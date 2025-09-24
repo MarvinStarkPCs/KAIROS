@@ -1,37 +1,28 @@
-# Laravel
-/vendor/
-/node_modules/
+/.phpunit.cache
+/bootstrap/ssr
+/node_modules
+/public/build
 /public/hot
 /public/storage
+/resources/js/actions
+/resources/js/routes
+/resources/js/wayfinder
 /storage/*.key
-
-.env.backup
-.phpunit.result.cache
-Homestead.yaml
-Homestead.json
-/.idea
-/.vscode
-/.phpunit.cache
-
-# Laravel Mix / Vite
-/public/mix-manifest.json
-/public/build
-
-# Composer
-composer.lock
-
-# NPM/Yarn/Pnpm
-package-lock.json
-yarn.lock
-pnpm-lock.yaml
-
-# OS files
+/storage/pail
+/vendor
 .DS_Store
-Thumbs.db
-
-# Logs
-/storage/logs/*
-/*.log
-
-# Cache
-/bootstrap/cache/*.php
+.env
+.env.backup
+.env.production
+.phpactor.json
+.phpunit.result.cache
+Homestead.json
+Homestead.yaml
+npm-debug.log
+yarn-error.log
+/auth.json
+/.fleet
+/.idea
+/.nova
+/.vscode
+/.zed
