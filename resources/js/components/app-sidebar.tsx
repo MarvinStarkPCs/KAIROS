@@ -13,7 +13,17 @@ import {
 import { dashboard } from '@/routes';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/react';
-import { BookOpen, Folder, LayoutGrid } from 'lucide-react';
+import {
+    BookOpen,
+    Folder,
+    LayoutGrid,
+    Users,
+    CreditCard,
+    Calendar,
+    CheckSquare,
+    MessageSquare,
+    BarChart,
+} from 'lucide-react';
 import AppLogo from './app-logo';
 
 const mainNavItems: NavItem[] = [
@@ -21,6 +31,41 @@ const mainNavItems: NavItem[] = [
         title: 'Dashboard',
         href: dashboard(),
         icon: LayoutGrid,
+    },
+    {
+        title: 'Estudiantes',
+        href: '/students',
+        icon: Users,
+    },
+    {
+        title: 'Profesores',
+        href: '/teachers',
+        icon: Users,
+    },
+    {
+        title: 'Pagos',
+        href: '/payments',
+        icon: CreditCard,
+    },
+    {
+        title: 'Horarios',
+        href: '/schedules',
+        icon: Calendar,
+    },
+    {
+        title: 'Asistencia',
+        href: '/attendance',
+        icon: CheckSquare,
+    },
+    {
+        title: 'Comunicación',
+        href: '/communication',
+        icon: MessageSquare,
+    },
+    {
+        title: 'Reportes',
+        href: '/reports',
+        icon: BarChart,
     },
 ];
 
@@ -40,6 +85,7 @@ const footerNavItems: NavItem[] = [
 export function AppSidebar() {
     return (
         <Sidebar collapsible="icon" variant="inset">
+            {/* 🔹 Logo */}
             <SidebarHeader>
                 <SidebarMenu>
                     <SidebarMenuItem>
@@ -52,10 +98,12 @@ export function AppSidebar() {
                 </SidebarMenu>
             </SidebarHeader>
 
+            {/* 🔹 Menú principal */}
             <SidebarContent>
                 <NavMain items={mainNavItems} />
             </SidebarContent>
 
+            {/* 🔹 Footer con docs y usuario */}
             <SidebarFooter>
                 <NavFooter items={footerNavItems} className="mt-auto" />
                 <NavUser />

@@ -14,12 +14,13 @@ export function AppContent({
         return <SidebarInset {...props}>{children}</SidebarInset>;
     }
 
-    return (
-        <main
-            className="mx-auto flex h-full w-full max-w-7xl flex-1 flex-col gap-4 rounded-xl"
-            {...props}
-        >
-            {children}
-        </main>
-    );
+  return (
+    <main
+        className="flex h-full w-full flex-1 flex-col bg-[#f9f6f2] p-6"
+        {...props}
+    >
+        {children}
+    </main>
+);
+
 }
