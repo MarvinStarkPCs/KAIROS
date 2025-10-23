@@ -8,6 +8,10 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 use Spatie\Permission\Traits\HasRoles;
+use Spatie\ActivityLog\Traits\LogsActivity;
+use Spatie\ActivityLog\LogOptions;
+
+
 
 class User extends Authenticatable
 {
@@ -48,4 +52,15 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+    public function getRoles()
+    {
+        return $this->roles->pluck('name');
+    }
+ // Obtener permisos del usuario
+    public function getPermissions()
+    {
+        return $this->getAllPermissions()->pluck('name')->toArray();
+    }
+
 }

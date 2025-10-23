@@ -1,117 +1,192 @@
-import RegisteredUserController from '@/actions/App/Http/Controllers/Auth/RegisteredUserController';
-import { login } from '@/routes';
-import { Form, Head } from '@inertiajs/react';
-import { LoaderCircle } from 'lucide-react';
+import { Head, Form, Link } from '@inertiajs/react';
+import { User, Mail, Lock, UserPlus } from 'lucide-react';
 
 import InputError from '@/components/input-error';
-import TextLink from '@/components/text-link';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import AuthLayout from '@/layouts/auth-layout';
+import RegisteredUserController from '@/actions/App/Http/Controllers/Auth/RegisteredUserController';
+import { login } from '@/routes';
+import { LoaderCircle } from 'lucide-react';
 
 export default function Register() {
     return (
-        <AuthLayout
-            title="Create an account"
-            description="Enter your details below to create your account"
-        >
-            <Head title="Register" />
-            <Form
-                {...RegisteredUserController.store.form()}
-                resetOnSuccess={['password', 'password_confirmation']}
-                disableWhileProcessing
-                className="flex flex-col gap-6"
-            >
-                {({ processing, errors }) => (
-                    <>
-                        <div className="grid gap-6">
-                            <div className="grid gap-2">
-                                <Label htmlFor="name">Name</Label>
-                                <Input
-                                    id="name"
-                                    type="text"
-                                    required
-                                    autoFocus
-                                    tabIndex={1}
-                                    autoComplete="name"
-                                    name="name"
-                                    placeholder="Full name"
-                                />
-                                <InputError
-                                    message={errors.name}
-                                    className="mt-2"
-                                />
-                            </div>
+        <>
+            <Head title="Registrarse - Academia Linaje" />
 
-                            <div className="grid gap-2">
-                                <Label htmlFor="email">Email address</Label>
-                                <Input
-                                    id="email"
-                                    type="email"
-                                    required
-                                    tabIndex={2}
-                                    autoComplete="email"
-                                    name="email"
-                                    placeholder="email@example.com"
-                                />
-                                <InputError message={errors.email} />
-                            </div>
+            <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-amber-100 flex items-center justify-center p-4">
+                {/* Decorative elements */}
+                <div className="absolute inset-0 -z-10 overflow-hidden">
+                    <div className="absolute top-20 left-10 h-96 w-96 rounded-full bg-amber-300/30 blur-3xl"></div>
+                    <div className="absolute bottom-20 right-10 h-96 w-96 rounded-full bg-orange-300/30 blur-3xl"></div>
+                </div>
 
-                            <div className="grid gap-2">
-                                <Label htmlFor="password">Password</Label>
-                                <Input
-                                    id="password"
-                                    type="password"
-                                    required
-                                    tabIndex={3}
-                                    autoComplete="new-password"
-                                    name="password"
-                                    placeholder="Password"
-                                />
-                                <InputError message={errors.password} />
+                <div className="w-full max-w-md">
+                    {/* Card */}
+                    <div className="rounded-2xl bg-white p-8 shadow-2xl">
+                        {/* Icon and Title */}
+                        <div className="text-center mb-6">
+                            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-amber-100">
+                                <UserPlus className="h-7 w-7 text-amber-800" />
                             </div>
-
-                            <div className="grid gap-2">
-                                <Label htmlFor="password_confirmation">
-                                    Confirm password
-                                </Label>
-                                <Input
-                                    id="password_confirmation"
-                                    type="password"
-                                    required
-                                    tabIndex={4}
-                                    autoComplete="new-password"
-                                    name="password_confirmation"
-                                    placeholder="Confirm password"
-                                />
-                                <InputError
-                                    message={errors.password_confirmation}
-                                />
-                            </div>
-
-                            <Button
-                                type="submit"
-                                className="mt-2 w-full"
-                                tabIndex={5}
-                                data-test="register-user-button"
-                            >
-                                {processing && (
-                                    <LoaderCircle className="h-4 w-4 animate-spin" />
-                                )}
-                                Create account
-                            </Button>
+                            <h1 className="text-2xl font-bold text-gray-900 mb-2">
+                                Crear Cuenta
+                            </h1>
+                            <p className="text-sm text-gray-600">
+                                Ingresa tus datos para crear tu cuenta
+                            </p>
                         </div>
 
-                        <div className="text-center text-sm text-muted-foreground">
-                            Already have an account?{' '}
-                            <TextLink href={login()} tabIndex={6}>
-                                Log in
-                            </TextLink>
+                        <Form
+                            {...RegisteredUserController.store.form()}
+                            resetOnSuccess={['password', 'password_confirmation']}
+                            disableWhileProcessing
+                        >
+                            {({ processing, errors }) => (
+                                <div className="space-y-6">
+                                    {/* Name Field */}
+                                    <div>
+                                        <Label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
+                                            Nombre Completo
+                                        </Label>
+                                        <div className="relative">
+                                            <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                                                <User className="h-5 w-5 text-gray-400" />
+                                            </div>
+                                            <Input
+                                                id="name"
+                                                type="text"
+                                                name="name"
+                                                required
+                                                autoFocus
+                                                tabIndex={1}
+                                                autoComplete="name"
+                                                placeholder="Tu nombre completo"
+                                                className={`w-full rounded-lg border ${
+                                                    errors.name ? 'border-red-300' : 'border-gray-300'
+                                                } pl-10 pr-4 py-3 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-200 transition-all`}
+                                            />
+                                        </div>
+                                        <InputError message={errors.name} className="mt-2" />
+                                    </div>
+
+                                    {/* Email Field */}
+                                    <div>
+                                        <Label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+                                            Correo Electrónico
+                                        </Label>
+                                        <div className="relative">
+                                            <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                                                <Mail className="h-5 w-5 text-gray-400" />
+                                            </div>
+                                            <Input
+                                                id="email"
+                                                type="email"
+                                                name="email"
+                                                required
+                                                tabIndex={2}
+                                                autoComplete="email"
+                                                placeholder="tu@email.com"
+                                                className={`w-full rounded-lg border ${
+                                                    errors.email ? 'border-red-300' : 'border-gray-300'
+                                                } pl-10 pr-4 py-3 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-200 transition-all`}
+                                            />
+                                        </div>
+                                        <InputError message={errors.email} className="mt-2" />
+                                    </div>
+
+                                    {/* Password Field */}
+                                    <div>
+                                        <Label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+                                            Contraseña
+                                        </Label>
+                                        <div className="relative">
+                                            <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                                                <Lock className="h-5 w-5 text-gray-400" />
+                                            </div>
+                                            <Input
+                                                id="password"
+                                                type="password"
+                                                name="password"
+                                                required
+                                                tabIndex={3}
+                                                autoComplete="new-password"
+                                                placeholder="••••••••"
+                                                className={`w-full rounded-lg border ${
+                                                    errors.password ? 'border-red-300' : 'border-gray-300'
+                                                } pl-10 pr-4 py-3 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-200 transition-all`}
+                                            />
+                                        </div>
+                                        <InputError message={errors.password} className="mt-2" />
+                                    </div>
+
+                                    {/* Confirm Password Field */}
+                                    <div>
+                                        <Label htmlFor="password_confirmation" className="block text-sm font-medium text-gray-700 mb-2">
+                                            Confirmar Contraseña
+                                        </Label>
+                                        <div className="relative">
+                                            <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                                                <Lock className="h-5 w-5 text-gray-400" />
+                                            </div>
+                                            <Input
+                                                id="password_confirmation"
+                                                type="password"
+                                                name="password_confirmation"
+                                                required
+                                                tabIndex={4}
+                                                autoComplete="new-password"
+                                                placeholder="••••••••"
+                                                className={`w-full rounded-lg border ${
+                                                    errors.password_confirmation ? 'border-red-300' : 'border-gray-300'
+                                                } pl-10 pr-4 py-3 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-200 transition-all`}
+                                            />
+                                        </div>
+                                        <InputError message={errors.password_confirmation} className="mt-2" />
+                                    </div>
+
+                                    {/* Submit Button */}
+                                    <Button
+                                        type="submit"
+                                        tabIndex={5}
+                                        className="w-full rounded-lg bg-gradient-to-r from-amber-700 to-amber-900 px-6 py-3 font-semibold text-white shadow-lg hover:from-amber-800 hover:to-amber-950 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                                        data-test="register-user-button"
+                                    >
+                                        {processing && (
+                                            <LoaderCircle className="h-4 w-4 animate-spin mr-2" />
+                                        )}
+                                        {processing ? 'Creando cuenta...' : 'Crear Cuenta'}
+                                    </Button>
+                                </div>
+                            )}
+                        </Form>
+
+                        {/* Login Link */}
+                        <div className="mt-6 text-center">
+                            <p className="text-sm text-gray-600">
+                                ¿Ya tienes cuenta?{' '}
+                                <Link
+                                    href={login()}
+                                    tabIndex={6}
+                                    className="font-medium text-amber-800 hover:text-amber-900"
+                                >
+                                    Inicia Sesión
+                                </Link>
+                            </p>
                         </div>
-                    </>
-                )}
-            </Form>
-        </AuthLayout>
+                    </div>
+
+                    {/* Back to Home */}
+                    <div className="mt-6 text-center">
+                        <Link
+                            href="/"
+                            className="text-sm text-gray-600 hover:text-gray-900"
+                        >
+                            ← Volver al inicio
+                        </Link>
+                    </div>
+                </div>
+            </div>
+        </>
     );
 }
