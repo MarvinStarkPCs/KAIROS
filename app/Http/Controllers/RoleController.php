@@ -22,7 +22,6 @@ class RoleController extends Controller
             ]),
         ]);
     }
-
     public function create()
     {
         $permissions = Permission::all()->map(fn($p) => [
@@ -34,7 +33,6 @@ class RoleController extends Controller
             'permissions' => $permissions,
         ]);
     }
-
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -50,7 +48,6 @@ class RoleController extends Controller
 
         return redirect()->route('roles.index')->with('success', 'Rol creado exitosamente');
     }
-
     public function edit(Role $role)
     {
         $permissions = Permission::all()->map(fn($p) => [
@@ -64,7 +61,6 @@ class RoleController extends Controller
             'permissions' => $permissions,
         ]);
     }
-
     public function update(Request $request, Role $role)
     {
         $validated = $request->validate([
@@ -77,7 +73,6 @@ class RoleController extends Controller
 
         return redirect()->route('roles.index')->with('success', 'Rol actualizado exitosamente');
     }
-
     public function destroy(Role $role)
     {
         if ($role->name === 'Administrador') {

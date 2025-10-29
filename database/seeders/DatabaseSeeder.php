@@ -14,8 +14,12 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
+        // Seed roles and permissions first
+        $this->call([
+            RolePermissionSeeder::class,
+        ]);
 
+        // Create test user
         User::firstOrCreate(
             ['email' => 'test@example.com'],
             [
@@ -24,5 +28,10 @@ class DatabaseSeeder extends Seeder
                 'email_verified_at' => now(),
             ]
         );
+
+        // Seed music academic programs with study plans, activities, and criteria
+        $this->call([
+            MusicAcademicProgramSeeder::class,
+        ]);
     }
 }

@@ -57,10 +57,107 @@ class User extends Authenticatable
     {
         return $this->roles->pluck('name');
     }
- // Obtener permisos del usuario
+
+    // Obtener permisos del usuario
     public function getPermissions()
     {
         return $this->getAllPermissions()->pluck('name')->toArray();
+    }
+
+    // ========== Relaciones con Horarios ==========
+
+    // Horarios asignados como profesor
+    public function teachingSchedules()
+    {
+        return $this->hasMany(Schedule::class, 'professor_id');
+    }
+
+    // Inscripciones de horarios como estudiante
+    public function scheduleEnrollments()
+    {
+        return $this->hasMany(ScheduleEnrollment::class, 'student_id');
+    }
+
+    // Horarios en los que está inscrito como estudiante (many-to-many)
+    public function enrolledSchedules()
+    {
+        return $this->belongsToMany(Schedule::class, 'schedule_enrollments', 'student_id', 'schedule_id')
+            ->withPivot('enrollment_date', 'status', 'final_grade', 'notes')
+            ->withTimestamps();
+    }
+
+    // Horarios activos como estudiante
+    public function activeSchedules()
+    {
+        return $this->enrolledSchedules()->wherePivot('status', 'enrolled');
+    }
+
+    // Inscripciones a programas académicos
+    public function programEnrollments()
+    {
+        return $this->hasMany(\App\Models\Enrollment::class, 'student_id');
+    }
+
+    // Programas académicos en los que está inscrito
+    public function enrolledPrograms()
+    {
+        return $this->belongsToMany(\App\Models\AcademicProgram::class, 'enrollments', 'student_id', 'program_id')
+            ->withPivot('enrollment_date', 'status')
+            ->withTimestamps();
+    }
+
+    // ========== Relaciones con Asistencia ==========
+
+    // Asistencias como estudiante
+    public function attendances()
+    {
+        return $this->hasMany(Attendance::class, 'student_id');
+    }
+
+    // Asistencias registradas por este usuario (profesor/admin)
+    public function recordedAttendances()
+    {
+        return $this->hasMany(Attendance::class, 'recorded_by');
+    }
+
+    // ========== Relaciones con Pagos ==========
+
+    // Pagos del estudiante
+    public function payments()
+    {
+        return $this->hasMany(Payment::class, 'student_id');
+    }
+
+    // Pagos pendientes
+    public function pendingPayments()
+    {
+        return $this->payments()->where('status', 'pending');
+    }
+
+    // Pagos completados
+    public function completedPayments()
+    {
+        return $this->payments()->where('status', 'completed');
+    }
+
+    // Pagos registrados por este usuario
+    public function recordedPayments()
+    {
+        return $this->hasMany(Payment::class, 'recorded_by');
+    }
+
+    // ========== Relaciones con Progreso ==========
+
+    // Progreso como estudiante
+    public function studentProgress()
+    {
+        return $this->hasMany(StudentProgress::class, 'student_id');
+    }
+
+    // Progreso registrado como profesor
+    public function recordedProgress()
+    {
+        return $this->hasMany(StudentProgress::class, 'teacher_id');
     }
 
 }
