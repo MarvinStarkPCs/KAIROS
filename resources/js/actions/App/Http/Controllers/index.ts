@@ -4,7 +4,7 @@ import UserController from './UserController'
 import AuditController from './AuditController'
 import program_academy from './program_academy'
 import StudyPlanController from './StudyPlanController'
-import schedules from './schedules'
+import ScheduleController from './ScheduleController'
 import Assists from './Assists'
 import Pay from './Pay'
 import Settings from './Settings'
@@ -15,7 +15,7 @@ UserController: Object.assign(UserController, UserController),
 AuditController: Object.assign(AuditController, AuditController),
 program_academy: Object.assign(program_academy, program_academy),
 StudyPlanController: Object.assign(StudyPlanController, StudyPlanController),
-schedules: Object.assign(schedules, schedules),
+ScheduleController: Object.assign(ScheduleController, ScheduleController),
 Assists: Object.assign(Assists, Assists),
 Pay: Object.assign(Pay, Pay),
 Settings: Object.assign(Settings, Settings),

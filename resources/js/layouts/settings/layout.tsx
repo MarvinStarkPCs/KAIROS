@@ -1,4 +1,5 @@
 import Heading from '@/components/heading';
+import { Toaster } from '@/components/toaster';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
@@ -84,6 +85,7 @@ export default function SettingsLayout({ children }: PropsWithChildren) {
                     </section>
                 </div>
             </div>
+            <Toaster />
         </div>
     );
 }

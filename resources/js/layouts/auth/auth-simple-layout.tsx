@@ -1,4 +1,5 @@
 import AppLogoIcon from '@/components/app-logo-icon';
+import { Toaster } from '@/components/toaster';
 import { home } from '@/routes';
 import { Link } from '@inertiajs/react';
 import { type PropsWithChildren } from 'react';
@@ -39,6 +40,7 @@ export default function AuthSimpleLayout({
                     {children}
                 </div>
             </div>
+            <Toaster />
         </div>
     );
 }

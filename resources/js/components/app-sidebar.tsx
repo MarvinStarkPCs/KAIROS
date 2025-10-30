@@ -33,6 +33,11 @@ const mainNavItems: NavItem[] = [
         icon: LayoutGrid,
     },
     {
+        title: 'Programas Académicos',
+        href: '/programas_academicos',
+        icon: BookOpen,
+    },
+    {
         title: 'Estudiantes',
         href: '/students',
         icon: Users,
@@ -43,19 +48,19 @@ const mainNavItems: NavItem[] = [
         icon: Users,
     },
     {
-        title: 'Pagos',
-        href: '/payments',
-        icon: CreditCard,
-    },
-    {
         title: 'Horarios',
-        href: '/schedules',
+        href: '/horarios',
         icon: Calendar,
     },
     {
         title: 'Asistencia',
         href: '/attendance',
         icon: CheckSquare,
+    },
+    {
+        title: 'Pagos',
+        href: '/payments',
+        icon: CreditCard,
     },
     {
         title: 'Comunicación',

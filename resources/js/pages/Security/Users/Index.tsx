@@ -4,7 +4,6 @@ import { useState } from 'react';
 import { Head, Link, router } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
 
-import { Alert } from '@/components/Alert';
 import {
     Table,
     TableBody,
@@ -76,7 +75,6 @@ export default function UsersIndex({ users }: IndexProps) {
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-                <Alert />
             <Head title="Gestión de Usuarios" />
 
             <div className="flex h-full flex-1 flex-col gap-6 overflow-x-auto rounded-xl p-6 bg-[#f9f6f2]">

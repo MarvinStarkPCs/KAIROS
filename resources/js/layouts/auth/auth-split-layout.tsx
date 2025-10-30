@@ -1,4 +1,5 @@
 import AppLogoIcon from '@/components/app-logo-icon';
+import { Toaster } from '@/components/toaster';
 import { home } from '@/routes';
 import { type SharedData } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
@@ -57,6 +58,7 @@ export default function AuthSplitLayout({
                     {children}
                 </div>
             </div>
+            <Toaster />
         </div>
     );
 }

@@ -2,7 +2,11 @@
   "permissions": {
     "allow": [
       "Bash(php artisan:*)",
-      "Bash(composer run:*)"
+      "Bash(composer run:*)",
+      "Bash(npm run types:*)",
+      "Bash(npm install:*)",
+      "Bash(composer dump-autoload:*)",
+      "Bash(timeout:*)"
     ],
     "deny": [],
     "ask": []

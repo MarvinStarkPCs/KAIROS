@@ -1,4 +1,5 @@
 import AppLogoIcon from '@/components/app-logo-icon';
+import { Toaster } from '@/components/toaster';
 import {
     Card,
     CardContent,
@@ -43,6 +44,7 @@ export default function AuthCardLayout({
                     </Card>
                 </div>
             </div>
+            <Toaster />
         </div>
     );
 }
