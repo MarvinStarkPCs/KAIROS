@@ -4,284 +4,234 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-KAIROS is an academic management system built with Laravel 12 (backend) + React 19 + TypeScript (frontend), using Inertia.js as the integration layer. The system manages students, teachers, academic programs, schedules, attendance, payments, and includes a comprehensive role-based permission system with audit logging.
+KAIROS is an academic program management system built with Laravel 12 and React 19. It manages students, academic programs, enrollments, schedules, attendance, and payments for an educational institution (appears to be focused on music education).
 
-**Language**: Spanish (all UI text, validation messages, and database content should be in Spanish)
+## Tech Stack
+
+**Backend:**
+- Laravel 12 (PHP 8.2+)
+- Inertia.js for SPA architecture
+- Spatie Laravel Permission for role-based access control
+- Spatie Laravel Activity Log for audit trails
+- Laravel Fortify for authentication
+
+**Frontend:**
+- React 19 with TypeScript
+- Inertia.js React adapter
+- Vite 7 for build tooling
+- Tailwind CSS 4 with shadcn/ui components
+- Radix UI primitives
+- Sonner for toast notifications
+- Laravel Wayfinder for type-safe routing
+- Ziggy for Laravel routes in JavaScript
 
 ## Development Commands
 
-### Starting Development Environment
-```bash
-# Run Laravel server + queue worker + Vite dev server concurrently (recommended)
-composer run dev
+### Starting the Development Environment
 
-# Or run components separately:
-php artisan serve           # Laravel server on port 8000
-php artisan queue:listen    # Queue worker
-npm run dev                 # Vite dev server
+```bash
+# Start all development servers (Laravel, queue, Vite)
+composer dev
+
+# Start with SSR support
+composer dev:ssr
 ```
 
-### Building for Production
-```bash
-npm run build              # Build frontend assets
-npm run build:ssr          # Build with server-side rendering
-
-# SSR development mode:
-composer run dev:ssr       # Runs everything including SSR server
-```
+This runs Laravel's built-in server, queue worker, and Vite dev server concurrently.
 
 ### Testing
+
 ```bash
-composer run test          # Run Pest test suite (clears config first)
-php artisan test           # Direct test invocation
-php artisan test --filter=TestName  # Run specific test
+# Run all tests (uses Pest)
+composer test
+
+# Alternative
+php artisan test
 ```
 
 ### Code Quality
+
 ```bash
-# Frontend
-npm run lint               # ESLint with auto-fix
-npm run format             # Format with Prettier
-npm run format:check       # Check formatting without changes
-npm run types              # TypeScript type checking
+# Format PHP code
+./vendor/bin/pint
 
-# Backend
-./vendor/bin/pint          # Laravel Pint code formatter
+# Format frontend code
+npm run format
+
+# Check formatting without making changes
+npm run format:check
+
+# Lint and auto-fix JavaScript/TypeScript
+npm run lint
+
+# Type-check TypeScript
+npm run types
 ```
 
-### Database
+### Building for Production
+
 ```bash
-php artisan migrate        # Run migrations
-php artisan migrate:fresh --seed  # Fresh database with seeders
-php artisan db:seed --class=RolePermissionSeeder  # Seed roles/permissions
+# Build frontend assets
+npm run build
+
+# Build with SSR support
+npm run build:ssr
 ```
 
-## Architecture Overview
+## Database Architecture
 
-### Inertia.js Integration Pattern
+The system follows a hierarchical structure:
 
-The application uses Inertia.js to create a single-page application experience without building an API:
+1. **AcademicProgram** - Programs offered (e.g., Piano, Guitar)
+   - Has many `StudyPlan` (modules/courses within the program)
+   - Has many `Schedule` (class schedules)
+   - Has many `Enrollment` (student enrollments in the program)
 
-1. **Server-Side Routing**: All routes defined in `routes/web.php` (Laravel)
-2. **Controllers**: Return Inertia responses with data props
-3. **React Pages**: Automatically resolved from `resources/js/pages/` directory
-4. **Shared Props**: Global data provided via `HandleInertiaRequests` middleware
+2. **StudyPlan** - Modules/courses within a program
+   - Has many `Activity` (assignments, projects)
+   - Belongs to `AcademicProgram`
 
-**Example flow**:
+3. **Activity** - Tasks/assignments within a study plan
+   - Has many `EvaluationCriteria` (grading rubrics)
+   - Belongs to `StudyPlan`
+
+4. **Enrollment** - Student registration in a program
+   - Belongs to `User` (student)
+   - Belongs to `AcademicProgram`
+   - Unique constraint: student can only have one active/waiting enrollment per program
+
+5. **Schedule** - Class schedules for programs
+   - Belongs to `AcademicProgram`
+   - Belongs to `User` (professor)
+   - Has many `ScheduleEnrollment` (students enrolled in this schedule)
+
+6. **ScheduleEnrollment** - Junction table for students in schedules
+   - Belongs to `Schedule`
+   - Belongs to `User` (student)
+
+7. **Attendance** - Track student attendance
+   - Belongs to `ScheduleEnrollment`
+
+8. **Payment** - Financial transactions
+   - Belongs to `User` (student)
+   - Can belong to `AcademicProgram` or `Enrollment`
+
+## Key Conventions
+
+### Flash Messages
+
+Use the global flash helper functions in controllers:
+- `flash_success($message)` - Success notifications
+- `flash_error($message)` - Error notifications
+- `flash_info($message)` - Info notifications
+- `flash_warning($message)` - Warning notifications
+
+These are automatically displayed via the Sonner toast system in the frontend.
+
+### Routing
+
+Routes are defined in `routes/web.php` and automatically converted to type-safe TypeScript functions via Laravel Wayfinder. Generated routes are in `resources/js/routes/index.ts`.
+
+To use in React components:
+```typescript
+import { inscripciones } from '@/routes';
+
+// Navigate to index
+router.visit(inscripciones.index().url);
+
+// Navigate to create
+router.visit(inscripciones.create().url);
+
+// Navigate to edit with ID
+router.visit(inscripciones.edit({ enrollment: enrollmentId }).url);
+```
+
+### Inertia Pages
+
+Pages are located in `resources/js/pages/{Module}/{Action}.tsx` and rendered via:
 ```php
-// routes/web.php
-Route::get('/usuarios', [UserController::class, 'index'])->name('usuarios.index');
-
-// UserController.php
-public function index()
-{
-    return Inertia::render('Security/Users/index', [
-        'users' => User::with('roles')->paginate(10)
-    ]);
-}
+return Inertia::render('Module/Action', [
+    'data' => $data,
+]);
 ```
 
-This renders `resources/js/pages/Security/Users/index.tsx` with the `users` prop.
+### Models and Relationships
 
-### Shared Data Architecture
+All models use Spatie Activity Log for audit trails. When creating or modifying models:
+- Configure `getActivitylogOptions()` to specify logged attributes
+- Use `logOnly()`, `logOnlyDirty()`, and `useLogName()`
+- Define relationships explicitly with return types
 
-The `HandleInertiaRequests` middleware (`app/Http/Middleware/HandleInertiaRequests.php`) shares data globally to all React components:
+### UI Components
 
-- `name`: Application name from config
-- `quote`: Random inspiring quote (message + author)
-- `auth.user`: Currently authenticated user object
-- `sidebarOpen`: Sidebar state from cookie
+The project uses shadcn/ui components located in `resources/js/components/ui/`. Common components:
+- `Button`, `Input`, `Label`, `Textarea` - Form controls
+- `Dialog`, `AlertDialog` - Modals
+- `Table` - Data tables
+- `Card` - Content containers
+- `DropdownMenu`, `Select` - Dropdowns
+- `Sidebar` - Navigation sidebar
 
-Access in React components via `usePage().props`.
+Custom app-specific components are in `resources/js/components/`.
 
-### Permission System Architecture
+### Layout System
 
-Built on Spatie Laravel-Permission package:
+Two layout variants available via `AppShell` component:
+- `header` - Header-based layout (simpler pages)
+- `sidebar` - Sidebar navigation layout (main app)
 
-**Database Structure**:
-- `roles` table: Role definitions
-- `permissions` table: Permission definitions
-- `model_has_roles`: User → Role assignments
-- `role_has_permissions`: Role → Permission assignments
-- `model_has_permissions`: Direct user permissions (override)
+### Role-Based Access Control
 
-**Three Default Roles** (see `RolePermissionSeeder`):
-- **Administrador**: Full access to all permissions
-- **Profesor**: Can view students, teachers, schedules, attendance, communication, reports
-- **Estudiante**: Can view dashboard, schedules, attendance, communication
+Uses Spatie Laravel Permission. Common roles:
+- `Estudiante` (Student)
+- Other roles defined in seeders
 
-**Permission Naming Convention**: `{acción}_{recurso}` (e.g., `ver_estudiantes`, `crear_usuario`, `editar_rol`)
+Query users by role: `User::role('Estudiante')`
 
-**Usage in Controllers**:
+## Running Migrations and Seeds
+
+```bash
+# Run migrations
+php artisan migrate
+
+# Run specific seeder
+php artisan db:seed --class=RolePermissionSeeder
+
+# Fresh migration with all seeds
+php artisan migrate:fresh --seed
+```
+
+## Common Development Patterns
+
+### Creating a CRUD Module
+
+1. Create migration in `database/migrations/`
+2. Create model in `app/Models/` with relationships and activity log
+3. Create controller in `app/Http/Controllers/`
+4. Add routes in `routes/web.php`
+5. Create React pages in `resources/js/pages/{Module}/`
+6. Build routes will auto-generate when Vite runs
+
+### Form Validation
+
+Use Laravel validation in controllers with Spanish error messages:
 ```php
-$user->hasPermissionTo('ver_usuarios');
-$user->can('editar_estudiante');
+$validated = $request->validate([
+    'field' => ['required', 'exists:table,id'],
+], [
+    'field.required' => 'El campo es obligatorio',
+    'field.exists' => 'El valor seleccionado no existe',
+]);
 ```
 
-### Activity Log (Audit Trail)
+### Working with Inertia Forms
 
-Uses Spatie Laravel-ActivityLog to track all changes:
-- Automatically logs model changes when models use `LogsActivity` trait
-- Stores: subject (what changed), causer (who changed it), description, properties (old/new values)
-- View logs at `/auditoria` route via `AuditController`
-- Filter by date, user, event type
+Use Inertia's `useForm` hook for form handling with optimistic UI updates and error management.
 
-**To make a model loggable**:
-```php
-use Spatie\Activitylog\Traits\LogsActivity;
-use Spatie\Activitylog\LogOptions;
+## Important Notes
 
-class YourModel extends Model
-{
-    use LogsActivity;
-
-    public function getActivitylogOptions(): LogOptions
-    {
-        return LogOptions::defaults()
-            ->logOnly(['field1', 'field2'])
-            ->logOnlyDirty();
-    }
-}
-```
-
-### Frontend Component Organization
-
-```
-resources/js/
-├── app.tsx                    # Inertia entry point
-├── pages/                     # Inertia page components (routes)
-│   ├── auth/                  # Login, register, password reset
-│   ├── Security/              # Roles, Users, Audit pages
-│   ├── ProgramAcademy/        # Academic programs
-│   ├── Schedules/             # Schedule management
-│   ├── Assists/               # Attendance tracking
-│   ├── Pay/                   # Payments
-│   └── settings/              # User settings (profile, password, 2FA)
-├── components/
-│   ├── ui/                    # Radix UI-based primitives (button, dialog, etc.)
-│   ├── app-header.tsx         # Top navigation bar
-│   └── app-sidebar.tsx        # Left navigation sidebar
-├── layouts/
-│   ├── app-layout.tsx         # Main authenticated layout (header + sidebar)
-│   └── auth-layout.tsx        # Unauthenticated pages layout
-├── hooks/                     # Custom React hooks (use-appearance.ts for theming)
-└── actions/                   # Auto-generated TypeScript types from Laravel routes
-```
-
-### Styling Architecture
-
-**Tailwind CSS 4** with custom CSS variables for theming:
-
-- Theme variables defined in `resources/css/app.css`
-- Light/dark mode support via `[data-appearance="dark"]` attribute on `<html>`
-- Theme persistence in localStorage
-- Component variants managed with `class-variance-authority`
-
-**Radix UI Components**: Unstyled, accessible primitives styled with Tailwind in `components/ui/`
-
-### Route Generation for Frontend
-
-**Ziggy** generates TypeScript-safe Laravel routes for frontend:
-
-```tsx
-import { route } from 'ziggy-js';
-
-// Use in components:
-<Link href={route('usuarios.index')}>Users</Link>
-```
-
-All named Laravel routes are available type-safe in React.
-
-### TypeScript Integration
-
-**Wayfinder Plugin** auto-generates TypeScript types from Laravel:
-- Action types from controllers in `resources/js/actions/`
-- Validates Inertia props match controller return types
-- Enable with `formVariants: true` in vite.config.ts
-
-### Authentication Flow
-
-**Laravel Fortify** handles:
-- Login, registration, email verification
-- Password reset, password confirmation
-- Two-factor authentication with recovery codes
-
-**React Pages**:
-- `resources/js/pages/auth/login.tsx`
-- `resources/js/pages/auth/register.tsx`
-- `resources/js/pages/auth/two-factor-challenge.tsx`
-
-**Middleware**: Applied in `routes/web.php` (`auth`, `verified`)
-
-## Database Schema
-
-**Key Tables**:
-- `users`: Core user table with 2FA columns
-- `roles`, `permissions`: Spatie permission tables
-- `academic_programs`: Program name, description, duration, max_slots, status
-- `study_plans`: Curriculum linked to programs
-- `enrollments`: Student enrollments (student_id, program_id, enrollment_date, status)
-- `student_progress`: Student progress tracking
-- `activity_log`: Audit trail (subject_type, subject_id, causer_id, description, properties)
-
-## Important Conventions
-
-### File Naming
-- **Controllers**: PascalCase (e.g., `UserController.php`, `RoleController.php`)
-  - Exception: Some controllers use snake_case (e.g., `program_academy.php`, `schedules.php`) - follow existing pattern in that module
-- **React Components**: kebab-case for files (e.g., `app-sidebar.tsx`), PascalCase for component names
-- **React Pages**: kebab-case or camelCase (matches Inertia render path)
-
-### Route Naming
-- Use Spanish resource names in URLs (e.g., `/usuarios`, `/roles`, `/pagos`)
-- Use dot notation for route names (e.g., `usuarios.index`, `roles.edit`)
-
-### Code Style
-- **Backend**: Follow Laravel conventions, use Pint for formatting
-- **Frontend**: ESLint + Prettier configured, use `npm run format` before committing
-
-### Component Import Alias
-Vite configured with `@` alias pointing to `resources/js/`:
-```tsx
-import { Button } from '@/components/ui/button';
-import AppLayout from '@/layouts/app-layout';
-```
-
-## Module Status Reference
-
-**Fully Implemented**:
-- Authentication & 2FA
-- User management (CRUD)
-- Role management (CRUD with permissions)
-- Audit logging (view & filter)
-- Settings (profile, password, 2FA)
-
-**Partially Implemented** (UI exists, minimal backend logic):
-- Academic Programs (`program_academy` controller)
-- Schedules (`schedules` controller)
-- Attendance (`Assists` controller)
-- Payments (`Pay` controller)
-
-When implementing these modules, follow the pattern established in `UserController` and `RoleController`.
-
-## Testing Approach
-
-**Pest PHP** configured for testing:
-- Test files in `tests/Feature/` and `tests/Unit/`
-- Use Pest's `it()` syntax for readable test descriptions
-- Laravel's database factories available for test data
-
-## Key Dependencies
-
-**Backend**:
-- `spatie/laravel-permission`: Role-based access control
-- `spatie/laravel-activitylog`: Audit logging
-- `laravel/fortify`: Authentication scaffolding
-- `inertiajs/inertia-laravel`: Server-side Inertia adapter
-
-**Frontend**:
-- `@inertiajs/react`: Client-side Inertia adapter
-- `@radix-ui/*`: Accessible UI primitives
-- `lucide-react`: Icon library
-- `class-variance-authority`: Component variant management
-- `ziggy-js`: Laravel routes in JavaScript
+- All user-facing text should be in Spanish
+- Enrollment has a unique constraint preventing duplicate active/waiting enrollments per student-program combination
+- The `max_slots` field was removed from academic programs (no capacity limits)
+- Activity log is configured globally via Spatie package
+- TypeScript types for Inertia props should be defined in `resources/js/types/`

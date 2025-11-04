@@ -4,9 +4,10 @@ import UserController from './UserController'
 import AuditController from './AuditController'
 import program_academy from './program_academy'
 import StudyPlanController from './StudyPlanController'
+import EnrollmentController from './EnrollmentController'
 import ScheduleController from './ScheduleController'
-import Assists from './Assists'
-import Pay from './Pay'
+import AttendanceController from './AttendanceController'
+import PaymentController from './PaymentController'
 import Settings from './Settings'
 const Controllers = {
     Auth: Object.assign(Auth, Auth),
@@ -15,9 +16,10 @@ UserController: Object.assign(UserController, UserController),
 AuditController: Object.assign(AuditController, AuditController),
 program_academy: Object.assign(program_academy, program_academy),
 StudyPlanController: Object.assign(StudyPlanController, StudyPlanController),
+EnrollmentController: Object.assign(EnrollmentController, EnrollmentController),
 ScheduleController: Object.assign(ScheduleController, ScheduleController),
-Assists: Object.assign(Assists, Assists),
-Pay: Object.assign(Pay, Pay),
+AttendanceController: Object.assign(AttendanceController, AttendanceController),
+PaymentController: Object.assign(PaymentController, PaymentController),
 Settings: Object.assign(Settings, Settings),
 }
 

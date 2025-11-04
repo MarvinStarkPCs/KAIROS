@@ -12,6 +12,9 @@ import {
     Eye,
     Edit,
     X,
+    Filter,
+    Grid,
+    CalendarDays,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -29,8 +32,11 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import { ScheduleCalendar } from '@/components/ScheduleCalendar';
 import AppLayout from '@/layouts/app-layout';
 import { useState, useEffect } from 'react';
+import { toast } from 'sonner';
 
 interface AcademicProgram {
     id: number;
@@ -99,12 +105,24 @@ export default function SchedulesIndex({ schedules, stats, allProfessors, allStu
     const [sheetOpen, setSheetOpen] = useState(false);
     const [selectedStudent, setSelectedStudent] = useState<string>('');
     const [selectedProfessor, setSelectedProfessor] = useState<string>('');
+    const [viewMode, setViewMode] = useState<'grid' | 'calendar'>('calendar');
+    const [showFilters, setShowFilters] = useState(false);
+
+    // Filtros
+    const [filterProgram, setFilterProgram] = useState<string>('');
+    const [filterProfessor, setFilterProfessor] = useState<string>('');
+    const [filterStatus, setFilterStatus] = useState<string>('active');
+
+    // Obtener programas únicos de los horarios
+    const availablePrograms = Array.from(
+        new Map(schedules.map(s => [s.academic_program.id, s.academic_program])).values()
+    );
 
     // Reset selected values when sheet opens
     useEffect(() => {
         if (sheetOpen && selectedSchedule) {
             setSelectedStudent('');
-            setSelectedProfessor(selectedSchedule.professor_id?.toString() || '');
+            setSelectedProfessor(selectedSchedule.professor_id?.toString() || 'unassigned');
         }
     }, [sheetOpen, selectedSchedule]);
 
@@ -143,9 +161,11 @@ export default function SchedulesIndex({ schedules, stats, allProfessors, allStu
             { student_id: selectedStudent },
             {
                 preserveScroll: true,
-                onSuccess: () => {
-                    setSelectedStudent('');
-                    setSheetOpen(false);
+                onError: (errors) => {
+                    const firstError = Object.values(errors)[0];
+                    if (firstError) {
+                        toast.error(firstError as string);
+                    }
                 },
             }
         );
@@ -158,7 +178,7 @@ export default function SchedulesIndex({ schedules, stats, allProfessors, allStu
             `/horarios/${selectedSchedule.id}`,
             {
                 academic_program_id: selectedSchedule.academic_program_id,
-                professor_id: selectedProfessor || null,
+                professor_id: selectedProfessor === 'unassigned' ? null : selectedProfessor,
                 name: selectedSchedule.name,
                 description: selectedSchedule.description,
                 days_of_week: selectedSchedule.days_of_week,
@@ -171,8 +191,11 @@ export default function SchedulesIndex({ schedules, stats, allProfessors, allStu
             },
             {
                 preserveScroll: true,
-                onSuccess: () => {
-                    setSheetOpen(false);
+                onError: (errors) => {
+                    const firstError = Object.values(errors)[0];
+                    if (firstError) {
+                        toast.error(firstError as string);
+                    }
                 },
             }
         );
@@ -248,8 +271,123 @@ export default function SchedulesIndex({ schedules, stats, allProfessors, allStu
                     </div>
                 </div>
 
-                {/* Calendario Semanal */}
-                {schedules.length > 0 ? (
+                {/* View Toggle and Filters */}
+                <div className="flex items-center justify-between gap-4">
+                    <ToggleGroup type="single" value={viewMode} onValueChange={(value) => value && setViewMode(value as 'grid' | 'calendar')}>
+                        <ToggleGroupItem value="calendar" aria-label="Vista de calendario">
+                            <CalendarDays className="mr-2 h-4 w-4" />
+                            Calendario
+                        </ToggleGroupItem>
+                        <ToggleGroupItem value="grid" aria-label="Vista de cuadrícula">
+                            <Grid className="mr-2 h-4 w-4" />
+                            Cuadrícula
+                        </ToggleGroupItem>
+                    </ToggleGroup>
+
+                    <Button
+                        variant="outline"
+                        onClick={() => setShowFilters(!showFilters)}
+                        className="flex items-center gap-2"
+                    >
+                        <Filter className="h-4 w-4" />
+                        Filtros
+                        {(filterProgram || filterProfessor || filterStatus !== 'active') && (
+                            <span className="ml-1 rounded-full bg-blue-600 px-2 py-0.5 text-xs text-white">
+                                {[filterProgram, filterProfessor, filterStatus !== 'active'].filter(Boolean).length}
+                            </span>
+                        )}
+                    </Button>
+                </div>
+
+                {/* Filters Panel */}
+                {showFilters && (
+                    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+                        <div className="grid gap-4 md:grid-cols-3">
+                            <div className="space-y-2">
+                                <Label htmlFor="filter-program">Programa</Label>
+                                <Select value={filterProgram} onValueChange={setFilterProgram}>
+                                    <SelectTrigger id="filter-program">
+                                        <SelectValue placeholder="Todos los programas" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {availablePrograms.map((program) => (
+                                            <SelectItem key={program.id} value={program.id.toString()}>
+                                                {program.name}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label htmlFor="filter-professor">Profesor</Label>
+                                <Select value={filterProfessor} onValueChange={setFilterProfessor}>
+                                    <SelectTrigger id="filter-professor">
+                                        <SelectValue placeholder="Todos los profesores" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {allProfessors.map((professor) => (
+                                            <SelectItem key={professor.id} value={professor.id.toString()}>
+                                                {professor.name}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label htmlFor="filter-status">Estado</Label>
+                                <Select value={filterStatus} onValueChange={setFilterStatus}>
+                                    <SelectTrigger id="filter-status">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="active">Activo</SelectItem>
+                                        <SelectItem value="inactive">Inactivo</SelectItem>
+                                        <SelectItem value="completed">Completado</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        </div>
+
+                        {(filterProgram || filterProfessor || filterStatus !== 'active') && (
+                            <div className="mt-4">
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => {
+                                        setFilterProgram('');
+                                        setFilterProfessor('');
+                                        setFilterStatus('active');
+                                    }}
+                                >
+                                    Limpiar filtros
+                                </Button>
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                {/* Calendar View */}
+                {schedules.length > 0 && viewMode === 'calendar' && (
+                    <ScheduleCalendar
+                        filters={{
+                            program_id: filterProgram ? parseInt(filterProgram) : undefined,
+                            professor_id: filterProfessor ? parseInt(filterProfessor) : undefined,
+                            status: filterStatus || undefined,
+                        }}
+                        onEventClick={(scheduleId) => {
+                            const schedule = schedules.find(s => s.id === scheduleId);
+                            if (schedule) {
+                                setSelectedSchedule(schedule);
+                                setSheetOpen(true);
+                            }
+                        }}
+                    />
+                )}
+
+                {/* Grid View (Original) */}
+                {schedules.length > 0 && viewMode === 'grid' && (
                     <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
                         {/* Header del calendario */}
                         <div className="bg-gray-900 text-white p-4 flex items-center justify-between">
@@ -346,7 +484,10 @@ export default function SchedulesIndex({ schedules, stats, allProfessors, allStu
                             </table>
                         </div>
                     </div>
-                ) : (
+                )}
+
+                {/* Empty State */}
+                {schedules.length === 0 && (
                     <div className="rounded-xl border-2 border-dashed border-gray-300 bg-white p-12 text-center">
                         <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gray-100">
                             <Calendar className="h-8 w-8 text-gray-400" />
@@ -445,18 +586,12 @@ export default function SchedulesIndex({ schedules, stats, allProfessors, allStu
                                             <SelectValue placeholder="Sin asignar" />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            <SelectItem value="">Sin asignar</SelectItem>
-                                            {allProfessors.length === 0 ? (
-                                                <div className="p-2 text-sm text-gray-500">
-                                                    No hay profesores disponibles
-                                                </div>
-                                            ) : (
-                                                allProfessors.map((professor) => (
-                                                    <SelectItem key={professor.id} value={professor.id.toString()}>
-                                                        {professor.name} - {professor.email}
-                                                    </SelectItem>
-                                                ))
-                                            )}
+                                            <SelectItem value="unassigned">Sin asignar</SelectItem>
+                                            {allProfessors.map((professor) => (
+                                                <SelectItem key={professor.id} value={professor.id.toString()}>
+                                                    {professor.name} - {professor.email}
+                                                </SelectItem>
+                                            ))}
                                         </SelectContent>
                                     </Select>
                                     <Button onClick={handleAssignProfessor} className="w-full" variant="secondary">

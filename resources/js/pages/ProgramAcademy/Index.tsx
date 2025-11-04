@@ -1,7 +1,7 @@
 import { Head, Link, router } from '@inertiajs/react';
 import { GraduationCap, Users, Clock, Plus, Edit, Trash2, Calendar, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-
+import ProgramAcademyController from '@/actions/App/Http/Controllers/program_academy';
 import AppLayout from '@/layouts/app-layout';
 
 import { useState } from 'react';
@@ -48,7 +48,7 @@ export default function ProgramasAcademicos({ programs, stats }: ProgramasAcadem
 
     const handleDelete = () => {
         if (deleteDialog.programId) {
-            router.delete(route('programas_academicos.destroy', deleteDialog.programId), {
+            router.delete(ProgramAcademyController.destroy({ program: deleteDialog.programId }).url, {
                 onSuccess: () => {
                     setDeleteDialog({ open: false, programId: null });
                 },
@@ -67,7 +67,7 @@ export default function ProgramasAcademicos({ programs, stats }: ProgramasAcadem
                         <h1 className="text-3xl font-bold text-gray-900">Programas Académicos</h1>
                         <p className="mt-2 text-gray-600">Gestiona los programas y cursos de la academia</p>
                     </div>
-                    <Link href={route('programas_academicos.create')}>
+                    <Link href={ProgramAcademyController.create().url}>
                         <Button className="flex items-center space-x-2">
                             <Plus className="h-5 w-5" />
                             <span>Nuevo Programa</span>
@@ -174,14 +174,14 @@ export default function ProgramasAcademicos({ programs, stats }: ProgramasAcadem
 
                                 {/* Actions */}
                                 <div className="flex flex-col gap-2 border-t border-gray-200 pt-4">
-                                    <Link href={route('programas_academicos.show', program.id)}>
+                                    <Link href={ProgramAcademyController.show({ program: program.id }).url}>
                                         <Button size="sm" className="w-full">
                                             Ver Plan de Estudios
                                         </Button>
                                     </Link>
                                     <div className="flex items-center gap-2">
                                         <Link
-                                            href={route('programas_academicos.edit', program.id)}
+                                            href={ProgramAcademyController.edit({ program: program.id }).url}
                                             className="flex-1"
                                         >
                                             <Button variant="outline" size="sm" className="w-full">
@@ -215,7 +215,7 @@ export default function ProgramasAcademicos({ programs, stats }: ProgramasAcadem
                         <p className="mb-6 text-gray-600">
                             Comienza agregando tu primer programa académico
                         </p>
-                        <Link href={route('programas_academicos.create')}>
+                        <Link href={ProgramAcademyController.create().url}>
                             <Button>
                                 <Plus className="mr-2 h-5 w-5" />
                                 Crear Primer Programa

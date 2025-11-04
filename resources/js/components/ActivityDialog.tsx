@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import StudyPlanController from '@/actions/App/Http/Controllers/StudyPlanController';
 
 interface Activity {
     id: number;
@@ -66,7 +67,7 @@ export default function ActivityDialog({
         e.preventDefault();
 
         if (isEditing) {
-            put(route('activities.update', activity.id), {
+            put(StudyPlanController.updateActivity({ activity: activity.id }).url, {
                 preserveScroll: true,
                 onSuccess: () => {
                     onOpenChange(false);
@@ -74,7 +75,7 @@ export default function ActivityDialog({
                 },
             });
         } else {
-            post(route('activities.store', studyPlanId), {
+            post(StudyPlanController.storeActivity({ studyPlan: studyPlanId }).url, {
                 preserveScroll: true,
                 onSuccess: () => {
                     onOpenChange(false);

@@ -1,4 +1,5 @@
-import AppLayout from '@/layouts/app/app-sidebar-layout';
+import { Head, Link, router } from '@inertiajs/react';
+import AppLayout from '@/layouts/app-layout';
 import Heading from '@/components/heading';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -11,27 +12,9 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
-} from '@/components/ui/dialog';
-import { Label } from '@/components/ui/label';
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '@/components/ui/select';
-import { Link, router, useForm } from '@inertiajs/react';
-import { ArrowLeft, Edit, UserPlus, UserMinus, Clock, Users, Calendar, MapPin } from 'lucide-react';
-import { useState } from 'react';
+import { ArrowLeft, Edit, UserMinus, Clock, Users, Calendar, MapPin } from 'lucide-react';
 import type { PageProps } from '@/types';
+import { formatTimeRange, formatDate } from '@/lib/format';
 
 interface AcademicProgram {
     id: number;
@@ -85,26 +68,10 @@ interface Props extends PageProps {
     availableStudents: Student[];
 }
 
-export default function ScheduleShow({ schedule, availableStudents }: Props) {
-    const [openEnrollDialog, setOpenEnrollDialog] = useState(false);
-
-    const { data, setData, post, processing, reset } = useForm({
-        student_id: '',
-    });
-
-    const handleEnrollStudent = () => {
-        post(`/horarios/${schedule.id}/enroll`, {
-            preserveScroll: true,
-            onSuccess: () => {
-                setOpenEnrollDialog(false);
-                reset();
-            },
-        });
-    };
-
-    const handleUnenrollStudent = (student: Student) => {
+export default function ScheduleShow({ schedule }: Props) {
+    const handleDisenrollStudent = (student: Student) => {
         if (confirm(`¿Estás seguro de desinscribir a ${student.name} de este horario?`)) {
-            router.delete(`/horarios/${schedule.id}/unenroll/${student.id}`, {
+            router.delete(`/horarios/${schedule.id}/students/${student.id}`, {
                 preserveScroll: true,
             });
         }
@@ -132,6 +99,8 @@ export default function ScheduleShow({ schedule, availableStudents }: Props) {
 
     return (
         <AppLayout>
+            <Head title={`Horario: ${schedule.name}`} />
+
             <Heading
                 title="Detalle del Horario"
                 description={schedule.name}
@@ -204,7 +173,7 @@ export default function ScheduleShow({ schedule, availableStudents }: Props) {
                         <div>
                             <p className="text-sm font-medium text-muted-foreground">Hora</p>
                             <p className="text-sm font-semibold">
-                                {schedule.start_time} - {schedule.end_time}
+                                {formatTimeRange(schedule.start_time, schedule.end_time)}
                             </p>
                         </div>
                         {schedule.classroom && (
@@ -276,81 +245,11 @@ export default function ScheduleShow({ schedule, availableStudents }: Props) {
             {/* Estudiantes Inscritos */}
             <Card>
                 <CardHeader>
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <CardTitle>Estudiantes Inscritos</CardTitle>
-                            <CardDescription>
-                                {schedule.enrolled_count} estudiante(s) inscrito(s)
-                            </CardDescription>
-                        </div>
-                        <Dialog open={openEnrollDialog} onOpenChange={setOpenEnrollDialog}>
-                            <DialogTrigger asChild>
-                                <Button
-                                    className="flex items-center gap-2"
-                                    disabled={schedule.available_slots === 0}
-                                >
-                                    <UserPlus className="w-4 h-4" />
-                                    Inscribir Estudiante
-                                </Button>
-                            </DialogTrigger>
-                            <DialogContent>
-                                <DialogHeader>
-                                    <DialogTitle>Inscribir Estudiante</DialogTitle>
-                                    <DialogDescription>
-                                        Selecciona un estudiante para inscribir en este horario
-                                    </DialogDescription>
-                                </DialogHeader>
-
-                                <div className="space-y-4 py-4">
-                                    <div className="space-y-2">
-                                        <Label htmlFor="student">Estudiante</Label>
-                                        <Select
-                                            value={data.student_id}
-                                            onValueChange={(value) => setData('student_id', value)}
-                                        >
-                                            <SelectTrigger id="student">
-                                                <SelectValue placeholder="Selecciona un estudiante" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                {availableStudents.length === 0 ? (
-                                                    <div className="p-2 text-sm text-muted-foreground">
-                                                        No hay estudiantes disponibles
-                                                    </div>
-                                                ) : (
-                                                    availableStudents.map((student) => (
-                                                        <SelectItem
-                                                            key={student.id}
-                                                            value={student.id.toString()}
-                                                        >
-                                                            {student.name} ({student.email})
-                                                        </SelectItem>
-                                                    ))
-                                                )}
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
-                                </div>
-
-                                <DialogFooter>
-                                    <Button
-                                        variant="outline"
-                                        onClick={() => {
-                                            setOpenEnrollDialog(false);
-                                            reset();
-                                        }}
-                                    >
-                                        Cancelar
-                                    </Button>
-                                    <Button
-                                        onClick={handleEnrollStudent}
-                                        disabled={!data.student_id || processing}
-                                    >
-                                        {processing ? 'Inscribiendo...' : 'Inscribir'}
-                                    </Button>
-                                </DialogFooter>
-                            </DialogContent>
-                        </Dialog>
-                    </div>
+                    <CardTitle>Estudiantes Inscritos</CardTitle>
+                    <CardDescription>
+                        {schedule.enrolled_count} estudiante(s) inscrito(s).
+                        Para inscribir nuevos estudiantes, use el módulo de Inscripciones.
+                    </CardDescription>
                 </CardHeader>
                 <CardContent>
                     {schedule.enrollments.length === 0 ? (
@@ -376,13 +275,13 @@ export default function ScheduleShow({ schedule, availableStudents }: Props) {
                                             </TableCell>
                                             <TableCell>{enrollment.student.email}</TableCell>
                                             <TableCell>
-                                                {new Date(enrollment.enrollment_date).toLocaleDateString('es-ES')}
+                                                {formatDate(enrollment.enrollment_date, { short: true })}
                                             </TableCell>
                                             <TableCell className="text-right">
                                                 <Button
                                                     variant="ghost"
                                                     size="sm"
-                                                    onClick={() => handleUnenrollStudent(enrollment.student)}
+                                                    onClick={() => handleDisenrollStudent(enrollment.student)}
                                                     className="flex items-center gap-2 text-destructive hover:text-destructive"
                                                 >
                                                     <UserMinus className="w-4 h-4" />

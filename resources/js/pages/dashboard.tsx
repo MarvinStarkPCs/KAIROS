@@ -86,7 +86,15 @@ export default function Dashboard() {
 }
 
 /* 🧩 Componente de tarjeta estadística */
-function StatCard({ title, value, color, icon, footer }) {
+interface StatCardProps {
+    title: string;
+    value: string | number;
+    color: string;
+    icon: React.ReactNode;
+    footer: string;
+}
+
+function StatCard({ title, value, color, icon, footer }: StatCardProps) {
     return (
         <div
             className={`bg-white p-6 rounded-2xl shadow hover:shadow-lg border-l-4 border-${color}-500 transition`}
@@ -102,7 +110,13 @@ function StatCard({ title, value, color, icon, footer }) {
 }
 
 /* 🧩 Componente de botón de acción */
-function ActionButton({ color, icon, text }) {
+interface ActionButtonProps {
+    color: string;
+    icon: React.ReactNode;
+    text: string;
+}
+
+function ActionButton({ color, icon, text }: ActionButtonProps) {
     return (
         <button
             className={`bg-${color}-600 hover:bg-${color}-700 text-white py-3 rounded-xl flex items-center justify-center gap-2 transition`}

@@ -1,12 +1,21 @@
 {
   "permissions": {
     "allow": [
-      "Bash(php artisan:*)",
-      "Bash(composer run:*)",
-      "Bash(npm run types:*)",
+      "Bash(php artisan make:migration:*)",
+      "Bash(php artisan migrate:*)",
       "Bash(npm install:*)",
-      "Bash(composer dump-autoload:*)",
-      "Bash(timeout:*)"
+      "Bash(npm run types:*)",
+      "Bash(npm run build:*)",
+      "Bash(npm run dev:*)",
+      "Bash(tree:*)",
+      "Bash(for dir in */)",
+      "Bash(do echo '=== $dir ===')",
+      "Bash(ls:*)",
+      "Bash(done)",
+      "Bash(php artisan:*)",
+      "Bash(php -r:*)",
+      "Bash(php check_schedules.php:*)",
+      "Bash(php test_schedule_creation.php:*)"
     ],
     "deny": [],
     "ask": []

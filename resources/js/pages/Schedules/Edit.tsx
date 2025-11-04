@@ -1,5 +1,4 @@
-import AppLayout from '@/layouts/app/app-sidebar-layout';
-import Heading from '@/components/heading';
+import AppLayout from '@/layouts/app-layout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -13,9 +12,11 @@ import {
 } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Link, useForm, router } from '@inertiajs/react';
-import { FormEvent } from 'react';
+import { FormEvent, useEffect } from 'react';
 import { ArrowLeft, Save } from 'lucide-react';
+import { toast } from 'sonner';
 import type { PageProps } from '@/types';
+import ScheduleController from '@/actions/App/Http/Controllers/ScheduleController';
 
 interface AcademicProgram {
     id: number;
@@ -67,7 +68,7 @@ export default function ScheduleEdit({ schedule, programs, professors }: Props) 
         ? schedule.days_of_week.split(',').map(d => d.trim())
         : [];
 
-    const { data, setData, put, processing, errors } = useForm({
+    const { data, setData, put, processing, errors, transform } = useForm({
         academic_program_id: schedule.academic_program_id.toString(),
         professor_id: schedule.professor_id?.toString() || '',
         name: schedule.name,
@@ -81,6 +82,22 @@ export default function ScheduleEdit({ schedule, programs, professors }: Props) 
         status: schedule.status,
     });
 
+    // Transformar el array de días a string antes de enviar
+    transform((data) => ({
+        ...data,
+        days_of_week: Array.isArray(data.days_of_week)
+            ? data.days_of_week.join(',')
+            : data.days_of_week,
+    }));
+
+    // Mostrar toast cuando hay errores de validación
+    useEffect(() => {
+        if (Object.keys(errors).length > 0) {
+            const firstError = Object.values(errors)[0];
+            toast.error(firstError);
+        }
+    }, [errors]);
+
     const handleDayToggle = (day: string, checked: boolean) => {
         if (checked) {
             setData('days_of_week', [...data.days_of_week, day]);
@@ -91,271 +108,264 @@ export default function ScheduleEdit({ schedule, programs, professors }: Props) 
 
     const handleSubmit = (e: FormEvent) => {
         e.preventDefault();
-
-        // Manually transform and submit
-        const submitData = {
-            ...data,
-            days_of_week: Array.isArray(data.days_of_week)
-                ? data.days_of_week.join(',')
-                : data.days_of_week,
-        };
-
-        // Use the router directly for more control
-        router.put(`/horarios/${schedule.id}`, submitData, {
-            preserveScroll: true,
-        });
+        put(ScheduleController.update({ schedule: schedule.id }).url);
     };
 
     return (
         <AppLayout>
-            <Heading
-                title="Editar Horario"
-                description={`Editando: ${schedule.name}`}
-            />
-
-            <div className="mb-6">
-                <Link href="/horarios">
-                    <Button variant="outline" className="flex items-center gap-2">
-                        <ArrowLeft className="w-4 h-4" />
-                        Volver a Horarios
-                    </Button>
-                </Link>
-            </div>
-
-            <form onSubmit={handleSubmit} className="max-w-3xl space-y-6">
-                {/* Programa Académico */}
-                <div className="space-y-2">
-                    <Label htmlFor="academic_program_id">
-                        Programa Académico <span className="text-destructive">*</span>
-                    </Label>
-                    <Select
-                        value={data.academic_program_id}
-                        onValueChange={(value) => setData('academic_program_id', value)}
-                    >
-                        <SelectTrigger id="academic_program_id">
-                            <SelectValue placeholder="Selecciona un programa" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            {programs.map((program) => (
-                                <SelectItem key={program.id} value={program.id.toString()}>
-                                    {program.name}
-                                </SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-                    {errors.academic_program_id && (
-                        <p className="text-sm text-destructive">{errors.academic_program_id}</p>
-                    )}
-                </div>
-
-                {/* Profesor */}
-                <div className="space-y-2">
-                    <Label htmlFor="professor_id">Profesor (Opcional)</Label>
-                    <Select
-                        value={data.professor_id}
-                        onValueChange={(value) => setData('professor_id', value)}
-                    >
-                        <SelectTrigger id="professor_id">
-                            <SelectValue placeholder="Selecciona un profesor" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="">Sin asignar</SelectItem>
-                            {professors.map((professor) => (
-                                <SelectItem key={professor.id} value={professor.id.toString()}>
-                                    {professor.name} ({professor.email})
-                                </SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-                    {errors.professor_id && (
-                        <p className="text-sm text-destructive">{errors.professor_id}</p>
-                    )}
-                </div>
-
-                {/* Nombre */}
-                <div className="space-y-2">
-                    <Label htmlFor="name">
-                        Nombre del Horario <span className="text-destructive">*</span>
-                    </Label>
-                    <Input
-                        id="name"
-                        type="text"
-                        placeholder="Ej: Matemáticas - Grupo A"
-                        value={data.name}
-                        onChange={(e) => setData('name', e.target.value)}
-                    />
-                    {errors.name && (
-                        <p className="text-sm text-destructive">{errors.name}</p>
-                    )}
-                </div>
-
-                {/* Descripción */}
-                <div className="space-y-2">
-                    <Label htmlFor="description">Descripción (Opcional)</Label>
-                    <Textarea
-                        id="description"
-                        placeholder="Descripción del horario..."
-                        rows={3}
-                        value={data.description}
-                        onChange={(e) => setData('description', e.target.value)}
-                    />
-                    {errors.description && (
-                        <p className="text-sm text-destructive">{errors.description}</p>
-                    )}
-                </div>
-
-                {/* Días de la semana */}
-                <div className="space-y-2">
-                    <Label>
-                        Días de la Semana <span className="text-destructive">*</span>
-                    </Label>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 p-4 border rounded-lg">
-                        {daysOfWeek.map((day) => (
-                            <div key={day.value} className="flex items-center space-x-2">
-                                <Checkbox
-                                    id={day.value}
-                                    checked={data.days_of_week.includes(day.value)}
-                                    onCheckedChange={(checked) =>
-                                        handleDayToggle(day.value, checked as boolean)
-                                    }
-                                />
-                                <Label htmlFor={day.value} className="cursor-pointer">
-                                    {day.label}
-                                </Label>
-                            </div>
-                        ))}
+            <div className="space-y-6">
+                {/* Header */}
+                <div className="flex items-center justify-between">
+                    <div>
+                        <h1 className="text-3xl font-bold">Editar Horario</h1>
+                        <p className="text-muted-foreground">Editando: {schedule.name}</p>
                     </div>
-                    {errors.days_of_week && (
-                        <p className="text-sm text-destructive">{errors.days_of_week}</p>
-                    )}
-                </div>
-
-                {/* Horarios */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {/* Hora de inicio */}
-                    <div className="space-y-2">
-                        <Label htmlFor="start_time">
-                            Hora de Inicio <span className="text-destructive">*</span>
-                        </Label>
-                        <Input
-                            id="start_time"
-                            type="time"
-                            value={data.start_time}
-                            onChange={(e) => setData('start_time', e.target.value)}
-                        />
-                        {errors.start_time && (
-                            <p className="text-sm text-destructive">{errors.start_time}</p>
-                        )}
-                    </div>
-
-                    {/* Hora de fin */}
-                    <div className="space-y-2">
-                        <Label htmlFor="end_time">
-                            Hora de Fin <span className="text-destructive">*</span>
-                        </Label>
-                        <Input
-                            id="end_time"
-                            type="time"
-                            value={data.end_time}
-                            onChange={(e) => setData('end_time', e.target.value)}
-                        />
-                        {errors.end_time && (
-                            <p className="text-sm text-destructive">{errors.end_time}</p>
-                        )}
-                    </div>
-                </div>
-
-                {/* Información adicional */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {/* Aula */}
-                    <div className="space-y-2">
-                        <Label htmlFor="classroom">Aula (Opcional)</Label>
-                        <Input
-                            id="classroom"
-                            type="text"
-                            placeholder="Ej: Aula 101"
-                            value={data.classroom}
-                            onChange={(e) => setData('classroom', e.target.value)}
-                        />
-                        {errors.classroom && (
-                            <p className="text-sm text-destructive">{errors.classroom}</p>
-                        )}
-                    </div>
-
-                    {/* Semestre */}
-                    <div className="space-y-2">
-                        <Label htmlFor="semester">Semestre (Opcional)</Label>
-                        <Input
-                            id="semester"
-                            type="text"
-                            placeholder="Ej: 2025-1"
-                            value={data.semester}
-                            onChange={(e) => setData('semester', e.target.value)}
-                        />
-                        {errors.semester && (
-                            <p className="text-sm text-destructive">{errors.semester}</p>
-                        )}
-                    </div>
-                </div>
-
-                {/* Cupo y Estado */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {/* Cupo máximo */}
-                    <div className="space-y-2">
-                        <Label htmlFor="max_students">
-                            Cupo Máximo de Estudiantes <span className="text-destructive">*</span>
-                        </Label>
-                        <Input
-                            id="max_students"
-                            type="number"
-                            min="1"
-                            max="200"
-                            placeholder="Ej: 30"
-                            value={data.max_students}
-                            onChange={(e) => setData('max_students', e.target.value)}
-                        />
-                        {errors.max_students && (
-                            <p className="text-sm text-destructive">{errors.max_students}</p>
-                        )}
-                    </div>
-
-                    {/* Estado */}
-                    <div className="space-y-2">
-                        <Label htmlFor="status">
-                            Estado <span className="text-destructive">*</span>
-                        </Label>
-                        <Select
-                            value={data.status}
-                            onValueChange={(value) => setData('status', value as 'active' | 'inactive' | 'completed')}
-                        >
-                            <SelectTrigger id="status">
-                                <SelectValue placeholder="Selecciona un estado" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="active">Activo</SelectItem>
-                                <SelectItem value="inactive">Inactivo</SelectItem>
-                                <SelectItem value="completed">Completado</SelectItem>
-                            </SelectContent>
-                        </Select>
-                        {errors.status && (
-                            <p className="text-sm text-destructive">{errors.status}</p>
-                        )}
-                    </div>
-                </div>
-
-                {/* Botones */}
-                <div className="flex gap-3 pt-4">
-                    <Button type="submit" disabled={processing} className="flex items-center gap-2">
-                        <Save className="w-4 h-4" />
-                        {processing ? 'Guardando...' : 'Guardar Cambios'}
-                    </Button>
-                    <Link href="/horarios">
-                        <Button type="button" variant="outline">
-                            Cancelar
+                    <Link href={ScheduleController.index().url}>
+                        <Button variant="outline" className="flex items-center gap-2">
+                            <ArrowLeft className="w-4 h-4" />
+                            Volver a Horarios
                         </Button>
                     </Link>
                 </div>
-            </form>
+
+                <form onSubmit={handleSubmit} className="space-y-6">
+                    {/* Programa Académico */}
+                    <div className="space-y-2">
+                        <Label htmlFor="academic_program_id">
+                            Programa Académico <span className="text-destructive">*</span>
+                        </Label>
+                        <Select
+                            value={data.academic_program_id}
+                            onValueChange={(value) => setData('academic_program_id', value)}
+                        >
+                            <SelectTrigger id="academic_program_id">
+                                <SelectValue placeholder="Selecciona un programa" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {programs.map((program) => (
+                                    <SelectItem key={program.id} value={program.id.toString()}>
+                                        {program.name}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+
+                        {errors.academic_program_id && (
+                            <p className="text-sm text-destructive">{errors.academic_program_id}</p>
+                        )}
+                    </div>
+
+                    {/* Profesor */}
+                    <div className="space-y-2">
+                        <Label htmlFor="professor_id">Profesor (Opcional)</Label>
+                        <Select
+                            value={data.professor_id || undefined}
+                            onValueChange={(value) => setData('professor_id', value)}
+                        >
+                            <SelectTrigger id="professor_id">
+                                <SelectValue placeholder="Sin asignar - Selecciona un profesor" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {professors.map((professor) => (
+                                    <SelectItem key={professor.id} value={professor.id.toString()}>
+                                        {professor.name} ({professor.email})
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                        {errors.professor_id && (
+                            <p className="text-sm text-destructive">{errors.professor_id}</p>
+                        )}
+                    </div>
+
+                    {/* Nombre */}
+                    <div className="space-y-2">
+                        <Label htmlFor="name">
+                            Nombre del Horario <span className="text-destructive">*</span>
+                        </Label>
+                        <Input
+                            id="name"
+                            type="text"
+                            placeholder="Ej: Matemáticas - Grupo A"
+                            value={data.name}
+                            onChange={(e) => setData('name', e.target.value)}
+                        />
+                        {errors.name && (
+                            <p className="text-sm text-destructive">{errors.name}</p>
+                        )}
+                    </div>
+
+                    {/* Descripción */}
+                    <div className="space-y-2">
+                        <Label htmlFor="description">Descripción (Opcional)</Label>
+                        <Textarea
+                            id="description"
+                            placeholder="Descripción del horario..."
+                            rows={3}
+                            value={data.description}
+                            onChange={(e) => setData('description', e.target.value)}
+                        />
+                        {errors.description && (
+                            <p className="text-sm text-destructive">{errors.description}</p>
+                        )}
+                    </div>
+
+                    {/* Días de la semana */}
+                    <div className="space-y-2">
+                        <Label>
+                            Días de la Semana <span className="text-destructive">*</span>
+                        </Label>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 p-4 border rounded-lg">
+                            {daysOfWeek.map((day) => (
+                                <div key={day.value} className="flex items-center space-x-2">
+                                    <Checkbox
+                                        id={day.value}
+                                        checked={data.days_of_week.includes(day.value)}
+                                        onCheckedChange={(checked) =>
+                                            handleDayToggle(day.value, checked as boolean)
+                                        }
+                                    />
+                                    <Label htmlFor={day.value} className="cursor-pointer">
+                                        {day.label}
+                                    </Label>
+                                </div>
+                            ))}
+                        </div>
+                        {errors.days_of_week && (
+                            <p className="text-sm text-destructive">{errors.days_of_week}</p>
+                        )}
+                    </div>
+
+                    {/* Horarios */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {/* Hora de inicio */}
+                        <div className="space-y-2">
+                            <Label htmlFor="start_time">
+                                Hora de Inicio <span className="text-destructive">*</span>
+                            </Label>
+                            <Input
+                                id="start_time"
+                                type="time"
+                                value={data.start_time}
+                                onChange={(e) => setData('start_time', e.target.value)}
+                            />
+                            {errors.start_time && (
+                                <p className="text-sm text-destructive">{errors.start_time}</p>
+                            )}
+                        </div>
+
+                        {/* Hora de fin */}
+                        <div className="space-y-2">
+                            <Label htmlFor="end_time">
+                                Hora de Fin <span className="text-destructive">*</span>
+                            </Label>
+                            <Input
+                                id="end_time"
+                                type="time"
+                                value={data.end_time}
+                                onChange={(e) => setData('end_time', e.target.value)}
+                            />
+                            {errors.end_time && (
+                                <p className="text-sm text-destructive">{errors.end_time}</p>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Información adicional */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {/* Aula */}
+                        <div className="space-y-2">
+                            <Label htmlFor="classroom">Aula (Opcional)</Label>
+                            <Input
+                                id="classroom"
+                                type="text"
+                                placeholder="Ej: Aula 101"
+                                value={data.classroom}
+                                onChange={(e) => setData('classroom', e.target.value)}
+                            />
+                            {errors.classroom && (
+                                <p className="text-sm text-destructive">{errors.classroom}</p>
+                            )}
+                        </div>
+
+                        {/* Semestre */}
+                        <div className="space-y-2">
+                            <Label htmlFor="semester">Semestre (Opcional)</Label>
+                            <Input
+                                id="semester"
+                                type="text"
+                                placeholder="Ej: 2025-1"
+                                value={data.semester}
+                                onChange={(e) => setData('semester', e.target.value)}
+                            />
+                            {errors.semester && (
+                                <p className="text-sm text-destructive">{errors.semester}</p>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Cupo y Estado */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {/* Cupo máximo */}
+                        <div className="space-y-2">
+                            <Label htmlFor="max_students">
+                                Cupo Máximo de Estudiantes <span className="text-destructive">*</span>
+                            </Label>
+                            <Input
+                                id="max_students"
+                                type="number"
+                                min="1"
+                                max="200"
+                                placeholder="Ej: 30"
+                                value={data.max_students}
+                                onChange={(e) => setData('max_students', e.target.value)}
+                            />
+                            {errors.max_students && (
+                                <p className="text-sm text-destructive">{errors.max_students}</p>
+                            )}
+                        </div>
+
+                        {/* Estado */}
+                        <div className="space-y-2">
+                            <Label htmlFor="status">
+                                Estado <span className="text-destructive">*</span>
+                            </Label>
+                            <Select
+                                value={data.status}
+                                onValueChange={(value) =>
+                                    setData('status', value as 'active' | 'inactive' | 'completed')
+                                }
+                            >
+                                <SelectTrigger id="status">
+                                    <SelectValue placeholder="Selecciona un estado" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="active">Activo</SelectItem>
+                                    <SelectItem value="inactive">Inactivo</SelectItem>
+                                    <SelectItem value="completed">Completado</SelectItem>
+                                </SelectContent>
+                            </Select>
+
+                            {errors.status && (
+                                <p className="text-sm text-destructive">{errors.status}</p>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Botones */}
+                    <div className="flex gap-3 pt-4">
+                        <Button type="submit" disabled={processing} className="flex items-center gap-2">
+                            <Save className="w-4 h-4" />
+                            {processing ? 'Guardando...' : 'Guardar Cambios'}
+                        </Button>
+                        <Link href={ScheduleController.index().url}>
+                            <Button type="button" variant="outline">
+                                Cancelar
+                            </Button>
+                        </Link>
+                    </div>
+                </form>
+            </div>
         </AppLayout>
     );
 }

@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import StudyPlanController from '@/actions/App/Http/Controllers/StudyPlanController';
 
 interface StudyPlan {
     id: number;
@@ -55,7 +56,7 @@ export default function StudyPlanDialog({ open, onOpenChange, programId, studyPl
         e.preventDefault();
 
         if (isEditing) {
-            put(route('study_plans.update', studyPlan.id), {
+            put(StudyPlanController.update({ studyPlan: studyPlan.id }).url, {
                 preserveScroll: true,
                 onSuccess: () => {
                     onOpenChange(false);
@@ -63,7 +64,7 @@ export default function StudyPlanDialog({ open, onOpenChange, programId, studyPl
                 },
             });
         } else {
-            post(route('study_plans.store', programId), {
+            post(StudyPlanController.store({ program: programId }).url, {
                 preserveScroll: true,
                 onSuccess: () => {
                     onOpenChange(false);

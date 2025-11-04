@@ -166,4 +166,37 @@ class program_academy extends Controller
         return redirect()->route('programas_academicos.index')
             ->with('success', 'Programa académico eliminado exitosamente.');
     }
+
+    /**
+     * Get active schedules for a program (API endpoint)
+     */
+    public function getSchedules(AcademicProgram $program)
+    {
+        $schedules = $program->schedules()
+            ->where('status', 'active')
+            ->with('professor')
+            ->withCount(['enrollments as enrolled_count' => function ($query) {
+                $query->where('status', 'enrolled');
+            }])
+            ->get()
+            ->map(function ($schedule) {
+                return [
+                    'id' => $schedule->id,
+                    'name' => $schedule->name,
+                    'days_of_week' => $schedule->days_of_week,
+                    'start_time' => $schedule->start_time,
+                    'end_time' => $schedule->end_time,
+                    'classroom' => $schedule->classroom,
+                    'professor' => $schedule->professor ? [
+                        'id' => $schedule->professor->id,
+                        'name' => $schedule->professor->name,
+                    ] : null,
+                    'enrolled_count' => $schedule->enrolled_count,
+                    'max_students' => $schedule->max_students,
+                    'available_slots' => max(0, $schedule->max_students - $schedule->enrolled_count),
+                ];
+            });
+
+        return response()->json($schedules);
+    }
 }

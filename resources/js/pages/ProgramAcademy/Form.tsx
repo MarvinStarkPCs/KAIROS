@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import AppLayout from '@/layouts/app-layout';
-
+import ProgramAcademyController from '@/actions/App/Http/Controllers/program_academy';
 import { FormEvent } from 'react';
 
 interface Program {
@@ -34,9 +34,9 @@ export default function Form({ program }: FormProps) {
         e.preventDefault();
 
         if (isEditing) {
-            put(route('programas_academicos.update', program.id));
+            put(ProgramAcademyController.update({ program: program.id }).url);
         } else {
-            post(route('programas_academicos.store'));
+            post(ProgramAcademyController.store().url);
         }
     };
 
@@ -49,7 +49,7 @@ export default function Form({ program }: FormProps) {
                 <div className="flex items-center justify-between">
                     <div>
                         <Link
-                            href={route('programas_academicos.index')}
+                            href={ProgramAcademyController.index().url}
                             className="mb-2 inline-flex items-center text-sm text-gray-600 hover:text-gray-900"
                         >
                             <ArrowLeft className="mr-1 h-4 w-4" />
@@ -142,7 +142,7 @@ export default function Form({ program }: FormProps) {
 
                         {/* Actions */}
                         <div className="flex items-center justify-end gap-3 border-t border-gray-200 pt-6">
-                            <Link href={route('programas_academicos.index')}>
+                            <Link href={ProgramAcademyController.index().url}>
                                 <Button type="button" variant="outline">
                                     Cancelar
                                 </Button>

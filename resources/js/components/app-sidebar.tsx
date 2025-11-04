@@ -18,6 +18,7 @@ import {
     Folder,
     LayoutGrid,
     Users,
+    UserPlus,
     CreditCard,
     Calendar,
     CheckSquare,
@@ -25,6 +26,11 @@ import {
     BarChart,
 } from 'lucide-react';
 import AppLogo from './app-logo';
+import ProgramAcademyController from '@/actions/App/Http/Controllers/program_academy';
+import EnrollmentController from '@/actions/App/Http/Controllers/EnrollmentController';
+import ScheduleController from '@/actions/App/Http/Controllers/ScheduleController';
+import AttendanceController from '@/actions/App/Http/Controllers/AttendanceController';
+import PaymentController from '@/actions/App/Http/Controllers/PaymentController';
 
 const mainNavItems: NavItem[] = [
     {
@@ -34,44 +40,53 @@ const mainNavItems: NavItem[] = [
     },
     {
         title: 'Programas Académicos',
-        href: '/programas_academicos',
+        href: ProgramAcademyController.index(),
         icon: BookOpen,
     },
     {
-        title: 'Estudiantes',
-        href: '/students',
-        icon: Users,
-    },
-    {
-        title: 'Profesores',
-        href: '/teachers',
-        icon: Users,
+        title: 'Inscripciones',
+        href: EnrollmentController.index(),
+        icon: UserPlus,
     },
     {
         title: 'Horarios',
-        href: '/horarios',
+        href: ScheduleController.index(),
         icon: Calendar,
     },
     {
         title: 'Asistencia',
-        href: '/attendance',
+        href: AttendanceController.index(),
         icon: CheckSquare,
     },
     {
         title: 'Pagos',
-        href: '/payments',
+        href: PaymentController.index(),
         icon: CreditCard,
     },
-    {
-        title: 'Comunicación',
-        href: '/communication',
-        icon: MessageSquare,
-    },
-    {
-        title: 'Reportes',
-        href: '/reports',
-        icon: BarChart,
-    },
+    // TODO: Implement Students management module
+    // {
+    //     title: 'Estudiantes',
+    //     href: '/estudiantes',
+    //     icon: Users,
+    // },
+    // TODO: Implement Teachers management module
+    // {
+    //     title: 'Profesores',
+    //     href: '/profesores',
+    //     icon: Users,
+    // },
+    // TODO: Implement Communication module
+    // {
+    //     title: 'Comunicación',
+    //     href: '/comunicacion',
+    //     icon: MessageSquare,
+    // },
+    // TODO: Implement Reports module
+    // {
+    //     title: 'Reportes',
+    //     href: '/reportes',
+    //     icon: BarChart,
+    // },
 ];
 
 const footerNavItems: NavItem[] = [

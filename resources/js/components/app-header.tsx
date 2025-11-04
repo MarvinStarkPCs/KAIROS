@@ -24,6 +24,14 @@ import { useInitials } from '@/hooks/use-initials';
 import { cn } from '@/lib/utils';
 import { dashboard } from '@/routes';
 import { type BreadcrumbItem, type SharedData } from '@/types';
+import ProgramAcademyController from '@/actions/App/Http/Controllers/program_academy';
+import EnrollmentController from '@/actions/App/Http/Controllers/EnrollmentController';
+import ScheduleController from '@/actions/App/Http/Controllers/ScheduleController';
+import AttendanceController from '@/actions/App/Http/Controllers/AttendanceController';
+import PaymentController from '@/actions/App/Http/Controllers/PaymentController';
+import RoleController from '@/actions/App/Http/Controllers/RoleController';
+import UserController from '@/actions/App/Http/Controllers/UserController';
+import AuditController from '@/actions/App/Http/Controllers/AuditController';
 
 interface NavItem {
     title: string;
@@ -62,27 +70,32 @@ import { useState } from 'react';
 const mainNavItems: NavItem[] = [
     {
         title: '',
-        href: '/dashboard',
+        href: dashboard().url,
         icon: Home,
     },
     {
         title: 'Programas Académicos',
-        href: '/programas_academicos',
+        href: ProgramAcademyController.index().url,
         icon: BookOpen,
     },
     {
+        title: 'Inscripciones',
+        href: EnrollmentController.index().url,
+        icon: UserCheck,
+    },
+    {
         title: 'Pagos',
-        href: '/pagos',
+        href: PaymentController.index().url,
         icon: CreditCard,
     },
     {
         title: 'Horarios',
-        href: '/horarios',
+        href: ScheduleController.index().url,
         icon: Calendar,
     },
     {
         title: 'Asistencia',
-        href: '/asistencia',
+        href: AttendanceController.index().url,
         icon: CheckSquare,
     },
     {
@@ -102,17 +115,17 @@ const mainNavItems: NavItem[] = [
         submenu: [
             {
                 title: 'Roles y Permisos',
-                href: '/roles',
+                href: RoleController.index().url,
                 icon: Lock,
             },
             {
                 title: 'Usuarios',
-                href: '/usuarios',
+                href: UserController.index().url,
                 icon: UserCheck,
             },
             {
                 title: 'Auditoría',
-                href: '/auditoria',
+                href: AuditController.index().url,
                 icon: FileText,
             },
         ]

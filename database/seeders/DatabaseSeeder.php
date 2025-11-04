@@ -19,8 +19,8 @@ class DatabaseSeeder extends Seeder
             RolePermissionSeeder::class,
         ]);
 
-        // Create test user
-        User::firstOrCreate(
+        // Create test user (Admin)
+        $testUser = User::firstOrCreate(
             ['email' => 'test@example.com'],
             [
                 'name' => 'Test User',
@@ -28,6 +28,13 @@ class DatabaseSeeder extends Seeder
                 'email_verified_at' => now(),
             ]
         );
+        $testUser->assignRole('Administrador');
+
+        // Seed users: teachers and students
+        $this->call([
+            TeacherSeeder::class,
+            StudentSeeder::class,
+        ]);
 
         // Seed music academic programs with study plans, activities, and criteria
         $this->call([

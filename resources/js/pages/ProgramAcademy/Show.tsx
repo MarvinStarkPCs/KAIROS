@@ -1,6 +1,7 @@
 import { Head, Link } from '@inertiajs/react';
 import { ArrowLeft, Plus, Book, ListChecks, Award } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import ProgramAcademyController from '@/actions/App/Http/Controllers/program_academy';
 import AppLayout from '@/layouts/app-layout';
 import { useState } from 'react';
 import StudyPlanDialog from '@/components/StudyPlanDialog';
@@ -79,7 +80,7 @@ export default function Show({ program, studyPlans }: ShowProps) {
                 {/* Header */}
                 <div>
                     <Link
-                        href={route('programas_academicos.index')}
+                        href={ProgramAcademyController.index().url}
                         className="mb-3 inline-flex items-center text-sm text-gray-600 hover:text-gray-900"
                     >
                         <ArrowLeft className="mr-1 h-4 w-4" />
@@ -107,7 +108,7 @@ export default function Show({ program, studyPlans }: ShowProps) {
                             </div>
                         </div>
 
-                        <Link href={route('programas_academicos.edit', program.id)}>
+                        <Link href={ProgramAcademyController.edit({ program: program.id }).url}>
                             <Button variant="outline">Editar Programa</Button>
                         </Link>
                     </div>

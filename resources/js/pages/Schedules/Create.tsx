@@ -1,4 +1,4 @@
-import AppLayout from '@/layouts/app/app-sidebar-layout';
+import AppLayout from '@/layouts/app-layout';
 import Heading from '@/components/heading';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,9 +13,11 @@ import {
 } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Link, useForm, router } from '@inertiajs/react';
-import { FormEvent } from 'react';
+import { FormEvent, useEffect } from 'react';
 import { ArrowLeft, Save } from 'lucide-react';
+import { toast } from 'sonner';
 import type { PageProps } from '@/types';
+import ScheduleController from '@/actions/App/Http/Controllers/ScheduleController';
 
 interface AcademicProgram {
     id: number;
@@ -44,7 +46,7 @@ const daysOfWeek = [
 ];
 
 export default function ScheduleCreate({ programs, professors }: Props) {
-    const { data, setData, post, processing, errors } = useForm({
+    const { data, setData, post, processing, errors, transform } = useForm({
         academic_program_id: '',
         professor_id: '',
         name: '',
@@ -58,6 +60,22 @@ export default function ScheduleCreate({ programs, professors }: Props) {
         status: 'active',
     });
 
+    // Transformar el array de días a string antes de enviar
+    transform((data) => ({
+        ...data,
+        days_of_week: Array.isArray(data.days_of_week)
+            ? data.days_of_week.join(',')
+            : data.days_of_week,
+    }));
+
+    // Mostrar toast cuando hay errores de validación
+    useEffect(() => {
+        if (Object.keys(errors).length > 0) {
+            const firstError = Object.values(errors)[0];
+            toast.error(firstError);
+        }
+    }, [errors]);
+
     const handleDayToggle = (day: string, checked: boolean) => {
         if (checked) {
             setData('days_of_week', [...data.days_of_week, day]);
@@ -68,19 +86,7 @@ export default function ScheduleCreate({ programs, professors }: Props) {
 
     const handleSubmit = (e: FormEvent) => {
         e.preventDefault();
-
-        // Manually transform and submit
-        const submitData = {
-            ...data,
-            days_of_week: Array.isArray(data.days_of_week)
-                ? data.days_of_week.join(',')
-                : data.days_of_week,
-        };
-
-        // Use the router directly for more control
-        router.post('/horarios', submitData, {
-            preserveScroll: true,
-        });
+        post(ScheduleController.store().url);
     };
 
     return (
@@ -91,7 +97,7 @@ export default function ScheduleCreate({ programs, professors }: Props) {
             />
 
             <div className="mb-6">
-                <Link href="/horarios">
+                <Link href={ScheduleController.index().url}>
                     <Button variant="outline" className="flex items-center gap-2">
                         <ArrowLeft className="w-4 h-4" />
                         Volver a Horarios
@@ -100,6 +106,20 @@ export default function ScheduleCreate({ programs, professors }: Props) {
             </div>
 
             <form onSubmit={handleSubmit} className="max-w-3xl space-y-6">
+                {/* Mostrar errores generales */}
+                {Object.keys(errors).length > 0 && (
+                    <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                        <h3 className="text-red-800 font-semibold mb-2">Errores de validación:</h3>
+                        <ul className="list-disc list-inside space-y-1">
+                            {Object.entries(errors).map(([key, message]) => (
+                                <li key={key} className="text-red-700 text-sm">
+                                    {message}
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+                )}
+
                 {/* Programa Académico */}
                 <div className="space-y-2">
                     <Label htmlFor="academic_program_id">
@@ -128,22 +148,22 @@ export default function ScheduleCreate({ programs, professors }: Props) {
                 {/* Profesor */}
                 <div className="space-y-2">
                     <Label htmlFor="professor_id">Profesor (Opcional)</Label>
-                    <Select
-                        value={data.professor_id}
-                        onValueChange={(value) => setData('professor_id', value)}
-                    >
-                        <SelectTrigger id="professor_id">
-                            <SelectValue placeholder="Selecciona un profesor" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="">Sin asignar</SelectItem>
-                            {professors.map((professor) => (
-                                <SelectItem key={professor.id} value={professor.id.toString()}>
-                                    {professor.name} ({professor.email})
-                                </SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
+                 <Select
+    value={data.professor_id}
+    onValueChange={(value) => setData('professor_id', value)}
+>
+    <SelectTrigger id="professor_id">
+        <SelectValue placeholder="Selecciona un profesor" />
+    </SelectTrigger>
+    <SelectContent>
+        {professors.map((professor) => (
+            <SelectItem key={professor.id} value={professor.id.toString()}>
+                {professor.name} ({professor.email})
+            </SelectItem>
+        ))}
+    </SelectContent>
+</Select>
+
                     {errors.professor_id && (
                         <p className="text-sm text-destructive">{errors.professor_id}</p>
                     )}
@@ -326,7 +346,7 @@ export default function ScheduleCreate({ programs, professors }: Props) {
                         <Save className="w-4 h-4" />
                         {processing ? 'Guardando...' : 'Guardar Horario'}
                     </Button>
-                    <Link href="/horarios">
+                    <Link href={ScheduleController.index().url}>
                         <Button type="button" variant="outline">
                             Cancelar
                         </Button>

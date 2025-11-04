@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import StudyPlanController from '@/actions/App/Http/Controllers/StudyPlanController';
 
 interface EvaluationCriteria {
     id: number;
@@ -63,7 +64,7 @@ export default function EvaluationCriteriaDialog({
         e.preventDefault();
 
         if (isEditing) {
-            put(route('criteria.update', criteria.id), {
+            put(StudyPlanController.updateCriteria({ criteria: criteria.id }).url, {
                 preserveScroll: true,
                 onSuccess: () => {
                     onOpenChange(false);
@@ -71,7 +72,7 @@ export default function EvaluationCriteriaDialog({
                 },
             });
         } else {
-            post(route('criteria.store', activityId), {
+            post(StudyPlanController.storeCriteria({ activity: activityId }).url, {
                 preserveScroll: true,
                 onSuccess: () => {
                     onOpenChange(false);

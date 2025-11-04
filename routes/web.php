@@ -7,8 +7,9 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\AuditController;
 use App\Http\Controllers\program_academy;
 use App\Http\Controllers\ScheduleController;
-use App\Http\Controllers\Assists;
-use App\Http\Controllers\Pay;
+use App\Http\Controllers\EnrollmentController;
+use App\Http\Controllers\AttendanceController;
+use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\StudyPlanController;
 
 Route::get('/', function () {
@@ -50,6 +51,9 @@ Route::middleware(['auth'])->group(function () {
     Route::put('/programas_academicos/{program}', [program_academy::class, 'update'])->name('programas_academicos.update');
     Route::delete('/programas_academicos/{program}', [program_academy::class, 'destroy'])->name('programas_academicos.destroy');
 
+    // API: Get schedules for a program
+    Route::get('/api/programas/{program}/horarios', [program_academy::class, 'getSchedules'])->name('api.programas.horarios');
+
     // Study Plans (Módulos)
     Route::post('/programas_academicos/{program}/study-plans', [StudyPlanController::class, 'store'])->name('study_plans.store');
     Route::put('/study-plans/{studyPlan}', [StudyPlanController::class, 'update'])->name('study_plans.update');
@@ -65,6 +69,20 @@ Route::middleware(['auth'])->group(function () {
     Route::put('/criteria/{criteria}', [StudyPlanController::class, 'updateCriteria'])->name('criteria.update');
     Route::delete('/criteria/{criteria}', [StudyPlanController::class, 'destroyCriteria'])->name('criteria.destroy');
 
+    // Inscripciones a Programas (Enrollments)
+    Route::get('/inscripciones', [EnrollmentController::class, 'index'])->name('inscripciones.index');
+    Route::get('/inscripciones/create', [EnrollmentController::class, 'create'])->name('inscripciones.create');
+    Route::post('/inscripciones', [EnrollmentController::class, 'store'])->name('inscripciones.store');
+    Route::get('/inscripciones/{enrollment}', [EnrollmentController::class, 'show'])->name('inscripciones.show');
+    Route::get('/inscripciones/{enrollment}/edit', [EnrollmentController::class, 'edit'])->name('inscripciones.edit');
+    Route::put('/inscripciones/{enrollment}', [EnrollmentController::class, 'update'])->name('inscripciones.update');
+    Route::delete('/inscripciones/{enrollment}', [EnrollmentController::class, 'destroy'])->name('inscripciones.destroy');
+
+    // Acciones rápidas de inscripciones
+    Route::post('/inscripciones/quick-enroll', [EnrollmentController::class, 'quickEnroll'])->name('inscripciones.quick-enroll');
+    Route::post('/inscripciones/{enrollment}/change-status', [EnrollmentController::class, 'changeStatus'])->name('inscripciones.change-status');
+    Route::get('/programs/{program}/available-students', [EnrollmentController::class, 'availableStudents'])->name('programs.available-students');
+
     // Horarios (Schedules)
     Route::get('/horarios', [ScheduleController::class, 'index'])->name('horarios.index');
     Route::get('/horarios/create', [ScheduleController::class, 'create'])->name('horarios.create');
@@ -74,12 +92,29 @@ Route::middleware(['auth'])->group(function () {
     Route::put('/horarios/{schedule}', [ScheduleController::class, 'update'])->name('horarios.update');
     Route::delete('/horarios/{schedule}', [ScheduleController::class, 'destroy'])->name('horarios.destroy');
 
+    // API de calendarios
+    Route::get('/horarios-api/calendar-events', [ScheduleController::class, 'calendarEvents'])->name('horarios.calendar-events');
+    Route::post('/horarios-api/check-conflicts', [ScheduleController::class, 'checkStudentConflicts'])->name('horarios.check-conflicts');
+
     // Inscripciones en horarios
     Route::post('/horarios/{schedule}/enroll', [ScheduleController::class, 'enrollStudent'])->name('horarios.enroll');
-    Route::delete('/horarios/{schedule}/unenroll/{student}', [ScheduleController::class, 'unenrollStudent'])->name('horarios.unenroll');
+    Route::post('/horarios/{schedule}/bulk-enroll', [ScheduleController::class, 'bulkEnroll'])->name('horarios.bulk-enroll');
+    Route::delete('/horarios/{schedule}/students/{student}', [ScheduleController::class, 'disenrollStudent'])->name('horarios.disenroll');
 
-    Route::get('/asistencia', [Assists::class, 'index'])->name('asistencias.index');
-    Route::get('/pagos', [Pay::class, 'index'])->name('pagos.index');
+    // Asistencia
+    Route::get('/asistencia', [AttendanceController::class, 'index'])->name('asistencias.index');
+    Route::post('/asistencia', [AttendanceController::class, 'store'])->name('asistencias.store');
+    Route::put('/asistencia/{attendance}', [AttendanceController::class, 'update'])->name('asistencias.update');
+    Route::delete('/asistencia/{attendance}', [AttendanceController::class, 'destroy'])->name('asistencias.destroy');
+    Route::post('/asistencia/bulk', [AttendanceController::class, 'bulkStore'])->name('asistencias.bulk');
+
+    // Pagos
+    Route::get('/pagos', [PaymentController::class, 'index'])->name('pagos.index');
+    Route::post('/pagos', [PaymentController::class, 'store'])->name('pagos.store');
+    Route::put('/pagos/{payment}', [PaymentController::class, 'update'])->name('pagos.update');
+    Route::delete('/pagos/{payment}', [PaymentController::class, 'destroy'])->name('pagos.destroy');
+    Route::post('/pagos/{payment}/mark-paid', [PaymentController::class, 'markAsPaid'])->name('pagos.mark-paid');
+    Route::get('/pagos/{payment}/invoice', [PaymentController::class, 'generateInvoice'])->name('pagos.invoice');
 
 
 
