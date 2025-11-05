@@ -21,6 +21,7 @@ class program_academy extends Controller
                     'description' => $program->description,
                     'duration_months' => $program->duration_months,
                     'status' => $program->status,
+                    'color' => $program->color,
                     'active_students_count' => $program->active_students_count,
                     'schedules_count' => $program->schedules_count,
                     'active_schedules_count' => $program->active_schedules_count,
@@ -88,6 +89,7 @@ class program_academy extends Controller
                 'description' => $program->description,
                 'duration_months' => $program->duration_months,
                 'status' => $program->status,
+                'color' => $program->color,
                 'created_at' => $program->created_at->format('Y-m-d'),
             ],
             'studyPlans' => $studyPlans,
@@ -106,16 +108,19 @@ class program_academy extends Controller
             'description' => 'nullable|string',
             'duration_months' => 'required|integer|min:1',
             'status' => 'required|in:active,inactive',
+            'color' => 'required|string|regex:/^#[0-9A-Fa-f]{6}$/',
         ], [
             'name.required' => 'El nombre del programa es obligatorio.',
             'duration_months.required' => 'La duración es obligatoria.',
             'duration_months.min' => 'La duración debe ser al menos 1 mes.',
+            'color.required' => 'El color es obligatorio.',
+            'color.regex' => 'El color debe ser un código hexadecimal válido (ej: #3B82F6).',
         ]);
 
         AcademicProgram::create($validated);
 
-        return redirect()->route('programas_academicos.index')
-            ->with('success', 'Programa académico creado exitosamente.');
+        flash_success('Programa académico creado exitosamente.');
+        return redirect()->route('programas_academicos.index');
     }
 
     public function edit(AcademicProgram $program)
@@ -127,6 +132,7 @@ class program_academy extends Controller
                 'description' => $program->description,
                 'duration_months' => $program->duration_months,
                 'status' => $program->status,
+                'color' => $program->color,
             ],
         ]);
     }
@@ -138,16 +144,19 @@ class program_academy extends Controller
             'description' => 'nullable|string',
             'duration_months' => 'required|integer|min:1',
             'status' => 'required|in:active,inactive',
+            'color' => 'required|string|regex:/^#[0-9A-Fa-f]{6}$/',
         ], [
             'name.required' => 'El nombre del programa es obligatorio.',
             'duration_months.required' => 'La duración es obligatoria.',
             'duration_months.min' => 'La duración debe ser al menos 1 mes.',
+            'color.required' => 'El color es obligatorio.',
+            'color.regex' => 'El color debe ser un código hexadecimal válido (ej: #3B82F6).',
         ]);
 
         $program->update($validated);
 
-        return redirect()->route('programas_academicos.index')
-            ->with('success', 'Programa académico actualizado exitosamente.');
+        flash_success('Programa académico actualizado exitosamente.');
+        return redirect()->route('programas_academicos.index');
     }
 
     public function destroy(AcademicProgram $program)

@@ -17,6 +17,7 @@ class AcademicProgram extends Model
         'description',
         'duration_months',
         'status',
+        'color',
     ];
 
     protected $casts = [
@@ -27,7 +28,7 @@ class AcademicProgram extends Model
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
-            ->logOnly(['name', 'description', 'duration_months', 'status'])
+            ->logOnly(['name', 'description', 'duration_months', 'status', 'color'])
             ->logOnlyDirty()
             ->useLogName('academic_programs');
     }

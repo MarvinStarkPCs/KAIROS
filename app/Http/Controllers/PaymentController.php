@@ -13,6 +13,39 @@ use Carbon\Carbon;
 class PaymentController extends Controller
 {
     /**
+     * Display payments list/table
+     */
+    public function list(Request $request)
+    {
+        $query = Payment::with(['student', 'program', 'enrollment']);
+
+        // Filtros
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        if ($request->filled('student_id')) {
+            $query->where('student_id', $request->student_id);
+        }
+
+        if ($request->filled('program_id')) {
+            $query->where('program_id', $request->program_id);
+        }
+
+        $payments = $query->orderBy('created_at', 'desc')->paginate(20);
+
+        $students = User::role('Estudiante')->orderBy('name')->get(['id', 'name']);
+        $programs = AcademicProgram::where('status', 'active')->orderBy('name')->get(['id', 'name']);
+
+        return Inertia::render('Payments/List', [
+            'payments' => $payments,
+            'students' => $students,
+            'programs' => $programs,
+            'filters' => $request->only(['status', 'student_id', 'program_id']),
+        ]);
+    }
+
+    /**
      * Display payments dashboard
      */
     public function index()
@@ -145,6 +178,20 @@ class PaymentController extends Controller
     }
 
     /**
+     * Show form to create new payment
+     */
+    public function create()
+    {
+        $students = User::role('Estudiante')->orderBy('name')->get(['id', 'name', 'email']);
+        $programs = AcademicProgram::where('status', 'active')->orderBy('name')->get(['id', 'name']);
+
+        return Inertia::render('Payments/Form', [
+            'students' => $students,
+            'programs' => $programs,
+        ]);
+    }
+
+    /**
      * Store a new payment record
      */
     public function store(Request $request)
@@ -188,8 +235,35 @@ class PaymentController extends Controller
 
         $payment = Payment::create($validated);
 
-        return redirect()->back()
-            ->with('success', 'Pago registrado exitosamente');
+        flash_success('Pago registrado exitosamente');
+        return redirect()->route('pagos.list');
+    }
+
+    /**
+     * Display payment details
+     */
+    public function show(Payment $payment)
+    {
+        $payment->load(['student', 'program', 'enrollment', 'recordedBy']);
+
+        return Inertia::render('Payments/Show', [
+            'payment' => $payment,
+        ]);
+    }
+
+    /**
+     * Show form to edit payment
+     */
+    public function edit(Payment $payment)
+    {
+        $students = User::role('Estudiante')->orderBy('name')->get(['id', 'name', 'email']);
+        $programs = AcademicProgram::where('status', 'active')->orderBy('name')->get(['id', 'name']);
+
+        return Inertia::render('Payments/Form', [
+            'payment' => $payment,
+            'students' => $students,
+            'programs' => $programs,
+        ]);
     }
 
     /**
@@ -223,8 +297,8 @@ class PaymentController extends Controller
 
         $payment->update($validated);
 
-        return redirect()->back()
-            ->with('success', 'Pago actualizado exitosamente');
+        flash_success('Pago actualizado exitosamente');
+        return redirect()->route('pagos.list');
     }
 
     /**
@@ -234,8 +308,8 @@ class PaymentController extends Controller
     {
         $payment->delete();
 
-        return redirect()->back()
-            ->with('success', 'Pago eliminado exitosamente');
+        flash_success('Pago eliminado exitosamente');
+        return redirect()->route('pagos.list');
     }
 
     /**
@@ -257,8 +331,8 @@ class PaymentController extends Controller
             $validated['reference_number'] ?? null
         );
 
-        return redirect()->back()
-            ->with('success', 'Pago marcado como pagado exitosamente');
+        flash_success('Pago marcado como pagado exitosamente');
+        return redirect()->back();
     }
 
     /**

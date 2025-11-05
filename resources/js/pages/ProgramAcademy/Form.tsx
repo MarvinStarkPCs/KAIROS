@@ -14,6 +14,7 @@ interface Program {
     description: string | null;
     duration_months: number;
     status: 'active' | 'inactive';
+    color: string;
 }
 
 interface FormProps {
@@ -28,6 +29,7 @@ export default function Form({ program }: FormProps) {
         description: program?.description || '',
         duration_months: program?.duration_months || 1,
         status: program?.status || 'active',
+        color: program?.color || '#3B82F6',
     });
 
     const handleSubmit = (e: FormEvent) => {
@@ -138,6 +140,40 @@ export default function Form({ program }: FormProps) {
                                 <option value="inactive">Inactivo</option>
                             </select>
                             {errors.status && <p className="mt-1 text-sm text-red-600">{errors.status}</p>}
+                        </div>
+
+                        {/* Color */}
+                        <div>
+                            <Label htmlFor="color">
+                                Color del Programa <span className="text-red-500">*</span>
+                            </Label>
+                            <div className="mt-1 flex items-center gap-4">
+                                <Input
+                                    id="color"
+                                    type="color"
+                                    value={data.color}
+                                    onChange={(e) => setData('color', e.target.value)}
+                                    className="h-12 w-20 cursor-pointer"
+                                />
+                                <div className="flex-1">
+                                    <Input
+                                        type="text"
+                                        value={data.color}
+                                        onChange={(e) => setData('color', e.target.value)}
+                                        placeholder="#3B82F6"
+                                        pattern="^#[0-9A-Fa-f]{6}$"
+                                        className="font-mono"
+                                    />
+                                </div>
+                                <div
+                                    className="h-12 w-24 rounded-md border-2 border-gray-300 shadow-sm"
+                                    style={{ backgroundColor: data.color }}
+                                />
+                            </div>
+                            {errors.color && <p className="mt-1 text-sm text-red-600">{errors.color}</p>}
+                            <p className="mt-1 text-sm text-gray-500">
+                                Este color se usará para identificar el programa en el calendario de horarios
+                            </p>
                         </div>
 
                         {/* Actions */}

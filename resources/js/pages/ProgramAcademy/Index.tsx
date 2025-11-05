@@ -22,6 +22,7 @@ interface Program {
     description: string | null;
     duration_months: number;
     status: 'active' | 'inactive';
+    color: string;
     active_students_count: number;
     schedules_count: number;
     active_schedules_count: number;
@@ -136,8 +137,14 @@ export default function ProgramasAcademicos({ programs, stats }: ProgramasAcadem
                             >
                                 {/* Header */}
                                 <div className="mb-4 flex items-start justify-between">
-                                    <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-blue-100">
-                                        <GraduationCap className="h-6 w-6 text-blue-600" />
+                                    <div
+                                        className="flex h-12 w-12 items-center justify-center rounded-lg border-2"
+                                        style={{
+                                            backgroundColor: `${program.color}20`,
+                                            borderColor: program.color,
+                                        }}
+                                    >
+                                        <GraduationCap className="h-6 w-6" style={{ color: program.color }} />
                                     </div>
                                     <span
                                         className={`rounded-full px-2.5 py-1 text-xs font-medium ${

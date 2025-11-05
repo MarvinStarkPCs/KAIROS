@@ -29,6 +29,7 @@ interface ScheduleEvent {
     endRecur: string;
     extendedProps: {
         program: string;
+        program_color: string;
         professor: string;
         classroom: string;
         semester: string;
@@ -87,22 +88,44 @@ export function ScheduleCalendar({
         const { extendedProps } = eventInfo.event;
         const occupancyPercentage = (extendedProps.enrolled_count / extendedProps.max_students) * 100;
 
-        // Color basado en ocupación
-        let colorClass = 'bg-green-500';
+        // Determinar color: usar color de advertencia si hay alta ocupación, sino usar color del programa
+        let backgroundColor: string;
+        let borderColor: string;
+
         if (occupancyPercentage >= 100) {
-            colorClass = 'bg-red-500';
+            // Rojo para lleno
+            backgroundColor = '#EF4444'; // red-500
+            borderColor = '#DC2626'; // red-600
         } else if (occupancyPercentage >= 80) {
-            colorClass = 'bg-yellow-500';
+            // Amarillo/Amber para casi lleno
+            backgroundColor = '#F59E0B'; // amber-500
+            borderColor = '#D97706'; // amber-600
+        } else {
+            // Usar el color del programa académico
+            backgroundColor = extendedProps.program_color || '#3B82F6';
+            // Oscurecer un poco para el borde
+            borderColor = backgroundColor;
         }
 
         return (
-            <div className={`${colorClass} px-2 py-1 rounded text-white text-xs overflow-hidden h-full`}>
+            <div
+                className="px-2 py-1 rounded text-white text-xs overflow-hidden h-full border-l-4"
+                style={{
+                    backgroundColor,
+                    borderLeftColor: borderColor
+                }}
+            >
                 <div className="font-semibold truncate">{eventInfo.event.title}</div>
                 <div className="text-[10px] opacity-90 truncate">
                     {extendedProps.professor}
                 </div>
                 <div className="text-[10px] opacity-90">
                     {extendedProps.enrolled_count}/{extendedProps.max_students}
+                    {occupancyPercentage >= 80 && (
+                        <span className="ml-1">
+                            {occupancyPercentage >= 100 ? '🔴' : '⚠️'}
+                        </span>
+                    )}
                 </div>
                 {extendedProps.classroom && (
                     <div className="text-[10px] opacity-75 truncate">

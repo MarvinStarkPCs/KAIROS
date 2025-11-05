@@ -18,6 +18,7 @@ class MusicAcademicProgramSeeder extends Seeder
             'description' => 'Formación integral en guitarra clásica desde nivel principiante hasta avanzado.',
             'duration_months' => 12,
             'status' => 'active',
+            'color' => '#8B5CF6', // Violeta
         ]);
 
         // Módulo 1: Fundamentos de Guitarra
@@ -284,6 +285,7 @@ class MusicAcademicProgramSeeder extends Seeder
             'description' => 'Programa completo de piano desde iniciación hasta nivel avanzado.',
             'duration_months' => 18,
             'status' => 'active',
+            'color' => '#EC4899', // Rosa
         ]);
 
         // Módulo 1: Iniciación al Piano
@@ -459,6 +461,7 @@ class MusicAcademicProgramSeeder extends Seeder
             'description' => 'Formación vocal completa: técnica, repertorio, interpretación.',
             'duration_months' => 12,
             'status' => 'active',
+            'color' => '#F59E0B', // Amber/Naranja
         ]);
 
         // Módulo 1: Técnica Vocal
@@ -567,6 +570,7 @@ class MusicAcademicProgramSeeder extends Seeder
             'description' => 'Formación completa en producción musical con software DAW.',
             'duration_months' => 8,
             'status' => 'active',
+            'color' => '#10B981', // Verde Esmeralda
         ]);
 
         // Módulo 1: Fundamentos de Audio Digital
@@ -742,6 +746,7 @@ class MusicAcademicProgramSeeder extends Seeder
             'description' => 'Fundamentos teóricos de la música: solfeo, armonía, análisis.',
             'duration_months' => 6,
             'status' => 'active',
+            'color' => '#3B82F6', // Azul
         ]);
 
         // Módulo 1: Solfeo y Lectura
@@ -834,6 +839,7 @@ class MusicAcademicProgramSeeder extends Seeder
             'description' => 'Programa de violín clásico (temporalmente suspendido).',
             'duration_months' => 12,
             'status' => 'inactive',
+            'color' => '#6B7280', // Gris
         ]);
 
         $this->command->info('Music Academic Programs seeded successfully!');

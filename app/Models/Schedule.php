@@ -206,6 +206,7 @@ class Schedule extends Model
             'endRecur' => now()->endOfYear()->toDateString(), // Hasta fin del año
             'extendedProps' => [
                 'program' => $this->academicProgram->name ?? null,
+                'program_color' => $this->academicProgram->color ?? '#3B82F6',
                 'professor' => $this->professor->name ?? 'Sin asignar',
                 'classroom' => $this->classroom,
                 'semester' => $this->semester,

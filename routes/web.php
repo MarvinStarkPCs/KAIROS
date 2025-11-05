@@ -109,12 +109,16 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/asistencia/bulk', [AttendanceController::class, 'bulkStore'])->name('asistencias.bulk');
 
     // Pagos
-    Route::get('/pagos', [PaymentController::class, 'index'])->name('pagos.index');
-    Route::post('/pagos', [PaymentController::class, 'store'])->name('pagos.store');
-    Route::put('/pagos/{payment}', [PaymentController::class, 'update'])->name('pagos.update');
-    Route::delete('/pagos/{payment}', [PaymentController::class, 'destroy'])->name('pagos.destroy');
-    Route::post('/pagos/{payment}/mark-paid', [PaymentController::class, 'markAsPaid'])->name('pagos.mark-paid');
-    Route::get('/pagos/{payment}/invoice', [PaymentController::class, 'generateInvoice'])->name('pagos.invoice');
+    Route::get('/pagos', [PaymentController::class, 'index'])->name('pagos.index'); // Dashboard
+    Route::get('/pagos/list', [PaymentController::class, 'list'])->name('pagos.list'); // Lista/Tabla
+    Route::get('/pagos/create', [PaymentController::class, 'create'])->name('pagos.create'); // Crear
+    Route::get('/pagos/{payment}', [PaymentController::class, 'show'])->name('pagos.show'); // Ver
+    Route::get('/pagos/{payment}/edit', [PaymentController::class, 'edit'])->name('pagos.edit'); // Editar
+    Route::post('/pagos', [PaymentController::class, 'store'])->name('pagos.store'); // Guardar
+    Route::put('/pagos/{payment}', [PaymentController::class, 'update'])->name('pagos.update'); // Actualizar
+    Route::delete('/pagos/{payment}', [PaymentController::class, 'destroy'])->name('pagos.destroy'); // Eliminar
+    Route::post('/pagos/{payment}/mark-paid', [PaymentController::class, 'markAsPaid'])->name('pagos.mark-paid'); // Marcar como pagado
+    Route::get('/pagos/{payment}/invoice', [PaymentController::class, 'generateInvoice'])->name('pagos.invoice'); // Factura
 
 
 

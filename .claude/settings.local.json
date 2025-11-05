@@ -15,7 +15,8 @@
       "Bash(php artisan:*)",
       "Bash(php -r:*)",
       "Bash(php check_schedules.php:*)",
-      "Bash(php test_schedule_creation.php:*)"
+      "Bash(php test_schedule_creation.php:*)",
+      "Bash(php update_colors.php:*)"
     ],
     "deny": [],
     "ask": []
