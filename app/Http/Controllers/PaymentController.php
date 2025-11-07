@@ -17,7 +17,19 @@ class PaymentController extends Controller
      */
     public function index(Request $request)
     {
+        $user = auth()->user();
         $query = Payment::with(['student', 'program', 'enrollment', 'transactions']);
+
+        // Filtrar por rol del usuario
+        if ($user->hasRole('Responsable')) {
+            // Solo pagos de sus dependientes
+            $dependentIds = $user->dependents()->pluck('id')->toArray();
+            $query->whereIn('student_id', $dependentIds);
+        } elseif ($user->hasRole('Estudiante') && !$user->hasRole('Administrador')) {
+            // Solo sus propios pagos
+            $query->where('student_id', $user->id);
+        }
+        // Si es Admin, ve todos los pagos (sin filtro adicional)
 
         // Filtros
         if ($request->filled('status')) {
@@ -64,10 +76,24 @@ class PaymentController extends Controller
      */
     public function create()
     {
+        $user = auth()->user();
+
         // Cargar inscripciones activas con estudiante y programa
-        $enrollments = Enrollment::with(['student', 'program'])
-            ->where('status', 'active')
-            ->get()
+        $query = Enrollment::with(['student', 'program'])
+            ->where('status', 'active');
+
+        // Filtrar según el rol del usuario
+        if ($user->hasRole('Responsable')) {
+            // Solo inscripciones de sus dependientes
+            $dependentIds = $user->dependents()->pluck('id')->toArray();
+            $query->whereIn('student_id', $dependentIds);
+        } elseif ($user->hasRole('Estudiante') && !$user->hasRole('Administrador')) {
+            // Solo sus propias inscripciones
+            $query->where('student_id', $user->id);
+        }
+        // Si es Admin, ve todas las inscripciones (sin filtro adicional)
+
+        $enrollments = $query->get()
             ->map(function ($enrollment) {
                 return [
                     'id' => $enrollment->id,
@@ -119,6 +145,12 @@ class PaymentController extends Controller
             'reference_number.max' => 'El número de referencia no puede exceder 100 caracteres',
             'notes.max' => 'Las notas no pueden exceder 500 caracteres',
         ]);
+
+        // Verificar autorización: el usuario debe poder gestionar al estudiante
+        $student = User::findOrFail($validated['student_id']);
+        if (!auth()->user()->canManageStudent($student)) {
+            abort(403, 'No tienes permiso para crear pagos para este estudiante');
+        }
 
         $validated['recorded_by'] = auth()->id();
         $validated['payment_type'] = $validated['payment_type'] ?? 'single';
@@ -285,6 +317,12 @@ class PaymentController extends Controller
             'start_date.required' => 'La fecha de inicio es obligatoria',
             'start_date.date' => 'La fecha debe ser válida',
         ]);
+
+        // Verificar autorización: el usuario debe poder gestionar al estudiante
+        $student = User::findOrFail($validated['student_id']);
+        if (!auth()->user()->canManageStudent($student)) {
+            abort(403, 'No tienes permiso para crear pagos para este estudiante');
+        }
 
         $installments = Payment::createInstallmentPlan(
             $validated['student_id'],

@@ -218,6 +218,24 @@ Route::middleware(['auth'])->group(function () {
         });
     });
 
+    // === GESTIÓN DE DEPENDIENTES ===
+    Route::prefix('dependientes')->group(function () {
+        Route::middleware(['permission:ver_dependientes'])->group(function () {
+            Route::get('/', [\App\Http\Controllers\DependentController::class, 'index'])->name('dependientes.index');
+            Route::get('/{dependent}', [\App\Http\Controllers\DependentController::class, 'show'])->name('dependientes.show');
+        });
+        Route::middleware(['permission:crear_dependiente'])->group(function () {
+            Route::get('/crear', [\App\Http\Controllers\DependentController::class, 'create'])->name('dependientes.create');
+            Route::post('/', [\App\Http\Controllers\DependentController::class, 'store'])->name('dependientes.store');
+        });
+        Route::middleware(['permission:editar_dependiente'])->group(function () {
+            Route::get('/{dependent}/editar', [\App\Http\Controllers\DependentController::class, 'edit'])->name('dependientes.edit');
+            Route::put('/{dependent}', [\App\Http\Controllers\DependentController::class, 'update'])->name('dependientes.update');
+        });
+        Route::middleware(['permission:eliminar_dependiente'])->group(function () {
+            Route::delete('/{dependent}', [\App\Http\Controllers\DependentController::class, 'destroy'])->name('dependientes.destroy');
+        });
+    });
 
     // === RUTAS COMPARTIDAS (APIs y recursos de solo lectura) ===
     Route::get('/api/programas/{program}/horarios', [program_academy::class, 'getSchedules'])->name('api.programas.horarios');

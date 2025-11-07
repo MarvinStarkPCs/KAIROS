@@ -9,6 +9,7 @@ import AuditController from './AuditController'
 import StudyPlanController from './StudyPlanController'
 import AttendanceController from './AttendanceController'
 import TeacherController from './TeacherController'
+import DependentController from './DependentController'
 import Settings from './Settings'
 const Controllers = {
     Auth: Object.assign(Auth, Auth),
@@ -22,6 +23,7 @@ AuditController: Object.assign(AuditController, AuditController),
 StudyPlanController: Object.assign(StudyPlanController, StudyPlanController),
 AttendanceController: Object.assign(AttendanceController, AttendanceController),
 TeacherController: Object.assign(TeacherController, TeacherController),
+DependentController: Object.assign(DependentController, DependentController),
 Settings: Object.assign(Settings, Settings),
 }
 

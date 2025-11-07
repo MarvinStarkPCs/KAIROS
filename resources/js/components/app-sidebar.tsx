@@ -25,6 +25,7 @@ import {
     MessageSquare,
     BarChart,
     GraduationCap,
+    UsersRound,
 } from 'lucide-react';
 import AppLogo from './app-logo';
 import ProgramAcademyController from '@/actions/App/Http/Controllers/program_academy';
@@ -33,6 +34,7 @@ import ScheduleController from '@/actions/App/Http/Controllers/ScheduleControlle
 import AttendanceController from '@/actions/App/Http/Controllers/AttendanceController';
 import PaymentController from '@/actions/App/Http/Controllers/PaymentController';
 import TeacherController from '@/actions/App/Http/Controllers/TeacherController';
+import DependentController from '@/actions/App/Http/Controllers/DependentController';
 
 const allNavItems: NavItem[] = [
     {
@@ -40,6 +42,13 @@ const allNavItems: NavItem[] = [
         href: dashboard(),
         icon: LayoutGrid,
         permission: 'ver_dashboard',
+    },
+    // Portal de Responsables
+    {
+        title: 'Mis Dependientes',
+        href: DependentController.index(),
+        icon: UsersRound,
+        permission: 'ver_dependientes',
     },
     // Portal de Profesores
     {

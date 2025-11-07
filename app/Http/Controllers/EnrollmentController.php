@@ -79,9 +79,36 @@ class EnrollmentController extends Controller
             return $program;
         });
 
-        $students = User::role('Estudiante')
-            ->orderBy('name')
-            ->get(['id', 'name', 'email']);
+        $user = auth()->user();
+
+        // Si es Admin, ver todos los estudiantes
+        if ($user->hasRole('Administrador')) {
+            $students = User::role('Estudiante')
+                ->orderBy('name')
+                ->get(['id', 'name', 'email']);
+        }
+        // Si es Responsable, ver solo sus dependientes
+        elseif ($user->hasRole('Responsable')) {
+            // Obtener dependientes del responsable que sean estudiantes
+            $students = $user->dependents()
+                ->whereHas('roles', function ($query) {
+                    $query->where('name', 'Estudiante');
+                })
+                ->orderBy('name')
+                ->get(['id', 'name', 'email']);
+        }
+        // Si es Estudiante, solo puede inscribirse a sí mismo
+        elseif ($user->hasRole('Estudiante')) {
+            $students = collect([
+                [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                ]
+            ]);
+        } else {
+            $students = collect([]);
+        }
 
         return Inertia::render('Enrollments/Create', [
             'programs' => $programs,
@@ -107,6 +134,12 @@ class EnrollmentController extends Controller
             'status.required' => 'El estado es obligatorio',
             'status.in' => 'El estado debe ser: activo, en espera o retirado',
         ]);
+
+        // Verificar autorización: el usuario debe poder gestionar al estudiante
+        $student = User::findOrFail($validated['student_id']);
+        if (!auth()->user()->canManageStudent($student)) {
+            abort(403, 'No tienes permiso para inscribir a este estudiante');
+        }
 
         // Verificar que el estudiante no esté ya inscrito en el mismo programa
         $existingEnrollment = Enrollment::where('student_id', $validated['student_id'])
