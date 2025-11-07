@@ -1,25 +1,27 @@
 import Auth from './Auth'
-import RoleController from './RoleController'
+import PaymentController from './PaymentController'
 import UserController from './UserController'
-import AuditController from './AuditController'
 import program_academy from './program_academy'
-import StudyPlanController from './StudyPlanController'
+import RoleController from './RoleController'
 import EnrollmentController from './EnrollmentController'
 import ScheduleController from './ScheduleController'
+import AuditController from './AuditController'
+import StudyPlanController from './StudyPlanController'
 import AttendanceController from './AttendanceController'
-import PaymentController from './PaymentController'
+import TeacherController from './TeacherController'
 import Settings from './Settings'
 const Controllers = {
     Auth: Object.assign(Auth, Auth),
-RoleController: Object.assign(RoleController, RoleController),
+PaymentController: Object.assign(PaymentController, PaymentController),
 UserController: Object.assign(UserController, UserController),
-AuditController: Object.assign(AuditController, AuditController),
 program_academy: Object.assign(program_academy, program_academy),
-StudyPlanController: Object.assign(StudyPlanController, StudyPlanController),
+RoleController: Object.assign(RoleController, RoleController),
 EnrollmentController: Object.assign(EnrollmentController, EnrollmentController),
 ScheduleController: Object.assign(ScheduleController, ScheduleController),
+AuditController: Object.assign(AuditController, AuditController),
+StudyPlanController: Object.assign(StudyPlanController, StudyPlanController),
 AttendanceController: Object.assign(AttendanceController, AttendanceController),
-PaymentController: Object.assign(PaymentController, PaymentController),
+TeacherController: Object.assign(TeacherController, TeacherController),
 Settings: Object.assign(Settings, Settings),
 }
 

@@ -417,6 +417,35 @@ class ScheduleController extends Controller
     }
 
     /**
+     * Actualizar solo el profesor asignado a un horario
+     */
+    public function updateProfessor(Request $request, Schedule $schedule)
+    {
+        $validated = $request->validate([
+            'professor_id' => ['nullable', 'exists:users,id'],
+        ], [
+            'professor_id.exists' => 'El profesor seleccionado no existe',
+        ]);
+
+        // Si se asigna un profesor, validar que no tenga conflictos de horario
+        if ($request->filled('professor_id')) {
+            $data = [
+                'professor_id' => $validated['professor_id'],
+                'days_of_week' => $schedule->days_of_week,
+                'start_time' => $schedule->start_time,
+                'end_time' => $schedule->end_time,
+            ];
+            $this->validateProfessorOverlap($data, $schedule->id);
+        }
+
+        $schedule->update(['professor_id' => $validated['professor_id']]);
+
+        flash_success('Profesor actualizado exitosamente');
+
+        return redirect()->back();
+    }
+
+    /**
      * Verificar conflictos de horario para un estudiante
      */
     public function checkStudentConflicts(Request $request)

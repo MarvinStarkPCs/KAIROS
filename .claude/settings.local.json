@@ -16,7 +16,17 @@
       "Bash(php -r:*)",
       "Bash(php check_schedules.php:*)",
       "Bash(php test_schedule_creation.php:*)",
-      "Bash(php update_colors.php:*)"
+      "Bash(php update_colors.php:*)",
+      "Bash(storage/logs/laravel.log)",
+      "Bash(npx shadcn@latest add:*)",
+      "Bash(php:*)",
+      "Bash(del:*)",
+      "Bash(curl:*)",
+      "Bash(netstat:*)",
+      "Bash(findstr:*)",
+      "Bash(taskkill:*)",
+      "Bash(powershell -Command \"Stop-Process -Id 412 -Force\")",
+      "Bash(powershell -Command \"Get-Process node -ErrorAction SilentlyContinue | Stop-Process -Force\")"
     ],
     "deny": [],
     "ask": []

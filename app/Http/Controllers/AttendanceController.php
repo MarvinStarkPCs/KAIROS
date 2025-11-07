@@ -21,10 +21,24 @@ class AttendanceController extends Controller
         $startOfMonth = Carbon::now()->startOfMonth();
         $endOfMonth = Carbon::now()->endOfMonth();
 
-        // Get today's schedules with enrolled students
-        $todaySchedules = Schedule::with(['students', 'professor', 'academicProgram'])
-            ->whereDate('start_date', '<=', $today)
-            ->whereDate('end_date', '>=', $today)
+        // Obtener el día de la semana en español
+        $daysMapping = [
+            'Monday' => 'lunes',
+            'Tuesday' => 'martes',
+            'Wednesday' => 'miércoles',
+            'Thursday' => 'jueves',
+            'Friday' => 'viernes',
+            'Saturday' => 'sábado',
+            'Sunday' => 'domingo',
+        ];
+        $todayDayName = $daysMapping[$today->format('l')] ?? 'lunes';
+
+        // Obtener los horarios que tienen clase hoy
+        $todaySchedules = Schedule::with(['enrollments' => function($query) {
+            $query->where('status', 'enrolled')->with('student');
+        }, 'professor', 'academicProgram'])
+            ->where('status', 'active')
+            ->where('days_of_week', 'like', '%' . $todayDayName . '%')
             ->get();
 
         // Get today's attendance records
@@ -33,7 +47,7 @@ class AttendanceController extends Controller
             ->get();
 
         // Calculate today's stats
-        $totalStudentsToday = $todaySchedules->sum(fn($schedule) => $schedule->students->count());
+        $totalStudentsToday = $todaySchedules->sum(fn($schedule) => $schedule->enrollments->count());
         $presentToday = $todayAttendances->where('status', 'present')->count();
         $absentToday = $todayAttendances->where('status', 'absent')->count();
         $lateToday = $todayAttendances->where('status', 'late')->count();
@@ -58,6 +72,7 @@ class AttendanceController extends Controller
                 'present' => 'presente',
                 'absent' => 'ausente',
                 'late' => 'tardanza',
+                'excused' => 'justificado',
                 default => 'presente'
             };
 
@@ -76,7 +91,7 @@ class AttendanceController extends Controller
                     'avatar' => null,
                 ],
                 'estado' => $status,
-                'horaLlegada' => $attendance->created_at->format('h:i A'),
+                'horaLlegada' => $attendance->created_at->format('H:i'),
                 'acciones' => ['editar', 'contactar'],
             ];
         });

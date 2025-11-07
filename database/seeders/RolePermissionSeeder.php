@@ -33,19 +33,44 @@ class RolePermissionSeeder extends Seeder
             'editar_programa',
             'eliminar_programa',
 
+            // Permisos de Planes de Estudio
+            'crear_plan_estudio',
+            'editar_plan_estudio',
+            'eliminar_plan_estudio',
+            'crear_actividad',
+            'editar_actividad',
+            'eliminar_actividad',
+            'crear_criterio_evaluacion',
+            'editar_criterio_evaluacion',
+            'eliminar_criterio_evaluacion',
+
+            // Permisos de Inscripciones
+            'ver_inscripciones',
+            'crear_inscripcion',
+            'editar_inscripcion',
+            'eliminar_inscripcion',
+            'cambiar_estado_inscripcion',
+
             // Permisos de Horarios
             'ver_horarios',
             'crear_horario',
             'editar_horario',
             'eliminar_horario',
-            'asignar_profesor_horario',
             'inscribir_estudiante_horario',
+            'desinscribir_estudiante_horario',
 
             // Permisos de Asistencia
             'ver_asistencia',
             'registrar_asistencia',
             'editar_asistencia',
             'eliminar_asistencia',
+            'ver_asistencia_propia', // Para profesores ver solo sus grupos
+
+            // Permisos de Evaluaciones
+            'ver_evaluaciones',
+            'crear_evaluacion',
+            'editar_evaluacion',
+            'eliminar_evaluacion',
 
             // Permisos de Pagos
             'ver_pagos',
@@ -53,6 +78,7 @@ class RolePermissionSeeder extends Seeder
             'editar_pago',
             'eliminar_pago',
             'procesar_pago',
+            'generar_factura',
 
             // Permisos de Roles
             'ver_roles',
@@ -69,10 +95,10 @@ class RolePermissionSeeder extends Seeder
             // Permisos de Auditoría
             'ver_auditoria',
 
-            // Permisos de Progreso Académico
-            'ver_progreso',
-            'registrar_progreso',
-            'editar_progreso',
+            // Permisos del Portal de Profesores
+            'ver_mis_grupos',
+            'marcar_asistencia_grupo',
+            'evaluar_estudiantes',
 
             // Permisos generales
             'ver_dashboard',
@@ -81,46 +107,42 @@ class RolePermissionSeeder extends Seeder
         ];
 
         foreach ($permissions as $permission) {
-            Permission::create(['name' => $permission, 'guard_name' => 'web']);
+            Permission::firstOrCreate(
+                ['name' => $permission, 'guard_name' => 'web']
+            );
         }
 
-        // Crear Roles
-        $adminRole = Role::create(['name' => 'Administrador', 'guard_name' => 'web']);
-        $profesorRole = Role::create(['name' => 'Profesor', 'guard_name' => 'web']);
-        $estudianteRole = Role::create(['name' => 'Estudiante', 'guard_name' => 'web']);
+        // Crear Roles si no existen
+        $adminRole = Role::firstOrCreate(['name' => 'Administrador', 'guard_name' => 'web']);
+        $profesorRole = Role::firstOrCreate(['name' => 'Profesor', 'guard_name' => 'web']);
+        $estudianteRole = Role::firstOrCreate(['name' => 'Estudiante', 'guard_name' => 'web']);
 
-        // Asignar todos los permisos al Administrador
-        $adminRole->givePermissionTo(Permission::all());
+        // Sincronizar todos los permisos al Administrador
+        $adminRole->syncPermissions(Permission::all());
 
         // Permisos del Profesor
         $profesorPermissions = [
-            'ver_estudiantes',
-            'ver_profesores',
-            'ver_programas',
-            'ver_horarios',
-            'ver_asistencia',
-            'registrar_asistencia',
-            'editar_asistencia',
-            'ver_progreso',
-            'registrar_progreso',
-            'editar_progreso',
+            'ver_dashboard',
+            'ver_mis_grupos',
+            'marcar_asistencia_grupo',
+            'ver_asistencia_propia',
+            'evaluar_estudiantes',
+            'crear_evaluacion',
+            'ver_evaluaciones',
             'ver_comunicacion',
             'ver_reportes',
-            'ver_dashboard',
         ];
-        $profesorRole->givePermissionTo($profesorPermissions);
+        $profesorRole->syncPermissions($profesorPermissions);
 
         // Permisos del Estudiante
         $estudiantePermissions = [
             'ver_dashboard',
             'ver_programas',
             'ver_horarios',
-            'inscribir_estudiante_horario',
             'ver_asistencia',
             'ver_pagos',
-            'ver_progreso',
             'ver_comunicacion',
         ];
-        $estudianteRole->givePermissionTo($estudiantePermissions);
+        $estudianteRole->syncPermissions($estudiantePermissions);
     }
 }

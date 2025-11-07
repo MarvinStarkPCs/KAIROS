@@ -11,8 +11,8 @@ import {
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
 import { dashboard } from '@/routes';
-import { type NavItem } from '@/types';
-import { Link } from '@inertiajs/react';
+import { type NavItem, type SharedData } from '@/types';
+import { Link, usePage } from '@inertiajs/react';
 import {
     BookOpen,
     Folder,
@@ -24,6 +24,7 @@ import {
     CheckSquare,
     MessageSquare,
     BarChart,
+    GraduationCap,
 } from 'lucide-react';
 import AppLogo from './app-logo';
 import ProgramAcademyController from '@/actions/App/Http/Controllers/program_academy';
@@ -31,62 +32,53 @@ import EnrollmentController from '@/actions/App/Http/Controllers/EnrollmentContr
 import ScheduleController from '@/actions/App/Http/Controllers/ScheduleController';
 import AttendanceController from '@/actions/App/Http/Controllers/AttendanceController';
 import PaymentController from '@/actions/App/Http/Controllers/PaymentController';
+import TeacherController from '@/actions/App/Http/Controllers/TeacherController';
 
-const mainNavItems: NavItem[] = [
+const allNavItems: NavItem[] = [
     {
         title: 'Dashboard',
         href: dashboard(),
         icon: LayoutGrid,
+        permission: 'ver_dashboard',
     },
+    // Portal de Profesores
+    {
+        title: 'Mis Grupos',
+        href: TeacherController.myGroups(),
+        icon: GraduationCap,
+        permission: 'ver_mis_grupos',
+    },
+    // Módulos Administrativos
     {
         title: 'Programas Académicos',
         href: ProgramAcademyController.index(),
         icon: BookOpen,
+        permission: 'ver_programas',
     },
     {
         title: 'Inscripciones',
         href: EnrollmentController.index(),
         icon: UserPlus,
+        permission: 'ver_inscripciones',
     },
     {
         title: 'Horarios',
         href: ScheduleController.index(),
         icon: Calendar,
+        permission: 'ver_horarios',
     },
     {
         title: 'Asistencia',
         href: AttendanceController.index(),
         icon: CheckSquare,
+        permission: 'ver_asistencia',
     },
     {
         title: 'Pagos',
         href: PaymentController.index(),
         icon: CreditCard,
+        permission: 'ver_pagos',
     },
-    // TODO: Implement Students management module
-    // {
-    //     title: 'Estudiantes',
-    //     href: '/estudiantes',
-    //     icon: Users,
-    // },
-    // TODO: Implement Teachers management module
-    // {
-    //     title: 'Profesores',
-    //     href: '/profesores',
-    //     icon: Users,
-    // },
-    // TODO: Implement Communication module
-    // {
-    //     title: 'Comunicación',
-    //     href: '/comunicacion',
-    //     icon: MessageSquare,
-    // },
-    // TODO: Implement Reports module
-    // {
-    //     title: 'Reportes',
-    //     href: '/reportes',
-    //     icon: BarChart,
-    // },
 ];
 
 const footerNavItems: NavItem[] = [
@@ -103,6 +95,15 @@ const footerNavItems: NavItem[] = [
 ];
 
 export function AppSidebar() {
+    const { auth } = usePage<SharedData>().props;
+    const userPermissions = auth?.permissions || [];
+
+    // Filter navigation items based on user permissions
+    const visibleNavItems = allNavItems.filter(item => {
+        if (!item.permission) return true;
+        return userPermissions.includes(item.permission);
+    });
+
     return (
         <Sidebar collapsible="icon" variant="inset">
             {/* 🔹 Logo */}
@@ -120,7 +121,7 @@ export function AppSidebar() {
 
             {/* 🔹 Menú principal */}
             <SidebarContent>
-                <NavMain items={mainNavItems} />
+                <NavMain items={visibleNavItems} />
             </SidebarContent>
 
             {/* 🔹 Footer con docs y usuario */}

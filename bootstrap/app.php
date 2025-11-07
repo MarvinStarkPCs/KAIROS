@@ -21,6 +21,20 @@ return Application::configure(basePath: dirname(__DIR__))
             HandleInertiaRequests::class,
             AddLinkHeadersForPreloadedAssets::class,
         ]);
+
+        // Registrar alias de middleware de Spatie Permission
+        $middleware->alias([
+            'role' => \Spatie\Permission\Middleware\RoleMiddleware::class,
+            'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
+            'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
+        ]);
+    })
+    ->withSchedule(function (\Illuminate\Console\Scheduling\Schedule $schedule) {
+        // Generar mensualidades el día 25 de cada mes a las 2:00 AM
+        $schedule->command('payments:generate-monthly')->monthlyOn(25, '02:00');
+
+        // Marcar pagos vencidos diariamente a las 6:00 AM (después del día 5)
+        $schedule->command('payments:mark-overdue')->dailyAt('06:00');
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //

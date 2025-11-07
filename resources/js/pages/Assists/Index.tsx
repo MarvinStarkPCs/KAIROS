@@ -1,21 +1,20 @@
-import { AppHeader } from '@/components/app-header';
 import { Head } from '@inertiajs/react';
-import { 
+import AppLayout from '@/layouts/app-layout';
+import Heading from '@/components/heading';
+import {
     Check,
     X,
     Clock,
     TrendingUp,
     Download,
-    
     Edit,
     MessageSquare,
     Phone,
     AlertTriangle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Icon } from '@/components/icon';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { type BreadcrumbItem } from '@/types';
+import type { PageProps } from '@/types';
 
 interface Asistencia {
     id: number;
@@ -48,7 +47,7 @@ interface Alerta {
     acciones: string[];
 }
 
-interface Props {
+interface Props extends PageProps {
     asistenciaHoy: {
         total: number;
         presentes: number;
@@ -61,7 +60,7 @@ interface Props {
     alertas: Alerta[];
 }
 
-export default function ControlAsistencia({ 
+export default function ControlAsistencia({
     asistenciaHoy = { total: 26, presentes: 24, porcentaje: '92.3%' },
     ausencias = 2,
     tardanzas = 5,
@@ -69,11 +68,6 @@ export default function ControlAsistencia({
     asistencias = [],
     alertas = []
 }: Props) {
-
-    const breadcrumbs: BreadcrumbItem[] = [
-        { title: 'Dashboard', href: '/dashboard' },
-        { title: 'Asistencia', href: '/asistencia' },
-    ];
 
     // Datos de ejemplo
     const asistenciasEjemplo: Asistencia[] = asistencias.length > 0 ? asistencias : [
@@ -199,27 +193,24 @@ export default function ControlAsistencia({
     };
 
     return (
-        <>
-            <Head title="Control de Asistencia - Academia Linaje" />
-            <AppHeader breadcrumbs={breadcrumbs} />
+        <AppLayout>
+            <Head title="Control de Asistencia" />
 
-            <div className="min-h-screen bg-gray-50 px-6 py-8">
-                {/* Header */}
-                <div className="mb-6">
-                    <h1 className="text-3xl font-bold text-gray-800 mb-2">Control de Asistencia</h1>
-                    <p className="text-gray-600">Registro y seguimiento de asistencia estudiantil</p>
-                </div>
+            <Heading
+                title="Control de Asistencia"
+                description="Registro y seguimiento de asistencia estudiantil"
+            />
 
-                {/* Stats Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-                    {/* Asistencia Hoy */}
-                    <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
-                        <div className="flex items-center justify-between mb-3">
-                            <span className="text-sm font-medium text-gray-600">Asistencia Hoy</span>
-                            <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
-                                <Icon iconNode={Check} className="w-5 h-5 text-green-600" />
-                            </div>
+            {/* Stats Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                {/* Asistencia Hoy */}
+                <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+                    <div className="flex items-center justify-between mb-3">
+                        <span className="text-sm font-medium text-gray-600">Asistencia Hoy</span>
+                        <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
+                            <Check className="w-5 h-5 text-green-600" />
                         </div>
+                    </div>
                         <div className="text-3xl font-bold text-gray-900 mb-2">
                             {asistenciaHoy.presentes}/{asistenciaHoy.total}
                         </div>
@@ -234,83 +225,79 @@ export default function ControlAsistencia({
                         </div>
                     </div>
 
-                    {/* Ausencias */}
-                    <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
-                        <div className="flex items-center justify-between mb-3">
-                            <span className="text-sm font-medium text-gray-600">Ausencias</span>
-                            <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
-                                <Icon iconNode={X} className="w-5 h-5 text-red-600" />
-                            </div>
+                {/* Ausencias */}
+                <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+                    <div className="flex items-center justify-between mb-3">
+                        <span className="text-sm font-medium text-gray-600">Ausencias</span>
+                        <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
+                            <X className="w-5 h-5 text-red-600" />
                         </div>
-                        <div className="text-3xl font-bold text-gray-900 mb-2">{ausencias}</div>
-                        <div className="text-xs text-gray-500">Sin justificar</div>
-                        <div className="text-xs text-gray-400 mt-1">3 ausencias esta semana</div>
                     </div>
-
-                    {/* Tardanzas */}
-                    <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
-                        <div className="flex items-center justify-between mb-3">
-                            <span className="text-sm font-medium text-gray-600">Tardanzas</span>
-                            <div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center">
-                                <Icon iconNode={Clock} className="w-5 h-5 text-orange-600" />
-                            </div>
-                        </div>
-                        <div className="text-3xl font-bold text-gray-900 mb-2">{tardanzas}</div>
-                        <div className="text-xs text-gray-500">Esta semana</div>
-                        <div className="text-xs text-gray-400 mt-1">+2 vs semana anterior</div>
-                    </div>
-
-                    {/* Promedio Mensual */}
-                    <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
-                        <div className="flex items-center justify-between mb-3">
-                            <span className="text-sm font-medium text-gray-600">Promedio Mensual</span>
-                            <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
-                                <Icon iconNode={TrendingUp} className="w-5 h-5 text-blue-600" />
-                            </div>
-                        </div>
-                        <div className="text-3xl font-bold text-gray-900 mb-2">{promedioMensual}</div>
-                        <div className="text-xs text-green-600 font-medium">Excelente</div>
-                        <div className="text-xs text-gray-400 mt-1">+2.5% vs mes anterior</div>
-                    </div>
+                    <div className="text-3xl font-bold text-gray-900 mb-2">{ausencias}</div>
+                    <div className="text-xs text-gray-500">Sin justificar</div>
+                    <div className="text-xs text-gray-400 mt-1">Hoy</div>
                 </div>
 
-                {/* Botones de acción */}
-                <div className="flex gap-3 mb-6 flex-wrap">
-                    <Button className="flex items-center gap-2 bg-[#7a9b3c] hover:bg-[#6a8a2c]">
-                        <Icon iconNode={Check} className="w-4 h-4" />
-                        Marcar Asistencia
-                    </Button>
-                    <Button className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700">
-                        <Icon iconNode={Download} className="w-4 h-4" />
-                        Código QR
-                    </Button>
-                </div>
-
-                {/* Tabla de Asistencia */}
-                <div className="bg-white rounded-lg shadow-sm mb-6 overflow-hidden">
-                    {/* Header */}
-                    <div className="bg-[#6b5544] text-white p-4 flex items-center justify-between">
-                        <h2 className="text-lg font-semibold">Asistencia del Día - Lunes 16 Septiembre</h2>
-                        <div className="flex gap-2 items-center">
-                            <select 
-                                aria-label="Filtrar clases"
-                                title="Filtrar clases"
-                                className="px-3 py-1.5 bg-[#5a4433] rounded-lg text-sm border-none focus:outline-none focus:ring-2 focus:ring-white"
-                                value="todas"
-                            >
-                                <option value="todas">Todas las clases</option>
-                                <option value="presente">Presentes</option>
-                                <option value="ausente">Ausentes</option>
-                                <option value="tardanza">Tardanzas</option>
-                            </select>
-                            <Button 
-                                size="sm"
-                                className="bg-[#7a9b3c] hover:bg-[#6a8a2c]"
-                            >
-                                Exportar
-                            </Button>
+                {/* Tardanzas */}
+                <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+                    <div className="flex items-center justify-between mb-3">
+                        <span className="text-sm font-medium text-gray-600">Tardanzas</span>
+                        <div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center">
+                            <Clock className="w-5 h-5 text-orange-600" />
                         </div>
                     </div>
+                    <div className="text-3xl font-bold text-gray-900 mb-2">{tardanzas}</div>
+                    <div className="text-xs text-gray-500">Hoy</div>
+                    <div className="text-xs text-gray-400 mt-1">Estudiantes</div>
+                </div>
+
+                {/* Promedio Mensual */}
+                <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+                    <div className="flex items-center justify-between mb-3">
+                        <span className="text-sm font-medium text-gray-600">Promedio Mensual</span>
+                        <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
+                            <TrendingUp className="w-5 h-5 text-blue-600" />
+                        </div>
+                    </div>
+                    <div className="text-3xl font-bold text-gray-900 mb-2">{promedioMensual}</div>
+                    <div className="text-xs text-green-600 font-medium">Excelente</div>
+                    <div className="text-xs text-gray-400 mt-1">Este mes</div>
+                </div>
+            </div>
+
+            {/* Botones de acción */}
+            <div className="flex gap-3 mb-6 flex-wrap">
+                <Button className="flex items-center gap-2">
+                    <Download className="w-4 h-4" />
+                    Exportar Reporte
+                </Button>
+            </div>
+
+            {/* Tabla de Asistencia */}
+            <div className="bg-white rounded-lg shadow-sm mb-6 overflow-hidden">
+                {/* Header */}
+                <div className="bg-gray-800 text-white p-4 flex items-center justify-between">
+                    <h2 className="text-lg font-semibold">Asistencia del Día</h2>
+                    <div className="flex gap-2 items-center">
+                        <select
+                            aria-label="Filtrar clases"
+                            title="Filtrar clases"
+                            className="px-3 py-1.5 bg-gray-700 rounded-lg text-sm border-none focus:outline-none focus:ring-2 focus:ring-white"
+                            value="todas"
+                        >
+                            <option value="todas">Todas las clases</option>
+                            <option value="presente">Presentes</option>
+                            <option value="ausente">Ausentes</option>
+                            <option value="tardanza">Tardanzas</option>
+                        </select>
+                        <Button
+                            size="sm"
+                            variant="secondary"
+                        >
+                            Exportar
+                        </Button>
+                    </div>
+                </div>
 
                     {/* Table */}
                     <div className="overflow-x-auto">
@@ -401,21 +388,21 @@ export default function ControlAsistencia({
                                             <td className="px-6 py-4 whitespace-nowrap text-center">
                                                 <div className="flex items-center justify-center gap-2">
                                                     <Button size="sm" variant="ghost">
-                                                        <Icon iconNode={Edit} className="w-4 h-4 text-blue-600" />
+                                                        <Edit className="w-4 h-4 text-blue-600" />
                                                     </Button>
                                                     {asistencia.estado === 'ausente' && (
                                                         <>
                                                             <Button size="sm" variant="ghost">
-                                                                <Icon iconNode={Phone} className="w-4 h-4 text-red-600" />
+                                                                <Phone className="w-4 h-4 text-red-600" />
                                                             </Button>
                                                             <Button size="sm" variant="ghost">
-                                                                <Icon iconNode={MessageSquare} className="w-4 h-4 text-green-600" />
+                                                                <MessageSquare className="w-4 h-4 text-green-600" />
                                                             </Button>
                                                         </>
                                                     )}
                                                     {asistencia.estado === 'tardanza' && (
                                                         <Button size="sm" variant="ghost">
-                                                            <Icon iconNode={AlertTriangle} className="w-4 h-4 text-orange-600" />
+                                                            <AlertTriangle className="w-4 h-4 text-orange-600" />
                                                         </Button>
                                                     )}
                                                 </div>
@@ -428,25 +415,25 @@ export default function ControlAsistencia({
                     </div>
                 </div>
 
-                {/* Sección inferior */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    {/* Tendencia de Asistencia Semanal */}
-                    <div className="bg-white rounded-lg shadow-sm p-6">
-                        <div className="flex items-center gap-2 mb-4">
-                            <Icon iconNode={TrendingUp} className="w-5 h-5 text-[#7a9b3c]" />
-                            <h3 className="text-lg font-semibold text-gray-800">Tendencia de Asistencia Semanal</h3>
-                        </div>
-                        <div className="h-48 flex items-center justify-center text-gray-400 border-2 border-dashed border-gray-200 rounded-lg">
-                            Gráfico de tendencia semanal
-                        </div>
+            {/* Sección inferior */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Tendencia de Asistencia Semanal */}
+                <div className="bg-white rounded-lg shadow-sm p-6">
+                    <div className="flex items-center gap-2 mb-4">
+                        <TrendingUp className="w-5 h-5 text-blue-600" />
+                        <h3 className="text-lg font-semibold text-gray-800">Tendencia de Asistencia Semanal</h3>
                     </div>
+                    <div className="h-48 flex items-center justify-center text-gray-400 border-2 border-dashed border-gray-200 rounded-lg">
+                        Gráfico de tendencia semanal
+                    </div>
+                </div>
 
-                    {/* Estudiantes con Alertas */}
-                    <div className="bg-white rounded-lg shadow-sm p-6">
-                        <div className="flex items-center gap-2 mb-4">
-                            <Icon iconNode={AlertTriangle} className="w-5 h-5 text-[#7a9b3c]" />
-                            <h3 className="text-lg font-semibold text-gray-800">Estudiantes con Alertas</h3>
-                        </div>
+                {/* Estudiantes con Alertas */}
+                <div className="bg-white rounded-lg shadow-sm p-6">
+                    <div className="flex items-center gap-2 mb-4">
+                        <AlertTriangle className="w-5 h-5 text-orange-600" />
+                        <h3 className="text-lg font-semibold text-gray-800">Estudiantes con Alertas</h3>
+                    </div>
                         <div className="space-y-3">
                             {alertasEjemplo.map((alerta) => {
                                 const alertaTipo = getAlertaTipo(alerta.tipo);
@@ -511,10 +498,9 @@ export default function ControlAsistencia({
                                     </div>
                                 );
                             })}
-                        </div>
                     </div>
                 </div>
             </div>
-        </>
+        </AppLayout>
     );
 }

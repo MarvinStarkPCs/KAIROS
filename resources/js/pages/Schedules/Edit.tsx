@@ -68,14 +68,19 @@ export default function ScheduleEdit({ schedule, programs, professors }: Props) 
         ? schedule.days_of_week.split(',').map(d => d.trim())
         : [];
 
+    // Formatear tiempos de HH:MM:SS a HH:MM
+    const formatTime = (time: string) => {
+        return time.substring(0, 5); // "14:00:00" -> "14:00"
+    };
+
     const { data, setData, put, processing, errors, transform } = useForm({
         academic_program_id: schedule.academic_program_id.toString(),
         professor_id: schedule.professor_id?.toString() || '',
         name: schedule.name,
         description: schedule.description || '',
         days_of_week: initialDays,
-        start_time: schedule.start_time,
-        end_time: schedule.end_time,
+        start_time: formatTime(schedule.start_time),
+        end_time: formatTime(schedule.end_time),
         classroom: schedule.classroom || '',
         semester: schedule.semester || '',
         max_students: schedule.max_students.toString(),

@@ -16,19 +16,21 @@ class AcademicProgram extends Model
         'name',
         'description',
         'duration_months',
+        'monthly_fee',
         'status',
         'color',
     ];
 
     protected $casts = [
         'duration_months' => 'integer',
+        'monthly_fee' => 'decimal:2',
     ];
 
     // Activity Log configuration
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
-            ->logOnly(['name', 'description', 'duration_months', 'status', 'color'])
+            ->logOnly(['name', 'description', 'duration_months', 'monthly_fee', 'status', 'color'])
             ->logOnlyDirty()
             ->useLogName('academic_programs');
     }

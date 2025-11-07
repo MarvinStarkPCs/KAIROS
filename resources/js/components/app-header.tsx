@@ -23,33 +23,36 @@ import { UserMenuContent } from '@/components/user-menu-content';
 import { useInitials } from '@/hooks/use-initials';
 import { cn } from '@/lib/utils';
 import { dashboard } from '@/routes';
+import * as programas_academicos from '@/routes/programas_academicos';
+import * as inscripciones from '@/routes/inscripciones';
+import * as pagos from '@/routes/pagos';
+import * as horarios from '@/routes/horarios';
+import * as asistencias from '@/routes/asistencias';
+import * as roles from '@/routes/roles';
+import * as usuarios from '@/routes/usuarios';
+import * as audit from '@/routes/audit';
+import * as profesor from '@/routes/profesor';
 import { type BreadcrumbItem, type SharedData } from '@/types';
-import ProgramAcademyController from '@/actions/App/Http/Controllers/program_academy';
-import EnrollmentController from '@/actions/App/Http/Controllers/EnrollmentController';
-import ScheduleController from '@/actions/App/Http/Controllers/ScheduleController';
-import AttendanceController from '@/actions/App/Http/Controllers/AttendanceController';
-import PaymentController from '@/actions/App/Http/Controllers/PaymentController';
-import RoleController from '@/actions/App/Http/Controllers/RoleController';
-import UserController from '@/actions/App/Http/Controllers/UserController';
-import AuditController from '@/actions/App/Http/Controllers/AuditController';
 
 interface NavItem {
     title: string;
     href: string;
     icon: React.ComponentType<{ className?: string }>;
+    permission?: string;
     submenu?: Array<{
         title: string;
         href: string;
         icon: React.ComponentType<{ className?: string }>;
+        permission?: string;
     }>;
 }
 
 import { Link, usePage } from '@inertiajs/react';
-import { 
-    Home, 
-    CreditCard, 
-    Calendar, 
-    CheckSquare, 
+import {
+    Home,
+    CreditCard,
+    Calendar,
+    CheckSquare,
     MessageSquare,
     FileText,
     Menu,
@@ -62,71 +65,90 @@ import {
     Shield,
     UserCheck,
     BookOpen,
-    ChevronUp
+    ChevronUp,
+    GraduationCap
 } from 'lucide-react';
 import { useState } from 'react';
 
 // Navegación principal personalizada para Academia Linaje
-const mainNavItems: NavItem[] = [
+const allNavItems: NavItem[] = [
     {
         title: '',
         href: dashboard().url,
         icon: Home,
+        permission: 'ver_dashboard',
+    },
+    {
+        title: 'Mis Grupos',
+        href: profesor.misGrupos().url,
+        icon: GraduationCap,
+        permission: 'ver_mis_grupos',
     },
     {
         title: 'Programas Académicos',
-        href: ProgramAcademyController.index().url,
+        href: programas_academicos.index().url,
         icon: BookOpen,
+        permission: 'ver_programas',
     },
     {
         title: 'Inscripciones',
-        href: EnrollmentController.index().url,
+        href: inscripciones.index().url,
         icon: UserCheck,
+        permission: 'ver_inscripciones',
     },
     {
         title: 'Pagos',
-        href: PaymentController.index().url,
+        href: pagos.index().url,
         icon: CreditCard,
+        permission: 'ver_pagos',
     },
     {
         title: 'Horarios',
-        href: ScheduleController.index().url,
+        href: horarios.index().url,
         icon: Calendar,
+        permission: 'ver_horarios',
     },
     {
         title: 'Asistencia',
-        href: AttendanceController.index().url,
+        href: asistencias.index().url,
         icon: CheckSquare,
+        permission: 'ver_asistencia',
     },
     {
         title: 'Comunicación',
         href: '/comunicacion',
         icon: MessageSquare,
+        permission: 'ver_comunicacion',
     },
     {
         title: 'Reportes',
         href: '/reportes',
         icon: FileText,
+        permission: 'ver_reportes',
     },
     {
         title: 'Seguridad',
         href: '/seguridad',
         icon: Shield,
+        permission: 'ver_roles',
         submenu: [
             {
                 title: 'Roles y Permisos',
-                href: RoleController.index().url,
+                href: roles.index().url,
                 icon: Lock,
+                permission: 'ver_roles',
             },
             {
                 title: 'Usuarios',
-                href: UserController.index().url,
+                href: usuarios.index().url,
                 icon: UserCheck,
+                permission: 'ver_usuarios',
             },
             {
                 title: 'Auditoría',
-                href: AuditController.index().url,
+                href: audit.index().url,
                 icon: FileText,
+                permission: 'ver_auditoria',
             },
         ]
     },
@@ -143,9 +165,23 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
     const { auth } = page.props;
     const getInitials = useInitials();
     const [isMenuOpen, setIsMenuOpen] = useState(true);
-    
+
     // Simulación de notificaciones - reemplaza con tu lógica real
     const notificationCount = 3;
+
+    // Filtrar items del menú según permisos del usuario
+    const userPermissions = auth?.permissions || [];
+    const mainNavItems = allNavItems.filter(item => {
+        if (!item.permission) return true;
+        const hasPermission = userPermissions.includes(item.permission);
+        if (hasPermission && item.submenu) {
+            // Filtrar submenu también
+            item.submenu = item.submenu.filter(subitem =>
+                !subitem.permission || userPermissions.includes(subitem.permission)
+            );
+        }
+        return hasPermission;
+    });
 
     return (
         <>
@@ -251,7 +287,7 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
                                             {auth.user.name}
                                         </span>
                                         <span className="text-xs text-gray-500">
-                                            Administrador
+                                            {auth.roles && auth.roles.length > 0 ? auth.roles[0] : 'Usuario'}
                                         </span>
                                     </div>
                                     <ChevronDown className="hidden h-4 w-4 text-gray-600 lg:block" />

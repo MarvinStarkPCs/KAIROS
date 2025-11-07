@@ -7,7 +7,7 @@ import {
     CheckCircle,
     ChevronLeft,
     ChevronRight,
-    UserPlus,
+    // UserPlus,
     UserCog,
     Eye,
     Edit,
@@ -41,6 +41,7 @@ import { toast } from 'sonner';
 interface AcademicProgram {
     id: number;
     name: string;
+    color: string;
 }
 
 interface Professor {
@@ -103,7 +104,7 @@ export default function SchedulesIndex({ schedules, stats, allProfessors, allStu
     const [currentWeek] = useState('Semana Actual');
     const [selectedSchedule, setSelectedSchedule] = useState<Schedule | null>(null);
     const [sheetOpen, setSheetOpen] = useState(false);
-    const [selectedStudent, setSelectedStudent] = useState<string>('');
+    // const [selectedStudent, setSelectedStudent] = useState<string>('');
     const [selectedProfessor, setSelectedProfessor] = useState<string>('');
     const [viewMode, setViewMode] = useState<'grid' | 'calendar'>('calendar');
     const [showFilters, setShowFilters] = useState(false);
@@ -121,7 +122,7 @@ export default function SchedulesIndex({ schedules, stats, allProfessors, allStu
     // Reset selected values when sheet opens
     useEffect(() => {
         if (sheetOpen && selectedSchedule) {
-            setSelectedStudent('');
+            // setSelectedStudent('');
             setSelectedProfessor(selectedSchedule.professor_id?.toString() || 'unassigned');
         }
     }, [sheetOpen, selectedSchedule]);
@@ -139,12 +140,16 @@ export default function SchedulesIndex({ schedules, stats, allProfessors, allStu
 
     const horasOrdenadas = Object.keys(horariosAgrupados).sort();
 
-    // Función para obtener color según ocupación
-    const getOcupacionColor = (enrolled: number, max: number) => {
+    // Función para obtener color según ocupación (igual que en el calendario)
+    const getOcupacionColor = (enrolled: number, max: number, programColor: string) => {
         const percentage = (enrolled / max) * 100;
-        if (percentage >= 100) return 'bg-red-600';
-        if (percentage >= 80) return 'bg-yellow-600';
-        return 'bg-green-600';
+        if (percentage >= 100) {
+            return '#DC2626'; // red-600
+        }
+        if (percentage >= 80) {
+            return '#F59E0B'; // amber-500
+        }
+        return programColor || '#3B82F6'; // color del programa o azul por defecto
     };
 
     const handleScheduleClick = (e: React.MouseEvent, schedule: Schedule) => {
@@ -153,41 +158,31 @@ export default function SchedulesIndex({ schedules, stats, allProfessors, allStu
         setSheetOpen(true);
     };
 
-    const handleEnrollStudent = () => {
-        if (!selectedSchedule || !selectedStudent) return;
+    // const handleEnrollStudent = () => {
+    //     if (!selectedSchedule || !selectedStudent) return;
 
-        router.post(
-            `/horarios/${selectedSchedule.id}/enroll`,
-            { student_id: selectedStudent },
-            {
-                preserveScroll: true,
-                onError: (errors) => {
-                    const firstError = Object.values(errors)[0];
-                    if (firstError) {
-                        toast.error(firstError as string);
-                    }
-                },
-            }
-        );
-    };
+    //     router.post(
+    //         `/horarios/${selectedSchedule.id}/enroll`,
+    //         { student_id: selectedStudent },
+    //         {
+    //             preserveScroll: true,
+    //             onError: (errors) => {
+    //                 const firstError = Object.values(errors)[0];
+    //                 if (firstError) {
+    //                     toast.error(firstError as string);
+    //                 }
+    //             },
+    //         }
+    //     );
+    // };
 
     const handleAssignProfessor = () => {
         if (!selectedSchedule) return;
 
-        router.put(
-            `/horarios/${selectedSchedule.id}`,
+        router.patch(
+            `/horarios/${selectedSchedule.id}/professor`,
             {
-                academic_program_id: selectedSchedule.academic_program_id,
                 professor_id: selectedProfessor === 'unassigned' ? null : selectedProfessor,
-                name: selectedSchedule.name,
-                description: selectedSchedule.description,
-                days_of_week: selectedSchedule.days_of_week,
-                start_time: selectedSchedule.start_time,
-                end_time: selectedSchedule.end_time,
-                classroom: selectedSchedule.classroom,
-                semester: selectedSchedule.semester,
-                max_students: selectedSchedule.max_students,
-                status: selectedSchedule.status,
             },
             {
                 preserveScroll: true,
@@ -434,40 +429,52 @@ export default function SchedulesIndex({ schedules, stats, allProfessors, allStu
                                                             key={dia.key}
                                                             className="p-2 align-top border-l border-gray-200"
                                                         >
-                                                            {horarioDelDia?.map((horario) => (
-                                                                <div
-                                                                    key={horario.id}
-                                                                    onClick={(e) => handleScheduleClick(e, horario)}
-                                                                    className={`${getOcupacionColor(
-                                                                        horario.enrolled_count,
-                                                                        horario.max_students
-                                                                    )} text-white p-3 rounded-lg shadow-sm hover:shadow-md transition-shadow cursor-pointer mb-2`}
-                                                                >
-                                                                    <div className="font-semibold text-sm mb-1">
-                                                                        {horario.name}
-                                                                    </div>
-                                                                    <div className="text-xs opacity-90 mb-1">
-                                                                        {horario.academic_program.name}
-                                                                    </div>
-                                                                    {horario.classroom && (
+                                                            {horarioDelDia?.map((horario) => {
+                                                                const backgroundColor = getOcupacionColor(
+                                                                    horario.enrolled_count,
+                                                                    horario.max_students,
+                                                                    horario.academic_program.color
+                                                                );
+                                                                const occupancyPercentage = (horario.enrolled_count / horario.max_students) * 100;
+
+                                                                return (
+                                                                    <div
+                                                                        key={horario.id}
+                                                                        onClick={(e) => handleScheduleClick(e, horario)}
+                                                                        className="text-white p-3 rounded-lg shadow-sm hover:shadow-md transition-shadow cursor-pointer mb-2"
+                                                                        style={{ backgroundColor }}
+                                                                    >
+                                                                        <div className="font-semibold text-sm mb-1">
+                                                                            {horario.name}
+                                                                        </div>
                                                                         <div className="text-xs opacity-90 mb-1">
-                                                                            📍 {horario.classroom}
+                                                                            {horario.academic_program.name}
                                                                         </div>
-                                                                    )}
-                                                                    <div className="text-xs opacity-90">
-                                                                        {horario.start_time} - {horario.end_time}
-                                                                    </div>
-                                                                    <div className="text-xs opacity-90 mt-1 font-semibold">
-                                                                        {horario.enrolled_count}/{horario.max_students}{' '}
-                                                                        estudiantes
-                                                                    </div>
-                                                                    {horario.professor && (
-                                                                        <div className="text-xs opacity-90 mt-1">
-                                                                            👨‍🏫 {horario.professor.name}
+                                                                        {horario.classroom && (
+                                                                            <div className="text-xs opacity-90 mb-1">
+                                                                                📍 {horario.classroom}
+                                                                            </div>
+                                                                        )}
+                                                                        <div className="text-xs opacity-90">
+                                                                            {horario.start_time} - {horario.end_time}
                                                                         </div>
-                                                                    )}
-                                                                </div>
-                                                            ))}
+                                                                        <div className="text-xs opacity-90 mt-1 font-semibold">
+                                                                            {horario.enrolled_count}/{horario.max_students}{' '}
+                                                                            estudiantes
+                                                                            {occupancyPercentage >= 80 && (
+                                                                                <span className="ml-1">
+                                                                                    {occupancyPercentage >= 100 ? '🔴' : '⚠️'}
+                                                                                </span>
+                                                                            )}
+                                                                        </div>
+                                                                        {horario.professor && (
+                                                                            <div className="text-xs opacity-90 mt-1">
+                                                                                👨‍🏫 {horario.professor.name}
+                                                                            </div>
+                                                                        )}
+                                                                    </div>
+                                                                );
+                                                            })}
                                                         </td>
                                                     );
                                                 })}
@@ -534,7 +541,7 @@ export default function SchedulesIndex({ schedules, stats, allProfessors, allStu
                             </div>
 
                             {/* Inscribir Estudiante */}
-                            <div className="space-y-3">
+                            {/* <div className="space-y-3">
                                 <div className="flex items-center gap-2">
                                     <UserPlus className="h-5 w-5 text-blue-600" />
                                     <h4 className="font-semibold">Inscribir Estudiante</h4>
@@ -571,7 +578,7 @@ export default function SchedulesIndex({ schedules, stats, allProfessors, allStu
                                         <p className="text-sm text-red-600">No hay cupos disponibles</p>
                                     )}
                                 </div>
-                            </div>
+                            </div> */}
 
                             {/* Asignar Profesor */}
                             <div className="space-y-3 border-t pt-4">
