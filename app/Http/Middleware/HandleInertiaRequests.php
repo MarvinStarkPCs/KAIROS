@@ -38,6 +38,15 @@ class HandleInertiaRequests extends Middleware
     {
         [$message, $author] = str(Inspiring::quotes()->random())->explode('-');
 
+        // Calcular mensajes no leídos
+        $unreadMessagesCount = 0;
+        if ($request->user()) {
+            $conversations = $request->user()->conversations()->get();
+            foreach ($conversations as $conversation) {
+                $unreadMessagesCount += $conversation->unreadMessagesCount($request->user()->id);
+            }
+        }
+
         return [
             ...parent::share($request),
             'name' => config('app.name'),
@@ -46,6 +55,7 @@ class HandleInertiaRequests extends Middleware
                 'user' => $request->user(),
                 'permissions' => $request->user() ? $request->user()->getAllPermissions()->pluck('name')->toArray() : [],
                 'roles' => $request->user() ? $request->user()->getRoleNames()->toArray() : [],
+                'unreadMessages' => $unreadMessagesCount,
             ],
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
             'flash' => [

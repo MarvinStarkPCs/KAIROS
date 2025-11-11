@@ -12,6 +12,12 @@ use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\StudyPlanController;
 use App\Http\Controllers\TeacherController;
+use App\Http\Controllers\CommunicationController;
+use App\Http\Controllers\Auth\GoogleAuthController;
+
+// Google OAuth Routes
+Route::get('/auth/google', [GoogleAuthController::class, 'redirectToGoogle'])->name('auth.google');
+Route::get('/auth/google/callback', [GoogleAuthController::class, 'handleGoogleCallback'])->name('auth.google.callback');
 
 Route::get('/', function () {
     return Inertia::render('welcome');
@@ -218,23 +224,13 @@ Route::middleware(['auth'])->group(function () {
         });
     });
 
-    // === GESTIÓN DE DEPENDIENTES ===
-    Route::prefix('dependientes')->group(function () {
-        Route::middleware(['permission:ver_dependientes'])->group(function () {
-            Route::get('/', [\App\Http\Controllers\DependentController::class, 'index'])->name('dependientes.index');
-            Route::get('/{dependent}', [\App\Http\Controllers\DependentController::class, 'show'])->name('dependientes.show');
-        });
-        Route::middleware(['permission:crear_dependiente'])->group(function () {
-            Route::get('/crear', [\App\Http\Controllers\DependentController::class, 'create'])->name('dependientes.create');
-            Route::post('/', [\App\Http\Controllers\DependentController::class, 'store'])->name('dependientes.store');
-        });
-        Route::middleware(['permission:editar_dependiente'])->group(function () {
-            Route::get('/{dependent}/editar', [\App\Http\Controllers\DependentController::class, 'edit'])->name('dependientes.edit');
-            Route::put('/{dependent}', [\App\Http\Controllers\DependentController::class, 'update'])->name('dependientes.update');
-        });
-        Route::middleware(['permission:eliminar_dependiente'])->group(function () {
-            Route::delete('/{dependent}', [\App\Http\Controllers\DependentController::class, 'destroy'])->name('dependientes.destroy');
-        });
+    // Comunicaciones
+    Route::middleware(['permission:ver_comunicacion'])->group(function () {
+        Route::get('/comunicacion', [CommunicationController::class, 'index'])->name('comunicacion.index');
+        Route::get('/comunicacion/{conversation}', [CommunicationController::class, 'show'])->name('comunicacion.show');
+        Route::post('/comunicacion/start', [CommunicationController::class, 'start'])->name('comunicacion.start');
+        Route::post('/comunicacion/{conversation}/message', [CommunicationController::class, 'sendMessage'])->name('comunicacion.send');
+        Route::get('/api/comunicacion/users', [CommunicationController::class, 'users'])->name('comunicacion.users');
     });
 
     // === RUTAS COMPARTIDAS (APIs y recursos de solo lectura) ===

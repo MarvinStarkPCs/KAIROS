@@ -169,6 +169,9 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
     // Simulación de notificaciones - reemplaza con tu lógica real
     const notificationCount = 3;
 
+    // Mensajes no leídos desde el servidor
+    const unreadMessagesCount = auth.unreadMessages || 0;
+
     // Filtrar items del menú según permisos del usuario
     const userPermissions = auth?.permissions || [];
     const mainNavItems = allNavItems.filter(item => {
@@ -258,13 +261,20 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
                         </Button>
 
                         {/* Mensajes */}
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            className="hidden h-10 w-10 lg:flex"
-                        >
-                            <Mail className="h-5 w-5 text-gray-600" />
-                        </Button>
+                        <Link href="/comunicacion">
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                className="relative hidden h-10 w-10 lg:flex"
+                            >
+                                <Mail className="h-5 w-5 text-gray-600" />
+                                {unreadMessagesCount > 0 && (
+                                    <span className="absolute right-1 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-semibold text-white">
+                                        {unreadMessagesCount}
+                                    </span>
+                                )}
+                            </Button>
+                        </Link>
 
                         {/* Usuario */}
                         <DropdownMenu>

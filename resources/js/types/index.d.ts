@@ -5,6 +5,7 @@ export interface Auth {
     user: User;
     permissions: string[];
     roles: string[];
+    unreadMessages?: number;
 }
 
 export interface BreadcrumbItem {

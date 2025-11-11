@@ -104,14 +104,6 @@ class RolePermissionSeeder extends Seeder
             'ver_dashboard',
             'ver_comunicacion',
             'ver_reportes',
-
-            // Permisos de Dependientes (para Responsables)
-            'ver_dependientes',
-            'crear_dependiente',
-            'editar_dependiente',
-            'eliminar_dependiente',
-            'gestionar_inscripciones_dependientes',
-            'gestionar_pagos_dependientes',
         ];
 
         foreach ($permissions as $permission) {
@@ -124,7 +116,6 @@ class RolePermissionSeeder extends Seeder
         $adminRole = Role::firstOrCreate(['name' => 'Administrador', 'guard_name' => 'web']);
         $profesorRole = Role::firstOrCreate(['name' => 'Profesor', 'guard_name' => 'web']);
         $estudianteRole = Role::firstOrCreate(['name' => 'Estudiante', 'guard_name' => 'web']);
-        $responsableRole = Role::firstOrCreate(['name' => 'Responsable', 'guard_name' => 'web']);
 
         // Sincronizar todos los permisos al Administrador
         $adminRole->syncPermissions(Permission::all());
@@ -153,24 +144,5 @@ class RolePermissionSeeder extends Seeder
             'ver_comunicacion',
         ];
         $estudianteRole->syncPermissions($estudiantePermissions);
-
-        // Permisos del Responsable
-        $responsablePermissions = [
-            'ver_dashboard',
-            'ver_dependientes',
-            'crear_dependiente',
-            'editar_dependiente',
-            'eliminar_dependiente',
-            'gestionar_inscripciones_dependientes',
-            'gestionar_pagos_dependientes',
-            'ver_programas',
-            'ver_horarios',
-            'ver_inscripciones',
-            'crear_inscripcion',
-            'ver_pagos',
-            'crear_pago',
-            'ver_comunicacion',
-        ];
-        $responsableRole->syncPermissions($responsablePermissions);
     }
 }

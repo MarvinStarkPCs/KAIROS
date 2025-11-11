@@ -28,12 +28,8 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
-        'parent_id',
-        'phone',
-        'document_type',
-        'document_number',
-        'birth_date',
-        'address',
+        'google_id',
+        'avatar',
     ];
 
     /**
@@ -56,7 +52,6 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
-            'birth_date' => 'date',
         ];
     }
 
@@ -69,75 +64,6 @@ class User extends Authenticatable
     public function getPermissions()
     {
         return $this->getAllPermissions()->pluck('name')->toArray();
-    }
-
-    // ========== Relaciones Responsable/Dependientes ==========
-
-    /**
-     * Relación con el responsable (padre/madre/tutor)
-     */
-    public function parent()
-    {
-        return $this->belongsTo(User::class, 'parent_id');
-    }
-
-    /**
-     * Relación con los dependientes (hijos bajo su responsabilidad)
-     */
-    public function dependents()
-    {
-        return $this->hasMany(User::class, 'parent_id');
-    }
-
-    /**
-     * Verificar si tiene responsable
-     */
-    public function hasParent(): bool
-    {
-        return !is_null($this->parent_id);
-    }
-
-    /**
-     * Verificar si tiene dependientes
-     */
-    public function hasDependents(): bool
-    {
-        return $this->dependents()->exists();
-    }
-
-    /**
-     * Obtener el usuario responsable de facturación
-     * Si tiene parent, retorna el parent, si no retorna a sí mismo
-     */
-    public function getBillingUser(): User
-    {
-        return $this->parent ?? $this;
-    }
-
-    /**
-     * Verificar si es menor de edad (menor de 18 años)
-     */
-    public function isMinor(): bool
-    {
-        if (!$this->birth_date) {
-            return false;
-        }
-
-        return $this->birth_date->age < 18;
-    }
-
-    /**
-     * Verificar si puede gestionar inscripciones/pagos de un estudiante
-     */
-    public function canManageStudent(User $student): bool
-    {
-        // Puede gestionar si es:
-        // 1. El mismo estudiante
-        // 2. El responsable del estudiante
-        // 3. Es admin
-        return $this->id === $student->id
-            || $this->id === $student->parent_id
-            || $this->hasRole('Admin');
     }
 
     // ========== Relaciones con Horarios ==========
@@ -234,6 +160,23 @@ class User extends Authenticatable
     public function recordedProgress()
     {
         return $this->hasMany(StudentProgress::class, 'teacher_id');
+    }
+
+    // ========== Relaciones con Comunicaciones ==========
+
+    // Conversaciones del usuario
+    public function conversations()
+    {
+        return $this->belongsToMany(Conversation::class)
+            ->withPivot('last_read_at')
+            ->withTimestamps()
+            ->latest('last_message_at');
+    }
+
+    // Mensajes enviados por el usuario
+    public function messages()
+    {
+        return $this->hasMany(Message::class);
     }
 
 }
