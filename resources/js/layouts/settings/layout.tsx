@@ -1,11 +1,11 @@
 import Heading from '@/components/heading';
-import { Toaster } from '@/components/toaster';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
 import { edit as editAppearance } from '@/routes/appearance';
 import { edit as editPassword } from '@/routes/password';
 import { edit } from '@/routes/profile';
+import { edit as editSmtp } from '@/routes/smtp';
 import { show } from '@/routes/two-factor';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/react';
@@ -30,6 +30,11 @@ const sidebarNavItems: NavItem[] = [
     {
         title: 'Appearance',
         href: editAppearance(),
+        icon: null,
+    },
+    {
+        title: 'Servidor SMTP',
+        href: editSmtp(),
         icon: null,
     },
 ];
@@ -85,7 +90,6 @@ export default function SettingsLayout({ children }: PropsWithChildren) {
                     </section>
                 </div>
             </div>
-            <Toaster />
         </div>
     );
 }
