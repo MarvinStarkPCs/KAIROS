@@ -49,28 +49,34 @@ export function ScheduleCalendar({
     const [events, setEvents] = useState<ScheduleEvent[]>([]);
     const [loading, setLoading] = useState(true);
 
+    // Extraer valores individuales para evitar re-renders innecesarios
+    const programId = filters.program_id;
+    const professorId = filters.professor_id;
+    const status = filters.status;
+    const semester = filters.semester;
+
     useEffect(() => {
+        const loadEvents = async () => {
+            setLoading(true);
+            try {
+                const queryParams = new URLSearchParams();
+                if (programId) queryParams.append('program_id', programId.toString());
+                if (professorId) queryParams.append('professor_id', professorId.toString());
+                if (status) queryParams.append('status', status);
+                if (semester) queryParams.append('semester', semester);
+
+                const response = await fetch(`/horarios-api/calendar-events?${queryParams}`);
+                const data = await response.json();
+                setEvents(data);
+            } catch (error) {
+                console.error('Error loading calendar events:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
         loadEvents();
-    }, [filters]);
-
-    const loadEvents = async () => {
-        setLoading(true);
-        try {
-            const queryParams = new URLSearchParams();
-            if (filters.program_id) queryParams.append('program_id', filters.program_id.toString());
-            if (filters.professor_id) queryParams.append('professor_id', filters.professor_id.toString());
-            if (filters.status) queryParams.append('status', filters.status);
-            if (filters.semester) queryParams.append('semester', filters.semester);
-
-            const response = await fetch(`/horarios-api/calendar-events?${queryParams}`);
-            const data = await response.json();
-            setEvents(data);
-        } catch (error) {
-            console.error('Error loading calendar events:', error);
-        } finally {
-            setLoading(false);
-        }
-    };
+    }, [programId, professorId, status, semester]);
 
     const handleEventClick = (info: EventClickArg) => {
         info.jsEvent.preventDefault();

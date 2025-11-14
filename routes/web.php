@@ -14,10 +14,15 @@ use App\Http\Controllers\StudyPlanController;
 use App\Http\Controllers\TeacherController;
 use App\Http\Controllers\CommunicationController;
 use App\Http\Controllers\Auth\GoogleAuthController;
+use App\Http\Controllers\MatriculaController;
 
 // Google OAuth Routes
 Route::get('/auth/google', [GoogleAuthController::class, 'redirectToGoogle'])->name('auth.google');
 Route::get('/auth/google/callback', [GoogleAuthController::class, 'handleGoogleCallback'])->name('auth.google.callback');
+
+// Matrícula Pública (sin autenticación)
+Route::get('/matricula', [MatriculaController::class, 'create'])->name('matricula.create');
+Route::post('/matricula', [MatriculaController::class, 'store'])->name('matricula.store');
 
 Route::get('/', function () {
     return Inertia::render('welcome');

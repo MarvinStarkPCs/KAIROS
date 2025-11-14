@@ -27,10 +27,34 @@ class User extends Authenticatable
      */
     protected $fillable = [
         'name',
+        'last_name',
         'email',
         'password',
         'google_id',
         'avatar',
+        'parent_id',
+        'user_type',
+        // DATOS BÁSICOS
+        'document_type',
+        'document_number',
+        'birth_place',
+        'birth_date',
+        'gender',
+        // DATOS DE LOCALIZACIÓN
+        'address',
+        'neighborhood',
+        'phone',
+        'mobile',
+        'city',
+        'department',
+        // DATOS MUSICALES
+        'plays_instrument',
+        'instruments_played',
+        'has_music_studies',
+        'music_schools',
+        'desired_instrument',
+        'modality',
+        'current_level',
     ];
 
     /**
@@ -53,6 +77,9 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'birth_date' => 'date',
+            'plays_instrument' => 'boolean',
+            'has_music_studies' => 'boolean',
         ];
     }
 
@@ -189,6 +216,32 @@ class User extends Authenticatable
     public function sendPasswordResetNotification($token)
     {
         $this->notify(new ResetPasswordNotification($token));
+    }
+
+    // ========== Relaciones Guardian/Dependientes ==========
+
+    // Responsable/tutor del estudiante (para menores)
+    public function parent()
+    {
+        return $this->belongsTo(User::class, 'parent_id');
+    }
+
+    // Estudiantes dependientes (si es responsable)
+    public function dependents()
+    {
+        return $this->hasMany(User::class, 'parent_id');
+    }
+
+    // Verificar si es menor de edad
+    public function isMinor(): bool
+    {
+        return !is_null($this->parent_id);
+    }
+
+    // Obtener el responsable de pagos (el mismo si es adulto, o su parent si es menor)
+    public function getPaymentResponsible()
+    {
+        return $this->isMinor() ? $this->parent : $this;
     }
 
 }

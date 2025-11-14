@@ -79,7 +79,7 @@ export default function SmtpSettings({
                         }}
                         className="space-y-6"
                     >
-                        {({ processing, errors, data, setData }) => (
+                        {({ processing, errors }) => (
                             <>
                                 {/* Host */}
                                 <div className="grid gap-2">
@@ -124,17 +124,23 @@ export default function SmtpSettings({
                                         <Label htmlFor="encryption">
                                             Encriptación
                                         </Label>
-                                        <Select
+                                        <input
+                                            type="hidden"
                                             name="encryption"
+                                            value={smtpSetting?.encryption ?? 'tls'}
+                                        />
+                                        <Select
                                             defaultValue={
                                                 smtpSetting?.encryption ?? 'tls'
                                             }
-                                            onValueChange={(value) =>
-                                                setData(
-                                                    'encryption',
-                                                    value === 'none' ? '' : value
-                                                )
-                                            }
+                                            onValueChange={(value) => {
+                                                const input = document.querySelector(
+                                                    'input[name="encryption"]'
+                                                ) as HTMLInputElement;
+                                                if (input) {
+                                                    input.value = value === 'none' ? '' : value;
+                                                }
+                                            }}
                                         >
                                             <SelectTrigger className="w-full">
                                                 <SelectValue placeholder="Seleccionar encriptación" />
@@ -237,6 +243,11 @@ export default function SmtpSettings({
                                 </div>
 
                                 {/* Is Active */}
+                                <input
+                                    type="hidden"
+                                    name="is_active"
+                                    value={smtpSetting?.is_active ? '1' : '0'}
+                                />
                                 <div className="flex items-center justify-between rounded-lg border p-4">
                                     <div className="space-y-0.5">
                                         <Label htmlFor="is_active">
@@ -248,8 +259,15 @@ export default function SmtpSettings({
                                     </div>
                                     <Switch
                                         id="is_active"
-                                        name="is_active"
                                         defaultChecked={smtpSetting?.is_active ?? true}
+                                        onCheckedChange={(checked) => {
+                                            const input = document.querySelector(
+                                                'input[name="is_active"]'
+                                            ) as HTMLInputElement;
+                                            if (input) {
+                                                input.value = checked ? '1' : '0';
+                                            }
+                                        }}
                                     />
                                 </div>
 

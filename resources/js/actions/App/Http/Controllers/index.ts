@@ -1,4 +1,5 @@
 import Auth from './Auth'
+import MatriculaController from './MatriculaController'
 import PaymentController from './PaymentController'
 import UserController from './UserController'
 import program_academy from './program_academy'
@@ -13,6 +14,7 @@ import CommunicationController from './CommunicationController'
 import Settings from './Settings'
 const Controllers = {
     Auth: Object.assign(Auth, Auth),
+MatriculaController: Object.assign(MatriculaController, MatriculaController),
 PaymentController: Object.assign(PaymentController, PaymentController),
 UserController: Object.assign(UserController, UserController),
 program_academy: Object.assign(program_academy, program_academy),

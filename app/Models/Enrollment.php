@@ -14,19 +14,37 @@ class Enrollment extends Model
     protected $fillable = [
         'student_id',
         'program_id',
+        'enrolled_level',
         'enrollment_date',
         'status',
+        'payment_commitment_signed',
+        'payment_commitment_date',
+        'parental_authorization_signed',
+        'parental_authorization_date',
+        'parent_guardian_name',
     ];
 
     protected $casts = [
         'enrollment_date' => 'date',
+        'payment_commitment_signed' => 'boolean',
+        'payment_commitment_date' => 'datetime',
+        'parental_authorization_signed' => 'boolean',
+        'parental_authorization_date' => 'datetime',
     ];
 
     // Activity Log configuration
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
-            ->logOnly(['student_id', 'program_id', 'enrollment_date', 'status'])
+            ->logOnly([
+                'student_id',
+                'program_id',
+                'enrolled_level',
+                'enrollment_date',
+                'status',
+                'payment_commitment_signed',
+                'parental_authorization_signed',
+            ])
             ->logOnlyDirty()
             ->useLogName('enrollments');
     }
