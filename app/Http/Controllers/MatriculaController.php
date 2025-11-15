@@ -241,4 +241,59 @@ class MatriculaController extends Controller
             return redirect()->back()->withInput();
         }
     }
+
+    /**
+     * Mostrar página de checkout con widget de Wompi
+     */
+    public function checkout($paymentId)
+    {
+        $payment = \App\Models\Payment::with(['student', 'program', 'enrollment'])
+            ->findOrFail($paymentId);
+
+        // Verificar que el pago esté pendiente
+        if ($payment->status !== 'pending') {
+            flash_error('Este pago ya ha sido procesado.');
+            return redirect()->route('home');
+        }
+
+        // Generar firma de integridad para Wompi
+        $amountInCents = (int) ($payment->amount * 100);
+        $currency = 'COP';
+
+        // Para el widget, la firma de integridad NO se requiere en modo test
+        // O se debe usar un integrity key específico (diferente al events_secret)
+        // Por ahora, vamos a intentar sin firma primero
+        $integritySignature = null;
+
+        return Inertia::render('Matricula/Checkout', [
+            'payment' => $payment,
+            'wompiPublicKey' => config('wompi.public_key'),
+            'redirectUrl' => config('wompi.redirect_url'),
+            'amountInCents' => $amountInCents,
+            'integritySignature' => $integritySignature,
+        ]);
+    }
+
+    /**
+     * Página de confirmación después del pago
+     */
+    public function confirmation(Request $request)
+    {
+        $transactionId = $request->query('id');
+        $status = $request->query('status');
+
+        // Buscar el pago por la referencia de Wompi
+        $payment = \App\Models\Payment::where('wompi_transaction_id', $transactionId)->first();
+
+        if (!$payment) {
+            flash_error('No se encontró información del pago.');
+            return redirect()->route('home');
+        }
+
+        return Inertia::render('Matricula/Confirmation', [
+            'payment' => $payment,
+            'status' => $status,
+            'transactionId' => $transactionId,
+        ]);
+    }
 }

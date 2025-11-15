@@ -23,6 +23,11 @@ Route::get('/auth/google/callback', [GoogleAuthController::class, 'handleGoogleC
 // Matrícula Pública (sin autenticación)
 Route::get('/matricula', [MatriculaController::class, 'create'])->name('matricula.create');
 Route::post('/matricula', [MatriculaController::class, 'store'])->name('matricula.store');
+Route::get('/matricula/checkout/{payment}', [MatriculaController::class, 'checkout'])->name('matricula.checkout');
+Route::get('/matricula/confirmacion', [MatriculaController::class, 'confirmation'])->name('matricula.confirmation');
+
+// Webhook de Wompi (sin autenticación)
+Route::post('/webhook/wompi', [PaymentController::class, 'wompiWebhook'])->name('webhook.wompi');
 
 Route::get('/', function () {
     return Inertia::render('welcome');

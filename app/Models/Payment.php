@@ -31,6 +31,17 @@ class Payment extends Model
         'reference_number',
         'recorded_by',
         'notes',
+        // Campos de Wompi
+        'wompi_reference',
+        'wompi_transaction_id',
+        // Campos de pagos recurrentes
+        'card_token',
+        'payment_source_id',
+        'is_recurring',
+        'last_4_digits',
+        'card_brand',
+        'next_charge_date',
+        'failed_attempts',
     ];
 
     protected $casts = [

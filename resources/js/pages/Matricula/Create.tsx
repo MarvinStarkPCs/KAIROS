@@ -9,6 +9,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ChevronLeft, ChevronRight, CheckCircle } from 'lucide-react';
+import InputError from '@/components/input-error';
 
 interface Schedule {
     id: number;
@@ -134,9 +135,7 @@ export default function Create({ programs }: Props) {
                                         onChange={(e) => setData('responsable', { ...data.responsable, name: e.target.value })}
                                         placeholder="Nombre"
                                     />
-                                    {errors['responsable.name'] && (
-                                        <p className="text-sm text-red-600 mt-1">{errors['responsable.name']}</p>
-                                    )}
+                                    <InputError message={errors['responsable.name']} />
                                 </div>
                                 <div>
                                     <Label htmlFor="responsable_last_name">Apellidos *</Label>
@@ -146,9 +145,7 @@ export default function Create({ programs }: Props) {
                                         onChange={(e) => setData('responsable', { ...data.responsable, last_name: e.target.value })}
                                         placeholder="Apellidos"
                                     />
-                                    {errors['responsable.last_name'] && (
-                                        <p className="text-sm text-red-600 mt-1">{errors['responsable.last_name']}</p>
-                                    )}
+                                    <InputError message={errors['responsable.last_name']} />
                                 </div>
                             </div>
 
@@ -169,6 +166,7 @@ export default function Create({ programs }: Props) {
                                             <SelectItem value="CC">C.C</SelectItem>
                                         </SelectContent>
                                     </Select>
+                                    <InputError message={errors['responsable.document_type']} />
                                 </div>
                                 <div className="md:col-span-2">
                                     <Label htmlFor="responsable_document_number">Número de Documento *</Label>
@@ -180,9 +178,7 @@ export default function Create({ programs }: Props) {
                                         }
                                         placeholder="Número de documento"
                                     />
-                                    {errors['responsable.document_number'] && (
-                                        <p className="text-sm text-red-600 mt-1">{errors['responsable.document_number']}</p>
-                                    )}
+                                    <InputError message={errors['responsable.document_number']} />
                                 </div>
                             </div>
 
@@ -197,6 +193,7 @@ export default function Create({ programs }: Props) {
                                         }
                                         placeholder="Ciudad o Municipio"
                                     />
+                                    <InputError message={errors['responsable.birth_place']} />
                                 </div>
                                 <div>
                                     <Label htmlFor="responsable_birth_date">Fecha de Nacimiento *</Label>
@@ -208,9 +205,7 @@ export default function Create({ programs }: Props) {
                                             setData('responsable', { ...data.responsable, birth_date: e.target.value })
                                         }
                                     />
-                                    {errors['responsable.birth_date'] && (
-                                        <p className="text-sm text-red-600 mt-1">{errors['responsable.birth_date']}</p>
-                                    )}
+                                    <InputError message={errors['responsable.birth_date']} />
                                 </div>
                             </div>
 
@@ -232,6 +227,7 @@ export default function Create({ programs }: Props) {
                                         <Label htmlFor="gender_f">Femenino</Label>
                                     </div>
                                 </RadioGroup>
+                                <InputError message={errors['responsable.gender']} />
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -244,9 +240,7 @@ export default function Create({ programs }: Props) {
                                         onChange={(e) => setData('responsable', { ...data.responsable, email: e.target.value })}
                                         placeholder="correo@ejemplo.com"
                                     />
-                                    {errors['responsable.email'] && (
-                                        <p className="text-sm text-red-600 mt-1">{errors['responsable.email']}</p>
-                                    )}
+                                    <InputError message={errors['responsable.email']} />
                                 </div>
                                 <div>
                                     <Label htmlFor="responsable_mobile">Celular *</Label>
@@ -256,9 +250,7 @@ export default function Create({ programs }: Props) {
                                         onChange={(e) => setData('responsable', { ...data.responsable, mobile: e.target.value })}
                                         placeholder="300 123 4567"
                                     />
-                                    {errors['responsable.mobile'] && (
-                                        <p className="text-sm text-red-600 mt-1">{errors['responsable.mobile']}</p>
-                                    )}
+                                    <InputError message={errors['responsable.mobile']} />
                                 </div>
                             </div>
 
@@ -272,9 +264,7 @@ export default function Create({ programs }: Props) {
                                         onChange={(e) => setData('responsable', { ...data.responsable, password: e.target.value })}
                                         placeholder="Mínimo 8 caracteres"
                                     />
-                                    {errors['responsable.password'] && (
-                                        <p className="text-sm text-red-600 mt-1">{errors['responsable.password']}</p>
-                                    )}
+                                    <InputError message={errors['responsable.password']} />
                                 </div>
                                 <div>
                                     <Label htmlFor="responsable_password_confirmation">Confirmar Contraseña *</Label>
@@ -287,6 +277,7 @@ export default function Create({ programs }: Props) {
                                         }
                                         placeholder="Repita la contraseña"
                                     />
+                                    <InputError message={errors['responsable.password_confirmation']} />
                                 </div>
                             </div>
                         </CardContent>
@@ -310,9 +301,7 @@ export default function Create({ programs }: Props) {
                                         onChange={(e) => setData('responsable', { ...data.responsable, address: e.target.value })}
                                         placeholder="Calle 123 #45-67"
                                     />
-                                    {errors['responsable.address'] && (
-                                        <p className="text-sm text-red-600 mt-1">{errors['responsable.address']}</p>
-                                    )}
+                                    <InputError message={errors['responsable.address']} />
                                 </div>
                                 <div>
                                     <Label htmlFor="responsable_neighborhood">Barrio</Label>
@@ -324,6 +313,7 @@ export default function Create({ programs }: Props) {
                                         }
                                         placeholder="Nombre del barrio"
                                     />
+                                    <InputError message={errors['responsable.neighborhood']} />
                                 </div>
                             </div>
 
@@ -336,6 +326,7 @@ export default function Create({ programs }: Props) {
                                         onChange={(e) => setData('responsable', { ...data.responsable, phone: e.target.value })}
                                         placeholder="601 234 5678"
                                     />
+                                    <InputError message={errors['responsable.phone']} />
                                 </div>
                                 <div>
                                     <Label htmlFor="responsable_city">Ciudad *</Label>
@@ -345,9 +336,7 @@ export default function Create({ programs }: Props) {
                                         onChange={(e) => setData('responsable', { ...data.responsable, city: e.target.value })}
                                         placeholder="Ciudad"
                                     />
-                                    {errors['responsable.city'] && (
-                                        <p className="text-sm text-red-600 mt-1">{errors['responsable.city']}</p>
-                                    )}
+                                    <InputError message={errors['responsable.city']} />
                                 </div>
                                 <div>
                                     <Label htmlFor="responsable_department">Departamento *</Label>
@@ -359,9 +348,7 @@ export default function Create({ programs }: Props) {
                                         }
                                         placeholder="Departamento"
                                     />
-                                    {errors['responsable.department'] && (
-                                        <p className="text-sm text-red-600 mt-1">{errors['responsable.department']}</p>
-                                    )}
+                                    <InputError message={errors['responsable.department']} />
                                 </div>
                             </div>
 
@@ -385,6 +372,7 @@ export default function Create({ programs }: Props) {
                                         <Label htmlFor="is_minor_yes">Sí, es para un menor de edad</Label>
                                     </div>
                                 </RadioGroup>
+                                <InputError message={errors['is_minor']} />
                             </div>
                         </CardContent>
                     </Card>
@@ -412,9 +400,7 @@ export default function Create({ programs }: Props) {
                                         onChange={(e) => setData('estudiante', { ...data.estudiante, name: e.target.value })}
                                         placeholder="Nombre"
                                     />
-                                    {errors['estudiante.name'] && (
-                                        <p className="text-sm text-red-600 mt-1">{errors['estudiante.name']}</p>
-                                    )}
+                                    <InputError message={errors['estudiante.name']} />
                                 </div>
                                 <div>
                                     <Label htmlFor="estudiante_last_name">Apellidos *</Label>
@@ -424,9 +410,7 @@ export default function Create({ programs }: Props) {
                                         onChange={(e) => setData('estudiante', { ...data.estudiante, last_name: e.target.value })}
                                         placeholder="Apellidos"
                                     />
-                                    {errors['estudiante.last_name'] && (
-                                        <p className="text-sm text-red-600 mt-1">{errors['estudiante.last_name']}</p>
-                                    )}
+                                    <InputError message={errors['estudiante.last_name']} />
                                 </div>
                             </div>
 
@@ -447,6 +431,7 @@ export default function Create({ programs }: Props) {
                                             <SelectItem value="CC">C.C</SelectItem>
                                         </SelectContent>
                                     </Select>
+                                    <InputError message={errors['estudiante.document_type']} />
                                 </div>
                                 <div className="md:col-span-2">
                                     <Label htmlFor="estudiante_document_number">Número de Documento *</Label>
@@ -458,9 +443,7 @@ export default function Create({ programs }: Props) {
                                         }
                                         placeholder="Número de documento"
                                     />
-                                    {errors['estudiante.document_number'] && (
-                                        <p className="text-sm text-red-600 mt-1">{errors['estudiante.document_number']}</p>
-                                    )}
+                                    <InputError message={errors['estudiante.document_number']} />
                                 </div>
                             </div>
 
@@ -473,6 +456,7 @@ export default function Create({ programs }: Props) {
                                         onChange={(e) => setData('estudiante', { ...data.estudiante, birth_place: e.target.value })}
                                         placeholder="Ciudad o Municipio"
                                     />
+                                    <InputError message={errors['estudiante.birth_place']} />
                                 </div>
                                 <div>
                                     <Label htmlFor="estudiante_birth_date">Fecha de Nacimiento *</Label>
@@ -482,9 +466,7 @@ export default function Create({ programs }: Props) {
                                         value={data.estudiante.birth_date}
                                         onChange={(e) => setData('estudiante', { ...data.estudiante, birth_date: e.target.value })}
                                     />
-                                    {errors['estudiante.birth_date'] && (
-                                        <p className="text-sm text-red-600 mt-1">{errors['estudiante.birth_date']}</p>
-                                    )}
+                                    <InputError message={errors['estudiante.birth_date']} />
                                 </div>
                             </div>
 
@@ -506,6 +488,7 @@ export default function Create({ programs }: Props) {
                                         <Label htmlFor="estudiante_gender_f">Femenino</Label>
                                     </div>
                                 </RadioGroup>
+                                <InputError message={errors['estudiante.gender']} />
                             </div>
 
                             <div>
@@ -521,9 +504,7 @@ export default function Create({ programs }: Props) {
                                     Si el estudiante tiene correo, podrá acceder para ver su avance. Los pagos y facturas siempre
                                     se enviarán al correo del responsable.
                                 </p>
-                                {errors['estudiante.email'] && (
-                                    <p className="text-sm text-red-600 mt-1">{errors['estudiante.email']}</p>
-                                )}
+                                <InputError message={errors['estudiante.email']} />
                             </div>
                         </CardContent>
                     </Card>
@@ -560,6 +541,7 @@ export default function Create({ programs }: Props) {
                                         <Label htmlFor="plays_no">No</Label>
                                     </div>
                                 </RadioGroup>
+                                <InputError message={errors['datos_musicales.plays_instrument']} />
                             </div>
 
                             {data.datos_musicales.plays_instrument && (
@@ -577,6 +559,7 @@ export default function Create({ programs }: Props) {
                                         placeholder="Ej: Piano, Guitarra, Canto"
                                         rows={2}
                                     />
+                                    <InputError message={errors['datos_musicales.instruments_played']} />
                                 </div>
                             )}
 
@@ -601,6 +584,7 @@ export default function Create({ programs }: Props) {
                                         <Label htmlFor="studies_no">No</Label>
                                     </div>
                                 </RadioGroup>
+                                <InputError message={errors['datos_musicales.has_music_studies']} />
                             </div>
 
                             {data.datos_musicales.has_music_studies && (
@@ -618,6 +602,7 @@ export default function Create({ programs }: Props) {
                                         placeholder="Ej: Conservatorio Nacional, Academia XYZ"
                                         rows={2}
                                     />
+                                    <InputError message={errors['datos_musicales.music_schools']} />
                                 </div>
                             )}
 
@@ -634,9 +619,7 @@ export default function Create({ programs }: Props) {
                                     }
                                     placeholder="Ej: Piano, Guitarra, Canto, Batería, Bajo"
                                 />
-                                {errors['datos_musicales.desired_instrument'] && (
-                                    <p className="text-sm text-red-600 mt-1">{errors['datos_musicales.desired_instrument']}</p>
-                                )}
+                                <InputError message={errors['datos_musicales.desired_instrument']} />
                             </div>
 
                             <div>
@@ -656,9 +639,7 @@ export default function Create({ programs }: Props) {
                                         <SelectItem value="Linaje Big">Linaje Big - Mayores de 18 años</SelectItem>
                                     </SelectContent>
                                 </Select>
-                                {errors['datos_musicales.modality'] && (
-                                    <p className="text-sm text-red-600 mt-1">{errors['datos_musicales.modality']}</p>
-                                )}
+                                <InputError message={errors['datos_musicales.modality']} />
                             </div>
 
                             <div>
@@ -676,9 +657,7 @@ export default function Create({ programs }: Props) {
                                     }
                                     placeholder="Ej: 1"
                                 />
-                                {errors['datos_musicales.current_level'] && (
-                                    <p className="text-sm text-red-600 mt-1">{errors['datos_musicales.current_level']}</p>
-                                )}
+                                <InputError message={errors['datos_musicales.current_level']} />
                             </div>
                         </CardContent>
                     </Card>
@@ -747,6 +726,7 @@ export default function Create({ programs }: Props) {
                                                             ))}
                                                     </SelectContent>
                                                 </Select>
+                                                <InputError message={errors['schedule_id']} />
                                                 {data.schedule_id && (
                                                     <Button
                                                         type="button"

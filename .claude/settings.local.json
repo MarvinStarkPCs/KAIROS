@@ -3,7 +3,11 @@
     "allow": [
       "Bash(.env)",
       "Bash(php artisan:*)",
-      "Bash(storage/logs/laravel.log)"
+      "Bash(storage/logs/laravel.log)",
+      "Bash(npm run dev:*)",
+      "Bash(nul)",
+      "WebFetch(domain:docs.wompi.co)",
+      "WebSearch"
     ],
     "deny": [],
     "ask": []

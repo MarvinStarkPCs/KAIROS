@@ -13,7 +13,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        // Registrar MailService como singleton para usar en toda la aplicación
+        $this->app->singleton(\App\Services\MailService::class, function ($app) {
+            return new \App\Services\MailService();
+        });
     }
 
     /**

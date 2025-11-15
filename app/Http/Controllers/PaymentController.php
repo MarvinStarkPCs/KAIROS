@@ -347,4 +347,88 @@ class PaymentController extends Controller
 
         return response()->json($payment);
     }
+
+    /**
+     * Webhook de Wompi para recibir notificaciones de pagos
+     */
+    public function wompiWebhook(Request $request)
+    {
+        \Log::info('Wompi Webhook recibido:', $request->all());
+
+        // Verificar firma del webhook
+        $signature = $request->header('X-Event-Checksum');
+        $eventData = $request->all();
+
+        $expectedSignature = hash('sha256', json_encode($eventData['data']) . config('wompi.events_secret'));
+
+        if ($signature !== $expectedSignature) {
+            \Log::error('Firma de webhook inválida');
+            return response()->json(['error' => 'Firma inválida'], 401);
+        }
+
+        $event = $eventData['event'];
+        $transactionData = $eventData['data']['transaction'];
+
+        // Solo procesar eventos de transacciones aprobadas o rechazadas
+        if ($event !== 'transaction.updated') {
+            return response()->json(['message' => 'Evento ignorado'], 200);
+        }
+
+        // Buscar el pago por la referencia
+        $payment = Payment::where('wompi_reference', $transactionData['reference'])->first();
+
+        if (!$payment) {
+            \Log::error('Pago no encontrado para referencia: ' . $transactionData['reference']);
+            return response()->json(['error' => 'Pago no encontrado'], 404);
+        }
+
+        // Actualizar el pago según el estado de la transacción
+        $status = $transactionData['status'];
+
+        $payment->wompi_transaction_id = $transactionData['id'];
+        $payment->payment_method = $transactionData['payment_method_type'];
+
+        if ($status === 'APPROVED') {
+            $payment->status = 'completed';
+            $payment->payment_date = now();
+            $payment->paid_amount = $payment->amount;
+            $payment->remaining_amount = 0;
+
+            // Si es pago con tarjeta, guardar token para cobros recurrentes
+            if (isset($transactionData['payment_method']['type']) &&
+                in_array($transactionData['payment_method']['type'], ['CARD', 'BANCOLOMBIA_TRANSFER'])) {
+
+                // Verificar si hay un token de tarjeta
+                if (isset($transactionData['payment_method']['extra']['token'])) {
+                    $payment->card_token = $transactionData['payment_method']['extra']['token'];
+                    $payment->payment_source_id = $transactionData['payment_source_id'] ?? null;
+                    $payment->is_recurring = true;
+
+                    // Guardar info de la tarjeta
+                    if (isset($transactionData['payment_method']['extra']['last_four'])) {
+                        $payment->last_4_digits = $transactionData['payment_method']['extra']['last_four'];
+                    }
+                    if (isset($transactionData['payment_method']['extra']['card_type'])) {
+                        $payment->card_brand = $transactionData['payment_method']['extra']['card_type'];
+                    }
+
+                    // Establecer próxima fecha de cobro (30 días después)
+                    $payment->next_charge_date = Carbon::now()->addDays(30);
+                }
+            }
+
+            \Log::info('Pago aprobado:', ['payment_id' => $payment->id, 'transaction_id' => $transactionData['id']]);
+
+            // TODO: Enviar email de confirmación al responsable
+
+        } elseif ($status === 'DECLINED' || $status === 'ERROR') {
+            $payment->status = 'cancelled';
+
+            \Log::warning('Pago rechazado:', ['payment_id' => $payment->id, 'transaction_id' => $transactionData['id']]);
+        }
+
+        $payment->save();
+
+        return response()->json(['message' => 'Webhook procesado exitosamente'], 200);
+    }
 }

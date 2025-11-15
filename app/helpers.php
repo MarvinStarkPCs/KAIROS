@@ -41,3 +41,14 @@ if (! function_exists('flash_warning')) {
         FlashHelper::warning($message);
     }
 }
+
+if (! function_exists('mail_service')) {
+    /**
+     * Get the MailService instance.
+     * Use this to access SMTP configuration or reconfigure mail on-the-fly.
+     */
+    function mail_service(): \App\Services\MailService
+    {
+        return app(\App\Services\MailService::class);
+    }
+}
