@@ -6,7 +6,11 @@ use App\Models\Payment;
 use App\Models\User;
 use App\Models\AcademicProgram;
 use App\Models\Enrollment;
+use App\Models\PaymentSetting;
+use App\Mail\PaymentConfirmed;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Http;
 use Inertia\Inertia;
 use Carbon\Carbon;
 
@@ -349,6 +353,134 @@ class PaymentController extends Controller
     }
 
     /**
+     * Mostrar configuración de pagos
+     */
+    public function settings()
+    {
+        $paymentSetting = PaymentSetting::first();
+
+        return Inertia::render('Payments/Settings', [
+            'paymentSetting' => $paymentSetting,
+        ]);
+    }
+
+    /**
+     * Actualizar configuración de pagos
+     */
+    public function updateSettings(Request $request)
+    {
+        $validated = $request->validate([
+            'monthly_amount' => ['required', 'numeric', 'min:1000'],
+            'is_active' => ['required', 'boolean'],
+        ], [
+            'monthly_amount.required' => 'El monto mensual es obligatorio',
+            'monthly_amount.numeric' => 'El monto debe ser un número',
+            'monthly_amount.min' => 'El monto debe ser al menos $1,000 COP',
+            'is_active.required' => 'El estado es obligatorio',
+            'is_active.boolean' => 'El estado debe ser verdadero o falso',
+        ]);
+
+        $paymentSetting = PaymentSetting::first();
+
+        if ($paymentSetting) {
+            $paymentSetting->update($validated);
+            flash_success('Configuración de pagos actualizada correctamente');
+        } else {
+            PaymentSetting::create($validated);
+            flash_success('Configuración de pagos creada correctamente');
+        }
+
+        return redirect()->back();
+    }
+
+    /**
+     * Verificar estado de pago en Wompi manualmente
+     */
+    public function checkWompiStatus(Payment $payment)
+    {
+        // Verificar que el pago tenga un wompi_transaction_id o wompi_reference
+        if (!$payment->wompi_transaction_id && !$payment->wompi_reference) {
+            flash_error('Este pago no tiene información de Wompi para consultar.');
+            return redirect()->back();
+        }
+
+        try {
+            $transactionId = $payment->wompi_transaction_id;
+
+            // Si no tiene transaction_id pero tiene reference, buscar por reference
+            if (!$transactionId && $payment->wompi_reference) {
+                // Intentar consultar por referencia (esto requiere buscar en el historial de transacciones)
+                flash_info('Este pago aún no tiene un ID de transacción registrado. Espere a que Wompi procese el pago.');
+                return redirect()->back();
+            }
+
+            // Consultar transacción en Wompi
+            $response = Http::get("https://production.wompi.co/v1/transactions/{$transactionId}");
+
+            if (!$response->successful()) {
+                \Log::error('Error consultando transacción en Wompi', [
+                    'payment_id' => $payment->id,
+                    'transaction_id' => $transactionId,
+                    'response' => $response->body()
+                ]);
+                flash_error('No se pudo consultar el estado en Wompi. Verifique que el ID de transacción sea correcto.');
+                return redirect()->back();
+            }
+
+            $transactionData = $response->json()['data'];
+            $status = $transactionData['status'];
+
+            // Actualizar el pago según el estado
+            $originalStatus = $payment->status;
+
+            if ($status === 'APPROVED' && $payment->status !== 'completed') {
+                $payment->status = 'completed';
+                $payment->payment_date = now();
+                $payment->paid_amount = $payment->amount;
+                $payment->remaining_amount = 0;
+                $payment->payment_method = $transactionData['payment_method_type'] ?? $payment->payment_method;
+
+                $payment->save();
+
+                \Log::info('Pago actualizado manualmente desde Wompi', [
+                    'payment_id' => $payment->id,
+                    'transaction_id' => $transactionId,
+                    'old_status' => $originalStatus,
+                    'new_status' => 'completed'
+                ]);
+
+                flash_success('¡Pago verificado y actualizado! Estado en Wompi: APROBADO');
+            } elseif ($status === 'DECLINED' || $status === 'ERROR') {
+                if ($payment->status !== 'cancelled') {
+                    $payment->status = 'cancelled';
+                    $payment->save();
+
+                    \Log::info('Pago rechazado verificado desde Wompi', [
+                        'payment_id' => $payment->id,
+                        'transaction_id' => $transactionId
+                    ]);
+                }
+
+                flash_warning('El pago fue rechazado en Wompi. Estado: ' . $status);
+            } elseif ($status === 'PENDING') {
+                flash_info('El pago está pendiente en Wompi. Estado: PENDIENTE');
+            } else {
+                flash_info('Estado del pago en Wompi: ' . $status);
+            }
+
+            return redirect()->back();
+
+        } catch (\Exception $e) {
+            \Log::error('Error verificando estado en Wompi: ' . $e->getMessage(), [
+                'payment_id' => $payment->id,
+                'exception' => $e->getTraceAsString()
+            ]);
+            flash_error('Ocurrió un error al consultar el estado en Wompi: ' . $e->getMessage());
+            return redirect()->back();
+        }
+    }
+
+    /**
      * Webhook de Wompi para recibir notificaciones de pagos
      */
     public function wompiWebhook(Request $request)
@@ -419,7 +551,27 @@ class PaymentController extends Controller
 
             \Log::info('Pago aprobado:', ['payment_id' => $payment->id, 'transaction_id' => $transactionData['id']]);
 
-            // TODO: Enviar email de confirmación al responsable
+            // Enviar email de confirmación al responsable o estudiante
+            try {
+                $recipient = $payment->student;
+
+                // Si el estudiante tiene padre/guardian, enviar el email al padre
+                if ($recipient->parent_id) {
+                    $parent = User::find($recipient->parent_id);
+                    if ($parent && $parent->email) {
+                        Mail::to($parent->email)->send(new PaymentConfirmed($payment));
+                        \Log::info('Email enviado al padre/guardian:', ['email' => $parent->email]);
+                    }
+                }
+
+                // También enviar al estudiante si tiene email
+                if ($recipient->email) {
+                    Mail::to($recipient->email)->send(new PaymentConfirmed($payment));
+                    \Log::info('Email enviado al estudiante:', ['email' => $recipient->email]);
+                }
+            } catch (\Exception $e) {
+                \Log::error('Error enviando email de confirmación: ' . $e->getMessage());
+            }
 
         } elseif ($status === 'DECLINED' || $status === 'ERROR') {
             $payment->status = 'cancelled';

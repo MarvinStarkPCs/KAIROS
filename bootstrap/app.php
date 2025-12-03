@@ -36,6 +36,10 @@ return Application::configure(basePath: dirname(__DIR__))
 
         // Marcar pagos vencidos diariamente a las 6:00 AM (después del día 5)
         $schedule->command('payments:mark-overdue')->dailyAt('06:00');
+
+        // Verificar pagos manuales pendientes del 1-5 del mes
+        // Se ejecuta el día 6 de cada mes a las 7:00 AM
+        $schedule->command('payments:check-pending-manual')->monthlyOn(6, '07:00');
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //

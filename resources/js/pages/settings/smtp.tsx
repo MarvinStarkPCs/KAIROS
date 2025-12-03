@@ -1,8 +1,7 @@
-import SmtpController from '@/actions/App/Http/Controllers/Settings/SmtpController';
 import { type BreadcrumbItem } from '@/types';
-import { Form, Head, router } from '@inertiajs/react';
+import { useForm, Head, router } from '@inertiajs/react';
 import { Mail, Send } from 'lucide-react';
-import { useState } from 'react';
+import { FormEventHandler, useState } from 'react';
 
 import HeadingSmall from '@/components/heading-small';
 import InputError from '@/components/input-error';
@@ -48,6 +47,24 @@ export default function SmtpSettings({
     const [testEmail, setTestEmail] = useState('');
     const [isSendingTest, setIsSendingTest] = useState(false);
 
+    const { data, setData, patch, processing, errors } = useForm({
+        host: smtpSetting?.host ?? '',
+        port: smtpSetting?.port ?? 587,
+        username: smtpSetting?.username ?? '',
+        password: '',
+        encryption: smtpSetting?.encryption ?? 'tls',
+        from_address: smtpSetting?.from_address ?? '',
+        from_name: smtpSetting?.from_name ?? '',
+        is_active: smtpSetting?.is_active ?? true,
+    });
+
+    const submit: FormEventHandler = (e) => {
+        e.preventDefault();
+        patch('/settings/smtp', {
+            preserveScroll: true,
+        });
+    };
+
     const handleTestEmail = () => {
         if (!testEmail) return;
 
@@ -72,14 +89,8 @@ export default function SmtpSettings({
                         description="Configura el servidor SMTP para enviar correos electrónicos desde la aplicación"
                     />
 
-                    <Form
-                        {...SmtpController.update.form()}
-                        options={{
-                            preserveScroll: true,
-                        }}
-                        className="space-y-6"
-                    >
-                        {({ processing, errors }) => (
+                    <form onSubmit={submit} className="space-y-6">
+                        {(() => (
                             <>
                                 {/* Host */}
                                 <div className="grid gap-2">
@@ -88,10 +99,10 @@ export default function SmtpSettings({
                                     </Label>
                                     <Input
                                         id="host"
-                                        name="host"
                                         type="text"
                                         className="mt-1 block w-full"
-                                        defaultValue={smtpSetting?.host ?? ''}
+                                        value={data.host}
+                                        onChange={(e) => setData('host', e.target.value)}
                                         placeholder="smtp.gmail.com"
                                         required
                                     />
@@ -107,10 +118,10 @@ export default function SmtpSettings({
                                         <Label htmlFor="port">Puerto</Label>
                                         <Input
                                             id="port"
-                                            name="port"
                                             type="number"
                                             className="mt-1 block w-full"
-                                            defaultValue={smtpSetting?.port ?? 587}
+                                            value={data.port}
+                                            onChange={(e) => setData('port', parseInt(e.target.value))}
                                             placeholder="587"
                                             required
                                         />
@@ -124,22 +135,10 @@ export default function SmtpSettings({
                                         <Label htmlFor="encryption">
                                             Encriptación
                                         </Label>
-                                        <input
-                                            type="hidden"
-                                            name="encryption"
-                                            value={smtpSetting?.encryption ?? 'tls'}
-                                        />
                                         <Select
-                                            defaultValue={
-                                                smtpSetting?.encryption ?? 'tls'
-                                            }
+                                            value={data.encryption}
                                             onValueChange={(value) => {
-                                                const input = document.querySelector(
-                                                    'input[name="encryption"]'
-                                                ) as HTMLInputElement;
-                                                if (input) {
-                                                    input.value = value === 'none' ? '' : value;
-                                                }
+                                                setData('encryption', value === 'none' ? '' : value);
                                             }}
                                         >
                                             <SelectTrigger className="w-full">
@@ -171,10 +170,10 @@ export default function SmtpSettings({
                                     </Label>
                                     <Input
                                         id="username"
-                                        name="username"
                                         type="text"
                                         className="mt-1 block w-full"
-                                        defaultValue={smtpSetting?.username ?? ''}
+                                        value={data.username}
+                                        onChange={(e) => setData('username', e.target.value)}
                                         placeholder="usuario@dominio.com"
                                     />
                                     <InputError
@@ -188,9 +187,10 @@ export default function SmtpSettings({
                                     <Label htmlFor="password">Contraseña</Label>
                                     <Input
                                         id="password"
-                                        name="password"
                                         type="password"
                                         className="mt-1 block w-full"
+                                        value={data.password}
+                                        onChange={(e) => setData('password', e.target.value)}
                                         placeholder="••••••••"
                                     />
                                     <p className="text-xs text-muted-foreground">
@@ -209,10 +209,10 @@ export default function SmtpSettings({
                                     </Label>
                                     <Input
                                         id="from_address"
-                                        name="from_address"
                                         type="email"
                                         className="mt-1 block w-full"
-                                        defaultValue={smtpSetting?.from_address ?? ''}
+                                        value={data.from_address}
+                                        onChange={(e) => setData('from_address', e.target.value)}
                                         placeholder="noreply@dominio.com"
                                         required
                                     />
@@ -229,10 +229,10 @@ export default function SmtpSettings({
                                     </Label>
                                     <Input
                                         id="from_name"
-                                        name="from_name"
                                         type="text"
                                         className="mt-1 block w-full"
-                                        defaultValue={smtpSetting?.from_name ?? ''}
+                                        value={data.from_name}
+                                        onChange={(e) => setData('from_name', e.target.value)}
                                         placeholder="KAIROS"
                                         required
                                     />
@@ -243,11 +243,6 @@ export default function SmtpSettings({
                                 </div>
 
                                 {/* Is Active */}
-                                <input
-                                    type="hidden"
-                                    name="is_active"
-                                    value={smtpSetting?.is_active ? '1' : '0'}
-                                />
                                 <div className="flex items-center justify-between rounded-lg border p-4">
                                     <div className="space-y-0.5">
                                         <Label htmlFor="is_active">
@@ -259,15 +254,8 @@ export default function SmtpSettings({
                                     </div>
                                     <Switch
                                         id="is_active"
-                                        defaultChecked={smtpSetting?.is_active ?? true}
-                                        onCheckedChange={(checked) => {
-                                            const input = document.querySelector(
-                                                'input[name="is_active"]'
-                                            ) as HTMLInputElement;
-                                            if (input) {
-                                                input.value = checked ? '1' : '0';
-                                            }
-                                        }}
+                                        checked={data.is_active}
+                                        onCheckedChange={(checked) => setData('is_active', checked)}
                                     />
                                 </div>
 
@@ -280,8 +268,8 @@ export default function SmtpSettings({
                                     </Button>
                                 </div>
                             </>
-                        )}
-                    </Form>
+                        ))()}
+                    </form>
 
                     {/* Test Email Section */}
                     {smtpSetting && (

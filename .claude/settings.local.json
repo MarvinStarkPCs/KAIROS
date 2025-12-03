@@ -7,7 +7,12 @@
       "Bash(npm run dev:*)",
       "Bash(nul)",
       "WebFetch(domain:docs.wompi.co)",
-      "WebSearch"
+      "WebSearch",
+      "Bash(npm run build:*)",
+      "Bash(mkdir:*)",
+      "Bash(php -l:*)",
+      "Bash(php test-payment.php:*)",
+      "Bash(php test-matricula.php:*)"
     ],
     "deny": [],
     "ask": []

@@ -9,6 +9,7 @@ use App\Models\ParentGuardian;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Carbon\Carbon;
@@ -62,12 +63,12 @@ class MatriculaController extends Controller
             // Datos del responsable (quien se registra)
             'responsable.name' => ['required', 'string', 'max:255'],
             'responsable.last_name' => ['required', 'string', 'max:255'],
-            'responsable.email' => ['required', 'email', 'unique:users,email'],
+            'responsable.email' => ['required', 'email', 'max:255', 'unique:users,email'],
             'responsable.password' => ['required', 'string', 'min:8', 'confirmed'],
-            'responsable.document_type' => ['required', Rule::in(['TI', 'CC'])],
-            'responsable.document_number' => ['required', 'string', 'unique:users,document_number'],
+            'responsable.document_type' => ['required', Rule::in(['TI', 'CC', 'CE', 'Pasaporte'])],
+            'responsable.document_number' => ['required', 'string', 'max:50', 'unique:users,document_number'],
             'responsable.birth_place' => ['nullable', 'string', 'max:255'],
-            'responsable.birth_date' => ['required', 'date'],
+            'responsable.birth_date' => ['required', 'date', 'before:today'],
             'responsable.gender' => ['required', Rule::in(['M', 'F'])],
             'responsable.address' => ['required', 'string'],
             'responsable.neighborhood' => ['nullable', 'string', 'max:255'],
@@ -79,40 +80,88 @@ class MatriculaController extends Controller
             // Indica si el estudiante es el mismo que el responsable o es un menor
             'is_minor' => ['required', 'boolean'],
 
-            // Datos del estudiante (si es menor)
-            'estudiante.name' => ['required_if:is_minor,true', 'string', 'max:255'],
-            'estudiante.last_name' => ['required_if:is_minor,true', 'string', 'max:255'],
-            'estudiante.email' => ['nullable', 'email', 'unique:users,email'],
-            'estudiante.document_type' => ['required_if:is_minor,true', Rule::in(['TI', 'CC'])],
-            'estudiante.document_number' => ['required_if:is_minor,true', 'string', 'unique:users,document_number'],
-            'estudiante.birth_place' => ['nullable', 'string', 'max:255'],
-            'estudiante.birth_date' => ['required_if:is_minor,true', 'date'],
-            'estudiante.gender' => ['required_if:is_minor,true', Rule::in(['M', 'F'])],
+            // Si NO es menor (adulto que se inscribe a sí mismo)
+            'responsable.plays_instrument' => ['required_if:is_minor,false', 'boolean'],
+            'responsable.instruments_played' => ['nullable', 'string'],
+            'responsable.has_music_studies' => ['required_if:is_minor,false', 'boolean'],
+            'responsable.music_schools' => ['nullable', 'string'],
+            'responsable.desired_instrument' => ['required_if:is_minor,false', 'string', 'max:255'],
+            'responsable.modality' => ['required_if:is_minor,false', Rule::in(['Linaje Kids', 'Linaje Teens', 'Linaje Big'])],
+            'responsable.current_level' => ['required_if:is_minor,false', 'integer', 'min:1', 'max:10'],
+            'responsable.program_id' => ['required_if:is_minor,false', 'exists:academic_programs,id'],
+            'responsable.schedule_id' => ['nullable', 'exists:schedules,id'],
 
-            // Datos musicales (del estudiante)
-            'datos_musicales.plays_instrument' => ['required', 'boolean'],
-            'datos_musicales.instruments_played' => ['nullable', 'string'],
-            'datos_musicales.has_music_studies' => ['required', 'boolean'],
-            'datos_musicales.music_schools' => ['nullable', 'string'],
-            'datos_musicales.desired_instrument' => ['required', 'string', 'max:255'],
-            'datos_musicales.modality' => ['required', Rule::in(['Linaje Kids', 'Linaje Teens', 'Linaje Big'])],
-            'datos_musicales.current_level' => ['required', 'integer', 'min:1'],
-
-            // Programa académico
-            'program_id' => ['required', 'exists:academic_programs,id'],
-            'schedule_id' => ['nullable', 'exists:schedules,id'],
+            // Array de estudiantes (si es menor)
+            'estudiantes' => ['required_if:is_minor,true', 'array', 'min:1', 'max:10'],
+            'estudiantes.*.name' => ['required', 'string', 'max:255'],
+            'estudiantes.*.last_name' => ['required', 'string', 'max:255'],
+            'estudiantes.*.email' => ['nullable', 'email', 'max:255', 'unique:users,email'],
+            'estudiantes.*.document_type' => ['required', Rule::in(['TI', 'CC', 'CE', 'Pasaporte'])],
+            'estudiantes.*.document_number' => ['required', 'string', 'max:50', 'unique:users,document_number'],
+            'estudiantes.*.birth_place' => ['nullable', 'string', 'max:255'],
+            'estudiantes.*.birth_date' => ['required', 'date', 'before:today'],
+            'estudiantes.*.gender' => ['required', Rule::in(['M', 'F'])],
+            'estudiantes.*.datos_musicales.plays_instrument' => ['required', 'boolean'],
+            'estudiantes.*.datos_musicales.instruments_played' => ['nullable', 'string'],
+            'estudiantes.*.datos_musicales.has_music_studies' => ['required', 'boolean'],
+            'estudiantes.*.datos_musicales.music_schools' => ['nullable', 'string'],
+            'estudiantes.*.datos_musicales.desired_instrument' => ['required', 'string', 'max:255'],
+            'estudiantes.*.datos_musicales.modality' => ['required', Rule::in(['Linaje Kids', 'Linaje Teens', 'Linaje Big'])],
+            'estudiantes.*.datos_musicales.current_level' => ['required', 'integer', 'min:1', 'max:10'],
+            'estudiantes.*.program_id' => ['required', 'exists:academic_programs,id'],
+            'estudiantes.*.schedule_id' => ['nullable', 'exists:schedules,id'],
 
             // Autorización y compromiso
-            'parental_authorization' => ['required_if:is_minor,true', 'accepted'],
+            'parental_authorization' => [
+                function ($attribute, $value, $fail) use ($request) {
+                    // Solo validar si is_minor es true
+                    if ($request->input('is_minor') == true) {
+                        if (!$value || $value !== true) {
+                            $fail('Debe aceptar la autorización parental para menores de edad.');
+                        }
+                    }
+                },
+            ],
             'payment_commitment' => ['required', 'accepted'],
         ], [
+            // Mensajes personalizados - Responsable
             'responsable.name.required' => 'El nombre del responsable es obligatorio',
+            'responsable.last_name.required' => 'Los apellidos del responsable son obligatorios',
             'responsable.email.required' => 'El correo electrónico es obligatorio',
             'responsable.email.unique' => 'Este correo electrónico ya está registrado',
+            'responsable.password.min' => 'La contraseña debe tener al menos 8 caracteres',
+            'responsable.password.confirmed' => 'Las contraseñas no coinciden',
+            'responsable.document_number.required' => 'El número de documento es obligatorio',
             'responsable.document_number.unique' => 'Este número de documento ya está registrado',
-            'estudiante.email.unique' => 'Este correo electrónico ya está registrado',
-            'estudiante.document_number.unique' => 'Este número de documento ya está registrado',
-            'program_id.required' => 'Debe seleccionar un programa académico',
+            'responsable.birth_date.required' => 'La fecha de nacimiento es obligatoria',
+            'responsable.birth_date.before' => 'La fecha de nacimiento debe ser anterior a hoy',
+            'responsable.mobile.required' => 'El número de celular es obligatorio',
+            'responsable.address.required' => 'La dirección es obligatoria',
+            'responsable.city.required' => 'La ciudad es obligatoria',
+            'responsable.department.required' => 'El departamento es obligatorio',
+
+            // Mensajes - Datos musicales responsable
+            'responsable.desired_instrument.required_if' => 'Debe indicar el instrumento que desea estudiar',
+            'responsable.modality.required_if' => 'Debe seleccionar una modalidad',
+            'responsable.program_id.required_if' => 'Debe seleccionar un programa académico',
+
+            // Mensajes - Estudiantes
+            'estudiantes.required_if' => 'Debe agregar al menos un estudiante',
+            'estudiantes.min' => 'Debe agregar al menos un estudiante',
+            'estudiantes.max' => 'No puede agregar más de 10 estudiantes',
+            'estudiantes.*.name.required' => 'El nombre del estudiante es obligatorio',
+            'estudiantes.*.last_name.required' => 'Los apellidos del estudiante son obligatorios',
+            'estudiantes.*.email.unique' => 'Este correo electrónico ya está registrado',
+            'estudiantes.*.document_number.required' => 'El número de documento del estudiante es obligatorio',
+            'estudiantes.*.document_number.unique' => 'Este número de documento ya está registrado',
+            'estudiantes.*.birth_date.required' => 'La fecha de nacimiento del estudiante es obligatoria',
+            'estudiantes.*.birth_date.before' => 'La fecha de nacimiento debe ser anterior a hoy',
+            'estudiantes.*.gender.required' => 'El género del estudiante es obligatorio',
+            'estudiantes.*.datos_musicales.desired_instrument.required' => 'Debe indicar el instrumento que el estudiante desea estudiar',
+            'estudiantes.*.datos_musicales.modality.required' => 'Debe seleccionar una modalidad para el estudiante',
+            'estudiantes.*.program_id.required' => 'Debe seleccionar un programa académico para cada estudiante',
+
+            // Mensajes - Autorizaciones
             'payment_commitment.accepted' => 'Debe aceptar el compromiso de pago',
             'parental_authorization.accepted' => 'Debe aceptar la autorización parental',
         ]);
@@ -125,121 +174,279 @@ class MatriculaController extends Controller
             $responsableData['password'] = Hash::make($responsableData['password']);
             $responsableData['user_type'] = $validated['is_minor'] ? 'guardian' : 'both';
 
-            // Si el responsable también es el estudiante, agregar datos musicales
-            if (!$validated['is_minor']) {
-                $responsableData = array_merge($responsableData, $validated['datos_musicales']);
-            }
-
             $responsable = User::create($responsableData);
             $responsable->assignRole('Estudiante');
 
-            $studentUser = null;
+            $payments = [];
+            $enrollments = [];
 
-            // 2. Si es menor, crear usuario para el estudiante
-            if ($validated['is_minor']) {
-                $estudianteData = $validated['estudiante'];
-                $estudianteData['user_type'] = 'student';
-                $estudianteData['parent_id'] = $responsable->id;
+            // 2. Si NO es menor, el responsable ES el estudiante
+            if (!$validated['is_minor']) {
+                // El responsable es el estudiante adulto que se inscribe a sí mismo
+                // Necesita tener datos musicales en el formulario
 
-                // Si el estudiante tiene email, generar contraseña temporal
-                if (!empty($estudianteData['email'])) {
-                    $estudianteData['password'] = Hash::make('temporal123'); // Contraseña temporal
-                } else {
-                    // Si no tiene email, usar el email del responsable con +hijo
-                    $estudianteData['email'] = null;
-                    $estudianteData['password'] = null;
+                // Verificar que el responsable tenga programa seleccionado
+                if (!isset($validated['responsable']['program_id'])) {
+                    throw new \Exception('Debe seleccionar un programa académico');
                 }
 
-                // Heredar datos de ubicación del responsable
-                $estudianteData['address'] = $responsableData['address'];
-                $estudianteData['neighborhood'] = $responsableData['neighborhood'] ?? null;
-                $estudianteData['city'] = $responsableData['city'];
-                $estudianteData['department'] = $responsableData['department'];
-                $estudianteData['phone'] = $responsableData['phone'] ?? null;
-                $estudianteData['mobile'] = $responsableData['mobile'];
+                // Agregar datos musicales al responsable si no existen
+                $responsable->plays_instrument = $validated['responsable']['plays_instrument'] ?? false;
+                $responsable->instruments_played = $validated['responsable']['instruments_played'] ?? null;
+                $responsable->has_music_studies = $validated['responsable']['has_music_studies'] ?? false;
+                $responsable->music_schools = $validated['responsable']['music_schools'] ?? null;
+                $responsable->desired_instrument = $validated['responsable']['desired_instrument'] ?? null;
+                $responsable->modality = $validated['responsable']['modality'] ?? 'Linaje Big';
+                $responsable->current_level = $validated['responsable']['current_level'] ?? 1;
+                $responsable->save();
 
-                // Agregar datos musicales al estudiante
-                $estudianteData = array_merge($estudianteData, $validated['datos_musicales']);
-
-                $studentUser = User::create($estudianteData);
-                $studentUser->assignRole('Estudiante');
-
-                // 3. Crear registro en parent_guardians
-                ParentGuardian::create([
-                    'student_id' => $studentUser->id,
-                    'relationship_type' => 'padre', // Podríamos agregar un campo en el form
-                    'name' => $responsable->name . ' ' . $responsable->last_name,
-                    'address' => $responsable->address,
-                    'phone' => $responsable->mobile,
-                    'has_signed_authorization' => true,
-                    'authorization_date' => now(),
+                // Crear inscripción para el responsable
+                $enrollment = Enrollment::create([
+                    'student_id' => $responsable->id,
+                    'program_id' => $validated['responsable']['program_id'],
+                    'enrolled_level' => $responsable->current_level,
+                    'enrollment_date' => Carbon::today(),
+                    'status' => 'active',
+                    'payment_commitment_signed' => true,
+                    'payment_commitment_date' => now(),
                 ]);
+
+                $enrollments[] = $enrollment;
+
+                // Si se seleccionó un horario, inscribir al estudiante
+                if (!empty($validated['responsable']['schedule_id'])) {
+                    $schedule = \App\Models\Schedule::find($validated['responsable']['schedule_id']);
+
+                    if ($schedule && $schedule->hasAvailableSlots()) {
+                        \App\Models\ScheduleEnrollment::create([
+                            'student_id' => $responsable->id,
+                            'schedule_id' => $validated['responsable']['schedule_id'],
+                            'enrollment_date' => Carbon::today(),
+                            'status' => 'enrolled',
+                        ]);
+                    }
+                }
+
+                // Crear pago inicial de matrícula
+                $program = AcademicProgram::find($validated['responsable']['program_id']);
+
+                // Monto de prueba para validación de tarjeta: $1,500 COP (mínimo requerido por Wompi)
+                $paymentAmount = 1500;
+
+                $payment = \App\Models\Payment::create([
+                    'student_id' => $responsable->id,
+                    'program_id' => $program->id,
+                    'enrollment_id' => $enrollment->id,
+                    'concept' => 'Validación de Tarjeta - Matrícula ' . $program->name . ' - ' . $responsable->name,
+                    'payment_type' => 'single',
+                    'amount' => $paymentAmount,
+                    'original_amount' => $paymentAmount,
+                    'paid_amount' => 0,
+                    'remaining_amount' => $paymentAmount,
+                    'due_date' => Carbon::today(),
+                    'status' => 'pending',
+                    'wompi_reference' => 'MAT-' . $enrollment->id . '-' . time(),
+                ]);
+
+                $payments[] = $payment;
             }
+            // 3. Si es menor, procesar cada estudiante hijo
+            elseif ($validated['is_minor']) {
+                foreach ($validated['estudiantes'] as $estudianteData) {
+                    // Crear usuario para el estudiante
+                    $datosUsuario = [
+                        'name' => $estudianteData['name'],
+                        'last_name' => $estudianteData['last_name'],
+                        'email' => $estudianteData['email'] ?? null,
+                        'document_type' => $estudianteData['document_type'],
+                        'document_number' => $estudianteData['document_number'],
+                        'birth_place' => $estudianteData['birth_place'] ?? null,
+                        'birth_date' => $estudianteData['birth_date'],
+                        'gender' => $estudianteData['gender'],
+                        'user_type' => 'student',
+                        'parent_id' => $responsable->id,
+                        // Heredar datos de ubicación del responsable
+                        'address' => $responsableData['address'],
+                        'neighborhood' => $responsableData['neighborhood'] ?? null,
+                        'city' => $responsableData['city'],
+                        'department' => $responsableData['department'],
+                        'phone' => $responsableData['phone'] ?? null,
+                        'mobile' => $responsableData['mobile'],
+                        // Datos musicales
+                        'plays_instrument' => $estudianteData['datos_musicales']['plays_instrument'],
+                        'instruments_played' => $estudianteData['datos_musicales']['instruments_played'] ?? null,
+                        'has_music_studies' => $estudianteData['datos_musicales']['has_music_studies'],
+                        'music_schools' => $estudianteData['datos_musicales']['music_schools'] ?? null,
+                        'desired_instrument' => $estudianteData['datos_musicales']['desired_instrument'],
+                        'modality' => $estudianteData['datos_musicales']['modality'],
+                        'current_level' => $estudianteData['datos_musicales']['current_level'],
+                    ];
 
-            // 4. Crear la inscripción (enrollment)
-            $enrollmentData = [
-                'student_id' => $validated['is_minor'] ? $studentUser->id : $responsable->id,
-                'program_id' => $validated['program_id'],
-                'enrolled_level' => $validated['datos_musicales']['current_level'],
-                'enrollment_date' => Carbon::today(),
-                'status' => 'active',
-                'payment_commitment_signed' => true,
-                'payment_commitment_date' => now(),
-            ];
+                    // Si el estudiante tiene email, generar contraseña temporal
+                    if (!empty($datosUsuario['email'])) {
+                        $datosUsuario['password'] = Hash::make('temporal123');
+                    } else {
+                        $datosUsuario['password'] = null;
+                    }
 
-            // Si es menor, agregar información de autorización parental
-            if ($validated['is_minor']) {
-                $enrollmentData['parental_authorization_signed'] = true;
-                $enrollmentData['parental_authorization_date'] = now();
-                $enrollmentData['parent_guardian_name'] = $responsable->name . ' ' . $responsable->last_name;
-            }
+                    $studentUser = User::create($datosUsuario);
+                    $studentUser->assignRole('Estudiante');
 
-            $enrollment = Enrollment::create($enrollmentData);
-
-            // 5. Si se seleccionó un horario, inscribir al estudiante
-            if (!empty($validated['schedule_id'])) {
-                $schedule = \App\Models\Schedule::find($validated['schedule_id']);
-
-                if ($schedule && $schedule->hasAvailableSlots()) {
-                    \App\Models\ScheduleEnrollment::create([
-                        'student_id' => $validated['is_minor'] ? $studentUser->id : $responsable->id,
-                        'schedule_id' => $validated['schedule_id'],
-                        'enrollment_date' => Carbon::today(),
-                        'status' => 'enrolled',
+                    // 3. Crear registro en parent_guardians
+                    ParentGuardian::create([
+                        'student_id' => $studentUser->id,
+                        'relationship_type' => 'padre',
+                        'name' => $responsable->name . ' ' . $responsable->last_name,
+                        'address' => $responsable->address,
+                        'phone' => $responsable->mobile,
+                        'has_signed_authorization' => true,
+                        'authorization_date' => now(),
                     ]);
+
+                    // 4. Crear la inscripción (enrollment) para este estudiante
+                    $enrollment = Enrollment::create([
+                        'student_id' => $studentUser->id,
+                        'program_id' => $estudianteData['program_id'],
+                        'enrolled_level' => $estudianteData['datos_musicales']['current_level'],
+                        'enrollment_date' => Carbon::today(),
+                        'status' => 'active',
+                        'payment_commitment_signed' => true,
+                        'payment_commitment_date' => now(),
+                        'parental_authorization_signed' => true,
+                        'parental_authorization_date' => now(),
+                        'parent_guardian_name' => $responsable->name . ' ' . $responsable->last_name,
+                    ]);
+
+                    $enrollments[] = $enrollment;
+
+                    // 5. Si se seleccionó un horario, inscribir al estudiante
+                    if (!empty($estudianteData['schedule_id'])) {
+                        $schedule = \App\Models\Schedule::find($estudianteData['schedule_id']);
+
+                        if ($schedule && $schedule->hasAvailableSlots()) {
+                            \App\Models\ScheduleEnrollment::create([
+                                'student_id' => $studentUser->id,
+                                'schedule_id' => $estudianteData['schedule_id'],
+                                'enrollment_date' => Carbon::today(),
+                                'status' => 'enrolled',
+                            ]);
+                        }
+                    }
+
+                    // 6. Crear pago inicial de matrícula para este estudiante
+                    $program = AcademicProgram::find($estudianteData['program_id']);
+
+                    // Monto de prueba para validación de tarjeta: $1,500 COP (mínimo requerido por Wompi)
+                    $paymentAmount = 1500;
+
+                    $payment = \App\Models\Payment::create([
+                        'student_id' => $studentUser->id,
+                        'program_id' => $program->id,
+                        'enrollment_id' => $enrollment->id,
+                        'concept' => 'Validación de Tarjeta - Matrícula ' . $program->name . ' - ' . $studentUser->name,
+                        'payment_type' => 'single',
+                        'amount' => $paymentAmount,
+                        'original_amount' => $paymentAmount,
+                        'paid_amount' => 0,
+                        'remaining_amount' => $paymentAmount,
+                        'due_date' => Carbon::today(),
+                        'status' => 'pending',
+                        'wompi_reference' => 'MAT-' . $enrollment->id . '-' . time(),
+                    ]);
+
+                    $payments[] = $payment;
                 }
             }
-
-            // 6. Crear pago inicial de matrícula (pendiente)
-            $program = AcademicProgram::find($validated['program_id']);
-            $studentId = $validated['is_minor'] ? $studentUser->id : $responsable->id;
-            $paymentResponsible = $validated['is_minor'] ? $responsable : $responsable;
-
-            $payment = \App\Models\Payment::create([
-                'student_id' => $studentId,
-                'program_id' => $program->id,
-                'enrollment_id' => $enrollment->id,
-                'concept' => 'Matrícula - ' . $program->name,
-                'payment_type' => 'single',
-                'amount' => $program->monthly_fee, // Primera mensualidad
-                'original_amount' => $program->monthly_fee,
-                'paid_amount' => 0,
-                'remaining_amount' => $program->monthly_fee,
-                'due_date' => Carbon::today(),
-                'status' => 'pending',
-                'wompi_reference' => 'MAT-' . $enrollment->id . '-' . time(),
-            ]);
 
             DB::commit();
 
-            // Redirigir al checkout de pago
-            return redirect()->route('matricula.checkout', ['payment' => $payment->id]);
+            // Redirigir al checkout de pagos
+            if (!empty($payments)) {
+                flash_success('¡Matrícula(s) creada(s) exitosamente! Proceda con el pago.');
+
+                // Si solo hay un pago (adulto individual), redirigir al checkout simple
+                if (count($payments) === 1) {
+                    return redirect()->route('matricula.checkout', ['payment' => $payments[0]->id]);
+                }
+
+                // Si hay múltiples pagos, pasar todos los IDs
+                $paymentIds = array_map(fn($p) => $p->id, $payments);
+                return redirect()->route('matricula.checkout.multiple', ['payments' => implode(',', $paymentIds)]);
+            }
+
+            flash_error('No se crearon pagos.');
+            return redirect()->route('home');
 
         } catch (\Exception $e) {
             DB::rollBack();
-            flash_error('Ocurrió un error al procesar la matrícula. Por favor, intente nuevamente.');
+            \Log::error('Error en matrícula: ' . $e->getMessage());
+            \Log::error($e->getTraceAsString());
+            flash_error('Ocurrió un error al procesar la matrícula: ' . $e->getMessage());
             return redirect()->back()->withInput();
         }
+    }
+
+    /**
+     * Mostrar página de checkout para múltiples pagos
+     */
+    public function checkoutMultiple(Request $request)
+    {
+        $paymentIds = explode(',', $request->query('payments', ''));
+        $paymentIds = array_filter($paymentIds, 'is_numeric');
+
+        if (empty($paymentIds)) {
+            flash_error('No se encontraron pagos para procesar.');
+            return redirect()->route('home');
+        }
+
+        $payments = \App\Models\Payment::with(['student', 'program', 'enrollment'])
+            ->whereIn('id', $paymentIds)
+            ->where('status', 'pending')
+            ->get();
+
+        if ($payments->isEmpty()) {
+            flash_error('No se encontraron pagos pendientes.');
+            return redirect()->route('home');
+        }
+
+        // Obtener configuración activa de Wompi
+        $wompiSetting = \App\Models\WompiSetting::where('is_active', true)->first();
+
+        if (!$wompiSetting) {
+            $wompiPublicKey = config('wompi.public_key');
+            $integritySecret = config('wompi.integrity_secret');
+        } else {
+            $wompiPublicKey = $wompiSetting->public_key;
+            $integritySecret = $wompiSetting->integrity_secret;
+        }
+
+        // Preparar datos para cada pago
+        $paymentsData = $payments->map(function ($payment) use ($integritySecret) {
+            $amountInCents = (int) ($payment->amount * 100);
+            $currency = 'COP';
+            $integrityString = $payment->wompi_reference . $amountInCents . $currency . $integritySecret;
+            $integritySignature = hash('sha256', $integrityString);
+
+            return [
+                'id' => $payment->id,
+                'concept' => $payment->concept,
+                'amount' => $payment->amount,
+                'amountInCents' => $amountInCents,
+                'wompi_reference' => $payment->wompi_reference,
+                'integritySignature' => $integritySignature,
+                'student' => $payment->student,
+                'program' => $payment->program,
+            ];
+        });
+
+        $totalAmount = $payments->sum('amount');
+
+        return Inertia::render('Matricula/CheckoutMultiple', [
+            'payments' => $paymentsData,
+            'totalAmount' => $totalAmount,
+            'wompiPublicKey' => $wompiPublicKey,
+            'redirectUrl' => config('wompi.redirect_url'),
+        ]);
     }
 
     /**
@@ -256,18 +463,37 @@ class MatriculaController extends Controller
             return redirect()->route('home');
         }
 
+        // Obtener configuración activa de Wompi desde la base de datos
+        $wompiSetting = \App\Models\WompiSetting::where('is_active', true)->first();
+
+        // Si no hay configuración activa, usar las del .env como fallback
+        if (!$wompiSetting) {
+            $wompiPublicKey = config('wompi.public_key');
+            $integritySecret = config('wompi.integrity_secret');
+        } else {
+            $wompiPublicKey = $wompiSetting->public_key;
+            $integritySecret = $wompiSetting->integrity_secret;
+        }
+
         // Generar firma de integridad para Wompi
         $amountInCents = (int) ($payment->amount * 100);
         $currency = 'COP';
 
-        // Para el widget, la firma de integridad NO se requiere en modo test
-        // O se debe usar un integrity key específico (diferente al events_secret)
-        // Por ahora, vamos a intentar sin firma primero
-        $integritySignature = null;
+        // Concatenar: reference + amount_in_cents + currency + integrity_secret
+        $integrityString = $payment->wompi_reference . $amountInCents . $currency . $integritySecret;
+        $integritySignature = hash('sha256', $integrityString);
+
+        \Log::info('Wompi Integrity Signature', [
+            'reference' => $payment->wompi_reference,
+            'amount' => $amountInCents,
+            'currency' => $currency,
+            'string' => $integrityString,
+            'signature' => $integritySignature,
+        ]);
 
         return Inertia::render('Matricula/Checkout', [
             'payment' => $payment,
-            'wompiPublicKey' => config('wompi.public_key'),
+            'wompiPublicKey' => $wompiPublicKey,
             'redirectUrl' => config('wompi.redirect_url'),
             'amountInCents' => $amountInCents,
             'integritySignature' => $integritySignature,
@@ -280,20 +506,66 @@ class MatriculaController extends Controller
     public function confirmation(Request $request)
     {
         $transactionId = $request->query('id');
-        $status = $request->query('status');
 
-        // Buscar el pago por la referencia de Wompi
-        $payment = \App\Models\Payment::where('wompi_transaction_id', $transactionId)->first();
-
-        if (!$payment) {
-            flash_error('No se encontró información del pago.');
+        if (!$transactionId) {
+            flash_error('No se recibió el ID de transacción.');
             return redirect()->route('home');
         }
 
-        return Inertia::render('Matricula/Confirmation', [
-            'payment' => $payment,
-            'status' => $status,
-            'transactionId' => $transactionId,
-        ]);
+        // Consultar el estado de la transacción directamente en Wompi
+        try {
+            $wompiSetting = \App\Models\WompiSetting::where('is_active', true)->first();
+            $publicKey = $wompiSetting ? $wompiSetting->public_key : config('wompi.public_key');
+
+            // Consultar transacción en Wompi
+            $response = \Http::get("https://production.wompi.co/v1/transactions/{$transactionId}");
+
+            if (!$response->successful()) {
+                \Log::error('Error consultando transacción en Wompi', ['transaction_id' => $transactionId]);
+                flash_error('No se pudo consultar el estado del pago.');
+                return redirect()->route('home');
+            }
+
+            $transactionData = $response->json()['data'];
+            $reference = $transactionData['reference'];
+
+            // Buscar el pago por la referencia
+            $payment = \App\Models\Payment::where('wompi_reference', $reference)->first();
+
+            if (!$payment) {
+                \Log::error('Pago no encontrado para referencia: ' . $reference);
+                flash_error('No se encontró información del pago.');
+                return redirect()->route('home');
+            }
+
+            // Actualizar el pago con los datos de Wompi
+            $payment->wompi_transaction_id = $transactionId;
+            $payment->payment_method = $transactionData['payment_method_type'] ?? null;
+
+            if ($transactionData['status'] === 'APPROVED') {
+                $payment->status = 'completed';
+                $payment->payment_date = now();
+                $payment->paid_amount = $payment->amount;
+                $payment->remaining_amount = 0;
+
+                \Log::info('Pago aprobado desde confirmación', ['payment_id' => $payment->id, 'transaction_id' => $transactionId]);
+            } elseif ($transactionData['status'] === 'DECLINED' || $transactionData['status'] === 'ERROR') {
+                $payment->status = 'cancelled';
+                \Log::warning('Pago rechazado desde confirmación', ['payment_id' => $payment->id, 'transaction_id' => $transactionId]);
+            }
+
+            $payment->save();
+
+            return Inertia::render('Matricula/Confirmation', [
+                'payment' => $payment->load('student', 'program'),
+                'status' => $transactionData['status'],
+                'transactionId' => $transactionId,
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error('Error en confirmación de pago: ' . $e->getMessage());
+            flash_error('Ocurrió un error al procesar la confirmación del pago.');
+            return redirect()->route('home');
+        }
     }
 }

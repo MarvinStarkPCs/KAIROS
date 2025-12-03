@@ -24,6 +24,7 @@ Route::get('/auth/google/callback', [GoogleAuthController::class, 'handleGoogleC
 Route::get('/matricula', [MatriculaController::class, 'create'])->name('matricula.create');
 Route::post('/matricula', [MatriculaController::class, 'store'])->name('matricula.store');
 Route::get('/matricula/checkout/{payment}', [MatriculaController::class, 'checkout'])->name('matricula.checkout');
+Route::get('/matricula/checkout-multiple', [MatriculaController::class, 'checkoutMultiple'])->name('matricula.checkout.multiple');
 Route::get('/matricula/confirmacion', [MatriculaController::class, 'confirmation'])->name('matricula.confirmation');
 
 // Webhook de Wompi (sin autenticación)
@@ -198,8 +199,12 @@ Route::middleware(['auth'])->group(function () {
     // Pagos
     Route::middleware(['permission:ver_pagos'])->group(function () {
         Route::get('/pagos', [PaymentController::class, 'index'])->name('pagos.index');
+        Route::get('/pagos/settings', [PaymentController::class, 'settings'])->name('pagos.settings');
         Route::get('/pagos/{payment}', [PaymentController::class, 'show'])->name('pagos.show');
         Route::get('/pagos/{payment}/details', [PaymentController::class, 'getPaymentDetails'])->name('pagos.details');
+    });
+    Route::middleware(['permission:editar_pago'])->group(function () {
+        Route::patch('/pagos/settings', [PaymentController::class, 'updateSettings'])->name('pagos.settings.update');
     });
     Route::middleware(['permission:crear_pago'])->group(function () {
         Route::post('/pagos', [PaymentController::class, 'store'])->name('pagos.store');
@@ -211,6 +216,7 @@ Route::middleware(['auth'])->group(function () {
     Route::middleware(['permission:procesar_pago'])->group(function () {
         Route::post('/pagos/{payment}/mark-paid', [PaymentController::class, 'markAsPaid'])->name('pagos.mark-paid');
         Route::post('/pagos/{payment}/add-transaction', [PaymentController::class, 'addTransaction'])->name('pagos.add-transaction');
+        Route::post('/pagos/{payment}/check-wompi', [PaymentController::class, 'checkWompiStatus'])->name('pagos.check-wompi');
     });
     Route::middleware(['permission:generar_factura'])->group(function () {
         Route::get('/pagos/{payment}/invoice', [PaymentController::class, 'generateInvoice'])->name('pagos.invoice');

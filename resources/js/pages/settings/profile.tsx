@@ -1,8 +1,8 @@
-import ProfileController from '@/actions/App/Http/Controllers/Settings/ProfileController';
 import { send } from '@/routes/verification';
 import { type BreadcrumbItem, type SharedData } from '@/types';
 import { Transition } from '@headlessui/react';
-import { Form, Head, Link, usePage } from '@inertiajs/react';
+import { useForm, Head, Link, usePage } from '@inertiajs/react';
+import { FormEventHandler } from 'react';
 
 import DeleteUser from '@/components/delete-user';
 import HeadingSmall from '@/components/heading-small';
@@ -30,6 +30,18 @@ export default function Profile({
 }) {
     const { auth } = usePage<SharedData>().props;
 
+    const { data, setData, patch, processing, errors, recentlySuccessful } = useForm({
+        name: auth.user.name,
+        email: auth.user.email,
+    });
+
+    const submit: FormEventHandler = (e) => {
+        e.preventDefault();
+        patch('/settings/profile', {
+            preserveScroll: true,
+        });
+    };
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Configuración de Perfil" />
@@ -41,14 +53,8 @@ export default function Profile({
                         description="Actualiza tu nombre y dirección de correo electrónico"
                     />
 
-                    <Form
-                        {...ProfileController.update.form()}
-                        options={{
-                            preserveScroll: true,
-                        }}
-                        className="space-y-6"
-                    >
-                        {({ processing, recentlySuccessful, errors }) => (
+                    <form onSubmit={submit} className="space-y-6">
+                        {(() => (
                             <>
                                 <div className="grid gap-2">
                                     <Label htmlFor="name">Nombre</Label>
@@ -56,8 +62,8 @@ export default function Profile({
                                     <Input
                                         id="name"
                                         className="mt-1 block w-full"
-                                        defaultValue={auth.user.name}
-                                        name="name"
+                                        value={data.name}
+                                        onChange={(e) => setData('name', e.target.value)}
                                         required
                                         autoComplete="name"
                                         placeholder="Nombre completo"
@@ -76,8 +82,8 @@ export default function Profile({
                                         id="email"
                                         type="email"
                                         className="mt-1 block w-full"
-                                        defaultValue={auth.user.email}
-                                        name="email"
+                                        value={data.email}
+                                        onChange={(e) => setData('email', e.target.value)}
                                         required
                                         autoComplete="username"
                                         placeholder="Correo electrónico"
@@ -136,8 +142,8 @@ export default function Profile({
                                     </Transition>
                                 </div>
                             </>
-                        )}
-                    </Form>
+                        ))()}
+                    </form>
                 </div>
 
                 <DeleteUser />

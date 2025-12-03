@@ -61,7 +61,8 @@ export default function Checkout({ payment, wompiPublicKey, redirectUrl, amountI
         script.setAttribute('data-redirect-url', redirectUrl);
 
         // Información del cliente
-        script.setAttribute('data-customer-data:email', payment.student.email);
+        const studentEmail = payment.student.email || 'noreply@academialinaje.com';
+        script.setAttribute('data-customer-data:email', studentEmail);
         script.setAttribute('data-customer-data:full-name', `${payment.student.name} ${payment.student.last_name}`);
 
         // Solo tarjeta de crédito/débito

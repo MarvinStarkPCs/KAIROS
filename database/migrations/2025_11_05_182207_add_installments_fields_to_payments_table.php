@@ -28,8 +28,7 @@ return new class extends Migration
             // installment: cuota de un plan de pagos
             // partial: permite abonos parciales
 
-            // Índices
-            $table->index('parent_payment_id');
+            // Índice adicional (foreignId ya crea índice automático para parent_payment_id)
             $table->index('payment_type');
         });
     }
@@ -40,9 +39,13 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('payments', function (Blueprint $table) {
-            $table->dropIndex(['parent_payment_id']);
-            $table->dropIndex(['payment_type']);
+            // 1. Primero eliminar la foreign key constraint
             $table->dropForeign(['parent_payment_id']);
+
+            // 2. Luego eliminar los índices
+            $table->dropIndex(['payment_type']);
+
+            // 3. Finalmente eliminar las columnas
             $table->dropColumn([
                 'parent_payment_id',
                 'installment_number',

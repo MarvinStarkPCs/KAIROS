@@ -4,6 +4,7 @@ use App\Http\Controllers\Settings\PasswordController;
 use App\Http\Controllers\Settings\ProfileController;
 use App\Http\Controllers\Settings\SmtpController;
 use App\Http\Controllers\Settings\TwoFactorAuthenticationController;
+use App\Http\Controllers\Settings\WompiController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -30,4 +31,7 @@ Route::middleware('auth')->group(function () {
     Route::get('settings/smtp', [SmtpController::class, 'edit'])->name('smtp.edit');
     Route::patch('settings/smtp', [SmtpController::class, 'update'])->name('smtp.update');
     Route::post('settings/smtp/test', [SmtpController::class, 'test'])->name('smtp.test');
+
+    Route::get('settings/wompi', [WompiController::class, 'edit'])->name('wompi.edit');
+    Route::patch('settings/wompi', [WompiController::class, 'update'])->name('wompi.update');
 });

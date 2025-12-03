@@ -1,11 +1,10 @@
-import PasswordController from '@/actions/App/Http/Controllers/Settings/PasswordController';
 import InputError from '@/components/input-error';
 import AppLayout from '@/layouts/app-layout';
 import SettingsLayout from '@/layouts/settings/layout';
 import { type BreadcrumbItem } from '@/types';
 import { Transition } from '@headlessui/react';
-import { Form, Head } from '@inertiajs/react';
-import { useRef } from 'react';
+import { useForm, Head } from '@inertiajs/react';
+import { FormEventHandler, useRef } from 'react';
 
 import HeadingSmall from '@/components/heading-small';
 import { Button } from '@/components/ui/button';
@@ -24,6 +23,29 @@ export default function Password() {
     const passwordInput = useRef<HTMLInputElement>(null);
     const currentPasswordInput = useRef<HTMLInputElement>(null);
 
+    const { data, setData, put, processing, errors, recentlySuccessful, reset } = useForm({
+        current_password: '',
+        password: '',
+        password_confirmation: '',
+    });
+
+    const submit: FormEventHandler = (e) => {
+        e.preventDefault();
+        put('/settings/password', {
+            preserveScroll: true,
+            onSuccess: () => reset(),
+            onError: (errors) => {
+                if (errors.password) {
+                    passwordInput.current?.focus();
+                }
+
+                if (errors.current_password) {
+                    currentPasswordInput.current?.focus();
+                }
+            },
+        });
+    };
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Configuración de Contraseña" />
@@ -35,29 +57,8 @@ export default function Password() {
                         description="Asegúrate de que tu cuenta use una contraseña larga y aleatoria para mantenerla segura"
                     />
 
-                    <Form
-                        {...PasswordController.update.form()}
-                        options={{
-                            preserveScroll: true,
-                        }}
-                        resetOnError={[
-                            'password',
-                            'password_confirmation',
-                            'current_password',
-                        ]}
-                        resetOnSuccess
-                        onError={(errors) => {
-                            if (errors.password) {
-                                passwordInput.current?.focus();
-                            }
-
-                            if (errors.current_password) {
-                                currentPasswordInput.current?.focus();
-                            }
-                        }}
-                        className="space-y-6"
-                    >
-                        {({ errors, processing, recentlySuccessful }) => (
+                    <form onSubmit={submit} className="space-y-6">
+                        {(() => (
                             <>
                                 <div className="grid gap-2">
                                     <Label htmlFor="current_password">
@@ -67,9 +68,10 @@ export default function Password() {
                                     <Input
                                         id="current_password"
                                         ref={currentPasswordInput}
-                                        name="current_password"
                                         type="password"
                                         className="mt-1 block w-full"
+                                        value={data.current_password}
+                                        onChange={(e) => setData('current_password', e.target.value)}
                                         autoComplete="current-password"
                                         placeholder="Contraseña actual"
                                     />
@@ -87,9 +89,10 @@ export default function Password() {
                                     <Input
                                         id="password"
                                         ref={passwordInput}
-                                        name="password"
                                         type="password"
                                         className="mt-1 block w-full"
+                                        value={data.password}
+                                        onChange={(e) => setData('password', e.target.value)}
                                         autoComplete="new-password"
                                         placeholder="Nueva contraseña"
                                     />
@@ -104,9 +107,10 @@ export default function Password() {
 
                                     <Input
                                         id="password_confirmation"
-                                        name="password_confirmation"
                                         type="password"
                                         className="mt-1 block w-full"
+                                        value={data.password_confirmation}
+                                        onChange={(e) => setData('password_confirmation', e.target.value)}
                                         autoComplete="new-password"
                                         placeholder="Confirmar contraseña"
                                     />
@@ -137,8 +141,8 @@ export default function Password() {
                                     </Transition>
                                 </div>
                             </>
-                        )}
-                    </Form>
+                        ))()}
+                    </form>
                 </div>
             </SettingsLayout>
         </AppLayout>

@@ -1,5 +1,5 @@
 import { Head, Link, router } from '@inertiajs/react';
-import { Plus, Search, Filter, Eye, Edit, Trash2, DollarSign, CheckCircle, Clock, XCircle, CreditCard, List as ListIcon } from 'lucide-react';
+import { Plus, Search, Filter, Eye, Edit, Trash2, DollarSign, CheckCircle, Clock, XCircle, CreditCard, List as ListIcon, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -35,6 +35,8 @@ interface Payment {
     has_transactions: boolean;
     installment_number?: number;
     total_installments?: number;
+    wompi_transaction_id?: string;
+    wompi_reference?: string;
 }
 
 interface Student {
@@ -86,6 +88,12 @@ export default function PaymentsList({ payments, students, programs, filters }: 
                 },
             });
         }
+    };
+
+    const handleCheckWompi = (paymentId: number) => {
+        router.post(`/pagos/${paymentId}/check-wompi`, {}, {
+            preserveScroll: true,
+        });
     };
 
     const getStatusBadge = (status: string) => {
@@ -289,6 +297,17 @@ export default function PaymentsList({ payments, students, programs, filters }: 
                                                 </td>
                                                 <td className="px-6 py-4 text-right">
                                                     <div className="flex items-center justify-end gap-2">
+                                                        {payment.wompi_transaction_id && payment.status === 'pending' && (
+                                                            <Button
+                                                                variant="outline"
+                                                                size="sm"
+                                                                className="text-blue-600 hover:bg-blue-50"
+                                                                onClick={() => handleCheckWompi(payment.id)}
+                                                                title="Verificar estado en Wompi"
+                                                            >
+                                                                <RefreshCw className="h-4 w-4" />
+                                                            </Button>
+                                                        )}
                                                         <Link href={`/pagos/${payment.id}`}>
                                                             <Button variant="outline" size="sm">
                                                                 <Eye className="h-4 w-4" />

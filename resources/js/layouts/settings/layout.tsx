@@ -6,6 +6,7 @@ import { edit as editAppearance } from '@/routes/appearance';
 import { edit as editPassword } from '@/routes/password';
 import { edit } from '@/routes/profile';
 import { edit as editSmtp } from '@/routes/smtp';
+import { edit as editWompi } from '@/routes/wompi';
 import { show } from '@/routes/two-factor';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/react';
@@ -35,6 +36,11 @@ const sidebarNavItems: NavItem[] = [
     {
         title: 'Servidor SMTP',
         href: editSmtp(),
+        icon: null,
+    },
+    {
+        title: 'Pasarela Wompi',
+        href: editWompi(),
         icon: null,
     },
 ];
