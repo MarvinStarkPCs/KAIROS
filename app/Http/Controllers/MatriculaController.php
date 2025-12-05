@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Models\AcademicProgram;
 use App\Models\Enrollment;
 use App\Models\ParentGuardian;
+use App\Models\PaymentSetting;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -230,14 +231,20 @@ class MatriculaController extends Controller
                 // Crear pago inicial de matrícula
                 $program = AcademicProgram::find($validated['responsable']['program_id']);
 
-                // Monto de prueba para validación de tarjeta: $1,500 COP (mínimo requerido por Wompi)
-                $paymentAmount = 1500;
+                // Obtener el monto configurado desde PaymentSetting
+                $paymentSetting = PaymentSetting::where('is_active', true)->first();
+                $paymentAmount = $paymentSetting ? (float) $paymentSetting->monthly_amount : 100000;
+
+                // Validar que el monto cumpla con el mínimo de Wompi (1,500 COP)
+                if ($paymentAmount < 1500) {
+                    $paymentAmount = 1500;
+                }
 
                 $payment = \App\Models\Payment::create([
                     'student_id' => $responsable->id,
                     'program_id' => $program->id,
                     'enrollment_id' => $enrollment->id,
-                    'concept' => 'Validación de Tarjeta - Matrícula ' . $program->name . ' - ' . $responsable->name,
+                    'concept' => 'Matrícula ' . $program->name . ' - ' . $responsable->name,
                     'payment_type' => 'single',
                     'amount' => $paymentAmount,
                     'original_amount' => $paymentAmount,
@@ -336,14 +343,20 @@ class MatriculaController extends Controller
                     // 6. Crear pago inicial de matrícula para este estudiante
                     $program = AcademicProgram::find($estudianteData['program_id']);
 
-                    // Monto de prueba para validación de tarjeta: $1,500 COP (mínimo requerido por Wompi)
-                    $paymentAmount = 1500;
+                    // Obtener el monto configurado desde PaymentSetting
+                    $paymentSetting = PaymentSetting::where('is_active', true)->first();
+                    $paymentAmount = $paymentSetting ? (float) $paymentSetting->monthly_amount : 100000;
+
+                    // Validar que el monto cumpla con el mínimo de Wompi (1,500 COP)
+                    if ($paymentAmount < 1500) {
+                        $paymentAmount = 1500;
+                    }
 
                     $payment = \App\Models\Payment::create([
                         'student_id' => $studentUser->id,
                         'program_id' => $program->id,
                         'enrollment_id' => $enrollment->id,
-                        'concept' => 'Validación de Tarjeta - Matrícula ' . $program->name . ' - ' . $studentUser->name,
+                        'concept' => 'Matrícula ' . $program->name . ' - ' . $studentUser->name,
                         'payment_type' => 'single',
                         'amount' => $paymentAmount,
                         'original_amount' => $paymentAmount,
