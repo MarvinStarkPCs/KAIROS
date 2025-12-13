@@ -191,4 +191,51 @@ class WompiService
 
         return hash_equals($expectedSignature, $signature);
     }
+
+    /**
+     * Preparar datos para checkout con firma de integridad
+     *
+     * @param string $reference Referencia única del pago
+     * @param float $amount Monto en pesos colombianos
+     * @param string $publicKey Llave pública de Wompi
+     * @param string|null $integritySecret Secret para firma de integridad
+     * @return array Datos preparados para el checkout
+     */
+    public function prepareCheckoutData(
+        string $reference,
+        float $amount,
+        string $publicKey,
+        ?string $integritySecret = null
+    ): array {
+        $amountInCents = (int) ($amount * 100);
+        $isTest = $this->isTestMode($publicKey);
+
+        $data = [
+            'amount_in_cents' => $amountInCents,
+            'currency' => 'COP',
+            'reference' => $reference,
+            'integrity_signature' => null,
+        ];
+
+        // Generar firma de integridad para producción
+        // En modo test, Wompi NO requiere firma
+        if (!empty($integritySecret) && !$isTest) {
+            $integrityString = $reference . $amountInCents . 'COP' . $integritySecret;
+            $data['integrity_signature'] = hash('sha256', $integrityString);
+
+            Log::info('Wompi: Firma de integridad generada para checkout', [
+                'reference' => $reference,
+                'amount_in_cents' => $amountInCents,
+                'is_test' => $isTest,
+                'signature' => $data['integrity_signature']
+            ]);
+        } else {
+            Log::info('Wompi: Checkout sin firma de integridad (modo test)', [
+                'reference' => $reference,
+                'is_test' => $isTest
+            ]);
+        }
+
+        return $data;
+    }
 }

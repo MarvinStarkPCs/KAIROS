@@ -20,7 +20,8 @@
       "Bash(curl:*)",
       "Bash(cat:*)",
       "Bash(git restore:*)",
-      "Bash(git checkout:*)"
+      "Bash(git checkout:*)",
+      "Bash(npx tsc:*)"
     ],
     "deny": [],
     "ask": []

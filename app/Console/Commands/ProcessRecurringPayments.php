@@ -125,28 +125,59 @@ class ProcessRecurringPayments extends Command
     {
         $wompiUrl = config('wompi.url');
         $privateKey = config('wompi.private_key');
+        $publicKey = config('wompi.public_key');
+        $integritySecret = config('wompi.integrity_secret');
 
         // Obtener el monto mensual del programa
         $amount = $payment->program->monthly_fee;
-        $amountInCents = $amount * 100;
+        $amountInCents = (int) ($amount * 100);
 
-        // Crear referencia única para este cobro
+        // Crear referencia única para este cobro (máximo 32 caracteres)
         $reference = 'REC-' . $payment->enrollment_id . '-' . time();
+
+        // Validar largo de referencia
+        if (strlen($reference) > 32) {
+            $reference = 'REC-' . substr(md5($payment->enrollment_id . time()), 0, 23);
+        }
+
+        // Validar email del estudiante
+        $customerEmail = filter_var($payment->student->email, FILTER_VALIDATE_EMAIL)
+            ? $payment->student->email
+            : 'noreply@academialinaje.com';
 
         // Preparar datos de la transacción
         $data = [
             'acceptance_token' => $this->getAcceptanceToken(),
             'amount_in_cents' => $amountInCents,
             'currency' => 'COP',
-            'customer_email' => $payment->student->email,
+            'customer_email' => $customerEmail,
             'payment_method' => [
                 'type' => 'CARD',
                 'token' => $payment->card_token,
                 'installments' => 1,
             ],
             'reference' => $reference,
-            'payment_source_id' => $payment->payment_source_id ?? null,
         ];
+
+        // Agregar payment_source_id solo si existe
+        if (!empty($payment->payment_source_id)) {
+            $data['payment_source_id'] = $payment->payment_source_id;
+        }
+
+        // Generar firma de integridad para producción
+        // En modo test (pub_test_*), Wompi NO requiere firma
+        $isTest = str_starts_with($publicKey, 'pub_test_');
+        if (!empty($integritySecret) && !$isTest) {
+            $integrityString = $reference . $amountInCents . 'COP' . $integritySecret;
+            $data['signature'] = [
+                'integrity' => hash('sha256', $integrityString)
+            ];
+
+            Log::info('Wompi: Firma de integridad añadida a transacción recurrente', [
+                'reference' => $reference,
+                'signature' => $data['signature']['integrity']
+            ]);
+        }
 
         // Realizar petición a Wompi
         $response = Http::withHeaders([
