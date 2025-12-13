@@ -12,7 +12,15 @@
       "Bash(mkdir:*)",
       "Bash(php -l:*)",
       "Bash(php test-payment.php:*)",
-      "Bash(php test-matricula.php:*)"
+      "Bash(php test-matricula.php:*)",
+      "WebFetch(domain:soporte.wompi.co)",
+      "Bash(npx tsc --noEmit --skipLibCheck resources/js/pages/Matricula/Create.tsx)",
+      "Bash(php -r:*)",
+      "Bash(php:*)",
+      "Bash(curl:*)",
+      "Bash(cat:*)",
+      "Bash(git restore:*)",
+      "Bash(git checkout:*)"
     ],
     "deny": [],
     "ask": []

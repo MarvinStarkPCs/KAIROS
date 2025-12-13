@@ -20,15 +20,41 @@ use App\Http\Controllers\MatriculaController;
 Route::get('/auth/google', [GoogleAuthController::class, 'redirectToGoogle'])->name('auth.google');
 Route::get('/auth/google/callback', [GoogleAuthController::class, 'handleGoogleCallback'])->name('auth.google.callback');
 
-// Matrícula Pública (sin autenticación)
-Route::get('/matricula', [MatriculaController::class, 'create'])->name('matricula.create');
-Route::post('/matricula', [MatriculaController::class, 'store'])->name('matricula.store');
-Route::get('/matricula/checkout/{payment}', [MatriculaController::class, 'checkout'])->name('matricula.checkout');
-Route::get('/matricula/checkout-multiple', [MatriculaController::class, 'checkoutMultiple'])->name('matricula.checkout.multiple');
-Route::get('/matricula/confirmacion', [MatriculaController::class, 'confirmation'])->name('matricula.confirmation');
+// Matrícula Pública (sin autenticación, con rate limiting)
+Route::middleware(['throttle:10,1'])->group(function () {
+    Route::get('/matricula', [MatriculaController::class, 'create'])->name('matricula.create');
+    Route::post('/matricula', [MatriculaController::class, 'store'])->name('matricula.store');
+});
+
+Route::middleware(['throttle:20,1'])->group(function () {
+    Route::get('/matricula/checkout/{payment}', [MatriculaController::class, 'checkout'])->name('matricula.checkout');
+    Route::post('/matricula/checkout/{payment}/create-payment-link', [MatriculaController::class, 'createPaymentLink'])->name('matricula.create-payment-link');
+    Route::get('/matricula/checkout-multiple', [MatriculaController::class, 'checkoutMultiple'])->name('matricula.checkout.multiple');
+    Route::get('/matricula/confirmacion', [MatriculaController::class, 'confirmation'])->name('matricula.confirmation');
+});
 
 // Webhook de Wompi (sin autenticación)
 Route::post('/webhook/wompi', [PaymentController::class, 'wompiWebhook'])->name('webhook.wompi');
+
+// TEST: Ruta de prueba para verificar errores de Inertia
+Route::get('/test-errors', function () {
+    return Inertia::render('TestErrors');
+})->name('test.errors');
+
+Route::post('/test-errors', function (\Illuminate\Http\Request $request) {
+    $request->validate([
+        'name' => 'required|min:3',
+        'email' => 'required|email',
+    ], [
+        'name.required' => 'El nombre es obligatorio',
+        'name.min' => 'El nombre debe tener al menos 3 caracteres',
+        'email.required' => 'El email es obligatorio',
+        'email.email' => 'El email debe ser válido',
+    ]);
+
+    flash_success('Formulario enviado correctamente');
+    return redirect()->back();
+})->name('test.errors.store');
 
 Route::get('/', function () {
     return Inertia::render('welcome');

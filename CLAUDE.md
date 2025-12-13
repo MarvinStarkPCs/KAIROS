@@ -14,6 +14,7 @@ KAIROS is an academic program management system built with Laravel 12 and React 
 - Spatie Laravel Permission for role-based access control
 - Spatie Laravel Activity Log for audit trails
 - Laravel Fortify for authentication
+- Wompi payment gateway integration
 
 **Frontend:**
 - React 19 with TypeScript
@@ -24,6 +25,7 @@ KAIROS is an academic program management system built with Laravel 12 and React 
 - Sonner for toast notifications
 - Laravel Wayfinder for type-safe routing
 - Ziggy for Laravel routes in JavaScript
+- FullCalendar for scheduling UI
 
 ## Development Commands
 
@@ -47,6 +49,12 @@ composer test
 
 # Alternative
 php artisan test
+
+# Run a specific test file
+php artisan test tests/Feature/ExampleTest.php
+
+# Run tests with filter
+php artisan test --filter="test name"
 ```
 
 ### Code Quality
@@ -86,6 +94,7 @@ The system follows a hierarchical structure:
    - Has many `StudyPlan` (modules/courses within the program)
    - Has many `Schedule` (class schedules)
    - Has many `Enrollment` (student enrollments in the program)
+   - Has `monthly_fee` field for recurring payment amounts
 
 2. **StudyPlan** - Modules/courses within a program
    - Has many `Activity` (assignments, projects)
@@ -93,12 +102,15 @@ The system follows a hierarchical structure:
 
 3. **Activity** - Tasks/assignments within a study plan
    - Has many `EvaluationCriteria` (grading rubrics)
+   - Has many `ActivityEvaluation` (student evaluations)
    - Belongs to `StudyPlan`
 
 4. **Enrollment** - Student registration in a program
    - Belongs to `User` (student)
    - Belongs to `AcademicProgram`
    - Unique constraint: student can only have one active/waiting enrollment per program
+   - Status options: 'active', 'suspended', 'completed', 'cancelled', 'waiting'
+   - Contains enrollment details (instrument, schedule preferences, etc.)
 
 5. **Schedule** - Class schedules for programs
    - Belongs to `AcademicProgram`
@@ -115,6 +127,23 @@ The system follows a hierarchical structure:
 8. **Payment** - Financial transactions
    - Belongs to `User` (student)
    - Can belong to `AcademicProgram` or `Enrollment`
+   - Supports installments (cuotas)
+   - Integrates with Wompi payment gateway
+   - Has many `PaymentTransaction` (payment history)
+
+9. **ParentGuardian** - Parent/guardian information for students
+   - Has many `User` (students) through pivot table
+
+10. **WompiSetting** - Payment gateway configuration
+    - Multiple configurations with active/inactive status
+    - Stores public keys and integrity secrets
+
+11. **PaymentSetting** - General payment configuration
+    - Default payment amounts and installment options
+
+12. **Conversation** & **Message** - Internal communication system
+    - Many-to-many relationship with users
+    - Real-time messaging capability
 
 ## Key Conventions
 
@@ -145,6 +174,14 @@ router.visit(inscripciones.create().url);
 // Navigate to edit with ID
 router.visit(inscripciones.edit({ enrollment: enrollmentId }).url);
 ```
+
+### Public Routes
+
+The following routes are accessible without authentication:
+- `/matricula` - Public enrollment form
+- `/matricula/checkout/{payment}` - Payment processing
+- `/matricula/confirmacion` - Payment confirmation
+- `/webhook/wompi` - Wompi payment webhook
 
 ### Inertia Pages
 
@@ -184,9 +221,26 @@ Two layout variants available via `AppShell` component:
 
 Uses Spatie Laravel Permission. Common roles:
 - `Estudiante` (Student)
+- `Profesor` (Teacher)
+- `Admin` (Administrator)
 - Other roles defined in seeders
 
 Query users by role: `User::role('Estudiante')`
+
+### Payment Integration
+
+The system integrates with Wompi payment gateway:
+- Configuration managed through `WompiService`
+- Supports test and production modes (detected by key prefix)
+- Integrity signatures required for production
+- Webhook endpoint for payment notifications
+
+### Service Classes
+
+Key service classes for business logic:
+- `EnrollmentService` - Handles enrollment validation and processing
+- `WompiService` - Manages payment gateway integration
+- Payment-related services in `app/Services/`
 
 ## Running Migrations and Seeds
 
@@ -224,9 +278,28 @@ $validated = $request->validate([
 ]);
 ```
 
+For complex validation logic, create Form Request classes in `app/Http/Requests/`.
+
 ### Working with Inertia Forms
 
 Use Inertia's `useForm` hook for form handling with optimistic UI updates and error management.
+
+### Testing Patterns
+
+Tests use Pest PHP testing framework:
+- Feature tests in `tests/Feature/`
+- Unit tests in `tests/Unit/`
+- Database refresh trait is automatically applied
+- Use `it()` function for test definitions
+
+## Environment Configuration
+
+Key environment variables:
+- `WOMPI_PUBLIC_KEY` - Wompi public API key
+- `WOMPI_PRIVATE_KEY` - Wompi private API key
+- `WOMPI_EVENTS_SECRET` - Wompi webhook secret
+- `WOMPI_INTEGRITY_SECRET` - Wompi integrity signature secret
+- `WOMPI_URL` - Wompi API URL (sandbox/production)
 
 ## Important Notes
 
@@ -235,3 +308,5 @@ Use Inertia's `useForm` hook for form handling with optimistic UI updates and er
 - The `max_slots` field was removed from academic programs (no capacity limits)
 - Activity log is configured globally via Spatie package
 - TypeScript types for Inertia props should be defined in `resources/js/types/`
+- Payment amounts are handled in cents for Wompi integration
+- The system supports Google OAuth authentication alongside traditional login

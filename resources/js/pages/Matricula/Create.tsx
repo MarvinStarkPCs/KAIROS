@@ -1,5 +1,5 @@
-import { Head, useForm, router } from '@inertiajs/react';
-import { FormEventHandler, useState } from 'react';
+import { Head, useForm, router, usePage } from '@inertiajs/react';
+import { FormEventHandler, useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -11,60 +11,53 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { ChevronLeft, ChevronRight, CheckCircle, Plus, Trash2, User, AlertCircle, Check } from 'lucide-react';
 import InputError from '@/components/input-error';
 import { cn } from '@/lib/utils';
+import { Toaster } from '@/components/toaster';
+import {
+    CreateProps,
+    MatriculaFormData,
+    Student,
+    Gender,
+    StudyModality,
+    DOCUMENT_TYPES,
+    GENDERS,
+    MODALITIES,
+    TOTAL_STEPS
+} from '@/types/matricula';
+import { useStudentManagement } from '@/hooks/useStudentManagement';
+import { isStepValid, getStepTitle } from '@/utils/matricula-validation';
+import { DocumentTypeSelect } from '@/components/matricula/DocumentTypeSelect';
+import { GenderRadioGroup } from '@/components/matricula/GenderRadioGroup';
+import { ModalitySelect } from '@/components/matricula/ModalitySelect';
+import { FormField } from '@/components/matricula/FormField';
 
-interface Schedule {
-    id: number;
-    days_of_week: string;
-    start_time: string;
-    end_time: string;
-    professor: {
-        id: number;
-        name: string;
-    };
-    enrolled_count: number;
-    available_slots: number;
-    has_capacity: boolean;
-}
-
-interface AcademicProgram {
-    id: number;
-    name: string;
-    description: string;
-    schedules: Schedule[];
-}
-
-interface Props {
-    programs: AcademicProgram[];
-}
-
-interface Estudiante {
-    name: string;
-    last_name: string;
-    email: string;
-    document_type: 'CC' | 'TI' | 'CE' | 'Pasaporte';
-    document_number: string;
-    birth_place: string;
-    birth_date: string;
-    gender: 'M' | 'F';
-    datos_musicales: {
-        plays_instrument: boolean;
-        instruments_played: string;
-        has_music_studies: boolean;
-        music_schools: string;
-        desired_instrument: string;
-        modality: '' | 'Linaje Kids' | 'Linaje Teens' | 'Linaje Big';
-        current_level: number;
-    };
-    program_id: string;
-    schedule_id: string;
-}
-
-export default function Create({ programs }: Props) {
+export default function Create({ programs }: CreateProps) {
     const [step, setStep] = useState(1);
-    const totalSteps = 4; // Reducido de 6 a 4 pasos
-    const [currentEstudianteIndex, setCurrentEstudianteIndex] = useState(0);
+    const { props } = usePage();
 
-    const { data, setData, post, processing, errors } = useForm({
+    // Debug: Monitorear mensajes flash
+    useEffect(() => {
+        console.log('📬 Props flash:', props.flash);
+        if (props.flash?.error) {
+            console.log('🔴 ERROR FLASH RECIBIDO:', props.flash.error);
+        }
+        if (props.flash?.success) {
+            console.log('✅ SUCCESS FLASH RECIBIDO:', props.flash.success);
+        }
+    }, [props.flash]);
+
+    const studentManagement = useStudentManagement();
+    const {
+        students,
+        currentIndex: currentEstudianteIndex,
+        setCurrentIndex: setCurrentEstudianteIndex,
+        createNewStudent: crearNuevoEstudiante,
+        addStudent: agregarEstudiante,
+        removeStudent: eliminarEstudiante,
+        updateStudent: actualizarEstudiante,
+        setStudentsData
+    } = studentManagement;
+
+    const { data, setData, post, processing, errors } = useForm<MatriculaFormData>({
         // Datos del responsable
         responsable: {
             name: '',
@@ -72,11 +65,11 @@ export default function Create({ programs }: Props) {
             email: '',
             password: '',
             password_confirmation: '',
-            document_type: 'CC' as 'CC' | 'TI' | 'CE' | 'Pasaporte',
+            document_type: 'CC',
             document_number: '',
             birth_place: '',
             birth_date: '',
-            gender: 'M' as 'M' | 'F',
+            gender: 'M',
             address: '',
             neighborhood: '',
             phone: '',
@@ -89,7 +82,7 @@ export default function Create({ programs }: Props) {
             has_music_studies: false,
             music_schools: '',
             desired_instrument: '',
-            modality: '' as '' | 'Linaje Kids' | 'Linaje Teens' | 'Linaje Big',
+            modality: '',
             current_level: 1,
             program_id: '',
             schedule_id: '',
@@ -97,122 +90,45 @@ export default function Create({ programs }: Props) {
         // ¿Es menor de edad?
         is_minor: false,
         // Array de estudiantes (para múltiples hijos)
-        estudiantes: [] as Estudiante[],
+        estudiantes: students,
         // Autorizaciones
         parental_authorization: false,
         payment_commitment: false,
     });
 
-    // Funciones para manejar estudiantes
-    const crearNuevoEstudiante = (): Estudiante => ({
-        name: '',
-        last_name: '',
-        email: '',
-        document_type: 'TI',
-        document_number: '',
-        birth_place: '',
-        birth_date: '',
-        gender: 'M',
-        datos_musicales: {
-            plays_instrument: false,
-            instruments_played: '',
-            has_music_studies: false,
-            music_schools: '',
-            desired_instrument: '',
-            modality: '',
-            current_level: 1,
-        },
-        program_id: '',
-        schedule_id: '',
-    });
+    // Debug: Monitorear cambios en errors
+    useEffect(() => {
+        console.log('🔍 Errors actualizados:', errors);
+        console.log('🔍 Cantidad de errores:', Object.keys(errors).length);
 
-    const agregarEstudiante = () => {
-        setData('estudiantes', [...data.estudiantes, crearNuevoEstudiante()]);
-        setCurrentEstudianteIndex(data.estudiantes.length);
+        if (Object.keys(errors).length > 0) {
+            console.log('🔍 Primer error:', Object.entries(errors)[0]);
+        }
+    }, [errors]);
+
+    // Sincronizar estudiantes con el hook cuando cambian
+    const handleAddStudent = () => {
+        const newStudents = agregarEstudiante();
+        setData('estudiantes', newStudents);
     };
 
-    const eliminarEstudiante = (index: number) => {
-        const nuevosEstudiantes = data.estudiantes.filter((_, i) => i !== index);
-        setData('estudiantes', nuevosEstudiantes);
-        if (currentEstudianteIndex >= nuevosEstudiantes.length) {
-            setCurrentEstudianteIndex(Math.max(0, nuevosEstudiantes.length - 1));
-        }
+    const handleRemoveStudent = (index: number) => {
+        const newStudents = eliminarEstudiante(index);
+        setData('estudiantes', newStudents);
     };
 
-    const actualizarEstudiante = (index: number, campo: string, valor: any) => {
-        const nuevosEstudiantes = [...data.estudiantes];
-        const campos = campo.split('.');
-
-        if (campos.length === 2 && campos[0] === 'datos_musicales') {
-            nuevosEstudiantes[index] = {
-                ...nuevosEstudiantes[index],
-                datos_musicales: {
-                    ...nuevosEstudiantes[index].datos_musicales,
-                    [campos[1]]: valor,
-                },
-            };
-        } else {
-            nuevosEstudiantes[index] = {
-                ...nuevosEstudiantes[index],
-                [campo]: valor,
-            };
-        }
-
-        setData('estudiantes', nuevosEstudiantes);
+    const handleUpdateStudent = (index: number, field: string, value: any) => {
+        const newStudents = actualizarEstudiante(index, field, value);
+        setData('estudiantes', newStudents);
     };
 
     // Validar si un paso está completo
-    const isStepValid = (stepNumber: number): boolean => {
-        switch (stepNumber) {
-            case 1: // Datos del responsable
-                return !!(
-                    data.responsable.name &&
-                    data.responsable.last_name &&
-                    data.responsable.email &&
-                    data.responsable.password &&
-                    data.responsable.password_confirmation &&
-                    data.responsable.document_number &&
-                    data.responsable.birth_date &&
-                    data.responsable.mobile
-                );
-            case 2: // Datos de localización
-                return !!(
-                    data.responsable.address &&
-                    data.responsable.city &&
-                    data.responsable.department
-                );
-            case 3: // Datos de estudiantes o datos musicales del adulto
-                if (!data.is_minor) {
-                    // Para adultos, validar datos musicales y programa
-                    return !!(
-                        data.responsable.desired_instrument &&
-                        data.responsable.modality &&
-                        data.responsable.program_id
-                    );
-                }
-                // Para menores, validar estudiantes
-                if (data.estudiantes.length === 0) return false;
-                return data.estudiantes.every(est =>
-                    est.name &&
-                    est.last_name &&
-                    est.document_number &&
-                    est.birth_date &&
-                    est.datos_musicales.desired_instrument &&
-                    est.datos_musicales.modality &&
-                    est.program_id
-                );
-            case 4: // Autorizaciones
-                if (data.is_minor) {
-                    return data.parental_authorization && data.payment_commitment;
-                }
-                return data.payment_commitment;
-            default:
-                return false;
-        }
+    const validateStep = (stepNumber: number): boolean => {
+        return isStepValid(stepNumber, data);
     };
 
     const nextStep = () => {
-        if (step < totalSteps) {
+        if (step < TOTAL_STEPS) {
             // Scroll suave al top
             window.scrollTo({ top: 0, behavior: 'smooth' });
             setStep(step + 1);
@@ -229,7 +145,7 @@ export default function Create({ programs }: Props) {
 
     // Ir directamente a un paso específico
     const goToStep = (targetStep: number) => {
-        if (targetStep >= 1 && targetStep <= totalSteps) {
+        if (targetStep >= 1 && targetStep <= TOTAL_STEPS) {
             window.scrollTo({ top: 0, behavior: 'smooth' });
             setStep(targetStep);
         }
@@ -238,27 +154,54 @@ export default function Create({ programs }: Props) {
     const submit: FormEventHandler = (e) => {
         e.preventDefault();
 
-        // Preparar los datos para enviar - solo incluir campos necesarios según el tipo de matrícula
-        const submitData: any = {
-            responsable: data.responsable,
-            is_minor: data.is_minor,
-            payment_commitment: data.payment_commitment,
-        };
+        console.log('Enviando formulario con datos:', data);
 
-        // Solo incluir estudiantes y autorización parental si es menor de edad
-        if (data.is_minor) {
-            submitData.estudiantes = data.estudiantes;
-            submitData.parental_authorization = data.parental_authorization;
-        }
+        // Usar el método post del hook con transform para preparar los datos
+        post('/matricula', {
+            preserveScroll: true,
+            preserveState: true, // Preservar estado para mantener datos del formulario en caso de error
+            transform: (data) => {
+                // Preparar los datos para enviar - solo incluir campos necesarios según el tipo de matrícula
+                const submitData: any = {
+                    responsable: data.responsable,
+                    is_minor: data.is_minor,
+                    payment_commitment: data.payment_commitment,
+                };
 
-        console.log('Enviando formulario con datos:', submitData);
+                console.log('🔍 Valor de is_minor antes del transform:', data.is_minor, typeof data.is_minor);
 
-        // Usar router.post directamente con los datos preparados
-        router.post('/matricula', submitData, {
+                // Solo incluir estudiantes y autorización parental si es menor de edad
+                if (data.is_minor) {
+                    submitData.estudiantes = data.estudiantes;
+                    submitData.parental_authorization = data.parental_authorization;
+                    console.log('✅ Incluyendo estudiantes:', submitData.estudiantes.length);
+                } else {
+                    // Para adultos, asegurar que estudiantes NO se envíe
+                    // El responsable es quien estudia, no hay estudiantes menores
+                    console.log('❌ NO incluyendo estudiantes (adulto)');
+                }
+
+                console.log('📦 Datos finales a enviar:', submitData);
+                console.log('📦 ¿Tiene campo estudiantes?', 'estudiantes' in submitData);
+
+                return submitData;
+            },
             onError: (errors) => {
-                console.log('Errores de validación:', errors);
+                console.log('❌ onError callback ejecutado');
+                console.log('❌ Errores recibidos:', errors);
+                console.log('❌ Cantidad de errores:', Object.keys(errors).length);
+                console.log('❌ Lista de campos con error:', Object.keys(errors));
+
+                // Mostrar cada error en consola
+                Object.entries(errors).forEach(([key, value]) => {
+                    console.log(`  - ${key}: ${value}`);
+                });
+
                 // Scroll al top para ver los errores
                 window.scrollTo({ top: 0, behavior: 'smooth' });
+
+                // Regresar al primer paso si hay errores
+                setStep(1);
             },
             onSuccess: () => {
                 console.log('Matrícula completada exitosamente');
@@ -286,6 +229,7 @@ export default function Create({ programs }: Props) {
                                         value={data.responsable.name}
                                         onChange={(e) => setData('responsable', { ...data.responsable, name: e.target.value })}
                                         placeholder="Nombre"
+                                        aria-invalid={!!errors['responsable.name']}
                                     />
                                     <InputError message={errors['responsable.name']} />
                                 </div>
@@ -296,32 +240,20 @@ export default function Create({ programs }: Props) {
                                         value={data.responsable.last_name}
                                         onChange={(e) => setData('responsable', { ...data.responsable, last_name: e.target.value })}
                                         placeholder="Apellidos"
+                                        aria-invalid={!!errors['responsable.last_name']}
                                     />
                                     <InputError message={errors['responsable.last_name']} />
                                 </div>
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                <div>
-                                    <Label htmlFor="responsable_document_type">Tipo de Documento *</Label>
-                                    <Select
-                                        value={data.responsable.document_type}
-                                        onValueChange={(value: 'CC' | 'TI' | 'CE' | 'Pasaporte') =>
-                                            setData('responsable', { ...data.responsable, document_type: value })
-                                        }
-                                    >
-                                        <SelectTrigger>
-                                            <SelectValue placeholder="Seleccione" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="CC">C.C</SelectItem>
-                                            <SelectItem value="TI">T.I</SelectItem>
-                                            <SelectItem value="CE">C.E</SelectItem>
-                                            <SelectItem value="Pasaporte">Pasaporte</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                    <InputError message={errors['responsable.document_type']} />
-                                </div>
+                                <DocumentTypeSelect
+                                    value={data.responsable.document_type}
+                                    onChange={(value) =>
+                                        setData('responsable', { ...data.responsable, document_type: value })
+                                    }
+                                    error={errors['responsable.document_type']}
+                                />
                                 <div className="md:col-span-2">
                                     <Label htmlFor="responsable_document_number">Número de Documento *</Label>
                                     <Input
@@ -331,6 +263,7 @@ export default function Create({ programs }: Props) {
                                             setData('responsable', { ...data.responsable, document_number: e.target.value })
                                         }
                                         placeholder="Número de documento"
+                                        aria-invalid={!!errors['responsable.document_number']}
                                     />
                                     <InputError message={errors['responsable.document_number']} />
                                 </div>
@@ -346,6 +279,7 @@ export default function Create({ programs }: Props) {
                                             setData('responsable', { ...data.responsable, birth_place: e.target.value })
                                         }
                                         placeholder="Ciudad de nacimiento"
+                                        aria-invalid={!!errors['responsable.birth_place']}
                                     />
                                     <InputError message={errors['responsable.birth_place']} />
                                 </div>
@@ -359,6 +293,7 @@ export default function Create({ programs }: Props) {
                                             setData('responsable', { ...data.responsable, birth_date: e.target.value })
                                         }
                                         max={new Date().toISOString().split('T')[0]}
+                                        aria-invalid={!!errors['responsable.birth_date']}
                                     />
                                     <InputError message={errors['responsable.birth_date']} />
                                 </div>
@@ -368,19 +303,17 @@ export default function Create({ programs }: Props) {
                                 <Label>Género *</Label>
                                 <RadioGroup
                                     value={data.responsable.gender}
-                                    onValueChange={(value: 'M' | 'F') =>
-                                        setData('responsable', { ...data.responsable, gender: value })
+                                    onValueChange={(value) =>
+                                        setData('responsable', { ...data.responsable, gender: value as Gender })
                                     }
                                     className="flex gap-4 mt-2"
                                 >
-                                    <div className="flex items-center space-x-2">
-                                        <RadioGroupItem value="M" id="gender_m" />
-                                        <Label htmlFor="gender_m">Masculino</Label>
-                                    </div>
-                                    <div className="flex items-center space-x-2">
-                                        <RadioGroupItem value="F" id="gender_f" />
-                                        <Label htmlFor="gender_f">Femenino</Label>
-                                    </div>
+                                    {Object.entries(GENDERS).map(([value, label]) => (
+                                        <div key={value} className="flex items-center space-x-2">
+                                            <RadioGroupItem value={value} id={`gender_${value}`} />
+                                            <Label htmlFor={`gender_${value}`}>{label}</Label>
+                                        </div>
+                                    ))}
                                 </RadioGroup>
                                 <InputError message={errors['responsable.gender']} />
                             </div>
@@ -393,6 +326,7 @@ export default function Create({ programs }: Props) {
                                     value={data.responsable.email}
                                     onChange={(e) => setData('responsable', { ...data.responsable, email: e.target.value })}
                                     placeholder="correo@ejemplo.com"
+                                    aria-invalid={!!errors['responsable.email']}
                                 />
                                 <InputError message={errors['responsable.email']} />
                             </div>
@@ -405,6 +339,7 @@ export default function Create({ programs }: Props) {
                                         value={data.responsable.phone}
                                         onChange={(e) => setData('responsable', { ...data.responsable, phone: e.target.value })}
                                         placeholder="607 123 4567"
+                                        aria-invalid={!!errors['responsable.phone']}
                                     />
                                     <InputError message={errors['responsable.phone']} />
                                 </div>
@@ -415,6 +350,7 @@ export default function Create({ programs }: Props) {
                                         value={data.responsable.mobile}
                                         onChange={(e) => setData('responsable', { ...data.responsable, mobile: e.target.value })}
                                         placeholder="300 123 4567"
+                                        aria-invalid={!!errors['responsable.mobile']}
                                     />
                                     <InputError message={errors['responsable.mobile']} />
                                 </div>
@@ -429,6 +365,7 @@ export default function Create({ programs }: Props) {
                                         value={data.responsable.password}
                                         onChange={(e) => setData('responsable', { ...data.responsable, password: e.target.value })}
                                         placeholder="Mínimo 8 caracteres"
+                                        aria-invalid={!!errors['responsable.password']}
                                     />
                                     <InputError message={errors['responsable.password']} />
                                 </div>
@@ -442,6 +379,7 @@ export default function Create({ programs }: Props) {
                                             setData('responsable', { ...data.responsable, password_confirmation: e.target.value })
                                         }
                                         placeholder="Repita la contraseña"
+                                        aria-invalid={!!errors['responsable.password_confirmation']}
                                     />
                                     <InputError message={errors['responsable.password_confirmation']} />
                                 </div>
@@ -466,6 +404,7 @@ export default function Create({ programs }: Props) {
                                         value={data.responsable.address}
                                         onChange={(e) => setData('responsable', { ...data.responsable, address: e.target.value })}
                                         placeholder="Calle 123 #45-67"
+                                        aria-invalid={!!errors['responsable.address']}
                                     />
                                     <InputError message={errors['responsable.address']} />
                                 </div>
@@ -478,6 +417,7 @@ export default function Create({ programs }: Props) {
                                             setData('responsable', { ...data.responsable, neighborhood: e.target.value })
                                         }
                                         placeholder="Nombre del barrio"
+                                        aria-invalid={!!errors['responsable.neighborhood']}
                                     />
                                     <InputError message={errors['responsable.neighborhood']} />
                                 </div>
@@ -491,6 +431,7 @@ export default function Create({ programs }: Props) {
                                         value={data.responsable.city}
                                         onChange={(e) => setData('responsable', { ...data.responsable, city: e.target.value })}
                                         placeholder="Ej: Ocaña, Cúcuta, Bogotá"
+                                        aria-invalid={!!errors['responsable.city']}
                                     />
                                     <InputError message={errors['responsable.city']} />
                                 </div>
@@ -543,11 +484,13 @@ export default function Create({ programs }: Props) {
                                         const esMinor = value === 'yes';
 
                                         // Si selecciona que sí es menor y no hay estudiantes, agregar uno automáticamente
-                                        if (esMinor && data.estudiantes.length === 0) {
+                                        if (esMinor && students.length === 0) {
+                                            const newStudent = crearNuevoEstudiante();
+                                            setStudentsData([newStudent]);
                                             setData({
                                                 ...data,
                                                 is_minor: true,
-                                                estudiantes: [crearNuevoEstudiante()],
+                                                estudiantes: [newStudent],
                                             });
                                             setCurrentEstudianteIndex(0);
                                         } else {
@@ -671,17 +614,21 @@ export default function Create({ programs }: Props) {
                                         <Label>Modalidad *</Label>
                                         <Select
                                             value={data.responsable.modality}
-                                            onValueChange={(value: 'Linaje Kids' | 'Linaje Teens' | 'Linaje Big') =>
-                                                setData('responsable', { ...data.responsable, modality: value })
+                                            onValueChange={(value) =>
+                                                setData('responsable', { ...data.responsable, modality: value as StudyModality })
                                             }
                                         >
                                             <SelectTrigger>
                                                 <SelectValue placeholder="Seleccione una modalidad" />
                                             </SelectTrigger>
                                             <SelectContent>
-                                                <SelectItem value="Linaje Big">Linaje Big (18+ años)</SelectItem>
-                                                <SelectItem value="Linaje Teens">Linaje Teens (10-17 años)</SelectItem>
-                                                <SelectItem value="Linaje Kids">Linaje Kids (4-9 años)</SelectItem>
+                                                {Object.entries(MODALITIES)
+                                                    .filter(([key]) => key !== '')
+                                                    .map(([value, label]) => (
+                                                        <SelectItem key={value} value={value}>
+                                                            {label}
+                                                        </SelectItem>
+                                                    ))}
                                             </SelectContent>
                                         </Select>
                                         <InputError message={errors['responsable.modality']} />
@@ -803,7 +750,7 @@ export default function Create({ programs }: Props) {
                                         type="button"
                                         variant="outline"
                                         size="sm"
-                                        onClick={agregarEstudiante}
+                                        onClick={handleAddStudent}
                                         className="flex items-center gap-2 text-green-600 border-green-600 hover:bg-green-50"
                                     >
                                         <Plus className="h-4 w-4" />
@@ -867,7 +814,7 @@ export default function Create({ programs }: Props) {
                                                 {data.estudiantes.length > 1 && (
                                                     <button
                                                         type="button"
-                                                        onClick={() => eliminarEstudiante(index)}
+                                                        onClick={() => handleRemoveStudent(index)}
                                                         className="h-full px-3 border-l-2 border-gray-200 text-red-600 hover:text-red-700 hover:bg-red-50 transition-colors"
                                                         title="Eliminar estudiante"
                                                     >
@@ -891,7 +838,7 @@ export default function Create({ programs }: Props) {
                                                 <Input
                                                     value={estudianteActual.name}
                                                     onChange={(e) =>
-                                                        actualizarEstudiante(currentEstudianteIndex, 'name', e.target.value)
+                                                        handleUpdateStudent(currentEstudianteIndex, 'name', e.target.value)
                                                     }
                                                     placeholder="Nombre"
                                                 />
@@ -902,7 +849,7 @@ export default function Create({ programs }: Props) {
                                                 <Input
                                                     value={estudianteActual.last_name}
                                                     onChange={(e) =>
-                                                        actualizarEstudiante(currentEstudianteIndex, 'last_name', e.target.value)
+                                                        handleUpdateStudent(currentEstudianteIndex, 'last_name', e.target.value)
                                                     }
                                                     placeholder="Apellidos"
                                                 />
@@ -915,18 +862,19 @@ export default function Create({ programs }: Props) {
                                                 <Label>Tipo de Documento *</Label>
                                                 <Select
                                                     value={estudianteActual.document_type}
-                                                    onValueChange={(value: 'CC' | 'TI' | 'CE' | 'Pasaporte') =>
-                                                        actualizarEstudiante(currentEstudianteIndex, 'document_type', value)
+                                                    onValueChange={(value) =>
+                                                        handleUpdateStudent(currentEstudianteIndex, 'document_type', value)
                                                     }
                                                 >
                                                     <SelectTrigger>
                                                         <SelectValue placeholder="Seleccione" />
                                                     </SelectTrigger>
                                                     <SelectContent>
-                                                        <SelectItem value="CC">C.C</SelectItem>
-                                                        <SelectItem value="TI">T.I</SelectItem>
-                                                        <SelectItem value="CE">C.E</SelectItem>
-                                                        <SelectItem value="Pasaporte">Pasaporte</SelectItem>
+                                                        {Object.entries(DOCUMENT_TYPES).map(([value, label]) => (
+                                                            <SelectItem key={value} value={value}>
+                                                                {label}
+                                                            </SelectItem>
+                                                        ))}
                                                     </SelectContent>
                                                 </Select>
                                                 <InputError
@@ -938,7 +886,7 @@ export default function Create({ programs }: Props) {
                                                 <Input
                                                     value={estudianteActual.document_number}
                                                     onChange={(e) =>
-                                                        actualizarEstudiante(currentEstudianteIndex, 'document_number', e.target.value)
+                                                        handleUpdateStudent(currentEstudianteIndex, 'document_number', e.target.value)
                                                     }
                                                     placeholder="Número de documento"
                                                 />
@@ -954,7 +902,7 @@ export default function Create({ programs }: Props) {
                                                 <Input
                                                     value={estudianteActual.birth_place}
                                                     onChange={(e) =>
-                                                        actualizarEstudiante(currentEstudianteIndex, 'birth_place', e.target.value)
+                                                        handleUpdateStudent(currentEstudianteIndex, 'birth_place', e.target.value)
                                                     }
                                                     placeholder="Ciudad de nacimiento"
                                                 />
@@ -966,7 +914,7 @@ export default function Create({ programs }: Props) {
                                                     type="date"
                                                     value={estudianteActual.birth_date}
                                                     onChange={(e) =>
-                                                        actualizarEstudiante(currentEstudianteIndex, 'birth_date', e.target.value)
+                                                        handleUpdateStudent(currentEstudianteIndex, 'birth_date', e.target.value)
                                                     }
                                                     max={new Date().toISOString().split('T')[0]}
                                                 />
@@ -978,19 +926,22 @@ export default function Create({ programs }: Props) {
                                             <Label>Género *</Label>
                                             <RadioGroup
                                                 value={estudianteActual.gender}
-                                                onValueChange={(value: 'M' | 'F') =>
-                                                    actualizarEstudiante(currentEstudianteIndex, 'gender', value)
+                                                onValueChange={(value) =>
+                                                    handleUpdateStudent(currentEstudianteIndex, 'gender', value)
                                                 }
                                                 className="flex gap-4 mt-2"
                                             >
-                                                <div className="flex items-center space-x-2">
-                                                    <RadioGroupItem value="M" id={`gender_m_${currentEstudianteIndex}`} />
-                                                    <Label htmlFor={`gender_m_${currentEstudianteIndex}`}>Masculino</Label>
-                                                </div>
-                                                <div className="flex items-center space-x-2">
-                                                    <RadioGroupItem value="F" id={`gender_f_${currentEstudianteIndex}`} />
-                                                    <Label htmlFor={`gender_f_${currentEstudianteIndex}`}>Femenino</Label>
-                                                </div>
+                                                {Object.entries(GENDERS).map(([value, label]) => (
+                                                    <div key={value} className="flex items-center space-x-2">
+                                                        <RadioGroupItem
+                                                            value={value}
+                                                            id={`gender_${value}_${currentEstudianteIndex}`}
+                                                        />
+                                                        <Label htmlFor={`gender_${value}_${currentEstudianteIndex}`}>
+                                                            {label}
+                                                        </Label>
+                                                    </div>
+                                                ))}
                                             </RadioGroup>
                                         </div>
 
@@ -1000,7 +951,7 @@ export default function Create({ programs }: Props) {
                                                 type="email"
                                                 value={estudianteActual.email}
                                                 onChange={(e) =>
-                                                    actualizarEstudiante(currentEstudianteIndex, 'email', e.target.value)
+                                                    handleUpdateStudent(currentEstudianteIndex, 'email', e.target.value)
                                                 }
                                                 placeholder="correo@ejemplo.com"
                                             />
@@ -1020,7 +971,7 @@ export default function Create({ programs }: Props) {
                                             <RadioGroup
                                                 value={estudianteActual.datos_musicales.plays_instrument ? 'yes' : 'no'}
                                                 onValueChange={(value) =>
-                                                    actualizarEstudiante(
+                                                    handleUpdateStudent(
                                                         currentEstudianteIndex,
                                                         'datos_musicales.plays_instrument',
                                                         value === 'yes'
@@ -1045,7 +996,7 @@ export default function Create({ programs }: Props) {
                                                 <Textarea
                                                     value={estudianteActual.datos_musicales.instruments_played}
                                                     onChange={(e) =>
-                                                        actualizarEstudiante(
+                                                        handleUpdateStudent(
                                                             currentEstudianteIndex,
                                                             'datos_musicales.instruments_played',
                                                             e.target.value
@@ -1062,7 +1013,7 @@ export default function Create({ programs }: Props) {
                                             <RadioGroup
                                                 value={estudianteActual.datos_musicales.has_music_studies ? 'yes' : 'no'}
                                                 onValueChange={(value) =>
-                                                    actualizarEstudiante(
+                                                    handleUpdateStudent(
                                                         currentEstudianteIndex,
                                                         'datos_musicales.has_music_studies',
                                                         value === 'yes'
@@ -1087,7 +1038,7 @@ export default function Create({ programs }: Props) {
                                                 <Textarea
                                                     value={estudianteActual.datos_musicales.music_schools}
                                                     onChange={(e) =>
-                                                        actualizarEstudiante(
+                                                        handleUpdateStudent(
                                                             currentEstudianteIndex,
                                                             'datos_musicales.music_schools',
                                                             e.target.value
@@ -1104,7 +1055,7 @@ export default function Create({ programs }: Props) {
                                             <Input
                                                 value={estudianteActual.datos_musicales.desired_instrument}
                                                 onChange={(e) =>
-                                                    actualizarEstudiante(
+                                                    handleUpdateStudent(
                                                         currentEstudianteIndex,
                                                         'datos_musicales.desired_instrument',
                                                         e.target.value
@@ -1121,17 +1072,21 @@ export default function Create({ programs }: Props) {
                                             <Label>Modalidad según edad *</Label>
                                             <Select
                                                 value={estudianteActual.datos_musicales.modality}
-                                                onValueChange={(value: 'Linaje Kids' | 'Linaje Teens' | 'Linaje Big') =>
-                                                    actualizarEstudiante(currentEstudianteIndex, 'datos_musicales.modality', value)
+                                                onValueChange={(value) =>
+                                                    handleUpdateStudent(currentEstudianteIndex, 'datos_musicales.modality', value)
                                                 }
                                             >
                                                 <SelectTrigger>
                                                     <SelectValue placeholder="Seleccione una modalidad" />
                                                 </SelectTrigger>
                                                 <SelectContent>
-                                                    <SelectItem value="Linaje Kids">Linaje Kids (4-9 años)</SelectItem>
-                                                    <SelectItem value="Linaje Teens">Linaje Teens (10-17 años)</SelectItem>
-                                                    <SelectItem value="Linaje Big">Linaje Big (18+ años)</SelectItem>
+                                                    {Object.entries(MODALITIES)
+                                                        .filter(([key]) => key !== '')
+                                                        .map(([value, label]) => (
+                                                            <SelectItem key={value} value={value}>
+                                                                {label}
+                                                            </SelectItem>
+                                                        ))}
                                                 </SelectContent>
                                             </Select>
                                             <InputError
@@ -1147,7 +1102,7 @@ export default function Create({ programs }: Props) {
                                                 max="10"
                                                 value={estudianteActual.datos_musicales.current_level}
                                                 onChange={(e) =>
-                                                    actualizarEstudiante(
+                                                    handleUpdateStudent(
                                                         currentEstudianteIndex,
                                                         'datos_musicales.current_level',
                                                         parseInt(e.target.value) || 1
@@ -1170,7 +1125,7 @@ export default function Create({ programs }: Props) {
                                             <Select
                                                 value={estudianteActual.program_id}
                                                 onValueChange={(value) =>
-                                                    actualizarEstudiante(currentEstudianteIndex, 'program_id', value)
+                                                    handleUpdateStudent(currentEstudianteIndex, 'program_id', value)
                                                 }
                                             >
                                                 <SelectTrigger>
@@ -1213,7 +1168,7 @@ export default function Create({ programs }: Props) {
                                                             <Select
                                                                 value={estudianteActual.schedule_id || undefined}
                                                                 onValueChange={(value) =>
-                                                                    actualizarEstudiante(currentEstudianteIndex, 'schedule_id', value || '')
+                                                                    handleUpdateStudent(currentEstudianteIndex, 'schedule_id', value || '')
                                                                 }
                                                             >
                                                                 <SelectTrigger>
@@ -1352,9 +1307,13 @@ export default function Create({ programs }: Props) {
         }
     };
 
+    // Debug en render
+    console.log('🎨 Renderizando con errores:', Object.keys(errors).length, errors);
+
     return (
         <>
             <Head title="Matrícula - Academia Linaje" />
+            <Toaster />
 
             <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-amber-100 py-12 px-4">
                 <div className="max-w-4xl mx-auto">
@@ -1364,12 +1323,54 @@ export default function Create({ programs }: Props) {
                         <p className="text-gray-600">Academia de Formación Musical y Espiritual LINAJE</p>
                     </div>
 
+                    {/* Banner de errores */}
+                    {Object.keys(errors).length > 0 && (
+                        <Card className="mb-6 border-red-200 bg-red-50">
+                            <CardContent className="pt-6">
+                                <div className="flex items-start gap-3">
+                                    <div className="flex-shrink-0">
+                                        <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
+                                            <AlertCircle className="h-5 w-5 text-red-600" />
+                                        </div>
+                                    </div>
+                                    <div className="flex-1">
+                                        <h3 className="text-base font-semibold text-red-900 mb-1">
+                                            Por favor revisa la información del formulario
+                                        </h3>
+                                        <p className="text-sm text-red-700 mb-3">
+                                            Se encontraron {Object.keys(errors).length} {Object.keys(errors).length === 1 ? 'error' : 'errores'} que deben ser corregidos:
+                                        </p>
+                                        <div className="bg-white rounded-lg p-3 border border-red-200">
+                                            <ul className="space-y-1.5">
+                                                {Object.entries(errors).slice(0, 8).map(([key, message]) => (
+                                                    <li key={key} className="flex items-start gap-2 text-sm text-gray-700">
+                                                        <span className="text-red-500 mt-0.5">•</span>
+                                                        <span>{message as string}</span>
+                                                    </li>
+                                                ))}
+                                                {Object.keys(errors).length > 8 && (
+                                                    <li className="text-sm text-red-600 font-medium mt-2 pl-4">
+                                                        ... y {Object.keys(errors).length - 8} {Object.keys(errors).length - 8 === 1 ? 'error más' : 'errores más'}
+                                                    </li>
+                                                )}
+                                            </ul>
+                                        </div>
+                                        <p className="text-xs text-red-600 mt-3 flex items-center gap-1">
+                                            <Check className="h-3 w-3" />
+                                            Los campos con errores están marcados en rojo debajo
+                                        </p>
+                                    </div>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    )}
+
                     {/* Progress Bar - Mejorado */}
                     <div className="mb-8">
                         {/* Barra de progreso visual */}
                         <div className="flex justify-between mb-4">
                             {[1, 2, 3, 4].map((s) => {
-                                const isComplete = s < step || (s === step && isStepValid(s));
+                                const isComplete = s < step || (s === step && validateStep(s));
                                 const isCurrent = s === step;
                                 const isPast = s < step;
 
@@ -1430,8 +1431,8 @@ export default function Create({ programs }: Props) {
                         {/* Indicador de progreso */}
                         <div className="text-center">
                             <p className="text-sm font-medium text-gray-700">
-                                Paso {step} de {totalSteps}
-                                {isStepValid(step) && (
+                                Paso {step} de {TOTAL_STEPS}
+                                {validateStep(step) && (
                                     <span className="ml-2 text-green-600 inline-flex items-center gap-1">
                                         <Check className="h-4 w-4" />
                                         Completado
@@ -1443,19 +1444,6 @@ export default function Create({ programs }: Props) {
 
                     {/* Form */}
                     <form onSubmit={submit}>
-                        {/* Mostrar errores globales */}
-                        {Object.keys(errors).length > 0 && (
-                            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-                                <h4 className="font-semibold text-red-900 mb-2">Hay errores en el formulario:</h4>
-                                <ul className="list-disc list-inside text-sm text-red-700 space-y-1">
-                                    {Object.entries(errors).map(([key, value]) => (
-                                        <li key={key}>
-                                            {key}: {value}
-                                        </li>
-                                    ))}
-                                </ul>
-                            </div>
-                        )}
 
                         {renderStep()}
 
@@ -1477,9 +1465,9 @@ export default function Create({ programs }: Props) {
                             {/* Espaciador cuando no hay botón anterior */}
                             {step === 1 && <div />}
 
-                            {step < totalSteps && (
+                            {step < TOTAL_STEPS && (
                                 <div className="ml-auto flex flex-col items-end gap-2">
-                                    {!isStepValid(step) && (
+                                    {!validateStep(step) && (
                                         <p className="text-sm text-amber-600 flex items-center gap-1">
                                             <AlertCircle className="h-4 w-4" />
                                             Completa los campos requeridos
@@ -1488,7 +1476,7 @@ export default function Create({ programs }: Props) {
                                     <Button
                                         type="button"
                                         onClick={nextStep}
-                                        disabled={!isStepValid(step)}
+                                        disabled={!validateStep(step)}
                                         size="lg"
                                         className="gap-2"
                                     >
@@ -1498,9 +1486,9 @@ export default function Create({ programs }: Props) {
                                 </div>
                             )}
 
-                            {step === totalSteps && (
+                            {step === TOTAL_STEPS && (
                                 <div className="ml-auto flex flex-col items-end gap-2">
-                                    {!isStepValid(step) && (
+                                    {!validateStep(step) && (
                                         <p className="text-sm text-red-600 flex items-center gap-1">
                                             <AlertCircle className="h-4 w-4" />
                                             Debes aceptar los compromisos
@@ -1508,7 +1496,7 @@ export default function Create({ programs }: Props) {
                                     )}
                                     <Button
                                         type="submit"
-                                        disabled={processing || !isStepValid(step)}
+                                        disabled={processing || !validateStep(step)}
                                         size="lg"
                                         className="bg-green-600 hover:bg-green-700 gap-2 min-w-[200px]"
                                     >

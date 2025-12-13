@@ -47,6 +47,19 @@ class HandleInertiaRequests extends Middleware
             }
         }
 
+        // Obtener errores de validación de la sesión
+        $errors = $request->session()->get('errors')
+            ? $request->session()->get('errors')->getBag('default')->getMessages()
+            : [];
+
+        // Log para debugging
+        if (!empty($errors)) {
+            \Log::info('Errores compartidos con Inertia', [
+                'errors' => $errors,
+                'url' => $request->url()
+            ]);
+        }
+
         return [
             ...parent::share($request),
             'name' => config('app.name'),

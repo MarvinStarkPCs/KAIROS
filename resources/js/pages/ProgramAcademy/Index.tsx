@@ -18,6 +18,7 @@ import {
 
 interface Program {
     id: number;
+    
     name: string;
     description: string | null;
     duration_months: number;

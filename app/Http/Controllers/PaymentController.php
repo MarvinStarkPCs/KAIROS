@@ -514,6 +514,18 @@ class PaymentController extends Controller
             return response()->json(['error' => 'Pago no encontrado'], 404);
         }
 
+        // IDEMPOTENCY CHECK: Verificar si este webhook ya fue procesado
+        // Si el payment ya tiene este transaction_id y está completed/cancelled, ignorar
+        if ($payment->wompi_transaction_id === $transactionData['id'] &&
+            in_array($payment->status, ['completed', 'cancelled'])) {
+            \Log::info('Webhook duplicado ignorado (ya procesado):', [
+                'payment_id' => $payment->id,
+                'transaction_id' => $transactionData['id'],
+                'status' => $payment->status
+            ]);
+            return response()->json(['message' => 'Webhook ya procesado'], 200);
+        }
+
         // Actualizar el pago según el estado de la transacción
         $status = $transactionData['status'];
 

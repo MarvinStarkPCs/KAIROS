@@ -35,5 +35,5 @@ return [
     | URLs de redirección después del pago
     |
     */
-    'redirect_url' => env('APP_URL') . '/pagos/confirmacion',
+    'redirect_url' => env('APP_URL') . '/matricula/confirmacion',
 ];

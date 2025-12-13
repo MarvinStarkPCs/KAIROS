@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Loader2, CheckCircle, CreditCard, Users, DollarSign } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Toaster } from '@/components/toaster';
 
 interface PaymentData {
     id: number;
@@ -108,6 +109,11 @@ export default function CheckoutMultiple({ payments, totalAmount, wompiPublicKey
     }, [currentPaymentIndex, currentPayment, wompiPublicKey, redirectUrl, completedPayments]);
 
     const handleNextPayment = () => {
+        // Marcar el pago actual como procesado
+        if (currentPayment && !completedPayments.includes(currentPayment.id)) {
+            setCompletedPayments(prev => [...prev, currentPayment.id]);
+        }
+
         if (currentPaymentIndex < payments.length - 1) {
             setIsProcessing(true);
             setCurrentPaymentIndex(currentPaymentIndex + 1);
@@ -116,6 +122,7 @@ export default function CheckoutMultiple({ payments, totalAmount, wompiPublicKey
     };
 
     const handleSkipPayment = () => {
+        // Marcar como saltado (también se considera procesado para evitar re-render)
         handleNextPayment();
     };
 
@@ -124,6 +131,7 @@ export default function CheckoutMultiple({ payments, totalAmount, wompiPublicKey
     return (
         <>
             <Head title="Pagar Matrículas" />
+            <Toaster />
 
             <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-amber-100 py-12 px-4 sm:px-6 lg:px-8">
                 <div className="max-w-5xl mx-auto">

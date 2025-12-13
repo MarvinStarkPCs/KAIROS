@@ -2,6 +2,7 @@ import { Head, Link } from '@inertiajs/react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { CheckCircle2, XCircle, Clock, Home, Mail } from 'lucide-react';
+import { Toaster } from '@/components/toaster';
 
 interface Payment {
     id: number;
@@ -34,6 +35,7 @@ export default function Confirmation({ payment, status, transactionId }: Confirm
     return (
         <>
             <Head title={isApproved ? 'Pago Exitoso' : 'Estado del Pago'} />
+            <Toaster />
 
             <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white py-12 px-4 sm:px-6 lg:px-8">
                 <div className="max-w-3xl mx-auto">

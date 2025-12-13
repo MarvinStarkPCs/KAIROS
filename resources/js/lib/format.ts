@@ -110,3 +110,48 @@ export function formatRelativeDate(date: string | Date): string {
     const years = Math.floor(diffDays / 365);
     return `Hace ${years} ${years === 1 ? 'año' : 'años'}`;
 }
+
+/**
+ * Formatea un valor en pesos colombianos
+ * @param amount Cantidad a formatear
+ * @param options Opciones de formato
+ * @returns String formateado (ej: "$50.000" o "$50.000 COP")
+ */
+export function formatCurrency(
+    amount: number,
+    options: {
+        includeCurrency?: boolean;
+        decimals?: boolean;
+    } = {}
+): string {
+    const { includeCurrency = false, decimals = false } = options;
+
+    const formattedAmount = new Intl.NumberFormat('es-CO', {
+        style: 'currency',
+        currency: 'COP',
+        minimumFractionDigits: decimals ? 2 : 0,
+        maximumFractionDigits: decimals ? 2 : 0,
+    }).format(amount);
+
+    if (!includeCurrency) {
+        // Remover "COP" del final si no se quiere mostrar
+        return formattedAmount.replace(/\s?COP$/i, '');
+    }
+
+    return formattedAmount;
+}
+
+/**
+ * Convierte centavos a pesos y formatea
+ * @param cents Cantidad en centavos
+ * @param options Opciones de formato
+ * @returns String formateado
+ */
+export function formatAmountFromCents(
+    cents: number,
+    options: {
+        includeCurrency?: boolean;
+    } = {}
+): string {
+    return formatCurrency(cents / 100, options);
+}
