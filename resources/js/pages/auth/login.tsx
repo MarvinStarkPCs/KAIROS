@@ -19,6 +19,10 @@ export default function Login({ status, canResetPassword }: { status?: string; c
         });
     };
 
+
+
+
+    
     return (
         <>
             <Head title="Iniciar Sesión - Academia Linaje" />
