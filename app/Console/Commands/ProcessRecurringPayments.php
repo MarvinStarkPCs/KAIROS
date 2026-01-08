@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Models\Payment;
 use App\Models\AcademicProgram;
+use App\Services\WompiService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -11,6 +12,10 @@ use Carbon\Carbon;
 
 class ProcessRecurringPayments extends Command
 {
+    public function __construct(protected WompiService $wompiService)
+    {
+        parent::__construct();
+    }
     /**
      * The name and signature of the console command.
      *
@@ -123,10 +128,12 @@ class ProcessRecurringPayments extends Command
      */
     private function chargeRecurringPayment(Payment $payment): array
     {
-        $wompiUrl = config('wompi.url');
-        $privateKey = config('wompi.private_key');
-        $publicKey = config('wompi.public_key');
-        $integritySecret = config('wompi.integrity_secret');
+        $config = $this->wompiService->getActiveConfig();
+
+        $wompiUrl = $config['api_url'];
+        $privateKey = $config['private_key'];
+        $publicKey = $config['public_key'];
+        $integritySecret = $config['integrity_secret'];
 
         // Obtener el monto mensual del programa
         $amount = $payment->program->monthly_fee;
@@ -239,11 +246,10 @@ class ProcessRecurringPayments extends Command
      */
     private function getAcceptanceToken(): string
     {
-        // Este token debe ser obtenido de la API de Wompi
-        // Para simplificar, lo guardamos en config
-        // En producción, este token debe ser obtenido dinámicamente
-        $wompiUrl = config('wompi.url');
-        $publicKey = config('wompi.public_key');
+        $config = $this->wompiService->getActiveConfig();
+
+        $wompiUrl = $config['api_url'];
+        $publicKey = $config['public_key'];
 
         $response = Http::withHeaders([
             'Authorization' => 'Bearer ' . $publicKey,

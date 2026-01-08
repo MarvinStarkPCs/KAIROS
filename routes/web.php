@@ -60,6 +60,19 @@ Route::get('/', function () {
     return Inertia::render('welcome');
 })->name('home');
 
+// Propuestas de diseño de página principal
+Route::get('/propuesta-1', function () {
+    return Inertia::render('propuesta_1');
+})->name('propuesta.1');
+
+Route::get('/propuesta-2', function () {
+    return Inertia::render('propuesta_2');
+})->name('propuesta.2');
+
+Route::get('/propuesta-3', function () {
+    return Inertia::render('propuesta_3');
+})->name('propuesta.3');
+
 Route::get('/pagos/create', [PaymentController::class, 'create'])->name('pagos.create');
 Route::get('/usuarios/create', [UserController::class, 'create'])->name('usuarios.create');
 Route::get('/programas_academicos/create', [program_academy::class, 'create'])->name('programas_academicos.create');

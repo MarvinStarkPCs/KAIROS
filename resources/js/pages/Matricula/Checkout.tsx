@@ -32,6 +32,7 @@ interface CheckoutProps {
 }
 
 export default function Checkout({ payment, wompi_config }: CheckoutProps) {
+    console.log('Wompi Config:', wompi_config);
     const customerName = `${payment.student.name} ${payment.student.last_name}`;
     const customerEmail = payment.student.email || 'noreply@academialinaje.com';
     const amountInCents = Math.round(payment.amount * 100);

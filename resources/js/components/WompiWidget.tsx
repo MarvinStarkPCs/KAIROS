@@ -1,6 +1,4 @@
-import { Button } from '@/components/ui/button';
-import { CreditCard, Loader2 } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 
 interface WompiWidgetProps {
     publicKey: string;
@@ -13,13 +11,6 @@ interface WompiWidgetProps {
     integritySignature?: string | null;
 }
 
-// Declarar el tipo global para WidgetCheckout
-declare global {
-    interface Window {
-        WidgetCheckout: any;
-    }
-}
-
 export default function WompiWidget({
     publicKey,
     amountInCents,
@@ -28,12 +19,13 @@ export default function WompiWidget({
     redirectUrl,
     customerEmail,
     customerName,
-    integritySignature = null,
+    integritySignature,
 }: WompiWidgetProps) {
-    const [isLoading, setIsLoading] = useState(true);
-    const [isProcessing, setIsProcessing] = useState(false);
-    const checkoutRef = useRef<any>(null);
+    const formRef = useRef<HTMLFormElement>(null);
 
+    /**
+     * Validar email con expresión regular
+     */
     const validateEmail = (email: string): string => {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(email)) {
@@ -45,95 +37,104 @@ export default function WompiWidget({
 
     const validEmail = validateEmail(customerEmail);
 
-    // Cargar el script de Wompi
+    // Detectar modo test/producción desde la public key
+    const isTestMode = publicKey.startsWith('pub_test_');
+
     useEffect(() => {
+         console.log('🔄 Datos actualizados:', {
+        publicKey,
+        amountInCents,
+        reference,
+        currency,
+        redirectUrl,
+        customerEmail,
+        customerName,
+        integritySignature,
+    });
+    if (!formRef.current) return;
+
+        /**
+         * Inicializar el widget embebido de Wompi
+         *
+         * IMPORTANTE: Según la documentación oficial de Wompi:
+         *
+         * 1. El widget embebido NO requiere acceptance_token como atributo data-*
+         *    - El acceptance_token solo se usa en llamadas API directas (POST /transactions)
+         *    - El widget maneja internamente el proceso de checkout
+         *
+         * 2. La firma de integridad (data-signature:integrity) es OPCIONAL en modo test
+         *    - En producción (pub_prod_*) es altamente recomendada
+         *    - En test (pub_test_*) puede omitirse sin problemas
+         *
+         * 3. Atributos obligatorios del widget:
+         *    - data-render="button"
+         *    - data-public-key
+         *    - data-currency
+         *    - data-amount-in-cents
+         *    - data-reference
+         *
+         * Referencias:
+         * - https://docs.wompi.co/en/docs/colombia/widget-checkout-web/
+         * - https://docs.wompi.co/en/docs/colombia/tokens-de-aceptacion/
+         */
+
         const script = document.createElement('script');
         script.src = 'https://checkout.wompi.co/widget.js';
-        script.async = true;
 
+        // Atributos obligatorios
+        script.setAttribute('data-render', 'button');
+        script.setAttribute('data-public-key', publicKey);
+        script.setAttribute('data-currency', currency);
+        script.setAttribute('data-amount-in-cents', amountInCents.toString());
+        script.setAttribute('data-reference', reference);
+
+        // Atributos opcionales pero recomendados
+        script.setAttribute('data-redirect-url', redirectUrl);
+        script.setAttribute('data-customer-data:email', validEmail);
+        script.setAttribute('data-customer-data:full-name', customerName);
+
+        // Firma de integridad: solo en producción
+        // En modo test es opcional y puede causar problemas si no está bien configurada
+        if (integritySignature && !isTestMode) {
+            script.setAttribute('data-signature:integrity', integritySignature);
+            console.log('🔐 Modo PRODUCCIÓN - Firma de integridad incluida');
+        } else if (isTestMode) {
+            console.log('🧪 Modo TEST - Sin firma de integridad (opcional en sandbox)');
+        }
+
+        formRef.current.appendChild(script);
+
+        // Abrir automáticamente el widget después de que se renderice
         script.onload = () => {
-            console.log('✅ Script de Wompi cargado');
-            initializeWidget();
+            console.log('✅ Script de Wompi cargado exitosamente');
+
+            // Esperar a que el botón se renderice y hacer click automático
+            setTimeout(() => {
+                const wompiButton = formRef.current?.querySelector('button');
+                if (wompiButton) {
+                    console.log('🚀 Abriendo widget de pago automáticamente...');
+                    wompiButton.click();
+                } else {
+                    console.warn('⚠️ No se encontró el botón de Wompi');
+                }
+            }, 1000);
         };
 
         script.onerror = () => {
             console.error('❌ Error al cargar el script de Wompi');
-            setIsLoading(false);
         };
 
-        document.body.appendChild(script);
-
+        // Cleanup: remover el script cuando el componente se desmonte
         return () => {
-            // Cleanup: remover el script cuando el componente se desmonte
-            if (document.body.contains(script)) {
-                document.body.removeChild(script);
+            const currentForm = formRef.current;
+            if (currentForm) {
+                const scriptElement = currentForm.querySelector('script[src="https://checkout.wompi.co/widget.js"]');
+                if (scriptElement) {
+                    currentForm.removeChild(scriptElement);
+                }
             }
         };
-    }, []);
-
-    // Inicializar el widget de Wompi
-    const initializeWidget = () => {
-        if (!window.WidgetCheckout) {
-            console.error('❌ WidgetCheckout no está disponible');
-            setIsLoading(false);
-            return;
-        }
-
-        try {
-            const config: any = {
-                currency: currency,
-                amountInCents: amountInCents,
-                reference: reference,
-                publicKey: publicKey,
-                redirectUrl: redirectUrl,
-                customerData: {
-                    email: validEmail,
-                    fullName: customerName,
-                },
-            };
-
-            // Solo agregar signature si existe (no en modo test)
-            if (integritySignature) {
-                config.signature = {
-                    integrity: integritySignature,
-                };
-            }
-
-            console.log('🔧 Configurando widget con:', config);
-
-            checkoutRef.current = new window.WidgetCheckout(config);
-            setIsLoading(false);
-            console.log('✅ Widget inicializado correctamente');
-        } catch (error) {
-            console.error('❌ Error al inicializar el widget:', error);
-            setIsLoading(false);
-        }
-    };
-
-    const handlePayment = () => {
-        if (!checkoutRef.current) {
-            console.error('❌ El widget no está inicializado');
-            return;
-        }
-
-        setIsProcessing(true);
-        console.log('🚀 Abriendo widget de Wompi...');
-
-        try {
-            checkoutRef.current.open((result: any) => {
-                console.log('✅ Resultado del pago:', result);
-                setIsProcessing(false);
-
-                if (result && result.transaction && result.transaction.id) {
-                    console.log('💳 ID de transacción:', result.transaction.id);
-                    // El redirect se maneja automáticamente por Wompi
-                }
-            });
-        } catch (error) {
-            console.error('❌ Error al abrir el widget:', error);
-            setIsProcessing(false);
-        }
-    };
+    }, [publicKey, amountInCents, reference, currency, redirectUrl, validEmail, customerName, integritySignature, isTestMode]);
 
     return (
         <div className="w-full">
@@ -150,7 +151,7 @@ export default function WompiWidget({
                             Pago Seguro con Wompi
                         </h3>
                         <p className="text-sm text-gray-600">
-                            Selecciona tu método de pago preferido
+                            Haz clic en el botón de abajo para continuar
                         </p>
                     </div>
                     <div className="pt-2">
@@ -164,31 +165,11 @@ export default function WompiWidget({
                 </div>
             </div>
 
-            {/* Botón de pago */}
-            <div className="flex justify-center">
-                <Button
-                    onClick={handlePayment}
-                    size="lg"
-                    disabled={isLoading || isProcessing}
-                    className="w-full max-w-md text-lg h-14 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 disabled:opacity-50"
-                >
-                    {isLoading ? (
-                        <>
-                            <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                            Cargando pasarela de pago...
-                        </>
-                    ) : isProcessing ? (
-                        <>
-                            <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                            Procesando...
-                        </>
-                    ) : (
-                        <>
-                            <CreditCard className="mr-2 h-5 w-5" />
-                            Pagar ${(amountInCents / 100).toLocaleString('es-CO')} COP
-                        </>
-                    )}
-                </Button>
+            {/* Botón original de Wompi usando el widget incrustado */}
+            <div className="flex justify-center mb-6">
+                <form ref={formRef}>
+                    {/* El script de Wompi se inyecta aquí via useEffect */}
+                </form>
             </div>
 
             {/* Instrucciones */}
@@ -205,7 +186,7 @@ export default function WompiWidget({
                                 Instrucciones de pago
                             </p>
                             <ul className="text-xs text-blue-800 space-y-1">
-                                <li>• Haz clic en el botón "Pagar"</li>
+                                <li>• Haz clic en el botón "Pagar con Wompi"</li>
                                 <li>• Se abrirá una ventana segura de Wompi</li>
                                 <li>• Elige tu método de pago (tarjeta, PSE, Nequi, etc.)</li>
                                 <li>• Completa la información requerida</li>

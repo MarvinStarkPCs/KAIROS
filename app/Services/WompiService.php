@@ -15,6 +15,10 @@ class WompiService
     {
         $wompiSetting = WompiSetting::where('is_active', true)->first();
 
+        Log::info('Wompi: Obteniendo configuración activa', [
+            'setting_found' => $wompiSetting ? true : false,
+        ]);
+
         if (!$wompiSetting) {
             throw new \Exception('No hay una configuración activa de Wompi. Por favor configure Wompi desde Configuración.');
         }
@@ -23,11 +27,39 @@ class WompiService
             throw new \Exception('La configuración de Wompi no tiene una llave pública.');
         }
 
+        if (empty($wompiSetting->api_url)) {
+            throw new \Exception('La configuración de Wompi no tiene una URL de API configurada.');
+        }
+
+        $isTest = $this->isTestMode($wompiSetting->public_key);
+
+        // Validar integrity_secret según el modo
+        if (!$isTest && empty($wompiSetting->integrity_secret)) {
+            throw new \Exception('La configuración de producción requiere un Integrity Secret. Por favor configúrelo desde el panel de Wompi.');
+        }
+
+        if ($isTest && !empty($wompiSetting->integrity_secret)) {
+            Log::info('Wompi: Integrity Secret configurado en modo test (necesario para PSE)', [
+                'public_key' => substr($wompiSetting->public_key, 0, 15) . '...',
+            ]);
+        }
+
+        Log::info('Wompi: Configuración activa cargada', [
+            'public_key' => substr($wompiSetting->public_key, 0, 15) . '...',
+            'api_url' => $wompiSetting->api_url,
+            'environment' => $wompiSetting->environment,
+            'is_test' => $isTest,
+            'has_integrity_secret' => !empty($wompiSetting->integrity_secret),
+        ]);
+
         return [
             'public_key' => $wompiSetting->public_key,
             'private_key' => $wompiSetting->private_key,
             'integrity_secret' => $wompiSetting->integrity_secret,
-            'is_test' => $this->isTestMode($wompiSetting->public_key),
+            'events_secret' => $wompiSetting->events_secret,
+            'api_url' => $wompiSetting->api_url,
+            'environment' => $wompiSetting->environment,
+            'is_test' => $isTest,
         ];
     }
 
@@ -40,13 +72,12 @@ class WompiService
     }
 
     /**
-     * Obtener URL base de la API según el modo (test/producción)
+     * Verificar si los pagos están activos
      */
-    private function getApiUrl(bool $isTest): string
+    public function isPaymentActive(): bool
     {
-        return $isTest
-            ? 'https://sandbox.wompi.co/v1'
-            : 'https://production.wompi.co/v1';
+        $wompiSetting = WompiSetting::where('is_active', true)->first();
+        return $wompiSetting && $wompiSetting->is_active;
     }
 
     /**
@@ -74,10 +105,10 @@ class WompiService
             'amount' => $amount,
             'amount_in_cents' => $amountInCents,
             'customer' => $customerEmail,
-            'is_test' => $config['is_test']
+            'environment' => $config['environment']
         ]);
 
-        $apiUrl = $this->getApiUrl($config['is_test']);
+        $apiUrl = $config['api_url'];
 
         // Datos para crear el payment link
         $payload = [
@@ -217,9 +248,11 @@ class WompiService
             'integrity_signature' => null,
         ];
 
-        // Generar firma de integridad para producción
-        // En modo test, Wompi NO requiere firma
-        if (!empty($integritySecret) && !$isTest) {
+        // Generar firma de integridad si hay integrity_secret configurado
+        // Según la documentación de Wompi:
+        // - En modo test (pub_test_*): La firma es OPCIONAL, pero algunos métodos como PSE la requieren
+        // - En modo producción (pub_prod_*): La firma es OBLIGATORIA
+        if (!empty($integritySecret)) {
             $integrityString = $reference . $amountInCents . 'COP' . $integritySecret;
             $data['integrity_signature'] = hash('sha256', $integrityString);
 
@@ -227,14 +260,16 @@ class WompiService
                 'reference' => $reference,
                 'amount_in_cents' => $amountInCents,
                 'is_test' => $isTest,
-                'signature' => $data['integrity_signature']
+                'mode' => $isTest ? 'TEST (para PSE)' : 'PRODUCCIÓN',
+                'signature' => substr($data['integrity_signature'], 0, 10) . '...'
             ]);
         } else {
-            Log::info('Wompi: Checkout sin firma de integridad (modo test)', [
+            Log::warning('Wompi: No se generó firma de integridad (integrity_secret no configurado)', [
                 'reference' => $reference,
                 'is_test' => $isTest
             ]);
         }
+
 
         return $data;
     }

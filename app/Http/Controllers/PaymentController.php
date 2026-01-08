@@ -8,6 +8,7 @@ use App\Models\AcademicProgram;
 use App\Models\Enrollment;
 use App\Models\PaymentSetting;
 use App\Mail\PaymentConfirmed;
+use App\Services\WompiService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Http;
@@ -16,6 +17,9 @@ use Carbon\Carbon;
 
 class PaymentController extends Controller
 {
+    public function __construct(protected WompiService $wompiService)
+    {
+    }
     /**
      * Display payments index/list
      */
@@ -409,13 +413,14 @@ class PaymentController extends Controller
 
             // Si no tiene transaction_id pero tiene reference, buscar por reference
             if (!$transactionId && $payment->wompi_reference) {
-                // Intentar consultar por referencia (esto requiere buscar en el historial de transacciones)
                 flash_info('Este pago aún no tiene un ID de transacción registrado. Espere a que Wompi procese el pago.');
                 return redirect()->back();
             }
 
+            $config = $this->wompiService->getActiveConfig();
+
             // Consultar transacción en Wompi
-            $response = Http::get("https://production.wompi.co/v1/transactions/{$transactionId}");
+            $response = Http::get("{$config['api_url']}/transactions/{$transactionId}");
 
             if (!$response->successful()) {
                 \Log::error('Error consultando transacción en Wompi', [
@@ -487,11 +492,13 @@ class PaymentController extends Controller
     {
         \Log::info('Wompi Webhook recibido:', $request->all());
 
+        $config = $this->wompiService->getActiveConfig();
+
         // Verificar firma del webhook
         $signature = $request->header('X-Event-Checksum');
         $eventData = $request->all();
 
-        $expectedSignature = hash('sha256', json_encode($eventData['data']) . config('wompi.events_secret'));
+        $expectedSignature = hash('sha256', json_encode($eventData['data']) . $config['events_secret']);
 
         if ($signature !== $expectedSignature) {
             \Log::error('Firma de webhook inválida');

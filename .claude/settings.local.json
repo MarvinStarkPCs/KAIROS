@@ -21,7 +21,9 @@
       "Bash(cat:*)",
       "Bash(git restore:*)",
       "Bash(git checkout:*)",
-      "Bash(npx tsc:*)"
+      "Bash(npx tsc:*)",
+      "WebFetch(domain:github.com)",
+      "Bash(composer show:*)"
     ],
     "deny": [],
     "ask": []

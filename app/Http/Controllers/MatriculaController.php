@@ -114,6 +114,12 @@ class MatriculaController extends Controller
      */
     public function checkoutMultiple(Request $request)
     {
+        // Validar que Wompi esté activo antes de permitir el pago
+        if (!$this->wompiService->isPaymentActive()) {
+            flash_info('You are enrolled, but you must contact the administrator to continue the payment process.');
+            return redirect()->route('home');
+        }
+
         $paymentIds = array_filter(
             explode(',', $request->query('payments', '')),
             'is_numeric'
@@ -171,35 +177,59 @@ class MatriculaController extends Controller
         $payment = Payment::with(['student', 'program', 'enrollment'])
             ->findOrFail($paymentId);
 
+        // Validar que Wompi esté activo antes de permitir el pago
+        if (!$this->wompiService->isPaymentActive()) {
+            flash_info('You are enrolled, but you must contact the administrator to continue the payment process.');
+            return redirect()->route('home');
+        }
+
         // Validar que el pago sea accesible
         if ($payment->status !== 'pending') {
+            \Log::info('Pago ya procesado', [
+                'payment_id' => $payment->id,
+                'status' => $payment->status,
+            ]);
             flash_error('Este pago ya ha sido procesado.');
             return redirect()->route('home');
         }
 
         // Validar que el pago sea reciente (creado en las últimas 24 horas)
         if ($payment->created_at->diffInHours(now()) > 24) {
+            \Log::info('Pago expirado', [
+                'payment_id' => $payment->id,
+                'created_at' => $payment->created_at,
+                'hours_diff' => $payment->created_at->diffInHours(now()),
+            ]);
             flash_error('Este enlace de pago ha expirado. Por favor, contacte al administrador.');
             return redirect()->route('home');
         }
 
         // Obtener configuración de Wompi
         $config = $this->wompiService->getActiveConfig();
-        $amountInCents = (int) ($payment->amount * 100);
 
-        // Generar firma de integridad solo para producción
-        // En test mode, Wompi no requiere firma
-        $integritySignature = null;
-        if (!empty($config['integrity_secret']) && !$config['is_test']) {
-            $integrityString = $payment->wompi_reference . $amountInCents . 'COP' . $config['integrity_secret'];
-            $integritySignature = hash('sha256', $integrityString);
-        }
+        \Log::info($config);
+        /**
+         * Preparar datos de checkout con firma de integridad
+         *
+         * IMPORTANTE: El servicio automáticamente:
+         * - Detecta si es modo test (pub_test_*) o producción (pub_prod_*)
+         * - En modo test: integrity_signature será null (no requerida)
+         * - En modo producción: genera la firma SHA256 si hay integrity_secret
+         *
+         * La firma se genera como: hash('sha256', reference + amountInCents + currency + secret)
+         */
+        $checkoutData = $this->wompiService->prepareCheckoutData(
+            $payment->wompi_reference,
+            $payment->amount,
+            $config['public_key'],
+            $config['integrity_secret']
+        );
 
         return Inertia::render('Matricula/Checkout', [
             'payment' => $payment,
             'wompi_config' => [
                 'public_key' => $config['public_key'],
-                'integrity_signature' => $integritySignature,
+                'integrity_signature' => $checkoutData['integrity_signature'],
             ],
         ]);
     }
@@ -209,6 +239,12 @@ class MatriculaController extends Controller
      */
     public function createPaymentLink($paymentId)
     {
+        // Validar que Wompi esté activo antes de crear payment link
+        if (!$this->wompiService->isPaymentActive()) {
+            flash_info('You are enrolled, but you must contact the administrator to continue the payment process.');
+            return redirect()->route('home');
+        }
+
         try {
             $payment = Payment::with(['student', 'program'])
                 ->findOrFail($paymentId);

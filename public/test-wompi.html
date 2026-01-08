@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Wompi - Ambiente de Prueba</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 600px;
+            width: 100%;
+            padding: 40px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: #333;
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .badge {
+            display: inline-block;
+            background: #10b981;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .config-section {
+            background: #f8fafc;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+
+        .config-section h3 {
+            color: #475569;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 15px;
+        }
+
+        .config-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .config-item:last-child {
+            border-bottom: none;
+        }
+
+        .config-label {
+            color: #64748b;
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .config-value {
+            color: #1e293b;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            max-width: 300px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .payment-section {
+            background: #f0fdf4;
+            border: 2px solid #86efac;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .amount {
+            font-size: 36px;
+            font-weight: 700;
+            color: #059669;
+            margin: 10px 0;
+        }
+
+        .reference {
+            color: #6b7280;
+            font-size: 12px;
+            margin-bottom: 20px;
+        }
+
+        #wompi-widget-container {
+            display: flex;
+            justify-content: center;
+            margin: 20px 0;
+        }
+
+        .signature-info {
+            background: #fef3c7;
+            border-left: 4px solid #f59e0b;
+            padding: 15px;
+            margin-top: 20px;
+            border-radius: 5px;
+        }
+
+        .signature-info p {
+            color: #92400e;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        .signature-info code {
+            background: white;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 11px;
+        }
+
+        .instructions {
+            background: #eff6ff;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .instructions h4 {
+            color: #1e40af;
+            margin-bottom: 10px;
+        }
+
+        .instructions ol {
+            margin-left: 20px;
+            color: #1e3a8a;
+        }
+
+        .instructions li {
+            margin: 8px 0;
+            font-size: 14px;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 2px solid #e5e7eb;
+        }
+
+        .footer p {
+            color: #9ca3af;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🧪 Test Wompi Integration</h1>
+            <span class="badge">Modo Test / Sandbox</span>
+        </div>
+
+        <div class="config-section">
+            <h3>📋 Configuración Actual</h3>
+            <div class="config-item">
+                <span class="config-label">Public Key:</span>
+                <span class="config-value" id="display-public-key">Cargando...</span>
+            </div>
+            <div class="config-item">
+                <span class="config-label">Integrity Secret:</span>
+                <span class="config-value" id="display-integrity-secret">Cargando...</span>
+            </div>
+            <div class="config-item">
+                <span class="config-label">Environment:</span>
+                <span class="config-value" id="display-environment">TEST</span>
+            </div>
+        </div>
+
+        <div class="payment-section">
+            <p style="color: #059669; font-weight: 600; margin-bottom: 5px;">Monto de Prueba</p>
+            <div class="amount">$10,000 COP</div>
+            <p class="reference">Referencia: <span id="reference-number">TEST-001-1734562800</span></p>
+
+            <div id="wompi-widget-container">
+                <form id="payment-form">
+                    <!-- El widget de Wompi se insertará aquí -->
+                </form>
+            </div>
+        </div>
+
+        <div class="signature-info">
+            <p>
+                <strong>ℹ️ Firma de Integridad:</strong><br>
+                La firma se genera como: <code>SHA256(reference + amountInCents + 'COP' + integrity_secret)</code>
+                <br><br>
+                <strong>Signature generada:</strong><br>
+                <code id="generated-signature" style="word-break: break-all;">Calculando...</code>
+            </p>
+        </div>
+
+        <div class="instructions">
+            <h4>📝 Instrucciones de Prueba</h4>
+            <ol>
+                <li>Haz clic en el botón "Pagar con Wompi"</li>
+                <li>Selecciona el método de pago (Tarjeta de crédito recomendado)</li>
+                <li>Usa las <strong>tarjetas de prueba de Wompi</strong>:
+                    <ul style="margin-top: 5px; list-style: none;">
+                        <li>💳 Visa: <code>4242 4242 4242 4242</code></li>
+                        <li>💳 Mastercard: <code>5555 5555 5555 4444</code></li>
+                        <li>📅 Vencimiento: Cualquier fecha futura</li>
+                        <li>🔒 CVV: Cualquier 3 dígitos</li>
+                    </ul>
+                </li>
+                <li>Completa el pago y verifica que funcione correctamente</li>
+            </ol>
+        </div>
+
+        <div class="footer">
+            <p>🔐 Ambiente de Prueba Seguro - Academia Linaje - KAIROS</p>
+        </div>
+    </div>
+
+    <script>
+        // ==========================================
+        // CONFIGURACIÓN - Actualiza con tus llaves
+        // ==========================================
+        const WOMPI_CONFIG = {
+            publicKey: 'pub_test_KzSrHaRDvMNyWCPeepPvZCeFIKVSDHQH',
+            integritySecret: 'test_integrity_7NTf7H3bCqzWN1UfZoGyuD0dkY2EbrBH',
+            environment: 'test'
+        };
+
+        const PAYMENT_DATA = {
+            reference: 'TEST-WOMPI-' + Date.now(),
+            amountInCents: 1000000, // $10,000 COP = 1,000,000 centavos
+            currency: 'COP',
+            redirectUrl: window.location.origin + '/matricula/confirmacion'
+        };
+
+        // ==========================================
+        // FUNCIÓN PARA GENERAR FIRMA SHA256
+        // ==========================================
+        async function generateIntegritySignature(reference, amountInCents, currency, secret) {
+            try {
+                const message = reference + amountInCents + currency + secret;
+                console.log('📝 Mensaje para firma:', message);
+
+                const msgBuffer = new TextEncoder().encode(message);
+                const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+                const hashArray = Array.from(new Uint8Array(hashBuffer));
+                const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+
+                console.log('✅ Firma generada exitosamente:', hashHex);
+                return hashHex;
+            } catch (error) {
+                console.error('❌ Error generando firma:', error);
+                return null;
+            }
+        }
+
+        // ==========================================
+        // INICIALIZAR WIDGET
+        // ==========================================
+        async function initializeWompiWidget() {
+            try {
+                console.log('🚀 Inicializando Wompi Widget...');
+                console.log('📊 Configuración:', WOMPI_CONFIG);
+                console.log('💰 Datos de pago:', PAYMENT_DATA);
+
+                // Mostrar configuración en la UI
+                document.getElementById('display-public-key').textContent = WOMPI_CONFIG.publicKey;
+                document.getElementById('display-integrity-secret').textContent = WOMPI_CONFIG.integritySecret.substring(0, 20) + '...';
+                document.getElementById('display-environment').textContent = WOMPI_CONFIG.environment.toUpperCase();
+                document.getElementById('reference-number').textContent = PAYMENT_DATA.reference;
+
+                // Generar firma de integridad
+                console.log('🔐 Generando firma de integridad...');
+                const signature = await generateIntegritySignature(
+                    PAYMENT_DATA.reference,
+                    PAYMENT_DATA.amountInCents,
+                    PAYMENT_DATA.currency,
+                    WOMPI_CONFIG.integritySecret
+                );
+
+                if (!signature) {
+                    throw new Error('No se pudo generar la firma de integridad');
+                }
+
+                console.log('✅ Firma de integridad:', signature);
+                document.getElementById('generated-signature').textContent = signature;
+
+                // Crear script del widget de Wompi
+                console.log('📦 Cargando script de Wompi...');
+                const script = document.createElement('script');
+                script.src = 'https://checkout.wompi.co/widget.js';
+
+                // Configurar atributos del widget
+                const attributes = {
+                    'data-render': 'button',
+                    'data-public-key': WOMPI_CONFIG.publicKey,
+                    'data-currency': PAYMENT_DATA.currency,
+                    'data-amount-in-cents': PAYMENT_DATA.amountInCents.toString(),
+                    'data-reference': PAYMENT_DATA.reference,
+                    'data-signature:integrity': signature,
+                    'data-redirect-url': PAYMENT_DATA.redirectUrl,
+                    'data-customer-data:email': 'test@academialinaje.com',
+                    'data-customer-data:full-name': 'Usuario de Prueba'
+                };
+
+                console.log('🏷️ Atributos del widget:', attributes);
+
+                for (const [key, value] of Object.entries(attributes)) {
+                    script.setAttribute(key, value);
+                }
+
+                // Event listeners
+                script.onload = () => {
+                    console.log('✅ Script de Wompi cargado exitosamente');
+                    console.log('🔍 Buscando botón de Wompi...');
+
+                    setTimeout(() => {
+                        const wompiButton = document.querySelector('#payment-form button');
+                        if (wompiButton) {
+                            console.log('✅ Botón de Wompi encontrado:', wompiButton);
+                            console.log('📏 Dimensiones del botón:', {
+                                width: wompiButton.offsetWidth,
+                                height: wompiButton.offsetHeight,
+                                visible: wompiButton.offsetParent !== null
+                            });
+                        } else {
+                            console.error('❌ Botón de Wompi NO encontrado');
+                            console.log('🔍 Contenido del formulario:', document.getElementById('payment-form').innerHTML);
+                        }
+                    }, 2000);
+                };
+
+                script.onerror = (error) => {
+                    console.error('❌ Error al cargar el script de Wompi:', error);
+                    document.getElementById('wompi-widget-container').innerHTML = `
+                        <div style="background: #fee2e2; border: 2px solid #ef4444; border-radius: 8px; padding: 20px; color: #991b1b;">
+                            <strong>❌ Error al cargar Wompi</strong><br>
+                            El script de Wompi no se pudo cargar. Verifica tu conexión a internet.
+                        </div>
+                    `;
+                };
+
+                // Insertar script en el formulario
+                console.log('➕ Insertando script en el DOM...');
+                document.getElementById('payment-form').appendChild(script);
+                console.log('✅ Script insertado. Esperando carga...');
+
+            } catch (error) {
+                console.error('💥 Error fatal al inicializar widget:', error);
+                document.getElementById('wompi-widget-container').innerHTML = `
+                    <div style="background: #fee2e2; border: 2px solid #ef4444; border-radius: 8px; padding: 20px; color: #991b1b;">
+                        <strong>💥 Error Fatal</strong><br>
+                        ${error.message}
+                    </div>
+                `;
+            }
+        }
+
+        // ==========================================
+        // INICIAR AL CARGAR LA PÁGINA
+        // ==========================================
+        window.addEventListener('DOMContentLoaded', () => {
+            console.log('📄 Página cargada - Iniciando test de Wompi');
+            initializeWompiWidget();
+        });
+
+        // ==========================================
+        // LISTENER PARA DEBUG
+        // ==========================================
+        window.addEventListener('message', (event) => {
+            console.log('💬 Mensaje recibido de Wompi:', event.data);
+        });
+    </script>
+</body>
+</html>

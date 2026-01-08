@@ -160,6 +160,8 @@ class EnrollmentService
      */
     public function processAdultEnrollment(array $data): array
     {
+
+        \Log::info('Procesando matrícula de adulto', ['data' => $data]);
         return DB::transaction(function () use ($data) {
             // 1. Crear usuario responsable (que también es el estudiante)
             // Pasar true como segundo parámetro para indicar que es estudiante
