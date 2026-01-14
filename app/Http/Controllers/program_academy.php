@@ -22,6 +22,7 @@ class program_academy extends Controller
                     'duration_months' => $program->duration_months,
                     'status' => $program->status,
                     'color' => $program->color,
+                    'is_demo' => $program->is_demo,
                     'active_students_count' => $program->active_students_count,
                     'schedules_count' => $program->schedules_count,
                     'active_schedules_count' => $program->active_schedules_count,
@@ -90,6 +91,7 @@ class program_academy extends Controller
                 'duration_months' => $program->duration_months,
                 'status' => $program->status,
                 'color' => $program->color,
+                'is_demo' => $program->is_demo,
                 'created_at' => $program->created_at->format('Y-m-d'),
             ],
             'studyPlans' => $studyPlans,
@@ -109,6 +111,7 @@ class program_academy extends Controller
             'duration_months' => 'required|integer|min:1',
             'status' => 'required|in:active,inactive',
             'color' => 'required|string|regex:/^#[0-9A-Fa-f]{6}$/',
+            'is_demo' => 'boolean',
         ], [
             'name.required' => 'El nombre del programa es obligatorio.',
             'duration_months.required' => 'La duración es obligatoria.',
@@ -133,6 +136,7 @@ class program_academy extends Controller
                 'duration_months' => $program->duration_months,
                 'status' => $program->status,
                 'color' => $program->color,
+                'is_demo' => $program->is_demo,
             ],
         ]);
     }
@@ -145,6 +149,7 @@ class program_academy extends Controller
             'duration_months' => 'required|integer|min:1',
             'status' => 'required|in:active,inactive',
             'color' => 'required|string|regex:/^#[0-9A-Fa-f]{6}$/',
+            'is_demo' => 'boolean',
         ], [
             'name.required' => 'El nombre del programa es obligatorio.',
             'duration_months.required' => 'La duración es obligatoria.',

@@ -23,6 +23,7 @@ class MatriculaController extends Controller
     public function create()
     {
         $programs = AcademicProgram::where('status', 'active')
+            ->where('is_demo', true)
             ->with(['schedules' => function ($query) {
                 $query->where('status', 'active')
                     ->with('professor:id,name')
@@ -51,7 +52,7 @@ class MatriculaController extends Controller
     }
 
     /**
-     * Procesar el formulario de matrícula
+     * Procesar el formulario de matrícula/demo
      */
     public function store(EnrollmentRequest $request)
     {
@@ -63,18 +64,26 @@ class MatriculaController extends Controller
         \Log::info('===== DATOS VALIDADOS =====');
         \Log::info('Datos de matrícula validados:', $request->validated());
 
-
         try {
+            // Verificar si es una inscripción para clase demo
+            $programId = $request->is_minor
+                ? $request->input('estudiantes.0.program_id')
+                : $request->input('responsable.program_id');
 
-            // Procesar según el tipo de matrícula
+            $program = AcademicProgram::find($programId);
+
+            // Si es un programa demo, solo guardar solicitud sin crear usuarios
+            if ($program && $program->is_demo) {
+                return $this->storeDemoRequest($request->validated());
+            }
+
+            // Si NO es demo, procesamiento normal de matrícula completa
             $result = $request->is_minor
                 ? $this->enrollmentService->processMinorEnrollment($request->validated())
                 : $this->enrollmentService->processAdultEnrollment($request->validated());
 
             $payments = $result['payments'];
-            $responsible = $result['responsible'];
-            
-  \Log::info ($responsible);
+
             // Redirigir al checkout
             return $this->redirectToCheckout($payments);
 
@@ -86,13 +95,77 @@ class MatriculaController extends Controller
                 'trace' => $e->getTraceAsString()
             ]);
 
-            // Agregar el mensaje de error específico para debugging
             $errorMessage = config('app.debug')
                 ? 'Error: ' . $e->getMessage()
-                : 'Ocurrió un error al procesar la matrícula. Por favor intenta nuevamente.';
+                : 'Ocurrió un error al procesar la solicitud. Por favor intenta nuevamente.';
 
-            // Usar back() con flash para que Inertia lo maneje correctamente
             return back()->with('error', $errorMessage)->withInput();
+        }
+    }
+
+    /**
+     * Guardar solicitud de clase demo (sin crear usuarios ni pagos)
+     */
+    protected function storeDemoRequest(array $data)
+    {
+        try {
+            $responsable = $data['responsable'];
+            $isMinor = $data['is_minor'];
+
+            // Preparar datos de estudiantes si es menor
+            $studentsData = null;
+            if ($isMinor && isset($data['estudiantes'])) {
+                $studentsData = collect($data['estudiantes'])->map(function ($student) {
+                    return [
+                        'name' => $student['name'],
+                        'last_name' => $student['last_name'],
+                        'document_type' => $student['document_type'],
+                        'document_number' => $student['document_number'],
+                        'birth_date' => $student['birth_date'] ?? null,
+                        'gender' => $student['gender'],
+                        'email' => $student['email'] ?? null,
+                        'program_id' => $student['program_id'],
+                        'schedule_id' => $student['schedule_id'] ?? null,
+                        'datos_musicales' => $student['datos_musicales'] ?? null,
+                    ];
+                })->toArray();
+            }
+
+            // Crear solicitud de demo
+            $demoRequest = \App\Models\DemoRequest::create([
+                'responsible_name' => $responsable['name'],
+                'responsible_last_name' => $responsable['last_name'],
+                'responsible_email' => $responsable['email'],
+                'responsible_phone' => $responsable['phone'] ?? null,
+                'responsible_mobile' => $responsable['mobile'],
+                'responsible_document_type' => $responsable['document_type'],
+                'responsible_document_number' => $responsable['document_number'],
+                'responsible_birth_date' => $responsable['birth_date'],
+                'responsible_gender' => $responsable['gender'],
+                'responsible_address' => $responsable['address'],
+                'responsible_city' => $responsable['city'],
+                'responsible_department' => $responsable['department'],
+                'is_minor' => $isMinor,
+                'program_id' => $isMinor ? $data['estudiantes'][0]['program_id'] : $responsable['program_id'],
+                'schedule_id' => $isMinor ? ($data['estudiantes'][0]['schedule_id'] ?? null) : ($responsable['schedule_id'] ?? null),
+                'students_data' => $studentsData,
+                'status' => 'pending',
+            ]);
+
+            \Log::info('Solicitud de clase demo creada exitosamente', [
+                'demo_request_id' => $demoRequest->id,
+                'responsible_email' => $demoRequest->responsible_email,
+            ]);
+
+            // Redirigir a página de confirmación simple
+            return redirect()->route('matricula.demo.confirmacion', ['request' => $demoRequest->id]);
+
+        } catch (\Exception $e) {
+            \Log::error('Error al guardar solicitud demo:', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            throw $e;
         }
     }
 
@@ -327,6 +400,19 @@ class MatriculaController extends Controller
 
         return Inertia::render('Matricula/Confirmation', [
             'payment' => $payment,
+        ]);
+    }
+
+    /**
+     * Página de confirmación para solicitud de clase demo
+     */
+    public function demoConfirmation($requestId)
+    {
+        $demoRequest = \App\Models\DemoRequest::with(['program', 'schedule'])
+            ->findOrFail($requestId);
+
+        return Inertia::render('Matricula/DemoConfirmation', [
+            'demoRequest' => $demoRequest,
         ]);
     }
 }

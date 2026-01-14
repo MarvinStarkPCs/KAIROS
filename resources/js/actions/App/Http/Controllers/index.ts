@@ -1,4 +1,5 @@
 import Auth from './Auth'
+import DemoLeadController from './DemoLeadController'
 import MatriculaController from './MatriculaController'
 import PaymentController from './PaymentController'
 import UserController from './UserController'
@@ -7,6 +8,7 @@ import RoleController from './RoleController'
 import EnrollmentController from './EnrollmentController'
 import ScheduleController from './ScheduleController'
 import AuditController from './AuditController'
+import Admin from './Admin'
 import StudyPlanController from './StudyPlanController'
 import AttendanceController from './AttendanceController'
 import TeacherController from './TeacherController'
@@ -14,6 +16,7 @@ import CommunicationController from './CommunicationController'
 import Settings from './Settings'
 const Controllers = {
     Auth: Object.assign(Auth, Auth),
+DemoLeadController: Object.assign(DemoLeadController, DemoLeadController),
 MatriculaController: Object.assign(MatriculaController, MatriculaController),
 PaymentController: Object.assign(PaymentController, PaymentController),
 UserController: Object.assign(UserController, UserController),
@@ -22,6 +25,7 @@ RoleController: Object.assign(RoleController, RoleController),
 EnrollmentController: Object.assign(EnrollmentController, EnrollmentController),
 ScheduleController: Object.assign(ScheduleController, ScheduleController),
 AuditController: Object.assign(AuditController, AuditController),
+Admin: Object.assign(Admin, Admin),
 StudyPlanController: Object.assign(StudyPlanController, StudyPlanController),
 AttendanceController: Object.assign(AttendanceController, AttendanceController),
 TeacherController: Object.assign(TeacherController, TeacherController),

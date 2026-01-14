@@ -106,6 +106,8 @@ class AcademicProgramController extends Controller
             'description' => 'nullable|string',
             'duration_months' => 'required|integer|min:1',
             'status' => 'required|in:active,inactive',
+            'color' => 'required|string|regex:/^#[0-9A-Fa-f]{6}$/',
+            'is_demo' => 'nullable|boolean',
         ], [
             'name.required' => 'El nombre del programa es obligatorio.',
             'duration_months.required' => 'La duración es obligatoria.',
@@ -127,6 +129,8 @@ class AcademicProgramController extends Controller
                 'description' => $program->description,
                 'duration_months' => $program->duration_months,
                 'status' => $program->status,
+                'color' => $program->color,
+                'is_demo' => $program->is_demo,
             ],
         ]);
     }
@@ -138,6 +142,8 @@ class AcademicProgramController extends Controller
             'description' => 'nullable|string',
             'duration_months' => 'required|integer|min:1',
             'status' => 'required|in:active,inactive',
+            'color' => 'required|string|regex:/^#[0-9A-Fa-f]{6}$/',
+            'is_demo' => 'nullable|boolean',
         ], [
             'name.required' => 'El nombre del programa es obligatorio.',
             'duration_months.required' => 'La duración es obligatoria.',

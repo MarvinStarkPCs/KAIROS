@@ -49,7 +49,6 @@ interface NavItem {
 
 import { Link, usePage } from '@inertiajs/react';
 import {
-    Home,
     CreditCard,
     Calendar,
     CheckSquare,
@@ -66,18 +65,13 @@ import {
     UserCheck,
     BookOpen,
     ChevronUp,
-    GraduationCap
+    GraduationCap,
+    Users
 } from 'lucide-react';
 import { useState } from 'react';
 
 // Navegación principal personalizada para Academia Linaje
 const allNavItems: NavItem[] = [
-    {
-        title: '',
-        href: dashboard().url,
-        icon: Home,
-        permission: 'ver_dashboard',
-    },
     {
         title: 'Mis Grupos',
         href: profesor.misGrupos().url,
@@ -95,6 +89,11 @@ const allNavItems: NavItem[] = [
         href: inscripciones.index().url,
         icon: UserCheck,
         permission: 'ver_inscripciones',
+    },
+    {
+        title: 'Demo Leads',
+        href: '/admin/demo-leads',
+        icon: Users,
     },
     {
         title: 'Pagos',

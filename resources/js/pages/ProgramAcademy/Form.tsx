@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Checkbox } from '@/components/ui/checkbox';
 import AppLayout from '@/layouts/app-layout';
 import ProgramAcademyController from '@/actions/App/Http/Controllers/program_academy';
 import { FormEvent } from 'react';
@@ -15,6 +16,7 @@ interface Program {
     duration_months: number;
     status: 'active' | 'inactive';
     color: string;
+    is_demo: boolean;
 }
 
 interface FormProps {
@@ -30,6 +32,7 @@ export default function Form({ program }: FormProps) {
         duration_months: program?.duration_months || 1,
         status: program?.status || 'active',
         color: program?.color || '#3B82F6',
+        is_demo: program?.is_demo || false,
     });
 
     const handleSubmit = (e: FormEvent) => {
@@ -140,6 +143,23 @@ export default function Form({ program }: FormProps) {
                                 <option value="inactive">Inactivo</option>
                             </select>
                             {errors.status && <p className="mt-1 text-sm text-red-600">{errors.status}</p>}
+                        </div>
+
+                        {/* Programa Demo */}
+                        <div className="flex items-center space-x-3 rounded-lg border border-gray-200 bg-gray-50 p-4">
+                            <Checkbox
+                                id="is_demo"
+                                checked={data.is_demo}
+                                onCheckedChange={(checked) => setData('is_demo', checked as boolean)}
+                            />
+                            <div className="flex-1">
+                                <Label htmlFor="is_demo" className="cursor-pointer font-medium">
+                                    Programa Demo
+                                </Label>
+                                <p className="text-sm text-gray-600">
+                                    Marcar este programa para mostrarlo en el formulario público de inscripción
+                                </p>
+                            </div>
                         </div>
 
                         {/* Color */}

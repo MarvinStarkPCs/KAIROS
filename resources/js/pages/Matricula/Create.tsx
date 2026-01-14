@@ -8,7 +8,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ChevronLeft, ChevronRight, CheckCircle, Plus, Trash2, User, AlertCircle, Check } from 'lucide-react';
+import { ChevronLeft, ChevronRight, CheckCircle, Plus, Trash2, User, AlertCircle, Check, Music2, GraduationCap, MapPin, FileText, Sparkles } from 'lucide-react';
 import InputError from '@/components/input-error';
 import { cn } from '@/lib/utils';
 import { Toaster } from '@/components/toaster';
@@ -213,14 +213,19 @@ export default function Create({ programs }: CreateProps) {
         switch (step) {
             case 1:
                 return (
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Datos del Responsable</CardTitle>
-                            <CardDescription>
+                    <Card className="border-2 shadow-xl hover:shadow-2xl transition-shadow duration-300">
+                        <CardHeader className="bg-gradient-to-r from-amber-50 to-orange-50 border-b">
+                            <div className="flex items-center gap-3 mb-2">
+                                <div className="p-2 bg-amber-100 rounded-lg">
+                                    <User className="h-5 w-5 text-amber-700" />
+                                </div>
+                                <CardTitle className="text-xl sm:text-2xl">Datos del Responsable</CardTitle>
+                            </div>
+                            <CardDescription className="text-sm sm:text-base">
                                 Ingrese los datos de la persona responsable de la matrícula
                             </CardDescription>
                         </CardHeader>
-                        <CardContent className="space-y-4">
+                        <CardContent className="space-y-4 sm:space-y-5 pt-6">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
                                     <Label htmlFor="responsable_name">Nombre *</Label>
@@ -390,12 +395,19 @@ export default function Create({ programs }: CreateProps) {
 
             case 2:
                 return (
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Datos de Localización</CardTitle>
-                            <CardDescription>Ingrese la dirección de residencia del responsable</CardDescription>
+                    <Card className="border-2 shadow-xl hover:shadow-2xl transition-shadow duration-300">
+                        <CardHeader className="bg-gradient-to-r from-amber-50 to-orange-50 border-b">
+                            <div className="flex items-center gap-3 mb-2">
+                                <div className="p-2 bg-amber-100 rounded-lg">
+                                    <MapPin className="h-5 w-5 text-amber-700" />
+                                </div>
+                                <CardTitle className="text-xl sm:text-2xl">Datos de Localización</CardTitle>
+                            </div>
+                            <CardDescription className="text-sm sm:text-base">
+                                Ingrese la dirección de residencia del responsable
+                            </CardDescription>
                         </CardHeader>
-                        <CardContent className="space-y-4">
+                        <CardContent className="space-y-4 sm:space-y-5 pt-6">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
                                     <Label htmlFor="responsable_address">Dirección *</Label>
@@ -518,14 +530,19 @@ export default function Create({ programs }: CreateProps) {
                 // Si no es menor, mostrar formulario de datos musicales del adulto
                 if (!data.is_minor) {
                     return (
-                        <Card>
-                            <CardHeader>
-                                <CardTitle>Datos Musicales y Programa</CardTitle>
-                                <CardDescription>
-                                    Completa tu información musical y selecciona el programa al que deseas inscribirte
+                        <Card className="border-2 shadow-xl hover:shadow-2xl transition-shadow duration-300">
+                            <CardHeader className="bg-gradient-to-r from-amber-50 to-orange-50 border-b">
+                                <div className="flex items-center gap-3 mb-2">
+                                    <div className="p-2 bg-amber-100 rounded-lg">
+                                        <Music2 className="h-5 w-5 text-amber-700" />
+                                    </div>
+                                    <CardTitle className="text-xl sm:text-2xl">Datos Musicales y Programa</CardTitle>
+                                </div>
+                                <CardDescription className="text-sm sm:text-base">
+                                    Completa tu información musical y selecciona el programa demo al que deseas asistir
                                 </CardDescription>
                             </CardHeader>
-                            <CardContent className="space-y-6">
+                            <CardContent className="space-y-6 pt-6">
                                 {/* Datos Musicales del Adulto */}
                                 <div className="space-y-4">
                                     <h3 className="font-semibold text-lg border-b pb-2">Experiencia Musical</h3>
@@ -689,9 +706,12 @@ export default function Create({ programs }: CreateProps) {
                                                 </p>
                                             </div>
 
-                                            {/* Horarios */}
-                                            {programs.find((p) => p.id.toString() === data.responsable.program_id)?.schedules &&
-                                                programs.find((p) => p.id.toString() === data.responsable.program_id)!.schedules.length > 0 && (
+                                            {/* Horarios - Solo mostrar si hay horarios con capacidad */}
+                                            {(() => {
+                                                const selectedProgram = programs.find((p) => p.id.toString() === data.responsable.program_id);
+                                                const availableSchedules = selectedProgram?.schedules?.filter((s) => s.has_capacity) || [];
+
+                                                return availableSchedules.length > 0 && (
                                                     <div>
                                                         <Label>Horario (Opcional)</Label>
                                                         <p className="text-xs text-gray-600 mb-2">
@@ -707,18 +727,16 @@ export default function Create({ programs }: CreateProps) {
                                                                 <SelectValue placeholder="Seleccione un horario (opcional)" />
                                                             </SelectTrigger>
                                                             <SelectContent>
-                                                                {programs
-                                                                    .find((p) => p.id.toString() === data.responsable.program_id)!
-                                                                    .schedules.filter((s) => s.has_capacity)
-                                                                    .map((schedule) => (
-                                                                        <SelectItem key={schedule.id} value={schedule.id.toString()}>
-                                                                            {schedule.days_of_week} | {schedule.start_time} - {schedule.end_time} | Prof. {schedule.professor.name} | Cupos: {schedule.available_slots}
-                                                                        </SelectItem>
-                                                                    ))}
+                                                                {availableSchedules.map((schedule) => (
+                                                                    <SelectItem key={schedule.id} value={schedule.id.toString()}>
+                                                                        {schedule.days_of_week} | {schedule.start_time} - {schedule.end_time} | Prof. {schedule.professor.name} | Cupos: {schedule.available_slots}
+                                                                    </SelectItem>
+                                                                ))}
                                                             </SelectContent>
                                                         </Select>
                                                     </div>
-                                                )}
+                                                );
+                                            })()}
                                         </>
                                     )}
                                 </div>
@@ -730,14 +748,19 @@ export default function Create({ programs }: CreateProps) {
                 const estudianteActual = data.estudiantes[currentEstudianteIndex];
 
                 return (
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Datos de los Estudiantes</CardTitle>
-                            <CardDescription>
-                                Ingrese los datos de cada estudiante menor de edad que desea matricular
+                    <Card className="border-2 shadow-xl hover:shadow-2xl transition-shadow duration-300">
+                        <CardHeader className="bg-gradient-to-r from-amber-50 to-orange-50 border-b">
+                            <div className="flex items-center gap-3 mb-2">
+                                <div className="p-2 bg-amber-100 rounded-lg">
+                                    <Music2 className="h-5 w-5 text-amber-700" />
+                                </div>
+                                <CardTitle className="text-xl sm:text-2xl">Datos de los Estudiantes</CardTitle>
+                            </div>
+                            <CardDescription className="text-sm sm:text-base">
+                                Ingrese los datos de cada estudiante menor de edad para la clase demo
                             </CardDescription>
                         </CardHeader>
-                        <CardContent className="space-y-6">
+                        <CardContent className="space-y-6 pt-6">
                             {/* Pestañas de estudiantes - Mejoradas */}
                             <div className="space-y-3">
                                 <div className="flex items-center justify-between">
@@ -1156,10 +1179,12 @@ export default function Create({ programs }: CreateProps) {
                                                     </p>
                                                 </div>
 
-                                                {/* Horarios */}
-                                                {programs.find((p) => p.id.toString() === estudianteActual.program_id)?.schedules &&
-                                                    programs.find((p) => p.id.toString() === estudianteActual.program_id)!.schedules
-                                                        .length > 0 && (
+                                                {/* Horarios - Solo mostrar si hay horarios con capacidad */}
+                                                {(() => {
+                                                    const selectedProgram = programs.find((p) => p.id.toString() === estudianteActual.program_id);
+                                                    const availableSchedules = selectedProgram?.schedules?.filter((s) => s.has_capacity) || [];
+
+                                                    return availableSchedules.length > 0 && (
                                                         <div>
                                                             <Label>Horario (Opcional)</Label>
                                                             <p className="text-xs text-gray-600 mb-2">
@@ -1175,20 +1200,18 @@ export default function Create({ programs }: CreateProps) {
                                                                     <SelectValue placeholder="Seleccione un horario (opcional)" />
                                                                 </SelectTrigger>
                                                                 <SelectContent>
-                                                                    {programs
-                                                                        .find((p) => p.id.toString() === estudianteActual.program_id)!
-                                                                        .schedules.filter((s) => s.has_capacity)
-                                                                        .map((schedule) => (
-                                                                            <SelectItem key={schedule.id} value={schedule.id.toString()}>
-                                                                                {schedule.days_of_week} | {schedule.start_time} -{' '}
-                                                                                {schedule.end_time} | Prof. {schedule.professor.name} | Cupos:{' '}
-                                                                                {schedule.available_slots}
-                                                                            </SelectItem>
-                                                                        ))}
+                                                                    {availableSchedules.map((schedule) => (
+                                                                        <SelectItem key={schedule.id} value={schedule.id.toString()}>
+                                                                            {schedule.days_of_week} | {schedule.start_time} -{' '}
+                                                                            {schedule.end_time} | Prof. {schedule.professor.name} | Cupos:{' '}
+                                                                            {schedule.available_slots}
+                                                                        </SelectItem>
+                                                                    ))}
                                                                 </SelectContent>
                                                             </Select>
                                                         </div>
-                                                    )}
+                                                    );
+                                                })()}
                                             </>
                                         )}
                                     </div>
@@ -1200,12 +1223,19 @@ export default function Create({ programs }: CreateProps) {
 
             case 4:
                 return (
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Autorizaciones y Compromiso</CardTitle>
-                            <CardDescription>Lea y acepte los términos antes de completar la matrícula</CardDescription>
+                    <Card className="border-2 shadow-xl hover:shadow-2xl transition-shadow duration-300">
+                        <CardHeader className="bg-gradient-to-r from-green-50 to-emerald-50 border-b">
+                            <div className="flex items-center gap-3 mb-2">
+                                <div className="p-2 bg-green-100 rounded-lg">
+                                    <FileText className="h-5 w-5 text-green-700" />
+                                </div>
+                                <CardTitle className="text-xl sm:text-2xl">Autorizaciones y Compromiso</CardTitle>
+                            </div>
+                            <CardDescription className="text-sm sm:text-base">
+                                Lea y acepte los términos antes de completar la inscripción a la clase demo
+                            </CardDescription>
                         </CardHeader>
-                        <CardContent className="space-y-6">
+                        <CardContent className="space-y-6 pt-6">
                             {data.is_minor && (
                                 <div className="p-4 border rounded-lg space-y-3">
                                     <h4 className="font-semibold">Autorización para Menores de Edad</h4>
@@ -1315,12 +1345,39 @@ export default function Create({ programs }: CreateProps) {
             <Head title="Matrícula - Academia Linaje" />
             <Toaster />
 
-            <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-amber-100 py-12 px-4">
-                <div className="max-w-4xl mx-auto">
-                    {/* Header */}
-                    <div className="text-center mb-8">
-                        <h1 className="text-4xl font-bold text-gray-900 mb-2">Formato de Ingreso</h1>
-                        <p className="text-gray-600">Academia de Formación Musical y Espiritual LINAJE</p>
+            <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-amber-100 py-8 sm:py-12 px-3 sm:px-4 lg:px-6">
+                <div className="max-w-5xl mx-auto">
+                    {/* Header - Mejorado con animaciones e iconos */}
+                    <div className="text-center mb-6 sm:mb-10 animate-fade-in">
+                        <div className="relative inline-block mb-4">
+                            <div className="absolute inset-0 bg-gradient-to-r from-amber-400 to-orange-400 rounded-full blur-xl opacity-30 animate-pulse"></div>
+                            <Music2 className="relative h-14 w-14 sm:h-16 sm:w-16 text-amber-600 mx-auto animate-bounce-once" />
+                        </div>
+                        <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold bg-gradient-to-r from-amber-600 via-orange-600 to-amber-700 bg-clip-text text-transparent mb-3">
+                            Clase Demo - Inscripción
+                        </h1>
+                        <p className="text-base sm:text-lg text-gray-700 font-medium mb-2">
+                            Academia de Formación Musical y Espiritual LINAJE
+                        </p>
+                        <p className="text-sm sm:text-base text-gray-600 max-w-2xl mx-auto px-4">
+                            Completa el formulario para registrarte en nuestra clase demo gratuita
+                        </p>
+                        <div className="mt-4 flex items-center justify-center gap-4 text-sm text-gray-600">
+                            <div className="flex items-center gap-1.5">
+                                <Sparkles className="h-4 w-4 text-amber-500" />
+                                <span className="hidden sm:inline">Experiencia única</span>
+                                <span className="sm:hidden">Único</span>
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                                <GraduationCap className="h-4 w-4 text-amber-500" />
+                                <span className="hidden sm:inline">Profesores expertos</span>
+                                <span className="sm:hidden">Expertos</span>
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                                <CheckCircle className="h-4 w-4 text-amber-500" />
+                                <span>Gratis</span>
+                            </div>
+                        </div>
                     </div>
 
                     {/* Banner de errores */}
@@ -1365,112 +1422,149 @@ export default function Create({ programs }: CreateProps) {
                         </Card>
                     )}
 
-                    {/* Progress Bar - Mejorado */}
-                    <div className="mb-8">
-                        {/* Barra de progreso visual */}
-                        <div className="flex justify-between mb-4">
-                            {[1, 2, 3, 4].map((s) => {
-                                const isComplete = s < step || (s === step && validateStep(s));
-                                const isCurrent = s === step;
-                                const isPast = s < step;
+                    {/* Progress Bar - Mejorado y Responsive */}
+                    <div className="mb-6 sm:mb-10 animate-fade-in">
+                        {/* Progress Percentage Bar */}
+                        <div className="mb-6 bg-white rounded-full p-1 shadow-inner">
+                            <div
+                                className="h-2 sm:h-2.5 bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 rounded-full transition-all duration-500 ease-out relative overflow-hidden"
+                                style={{ width: `${(step / TOTAL_STEPS) * 100}%` }}
+                            >
+                                <div className="absolute inset-0 bg-white/30 animate-pulse"></div>
+                            </div>
+                        </div>
+
+                        {/* Step Indicators - Mobile Optimized */}
+                        <div className="hidden sm:flex justify-between mb-6">
+                            {[
+                                { num: 1, label: 'Responsable', icon: User },
+                                { num: 2, label: 'Ubicación', icon: MapPin },
+                                { num: 3, label: 'Estudiantes', icon: Music2 },
+                                { num: 4, label: 'Finalizar', icon: FileText }
+                            ].map((s, index) => {
+                                const isComplete = s.num < step;
+                                const isCurrent = s.num === step;
+                                const isPast = s.num < step;
+                                const Icon = s.icon;
 
                                 return (
-                                    <div key={s} className="flex-1 flex items-center">
+                                    <div key={s.num} className="flex-1 flex items-center">
                                         <div className="relative flex flex-col items-center flex-1">
-                                            {/* Círculo del paso */}
+                                            {/* Circle with icon */}
                                             <button
                                                 type="button"
-                                                onClick={() => goToStep(s)}
-                                                disabled={s > step}
+                                                onClick={() => goToStep(s.num)}
+                                                disabled={s.num > step}
                                                 className={cn(
-                                                    'w-10 h-10 rounded-full flex items-center justify-center font-semibold transition-all duration-300 relative z-10',
-                                                    isCurrent && 'ring-4 ring-amber-200 scale-110',
-                                                    isPast && 'bg-green-600 text-white hover:bg-green-700',
-                                                    isCurrent && isComplete && 'bg-amber-600 text-white',
-                                                    isCurrent && !isComplete && 'bg-amber-400 text-white',
-                                                    !isCurrent && !isPast && 'bg-gray-200 text-gray-500',
-                                                    s <= step && 'cursor-pointer',
-                                                    s > step && 'cursor-not-allowed'
+                                                    'w-12 h-12 lg:w-14 lg:h-14 rounded-full flex items-center justify-center font-semibold transition-all duration-300 relative z-10 group',
+                                                    isCurrent && 'ring-4 ring-amber-300 scale-110 shadow-lg',
+                                                    isPast && 'bg-gradient-to-br from-green-500 to-green-600 text-white hover:scale-105 hover:shadow-xl',
+                                                    isCurrent && 'bg-gradient-to-br from-amber-500 to-orange-500 text-white shadow-lg',
+                                                    !isCurrent && !isPast && 'bg-gray-200 text-gray-400',
+                                                    s.num <= step && 'cursor-pointer hover:scale-105',
+                                                    s.num > step && 'cursor-not-allowed opacity-50'
                                                 )}
                                             >
                                                 {isPast ? (
-                                                    <Check className="h-5 w-5" />
+                                                    <Check className="h-5 w-5 lg:h-6 lg:w-6 animate-scale-in" />
                                                 ) : (
-                                                    <span>{s}</span>
+                                                    <Icon className={cn(
+                                                        "h-5 w-5 lg:h-6 lg:w-6 transition-transform",
+                                                        isCurrent && "animate-bounce-once"
+                                                    )} />
                                                 )}
                                             </button>
 
-                                            {/* Etiqueta del paso */}
+                                            {/* Label */}
                                             <span
                                                 className={cn(
-                                                    'text-xs mt-2 text-center font-medium transition-colors',
-                                                    isCurrent ? 'text-amber-600' : 'text-gray-500'
+                                                    'text-xs lg:text-sm mt-2 text-center font-medium transition-all duration-300 px-2',
+                                                    isCurrent && 'text-amber-700 font-bold scale-110',
+                                                    isPast && 'text-green-700 font-semibold',
+                                                    !isCurrent && !isPast && 'text-gray-500'
                                                 )}
                                             >
-                                                {s === 1 && 'Responsable'}
-                                                {s === 2 && 'Ubicación'}
-                                                {s === 3 && 'Estudiantes'}
-                                                {s === 4 && 'Finalizar'}
+                                                {s.label}
                                             </span>
                                         </div>
 
-                                        {/* Línea conectora */}
-                                        {s < 4 && (
-                                            <div
-                                                className={cn(
-                                                    'flex-1 h-1 mx-2 rounded transition-all duration-300',
-                                                    s < step ? 'bg-green-600' : 'bg-gray-200'
-                                                )}
-                                            />
+                                        {/* Connecting line */}
+                                        {index < 3 && (
+                                            <div className="relative flex-1 mx-2 lg:mx-3 h-1">
+                                                <div className="absolute inset-0 bg-gray-200 rounded"></div>
+                                                <div
+                                                    className={cn(
+                                                        'absolute inset-y-0 left-0 rounded transition-all duration-500 ease-out',
+                                                        s.num < step ? 'bg-gradient-to-r from-green-500 to-green-600 w-full step-line-fill' : 'w-0'
+                                                    )}
+                                                />
+                                            </div>
                                         )}
                                     </div>
                                 );
                             })}
                         </div>
 
-                        {/* Indicador de progreso */}
-                        <div className="text-center">
-                            <p className="text-sm font-medium text-gray-700">
-                                Paso {step} de {TOTAL_STEPS}
-                                {validateStep(step) && (
-                                    <span className="ml-2 text-green-600 inline-flex items-center gap-1">
-                                        <Check className="h-4 w-4" />
-                                        Completado
-                                    </span>
-                                )}
-                            </p>
+                        {/* Mobile Step Indicator */}
+                        <div className="sm:hidden flex items-center justify-between bg-white rounded-lg p-4 shadow-md">
+                            <div className="flex items-center gap-3">
+                                <div className={cn(
+                                    "w-12 h-12 rounded-full flex items-center justify-center bg-gradient-to-br from-amber-500 to-orange-500 text-white shadow-lg"
+                                )}>
+                                    {step === 1 && <User className="h-6 w-6" />}
+                                    {step === 2 && <MapPin className="h-6 w-6" />}
+                                    {step === 3 && <Music2 className="h-6 w-6" />}
+                                    {step === 4 && <FileText className="h-6 w-6" />}
+                                </div>
+                                <div>
+                                    <p className="text-sm font-semibold text-gray-900">
+                                        Paso {step} de {TOTAL_STEPS}
+                                    </p>
+                                    <p className="text-xs text-gray-600">
+                                        {step === 1 && 'Datos del Responsable'}
+                                        {step === 2 && 'Ubicación y Tipo'}
+                                        {step === 3 && 'Datos de Estudiantes'}
+                                        {step === 4 && 'Finalizar Inscripción'}
+                                    </p>
+                                </div>
+                            </div>
+                            {validateStep(step) && (
+                                <Check className="h-6 w-6 text-green-600 animate-scale-in" />
+                            )}
                         </div>
                     </div>
 
                     {/* Form */}
-                    <form onSubmit={submit}>
+                    <form onSubmit={submit} className="animate-fade-in">
+                        <div className="animate-slide-right">
+                            {renderStep()}
+                        </div>
 
-                        {renderStep()}
-
-                        {/* Navigation Buttons - Mejorados */}
-                        <div className="flex justify-between items-center mt-6 gap-4">
+                        {/* Navigation Buttons - Mejorados y Responsive */}
+                        <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center mt-6 sm:mt-8 gap-3 sm:gap-4 animate-fade-in">
                             {step > 1 && (
                                 <Button
                                     type="button"
                                     onClick={prevStep}
                                     variant="outline"
                                     size="lg"
-                                    className="gap-2"
+                                    className="gap-2 group hover:scale-105 transition-all duration-200 hover:border-amber-500 hover:text-amber-700 order-2 sm:order-1 w-full sm:w-auto"
                                 >
-                                    <ChevronLeft className="h-4 w-4" />
-                                    Anterior
+                                    <ChevronLeft className="h-4 w-4 sm:h-5 sm:w-5 group-hover:-translate-x-1 transition-transform" />
+                                    <span className="hidden sm:inline">Anterior</span>
+                                    <span className="sm:hidden">Volver</span>
                                 </Button>
                             )}
 
-                            {/* Espaciador cuando no hay botón anterior */}
-                            {step === 1 && <div />}
+                            {/* Espaciador cuando no hay botón anterior en desktop */}
+                            {step === 1 && <div className="hidden sm:block" />}
 
                             {step < TOTAL_STEPS && (
-                                <div className="ml-auto flex flex-col items-end gap-2">
+                                <div className="ml-auto flex flex-col items-end gap-2 order-1 sm:order-2 w-full sm:w-auto">
                                     {!validateStep(step) && (
-                                        <p className="text-sm text-amber-600 flex items-center gap-1">
-                                            <AlertCircle className="h-4 w-4" />
-                                            Completa los campos requeridos
+                                        <p className="text-xs sm:text-sm text-amber-700 flex items-center gap-1.5 bg-amber-50 px-3 py-2 rounded-lg animate-shake-error">
+                                            <AlertCircle className="h-4 w-4 flex-shrink-0" />
+                                            <span className="text-left">Completa los campos requeridos para continuar</span>
                                         </p>
                                     )}
                                     <Button
@@ -1478,37 +1572,45 @@ export default function Create({ programs }: CreateProps) {
                                         onClick={nextStep}
                                         disabled={!validateStep(step)}
                                         size="lg"
-                                        className="gap-2"
+                                        className={cn(
+                                            "gap-2 group bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 shadow-lg hover:shadow-xl transition-all duration-300 w-full sm:w-auto min-w-[140px]",
+                                            validateStep(step) && "button-pulse"
+                                        )}
                                     >
-                                        Siguiente
-                                        <ChevronRight className="h-4 w-4" />
+                                        <span>Siguiente</span>
+                                        <ChevronRight className="h-4 w-4 sm:h-5 sm:w-5 group-hover:translate-x-1 transition-transform" />
                                     </Button>
                                 </div>
                             )}
 
                             {step === TOTAL_STEPS && (
-                                <div className="ml-auto flex flex-col items-end gap-2">
+                                <div className="ml-auto flex flex-col items-end gap-2 order-1 sm:order-2 w-full sm:w-auto">
                                     {!validateStep(step) && (
-                                        <p className="text-sm text-red-600 flex items-center gap-1">
-                                            <AlertCircle className="h-4 w-4" />
-                                            Debes aceptar los compromisos
+                                        <p className="text-xs sm:text-sm text-red-700 flex items-center gap-1.5 bg-red-50 px-3 py-2 rounded-lg animate-shake-error">
+                                            <AlertCircle className="h-4 w-4 flex-shrink-0" />
+                                            <span className="text-left">Debes aceptar los compromisos para finalizar</span>
                                         </p>
                                     )}
                                     <Button
                                         type="submit"
                                         disabled={processing || !validateStep(step)}
                                         size="lg"
-                                        className="bg-green-600 hover:bg-green-700 gap-2 min-w-[200px]"
+                                        className={cn(
+                                            "bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 gap-2 shadow-lg hover:shadow-xl transition-all duration-300 w-full sm:w-auto sm:min-w-[220px]",
+                                            validateStep(step) && !processing && "animate-pulse"
+                                        )}
                                     >
                                         {processing ? (
                                             <>
-                                                <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                                                Procesando...
+                                                <div className="h-4 w-4 sm:h-5 sm:w-5 border-2 border-white border-t-transparent rounded-full loading-spinner" />
+                                                <span className="hidden sm:inline">Procesando...</span>
+                                                <span className="sm:hidden">Enviando...</span>
                                             </>
                                         ) : (
                                             <>
                                                 <CheckCircle className="h-5 w-5" />
-                                                Completar Matrícula
+                                                <span className="hidden sm:inline">Completar Matrícula</span>
+                                                <span className="sm:hidden">Finalizar</span>
                                             </>
                                         )}
                                     </Button>

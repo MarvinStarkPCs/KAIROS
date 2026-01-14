@@ -15,15 +15,23 @@ use App\Http\Controllers\TeacherController;
 use App\Http\Controllers\CommunicationController;
 use App\Http\Controllers\Auth\GoogleAuthController;
 use App\Http\Controllers\MatriculaController;
+use App\Http\Controllers\DemoLeadController;
+use App\Http\Controllers\Admin\DemoLeadController as AdminDemoLeadController;
 
 // Google OAuth Routes
 Route::get('/auth/google', [GoogleAuthController::class, 'redirectToGoogle'])->name('auth.google');
 Route::get('/auth/google/callback', [GoogleAuthController::class, 'handleGoogleCallback'])->name('auth.google.callback');
 
+// Demo Lead desde Welcome (sin autenticación, con rate limiting)
+Route::middleware(['throttle:5,1'])->group(function () {
+    Route::post('/demo/solicitud', [DemoLeadController::class, 'store'])->name('demo.lead.store');
+});
+
 // Matrícula Pública (sin autenticación, con rate limiting)
 Route::middleware(['throttle:10,1'])->group(function () {
     Route::get('/matricula', [MatriculaController::class, 'create'])->name('matricula.create');
     Route::post('/matricula', [MatriculaController::class, 'store'])->name('matricula.store');
+    Route::get('/matricula/demo/confirmacion/{request}', [MatriculaController::class, 'demoConfirmation'])->name('matricula.demo.confirmacion');
 });
 
 Route::middleware(['throttle:20,1'])->group(function () {
@@ -57,21 +65,37 @@ Route::post('/test-errors', function (\Illuminate\Http\Request $request) {
 })->name('test.errors.store');
 
 Route::get('/', function () {
-    return Inertia::render('welcome');
+    $demoPrograms = \App\Models\AcademicProgram::where('is_demo', true)
+        ->where('status', 'active')
+        ->with(['schedules' => function ($query) {
+            $query->where('status', 'active')
+                ->with('professor:id,name')
+                ->withCount(['enrollments as enrolled_count' => function ($q) {
+                    $q->where('status', 'enrolled');
+                }])
+                ->select('id', 'academic_program_id', 'days_of_week', 'start_time', 'end_time', 'professor_id', 'max_students', 'status');
+        }])
+        ->select('id', 'name', 'description')
+        ->orderBy('name')
+        ->get();
+
+    // Agregar información de cupos disponibles
+    $demoPrograms->each(function ($program) {
+        $program->schedules->each(function ($schedule) {
+            $schedule->available_slots = $schedule->max_students - $schedule->enrolled_count;
+            $schedule->has_capacity = $schedule->available_slots > 0;
+        });
+    });
+
+    // Filtrar solo programas que tienen horarios con capacidad disponible
+    $demoPrograms = $demoPrograms->filter(function($program) {
+        return $program->schedules->where('has_capacity', true)->count() > 0;
+    })->values();
+
+    return Inertia::render('welcome', [
+        'demoPrograms' => $demoPrograms,
+    ]);
 })->name('home');
-
-// Propuestas de diseño de página principal
-Route::get('/propuesta-1', function () {
-    return Inertia::render('propuesta_1');
-})->name('propuesta.1');
-
-Route::get('/propuesta-2', function () {
-    return Inertia::render('propuesta_2');
-})->name('propuesta.2');
-
-Route::get('/propuesta-3', function () {
-    return Inertia::render('propuesta_3');
-})->name('propuesta.3');
 
 Route::get('/pagos/create', [PaymentController::class, 'create'])->name('pagos.create');
 Route::get('/usuarios/create', [UserController::class, 'create'])->name('usuarios.create');
@@ -128,6 +152,15 @@ Route::middleware(['auth'])->group(function () {
     Route::middleware(['permission:ver_auditoria'])->group(function () {
         Route::get('/auditoria', [AuditController::class, 'index'])->name('audit.index');
         Route::get('/auditoria/filter', [AuditController::class, 'filter'])->name('audit.filter');
+    });
+
+    // Demo Leads (Gestión de solicitudes de clases demo)
+    Route::prefix('admin/demo-leads')->name('admin.demo-leads.')->group(function () {
+        Route::get('/', [AdminDemoLeadController::class, 'index'])->name('index');
+        Route::get('/{lead}', [AdminDemoLeadController::class, 'show'])->name('show');
+        Route::patch('/{lead}/status', [AdminDemoLeadController::class, 'updateStatus'])->name('update-status');
+        Route::patch('/{lead}/notes', [AdminDemoLeadController::class, 'updateNotes'])->name('update-notes');
+        Route::delete('/{lead}', [AdminDemoLeadController::class, 'destroy'])->name('destroy');
     });
 
     // Programas Académicos
