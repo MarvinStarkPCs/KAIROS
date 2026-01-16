@@ -250,7 +250,7 @@ export default function Show({
                                             {enrollments.length}
                                         </p>
                                         <p className="text-sm text-muted-foreground">
-                                            Inscripciones
+                                            Matrículas
                                         </p>
                                     </div>
                                 </div>
@@ -280,7 +280,7 @@ export default function Show({
                 <Tabs defaultValue="enrollments" className="space-y-4">
                     <TabsList>
                         <TabsTrigger value="enrollments">
-                            Inscripciones
+                            Matrículas
                         </TabsTrigger>
                         <TabsTrigger value="payments">Pagos</TabsTrigger>
                         <TabsTrigger value="attendances">Asistencias</TabsTrigger>
@@ -289,15 +289,15 @@ export default function Show({
                     <TabsContent value="enrollments">
                         <Card>
                             <CardHeader>
-                                <CardTitle>Inscripciones</CardTitle>
+                                <CardTitle>Matrículas</CardTitle>
                                 <CardDescription>
-                                    Programas académicos en los que está inscrito
+                                    Programas académicos en los que está matriculado
                                 </CardDescription>
                             </CardHeader>
                             <CardContent>
                                 {enrollments.length === 0 ? (
                                     <div className="py-12 text-center text-muted-foreground">
-                                        No tiene inscripciones registradas
+                                        No tiene matrículas registradas
                                     </div>
                                 ) : (
                                     <Table>
@@ -305,7 +305,7 @@ export default function Show({
                                             <TableRow>
                                                 <TableHead>Programa</TableHead>
                                                 <TableHead>
-                                                    Fecha de Inscripción
+                                                    Fecha de Matrícula
                                                 </TableHead>
                                                 <TableHead>Estado</TableHead>
                                             </TableRow>

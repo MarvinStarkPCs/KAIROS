@@ -79,7 +79,7 @@ export default function GestionPagos({
     transacciones = []
 }: Props) {
     const breadcrumbs: BreadcrumbItem[] = [
-        { title: 'Dashboard', href: '/dashboard' },
+        { title: 'Inicio', href: '/programas_academicos' },
         { title: 'Pagos', href: '/pagos' },
     ];
 
@@ -122,7 +122,7 @@ export default function GestionPagos({
                 tipo: 'Guitarra',
                 avatar: undefined
             },
-            concepto: 'Inscripción',
+            concepto: 'Matrícula',
             metodo: 'PayPal',
             metodoBadge: 'PayPal',
             monto: 50.00,
@@ -181,7 +181,7 @@ export default function GestionPagos({
                 <div className="mb-6 flex items-center justify-between flex-wrap gap-4">
                     <div>
                         <h1 className="text-3xl font-bold text-gray-800 mb-2">Gestión de Pagos</h1>
-                        <p className="text-gray-600">Control de mensualidades, inscripciones y facturación</p>
+                        <p className="text-gray-600">Control de mensualidades, matrículas y facturación</p>
                     </div>
                     <div className="flex gap-3">
                         <Button className="flex items-center gap-2 bg-[#7a9b3c] hover:bg-[#6a8a2c]">

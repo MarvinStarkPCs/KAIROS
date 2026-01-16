@@ -53,7 +53,7 @@ export default function RolesEdit({ role, permissions }: EditProps) {
     }, {} as Record<string, Permission[]>);
 
     const breadcrumbs: BreadcrumbItem[] = [
-        { title: 'Dashboard', href: route('dashboard') },
+        { title: 'Inicio', href: route('programas_academicos.index') },
         { title: 'Roles y Permisos', href: route('roles.index') },
         { title: `Editar: ${role.name}`, href: route('roles.edit', role.id) },
     ];

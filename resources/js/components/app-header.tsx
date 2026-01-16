@@ -22,7 +22,6 @@ import {
 import { UserMenuContent } from '@/components/user-menu-content';
 import { useInitials } from '@/hooks/use-initials';
 import { cn } from '@/lib/utils';
-import { dashboard } from '@/routes';
 import * as programas_academicos from '@/routes/programas_academicos';
 import * as inscripciones from '@/routes/inscripciones';
 import * as pagos from '@/routes/pagos';
@@ -85,7 +84,7 @@ const allNavItems: NavItem[] = [
         permission: 'ver_programas',
     },
     {
-        title: 'Inscripciones',
+        title: 'Matrículas',
         href: inscripciones.index().url,
         icon: UserCheck,
         permission: 'ver_inscripciones',
@@ -192,7 +191,7 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
                     {/* Logo y título */}
                     <div className="flex items-center space-x-3">
                         <Link
-                            href={dashboard()}
+                            href={programas_academicos.index().url}
                             prefetch
                             className="flex items-center space-x-3"
                         >

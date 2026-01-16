@@ -58,7 +58,7 @@ export function Step4AuthorizationsForm({
                                         className="cursor-pointer font-normal"
                                     >
                                         <span className="font-medium">Yo, como padre/madre/tutor legal,</span>{' '}
-                                        autorizo la inscripción del/los menor(es) de edad en el programa
+                                        autorizo la matrícula del/los menor(es) de edad en el programa
                                         académico musical. Declaro que la información proporcionada es
                                         verídica y me comprometo a cumplir con las normas y políticas de la
                                         institución. *

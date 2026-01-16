@@ -104,15 +104,15 @@ export default function Create({ programs, students }: Props) {
 
     return (
         <AppLayout>
-            <Head title="Nueva Inscripción" />
+            <Head title="Nueva Matrícula" />
 
             <div className="space-y-6">
                 {/* Header */}
                 <div className="flex items-center justify-between">
                     <div>
-                        <h1 className="text-3xl font-bold">Nueva Inscripción</h1>
+                        <h1 className="text-3xl font-bold">Nueva Matrícula</h1>
                         <p className="text-muted-foreground">
-                            Inscribir un estudiante en un programa académico
+                            Matricular un estudiante en un programa académico
                         </p>
                     </div>
                     <Link href="/inscripciones">
@@ -127,9 +127,9 @@ export default function Create({ programs, students }: Props) {
                 <form onSubmit={submit}>
                     <Card>
                         <CardHeader>
-                            <CardTitle>Datos de la Inscripción</CardTitle>
+                            <CardTitle>Datos de la Matrícula</CardTitle>
                             <CardDescription>
-                                Complete los datos del estudiante y el programa al que se inscribirá
+                                Complete los datos del estudiante y el programa al que se matriculará
                             </CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-6">
@@ -207,9 +207,9 @@ export default function Create({ programs, students }: Props) {
                                 )}
                             </div>
 
-                            {/* Fecha de Inscripción */}
+                            {/* Fecha de Matrícula */}
                             <div className="space-y-2">
-                                <Label htmlFor="enrollment_date">Fecha de Inscripción</Label>
+                                <Label htmlFor="enrollment_date">Fecha de Matrícula</Label>
                                 <Input
                                     id="enrollment_date"
                                     type="date"
@@ -349,7 +349,7 @@ export default function Create({ programs, students }: Props) {
                                 </Link>
                                 <Button type="submit" disabled={processing}>
                                     <Save className="mr-2 h-4 w-4" />
-                                    {processing ? 'Guardando...' : 'Crear Inscripción'}
+                                    {processing ? 'Guardando...' : 'Crear Matrícula'}
                                 </Button>
                             </div>
                         </CardContent>

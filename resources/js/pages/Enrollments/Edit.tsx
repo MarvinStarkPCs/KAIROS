@@ -54,15 +54,15 @@ export default function Edit({ enrollment, programs }: Props) {
 
     return (
         <AppLayout>
-            <Head title="Editar Inscripción" />
+            <Head title="Editar Matrícula" />
 
             <div className="space-y-6">
                 {/* Header */}
                 <div className="flex items-center justify-between">
                     <div>
-                        <h1 className="text-3xl font-bold">Editar Inscripción</h1>
+                        <h1 className="text-3xl font-bold">Editar Matrícula</h1>
                         <p className="text-muted-foreground">
-                            Modificar inscripción de {enrollment.student.name}
+                            Modificar matrícula de {enrollment.student.name}
                         </p>
                     </div>
                     <Link href="/inscripciones">
@@ -77,9 +77,9 @@ export default function Edit({ enrollment, programs }: Props) {
                 <form onSubmit={submit}>
                     <Card>
                         <CardHeader>
-                            <CardTitle>Datos de la Inscripción</CardTitle>
+                            <CardTitle>Datos de la Matrícula</CardTitle>
                             <CardDescription>
-                                Actualice los datos de la inscripción. El estudiante no puede ser modificado.
+                                Actualice los datos de la matrícula. El estudiante no puede ser modificado.
                             </CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-6">
@@ -91,7 +91,7 @@ export default function Edit({ enrollment, programs }: Props) {
                                     <p className="text-sm text-muted-foreground">{enrollment.student.email}</p>
                                 </div>
                                 <p className="text-xs text-muted-foreground">
-                                    El estudiante no puede ser modificado en una inscripción existente
+                                    El estudiante no puede ser modificado en una matrícula existente
                                 </p>
                             </div>
 
@@ -120,9 +120,9 @@ export default function Edit({ enrollment, programs }: Props) {
                                 )}
                             </div>
 
-                            {/* Fecha de Inscripción */}
+                            {/* Fecha de Matrícula */}
                             <div className="space-y-2">
-                                <Label htmlFor="enrollment_date">Fecha de Inscripción</Label>
+                                <Label htmlFor="enrollment_date">Fecha de Matrícula</Label>
                                 <Input
                                     id="enrollment_date"
                                     type="date"
@@ -156,7 +156,7 @@ export default function Edit({ enrollment, programs }: Props) {
                                 </Select>
                                 {errors.status && <p className="text-sm text-destructive">{errors.status}</p>}
                                 <p className="text-xs text-muted-foreground">
-                                    {data.status === 'active' && 'La inscripción está activa y el estudiante puede acceder al programa'}
+                                    {data.status === 'active' && 'La matrícula está activa y el estudiante puede acceder al programa'}
                                     {data.status === 'waiting' && 'El estudiante está en lista de espera'}
                                     {data.status === 'withdrawn' && 'El estudiante se ha retirado del programa'}
                                 </p>

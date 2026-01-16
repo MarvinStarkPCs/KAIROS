@@ -40,7 +40,7 @@ export default function RolesIndex({ roles }: IndexProps) {
     const [isDeleting, setIsDeleting] = useState(false);
 
     const breadcrumbs: BreadcrumbItem[] = [
-        { title: 'Dashboard', href: route('dashboard') },
+        { title: 'Inicio', href: route('programas_academicos.index') },
         { title: 'Roles y Permisos', href: route('roles.index') },
     ];
 

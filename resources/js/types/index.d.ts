@@ -24,6 +24,7 @@ export interface NavItem {
     icon?: LucideIcon | null;
     isActive?: boolean;
     permission?: string;
+    role?: string;
 }
 
 export interface FlashMessages {

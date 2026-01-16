@@ -12,6 +12,7 @@ use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\StudyPlanController;
 use App\Http\Controllers\TeacherController;
+use App\Http\Controllers\StudentController;
 use App\Http\Controllers\CommunicationController;
 use App\Http\Controllers\Auth\GoogleAuthController;
 use App\Http\Controllers\MatriculaController;
@@ -105,14 +106,6 @@ Route::get('/inscripciones/create', [EnrollmentController::class, 'create'])->na
 Route::get('/horarios/create', [ScheduleController::class, 'create'])->name('horarios.create');
 Route::get('/pagos/create', [PaymentController::class, 'create'])->name('pagos.create');
 Route::post('/pagos/create-installments', [PaymentController::class, 'createInstallments'])->name('pagos.create-installments');
-
-
-Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('dashboard', function () {
-        return Inertia::render('dashboard');
-
-    })->name('dashboard');
-});
 
 
 Route::middleware(['auth'])->group(function () {
@@ -309,6 +302,14 @@ Route::middleware(['auth'])->group(function () {
         Route::middleware(['permission:evaluar_estudiantes'])->group(function () {
             Route::get('/grupo/{schedule}/actividad/{activity}/evaluar', [TeacherController::class, 'evaluateActivity'])->name('profesor.evaluar-actividad');
             Route::post('/grupo/{schedule}/actividad/{activity}/evaluaciones', [TeacherController::class, 'storeEvaluations'])->name('profesor.guardar-evaluaciones');
+        });
+    });
+
+    // === PORTAL DE ESTUDIANTES ===
+    Route::prefix('estudiante')->group(function () {
+        Route::middleware(['role:Estudiante'])->group(function () {
+            Route::get('/mi-portal', [StudentController::class, 'dashboard'])->name('estudiante.dashboard');
+            Route::get('/calificaciones/{programId?}', [StudentController::class, 'grades'])->name('estudiante.calificaciones');
         });
     });
 

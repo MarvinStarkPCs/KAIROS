@@ -50,7 +50,7 @@ export default function UsersIndex({ users }: IndexProps) {
     const [isDeleting, setIsDeleting] = useState(false);
 
     const breadcrumbs: BreadcrumbItem[] = [
-        { title: 'Dashboard', href: route('dashboard') },
+        { title: 'Inicio', href: route('programas_academicos.index') },
         { title: 'Usuarios', href: route('usuarios.index') },
     ];
 

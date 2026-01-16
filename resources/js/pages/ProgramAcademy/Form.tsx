@@ -157,7 +157,7 @@ export default function Form({ program }: FormProps) {
                                     Programa Demo
                                 </Label>
                                 <p className="text-sm text-gray-600">
-                                    Marcar este programa para mostrarlo en el formulario público de inscripción
+                                    Marcar este programa para mostrarlo en el formulario público de matrícula
                                 </p>
                             </div>
                         </div>

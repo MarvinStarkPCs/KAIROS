@@ -96,7 +96,7 @@ export default function Index({ dependents }: Props) {
                             </h3>
                             <p className="mt-2 text-sm text-muted-foreground">
                                 Comienza agregando un dependiente para gestionar
-                                sus inscripciones y pagos.
+                                sus matrículas y pagos.
                             </p>
                             <Button
                                 className="mt-4"
@@ -125,7 +125,7 @@ export default function Index({ dependents }: Props) {
                                         <TableHead>Documento</TableHead>
                                         <TableHead>Edad</TableHead>
                                         <TableHead>Contacto</TableHead>
-                                        <TableHead>Inscripciones</TableHead>
+                                        <TableHead>Matrículas</TableHead>
                                         <TableHead>Pagos Pendientes</TableHead>
                                         <TableHead className="text-right">
                                             Acciones

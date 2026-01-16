@@ -10,13 +10,11 @@ import {
     SidebarMenuButton,
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
-import { dashboard } from '@/routes';
 import { type NavItem, type SharedData } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
 import {
     BookOpen,
     Folder,
-    LayoutGrid,
     Users,
     UserPlus,
     CreditCard,
@@ -25,6 +23,8 @@ import {
     MessageSquare,
     BarChart,
     GraduationCap,
+    Award,
+    User,
 } from 'lucide-react';
 import AppLogo from './app-logo';
 import ProgramAcademyController from '@/actions/App/Http/Controllers/program_academy';
@@ -33,13 +33,21 @@ import ScheduleController from '@/actions/App/Http/Controllers/ScheduleControlle
 import AttendanceController from '@/actions/App/Http/Controllers/AttendanceController';
 import PaymentController from '@/actions/App/Http/Controllers/PaymentController';
 import TeacherController from '@/actions/App/Http/Controllers/TeacherController';
+import StudentController from '@/actions/App/Http/Controllers/StudentController';
 
 const allNavItems: NavItem[] = [
+    // Portal de Estudiantes
     {
-        title: 'Dashboard',
-        href: dashboard(),
-        icon: LayoutGrid,
-        permission: 'ver_dashboard',
+        title: 'Mi Portal',
+        href: StudentController.dashboard(),
+        icon: User,
+        role: 'Estudiante',
+    },
+    {
+        title: 'Mis Calificaciones',
+        href: StudentController.grades(),
+        icon: Award,
+        role: 'Estudiante',
     },
     // Portal de Profesores
     {
@@ -56,7 +64,7 @@ const allNavItems: NavItem[] = [
         permission: 'ver_programas',
     },
     {
-        title: 'Inscripciones',
+        title: 'Matrículas',
         href: EnrollmentController.index(),
         icon: UserPlus,
         permission: 'ver_inscripciones',
@@ -97,11 +105,20 @@ const footerNavItems: NavItem[] = [
 export function AppSidebar() {
     const { auth } = usePage<SharedData>().props;
     const userPermissions = auth?.permissions || [];
+    const userRoles = auth?.roles || [];
 
-    // Filter navigation items based on user permissions
+    // Filter navigation items based on user permissions and roles
     const visibleNavItems = allNavItems.filter(item => {
-        if (!item.permission) return true;
-        return userPermissions.includes(item.permission);
+        // Check role if specified
+        if (item.role && !userRoles.includes(item.role)) {
+            return false;
+        }
+        // Check permission if specified
+        if (item.permission && !userPermissions.includes(item.permission)) {
+            return false;
+        }
+        // If no role or permission required, or if checks passed
+        return item.role || item.permission ? true : true;
     });
 
     return (
@@ -111,7 +128,7 @@ export function AppSidebar() {
                 <SidebarMenu>
                     <SidebarMenuItem>
                         <SidebarMenuButton size="lg" asChild>
-                            <Link href={dashboard()} prefetch>
+                            <Link href={ProgramAcademyController.index().url} prefetch>
                                 <AppLogo />
                             </Link>
                         </SidebarMenuButton>

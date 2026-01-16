@@ -91,13 +91,13 @@ export default function Show({ enrollment, studentSchedules, payments }: Props) 
 
     return (
         <AppLayout>
-            <Head title={`Inscripción #${enrollment.id}`} />
+            <Head title={`Matrícula #${enrollment.id}`} />
 
             <div className="space-y-6">
                 {/* Header */}
                 <div className="flex items-center justify-between">
                     <div>
-                        <h1 className="text-3xl font-bold">Detalle de Inscripción #{enrollment.id}</h1>
+                        <h1 className="text-3xl font-bold">Detalle de Matrícula #{enrollment.id}</h1>
                         <p className="text-muted-foreground">
                             {enrollment.student.name} - {enrollment.program.name}
                         </p>
@@ -139,12 +139,12 @@ export default function Show({ enrollment, studentSchedules, payments }: Props) 
                         </CardContent>
                     </Card>
 
-                    {/* Información de la Inscripción */}
+                    {/* Información de la Matrícula */}
                     <Card>
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2">
                                 <Calendar className="h-5 w-5" />
-                                Información de la Inscripción
+                                Información de la Matrícula
                             </CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-3">
@@ -153,7 +153,7 @@ export default function Show({ enrollment, studentSchedules, payments }: Props) 
                                 <p className="text-lg">{enrollment.program.name}</p>
                             </div>
                             <div>
-                                <p className="text-sm font-medium text-muted-foreground">Fecha de Inscripción</p>
+                                <p className="text-sm font-medium text-muted-foreground">Fecha de Matrícula</p>
                                 <p>{new Date(enrollment.enrollment_date).toLocaleDateString('es-ES')}</p>
                             </div>
                             <div>
@@ -235,7 +235,7 @@ export default function Show({ enrollment, studentSchedules, payments }: Props) 
                     <CardContent>
                         {payments.length === 0 ? (
                             <p className="text-center text-muted-foreground py-4">
-                                No hay pagos registrados para esta inscripción
+                                No hay pagos registrados para esta matrícula
                             </p>
                         ) : (
                             <Table>

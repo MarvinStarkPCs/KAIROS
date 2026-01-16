@@ -99,8 +99,8 @@ export default function Index({ enrollments, stats, programs, students, filters 
     };
 
     const handleDelete = (id: number) => {
-        if (confirm('¿Estás seguro de eliminar esta inscripción?')) {
-            router.delete(`/inscripciones/${id}`);
+        if (confirm('¿Estás seguro de eliminar esta matrícula?')) {
+            router.delete(`/matrículas/${id}`);
         }
     };
 
@@ -115,21 +115,21 @@ export default function Index({ enrollments, stats, programs, students, filters 
 
     return (
         <AppLayout>
-            <Head title="Inscripciones" />
+            <Head title="Matrículas" />
 
             <div className="space-y-6">
                 {/* Header */}
                 <div className="flex items-center justify-between">
                     <div>
-                        <h1 className="text-3xl font-bold">Inscripciones a Programas</h1>
+                        <h1 className="text-3xl font-bold">Matrículas a Programas</h1>
                         <p className="text-muted-foreground">
-                            Gestiona las inscripciones de estudiantes a programas académicos
+                            Gestiona las matrículas de estudiantes a programas académicos
                         </p>
                     </div>
-                    <Link href="/inscripciones/create">
+                    <Link href="/matrículas/create">
                         <Button>
                             <Plus className="mr-2 h-4 w-4" />
-                            Nueva Inscripción
+                            Nueva Matrícula
                         </Button>
                     </Link>
                 </div>
@@ -138,7 +138,7 @@ export default function Index({ enrollments, stats, programs, students, filters 
                 <div className="grid gap-4 md:grid-cols-4">
                     <Card>
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">Total Inscripciones</CardTitle>
+                            <CardTitle className="text-sm font-medium">Total Matrículas</CardTitle>
                             <Users className="h-4 w-4 text-muted-foreground" />
                         </CardHeader>
                         <CardContent>
@@ -235,7 +235,7 @@ export default function Index({ enrollments, stats, programs, students, filters 
                 <Card>
                     <CardHeader>
                         <CardTitle>
-                            Inscripciones ({enrollments.total})
+                            Matrículas ({enrollments.total})
                         </CardTitle>
                     </CardHeader>
                     <CardContent>
@@ -245,7 +245,7 @@ export default function Index({ enrollments, stats, programs, students, filters 
                                     <TableHead>ID</TableHead>
                                     <TableHead>Estudiante</TableHead>
                                     <TableHead>Programa</TableHead>
-                                    <TableHead>Fecha Inscripción</TableHead>
+                                    <TableHead>Fecha Matrícula</TableHead>
                                     <TableHead>Estado</TableHead>
                                     <TableHead className="text-right">Acciones</TableHead>
                                 </TableRow>
@@ -254,7 +254,7 @@ export default function Index({ enrollments, stats, programs, students, filters 
                                 {enrollments.data.length === 0 ? (
                                     <TableRow>
                                         <TableCell colSpan={6} className="text-center text-muted-foreground">
-                                            No se encontraron inscripciones
+                                            No se encontraron matrículas
                                         </TableCell>
                                     </TableRow>
                                 ) : (
@@ -276,12 +276,12 @@ export default function Index({ enrollments, stats, programs, students, filters 
                                             <TableCell>{getStatusBadge(enrollment.status)}</TableCell>
                                             <TableCell className="text-right">
                                                 <div className="flex justify-end gap-2">
-                                                    <Link href={`/inscripciones/${enrollment.id}`}>
+                                                    <Link href={`/matrículas/${enrollment.id}`}>
                                                         <Button variant="ghost" size="sm">
                                                             <Eye className="h-4 w-4" />
                                                         </Button>
                                                     </Link>
-                                                    <Link href={`/inscripciones/${enrollment.id}/edit`}>
+                                                    <Link href={`/matrículas/${enrollment.id}/edit`}>
                                                         <Button variant="ghost" size="sm">
                                                             <Edit className="h-4 w-4" />
                                                         </Button>
@@ -312,7 +312,7 @@ export default function Index({ enrollments, stats, programs, students, filters 
                                         <Button
                                             variant="outline"
                                             onClick={() =>
-                                                router.get(`/inscripciones?page=${enrollments.current_page - 1}`)
+                                                router.get(`/matrículas?page=${enrollments.current_page - 1}`)
                                             }
                                         >
                                             Anterior
@@ -322,7 +322,7 @@ export default function Index({ enrollments, stats, programs, students, filters 
                                         <Button
                                             variant="outline"
                                             onClick={() =>
-                                                router.get(`/inscripciones?page=${enrollments.current_page + 1}`)
+                                                router.get(`/matrículas?page=${enrollments.current_page + 1}`)
                                             }
                                         >
                                             Siguiente

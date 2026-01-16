@@ -50,7 +50,7 @@ export default function UsersEdit({ user, roles }: EditProps) {
     type BreadcrumbItem = { title: string; href: string };
 
     const breadcrumbs: BreadcrumbItem[] = [
-        { title: 'Dashboard', href: route('dashboard') },
+        { title: 'Inicio', href: route('programas_academicos.index') },
         { title: 'Usuarios', href: route('usuarios.index') },
         { title: `Editar: ${user.name}`, href: route('usuarios.edit', user.id) },
     ];

@@ -70,7 +70,7 @@ interface Props extends PageProps {
 
 export default function ScheduleShow({ schedule }: Props) {
     const handleDisenrollStudent = (student: Student) => {
-        if (confirm(`¿Estás seguro de desinscribir a ${student.name} de este horario?`)) {
+        if (confirm(`¿Estás seguro de desmatricular a ${student.name} de este horario?`)) {
             router.delete(`/horarios/${schedule.id}/students/${student.id}`, {
                 preserveScroll: true,
             });
@@ -248,7 +248,7 @@ export default function ScheduleShow({ schedule }: Props) {
                     <CardTitle>Estudiantes Inscritos</CardTitle>
                     <CardDescription>
                         {schedule.enrolled_count} estudiante(s) inscrito(s).
-                        Para inscribir nuevos estudiantes, use el módulo de Inscripciones.
+                        Para matricular nuevos estudiantes, use el módulo de Matrículas.
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -263,7 +263,7 @@ export default function ScheduleShow({ schedule }: Props) {
                                     <TableRow>
                                         <TableHead>Nombre</TableHead>
                                         <TableHead>Email</TableHead>
-                                        <TableHead>Fecha de Inscripción</TableHead>
+                                        <TableHead>Fecha de Matrícula</TableHead>
                                         <TableHead className="text-right">Acciones</TableHead>
                                     </TableRow>
                                 </TableHeader>
@@ -285,7 +285,7 @@ export default function ScheduleShow({ schedule }: Props) {
                                                     className="flex items-center gap-2 text-destructive hover:text-destructive"
                                                 >
                                                     <UserMinus className="w-4 h-4" />
-                                                    Desinscribir
+                                                    Desmatricular
                                                 </Button>
                                             </TableCell>
                                         </TableRow>

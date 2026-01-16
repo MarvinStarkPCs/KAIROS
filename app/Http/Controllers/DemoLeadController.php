@@ -75,7 +75,7 @@ class DemoLeadController extends Controller
             if ($emailSent) {
                 flash_success('¡Solicitud recibida exitosamente! 📧 Te hemos enviado un correo de confirmación a ' . $lead->email . '. Revisa tu bandeja de entrada.');
             } else {
-                flash_success('¡Gracias por tu interés! Tu solicitud ha sido registrada. Nos pondremos en contacto contigo pronto.');
+                flash_warning('¡Tu solicitud ha sido registrada! Sin embargo, no pudimos enviarte el correo de confirmación. Por favor comunícate con nosotros al teléfono o WhatsApp para confirmar tu clase demo.');
             }
 
             return redirect()->back();

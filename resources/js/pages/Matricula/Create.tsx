@@ -1232,7 +1232,7 @@ export default function Create({ programs }: CreateProps) {
                                 <CardTitle className="text-xl sm:text-2xl">Autorizaciones y Compromiso</CardTitle>
                             </div>
                             <CardDescription className="text-sm sm:text-base">
-                                Lea y acepte los términos antes de completar la inscripción a la clase demo
+                                Lea y acepte los términos antes de completar la matrícula a la clase demo
                             </CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-6 pt-6">
@@ -1288,7 +1288,7 @@ export default function Create({ programs }: CreateProps) {
                                 </p>
                                 <p className="text-sm text-gray-700">
                                     Mediante este documento usted deja constado todo lo que involucra en los Pagos de
-                                    Inscripciones y Matrículas. Entiéndase que en caso de que una de las partes no cumpla con
+                                    Matrículas. Entiéndase que en caso de que una de las partes no cumpla con
                                     dicho acuerdo, es usted quien tiene la responsabilidad final de los pagos con la Academia.
                                 </p>
 
@@ -1354,7 +1354,7 @@ export default function Create({ programs }: CreateProps) {
                             <Music2 className="relative h-14 w-14 sm:h-16 sm:w-16 text-amber-600 mx-auto animate-bounce-once" />
                         </div>
                         <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold bg-gradient-to-r from-amber-600 via-orange-600 to-amber-700 bg-clip-text text-transparent mb-3">
-                            Clase Demo - Inscripción
+                            Clase Demo - Matrícula
                         </h1>
                         <p className="text-base sm:text-lg text-gray-700 font-medium mb-2">
                             Academia de Formación Musical y Espiritual LINAJE
@@ -1524,7 +1524,7 @@ export default function Create({ programs }: CreateProps) {
                                         {step === 1 && 'Datos del Responsable'}
                                         {step === 2 && 'Ubicación y Tipo'}
                                         {step === 3 && 'Datos de Estudiantes'}
-                                        {step === 4 && 'Finalizar Inscripción'}
+                                        {step === 4 && 'Finalizar Matrícula'}
                                     </p>
                                 </div>
                             </div>
