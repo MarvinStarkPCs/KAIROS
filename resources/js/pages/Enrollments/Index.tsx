@@ -81,7 +81,7 @@ export default function Index({ enrollments, stats, programs, students, filters 
 
     const handleFilter = () => {
         router.get(
-            '/inscripciones',
+            '/matriculas',
             {
                 search: search || undefined,
                 program_id: programFilter !== 'all' ? programFilter : undefined,
@@ -95,7 +95,7 @@ export default function Index({ enrollments, stats, programs, students, filters 
         setSearch('');
         setProgramFilter('all');
         setStatusFilter('all');
-        router.get('/inscripciones');
+        router.get('/matriculas');
     };
 
     const handleDelete = (id: number) => {

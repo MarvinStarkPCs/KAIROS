@@ -31,6 +31,7 @@ import * as roles from '@/routes/roles';
 import * as usuarios from '@/routes/usuarios';
 import * as audit from '@/routes/audit';
 import * as profesor from '@/routes/profesor';
+import * as estudiante from '@/routes/estudiante';
 import { type BreadcrumbItem, type SharedData } from '@/types';
 
 interface NavItem {
@@ -38,6 +39,7 @@ interface NavItem {
     href: string;
     icon: React.ComponentType<{ className?: string }>;
     permission?: string;
+    role?: string;
     submenu?: Array<{
         title: string;
         href: string;
@@ -65,12 +67,28 @@ import {
     BookOpen,
     ChevronUp,
     GraduationCap,
-    Users
+    Users,
+    User,
+    Award
 } from 'lucide-react';
 import { useState } from 'react';
 
 // Navegación principal personalizada para Academia Linaje
 const allNavItems: NavItem[] = [
+    // Portal de Estudiantes
+    {
+        title: 'Mi Portal',
+        href: estudiante.dashboard().url,
+        icon: User,
+        role: 'Estudiante',
+    },
+    {
+        title: 'Mis Calificaciones',
+        href: estudiante.calificaciones().url,
+        icon: Award,
+        role: 'Estudiante',
+    },
+    // Portal de Profesores
     {
         title: 'Mis Grupos',
         href: profesor.misGrupos().url,
@@ -93,6 +111,7 @@ const allNavItems: NavItem[] = [
         title: 'Demo Leads',
         href: '/admin/demo-leads',
         icon: Users,
+        permission: 'ver_demo_leads',
     },
     {
         title: 'Pagos',
@@ -170,42 +189,43 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
     // Mensajes no leídos desde el servidor
     const unreadMessagesCount = auth.unreadMessages || 0;
 
-    // Filtrar items del menú según permisos del usuario
+    // Filtrar items del menú según permisos y roles del usuario
     const userPermissions = auth?.permissions || [];
+    const userRoles = auth?.roles || [];
     const mainNavItems = allNavItems.filter(item => {
-        if (!item.permission) return true;
-        const hasPermission = userPermissions.includes(item.permission);
-        if (hasPermission && item.submenu) {
-            // Filtrar submenu también
+        // Verificar rol si está especificado
+        if (item.role && !userRoles.includes(item.role)) {
+            return false;
+        }
+        // Verificar permiso si está especificado
+        if (item.permission && !userPermissions.includes(item.permission)) {
+            return false;
+        }
+        // Filtrar submenu si existe
+        if (item.submenu) {
             item.submenu = item.submenu.filter(subitem =>
                 !subitem.permission || userPermissions.includes(subitem.permission)
             );
         }
-        return hasPermission;
+        return true;
     });
 
     return (
         <>
             <div className="border-b border-gray-200 bg-white">
-                <div className="mx-auto flex h-16 items-center justify-between px-6">
+                <div className="mx-auto flex h-24 items-center justify-between px-6">
                     {/* Logo y título */}
                     <div className="flex items-center space-x-3">
                         <Link
                             href={programas_academicos.index().url}
                             prefetch
-                            className="flex items-center space-x-3"
+                            className="flex items-center"
                         >
-                            <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-[#6b5544] text-white">
-                                <Music className="h-7 w-7" />
-                            </div>
-                            <div className="flex flex-col">
-                                <span className="text-lg font-semibold text-gray-800">
-                                    Academia linaje
-                                </span>
-                                <span className="text-xs text-gray-500">
-                                    Sistema de Gestión Musical
-                                </span>
-                            </div>
+                            <img
+                                src="/logo_academia.png"
+                                alt="Academia Linaje"
+                                className="h-24 w-auto"
+                            />
                         </Link>
 
                         {/* Toggle Button - Al lado del logo */}
@@ -326,14 +346,11 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
                                         Menú de Navegación
                                     </SheetTitle>
                                     <SheetHeader className="flex items-start justify-start text-left">
-                                        <div className="flex items-center space-x-2">
-                                            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#6b5544] text-white">
-                                                <Music className="h-6 w-6" />
-                                            </div>
-                                            <span className="font-semibold text-gray-800">
-                                                Academia Linaje
-                                            </span>
-                                        </div>
+                                        <img
+                                            src="/logo_academia.png"
+                                            alt="Academia Linaje"
+                                            className="h-10 w-auto"
+                                        />
                                     </SheetHeader>
                                     <div className="mt-6 flex flex-col space-y-1">
                                         {mainNavItems.map((item) => (

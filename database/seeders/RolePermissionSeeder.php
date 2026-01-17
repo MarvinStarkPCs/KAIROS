@@ -104,6 +104,10 @@ class RolePermissionSeeder extends Seeder
             'ver_dashboard',
             'ver_comunicacion',
             'ver_reportes',
+
+            // Permisos de Demo Leads
+            'ver_demo_leads',
+            'gestionar_demo_leads',
         ];
 
         foreach ($permissions as $permission) {

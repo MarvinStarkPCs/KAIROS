@@ -49,7 +49,7 @@ export default function Edit({ enrollment, programs }: Props) {
 
     const submit: FormEventHandler = (e) => {
         e.preventDefault();
-        put(`/inscripciones/${enrollment.id}`);
+        put(`/matriculas/${enrollment.id}`);
     };
 
     return (
@@ -65,7 +65,7 @@ export default function Edit({ enrollment, programs }: Props) {
                             Modificar matrícula de {enrollment.student.name}
                         </p>
                     </div>
-                    <Link href="/inscripciones">
+                    <Link href="/matriculas">
                         <Button variant="outline">
                             <ArrowLeft className="mr-2 h-4 w-4" />
                             Volver
@@ -164,7 +164,7 @@ export default function Edit({ enrollment, programs }: Props) {
 
                             {/* Actions */}
                             <div className="flex justify-end gap-4 pt-4">
-                                <Link href="/inscripciones">
+                                <Link href="/matriculas">
                                     <Button type="button" variant="outline">
                                         Cancelar
                                     </Button>

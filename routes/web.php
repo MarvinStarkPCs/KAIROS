@@ -102,7 +102,7 @@ Route::get('/pagos/create', [PaymentController::class, 'create'])->name('pagos.c
 Route::get('/usuarios/create', [UserController::class, 'create'])->name('usuarios.create');
 Route::get('/programas_academicos/create', [program_academy::class, 'create'])->name('programas_academicos.create');
 Route::get('/roles/create', [RoleController::class, 'create'])->name('roles.create');
-Route::get('/inscripciones/create', [EnrollmentController::class, 'create'])->name('inscripciones.create');
+Route::get('/matriculas/create', [EnrollmentController::class, 'create'])->name('inscripciones.create');
 Route::get('/horarios/create', [ScheduleController::class, 'create'])->name('horarios.create');
 Route::get('/pagos/create', [PaymentController::class, 'create'])->name('pagos.create');
 Route::post('/pagos/create-installments', [PaymentController::class, 'createInstallments'])->name('pagos.create-installments');
@@ -203,23 +203,23 @@ Route::middleware(['auth'])->group(function () {
 
     // Inscripciones
     Route::middleware(['permission:ver_inscripciones'])->group(function () {
-        Route::get('/inscripciones', [EnrollmentController::class, 'index'])->name('inscripciones.index');
-        Route::get('/inscripciones/{enrollment}', [EnrollmentController::class, 'show'])->name('inscripciones.show');
+        Route::get('/matriculas', [EnrollmentController::class, 'index'])->name('inscripciones.index');
+        Route::get('/matriculas/{enrollment}', [EnrollmentController::class, 'show'])->name('inscripciones.show');
         Route::get('/programs/{program}/available-students', [EnrollmentController::class, 'availableStudents'])->name('programs.available-students');
     });
     Route::middleware(['permission:crear_inscripcion'])->group(function () {
-        Route::post('/inscripciones', [EnrollmentController::class, 'store'])->name('inscripciones.store');
-        Route::post('/inscripciones/quick-enroll', [EnrollmentController::class, 'quickEnroll'])->name('inscripciones.quick-enroll');
+        Route::post('/matriculas', [EnrollmentController::class, 'store'])->name('inscripciones.store');
+        Route::post('/matriculas/quick-enroll', [EnrollmentController::class, 'quickEnroll'])->name('inscripciones.quick-enroll');
     });
     Route::middleware(['permission:editar_inscripcion'])->group(function () {
-        Route::get('/inscripciones/{enrollment}/edit', [EnrollmentController::class, 'edit'])->name('inscripciones.edit');
-        Route::put('/inscripciones/{enrollment}', [EnrollmentController::class, 'update'])->name('inscripciones.update');
+        Route::get('/matriculas/{enrollment}/edit', [EnrollmentController::class, 'edit'])->name('inscripciones.edit');
+        Route::put('/matriculas/{enrollment}', [EnrollmentController::class, 'update'])->name('inscripciones.update');
     });
     Route::middleware(['permission:cambiar_estado_inscripcion'])->group(function () {
-        Route::post('/inscripciones/{enrollment}/change-status', [EnrollmentController::class, 'changeStatus'])->name('inscripciones.change-status');
+        Route::post('/matriculas/{enrollment}/change-status', [EnrollmentController::class, 'changeStatus'])->name('inscripciones.change-status');
     });
     Route::middleware(['permission:eliminar_inscripcion'])->group(function () {
-        Route::delete('/inscripciones/{enrollment}', [EnrollmentController::class, 'destroy'])->name('inscripciones.destroy');
+        Route::delete('/matriculas/{enrollment}', [EnrollmentController::class, 'destroy'])->name('inscripciones.destroy');
     });
 
     // Horarios

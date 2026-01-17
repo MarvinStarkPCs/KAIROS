@@ -112,3 +112,19 @@ export const applyUrlDefaults = <T extends Record<string, unknown>>(
 export const setUrlDefaults = (defaults: Record<string, unknown>) => {
     urlDefaults = defaults;
 };
+
+export const validateParameters = (
+    args: Record<string, unknown> | undefined,
+    allowed: string[]
+) => {
+    if (!args) return;
+
+    const providedKeys = Object.keys(args);
+    const invalid = providedKeys.filter(key => !allowed.includes(key));
+
+    if (invalid.length > 0) {
+        console.warn(
+            `Invalid route parameters: ${invalid.join(', ')}. Allowed: ${allowed.join(', ')}`
+        );
+    }
+};

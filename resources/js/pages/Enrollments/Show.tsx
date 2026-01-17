@@ -103,13 +103,13 @@ export default function Show({ enrollment, studentSchedules, payments }: Props) 
                         </p>
                     </div>
                     <div className="flex gap-2">
-                        <Link href={`/inscripciones/${enrollment.id}/edit`}>
+                        <Link href={`/matriculas/${enrollment.id}/edit`}>
                             <Button variant="outline">
                                 <Edit className="mr-2 h-4 w-4" />
                                 Editar
                             </Button>
                         </Link>
-                        <Link href="/inscripciones">
+                        <Link href="/matriculas">
                             <Button variant="outline">
                                 <ArrowLeft className="mr-2 h-4 w-4" />
                                 Volver

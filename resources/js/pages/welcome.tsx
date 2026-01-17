@@ -1,4 +1,5 @@
-import { dashboard, login } from '@/routes';
+import { login } from '@/routes';
+import * as programas_academicos from '@/routes/programas_academicos';
 import { type SharedData } from '@/types';
 import { Head, Link, usePage, useForm } from '@inertiajs/react';
 import { Music, Users, Award, MapPin, Phone, Mail, Clock, Star, CheckCircle, Gift, ArrowRight, Play } from 'lucide-react';
@@ -104,19 +105,17 @@ export default function Welcome() {
                 <header className="border-b border-gray-200 bg-white/95 backdrop-blur-sm sticky top-0 z-50 shadow-sm">
                     <div className="mx-auto max-w-7xl px-4 sm:px-6 py-4">
                         <div className="flex items-center justify-between">
-                            <div className="flex items-center space-x-3">
-                                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-amber-600 to-amber-800 text-white shadow-lg">
-                                    <Music className="h-7 w-7" />
-                                </div>
-                                <div className="flex flex-col">
-                                    <span className="text-xl font-bold text-gray-900">Academia Linaje</span>
-                                    <span className="text-xs text-amber-700 font-medium">Escuela de Música</span>
-                                </div>
+                            <div className="flex items-center">
+                                <img
+                                    src="/logo_academia.png"
+                                    alt="Academia Linaje"
+                                    className="h-12 w-auto"
+                                />
                             </div>
                             <div className="flex items-center space-x-4">
                                 {auth.user ? (
                                     <Link
-                                        href={dashboard()}
+                                        href={programas_academicos.index().url}
                                         className="rounded-lg bg-amber-700 px-6 py-2.5 text-sm font-semibold text-white shadow-md hover:bg-amber-800 transition-all hover:shadow-lg"
                                     >
                                         Mi Portal
@@ -795,11 +794,12 @@ export default function Welcome() {
                 <footer className="border-t border-gray-200 bg-gradient-to-br from-gray-900 to-gray-800 text-white py-12">
                     <div className="mx-auto max-w-7xl px-4 sm:px-6">
                         <div className="text-center">
-                            <div className="flex items-center justify-center space-x-3 mb-6">
-                                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-amber-600 to-orange-600 shadow-lg">
-                                    <Music className="h-7 w-7" />
-                                </div>
-                                <span className="text-2xl font-bold">Academia Linaje</span>
+                            <div className="flex items-center justify-center mb-6">
+                                <img
+                                    src="/logo_academia.png"
+                                    alt="Academia Linaje"
+                                    className="h-14 w-auto"
+                                />
                             </div>
                             <p className="text-gray-300 mb-6 text-lg">
                                 Formando músicos con excelencia y pasión desde hace más de 10 años

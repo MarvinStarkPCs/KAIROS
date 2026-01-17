@@ -66,7 +66,7 @@ export default function Create({ programs, students }: Props) {
 
     const submit: FormEventHandler = (e) => {
         e.preventDefault();
-        post('/inscripciones');
+        post('/matriculas');
     };
 
     const selectedProgram = programs.find((p) => p.id.toString() === data.program_id);
@@ -115,7 +115,7 @@ export default function Create({ programs, students }: Props) {
                             Matricular un estudiante en un programa académico
                         </p>
                     </div>
-                    <Link href="/inscripciones">
+                    <Link href="/matriculas">
                         <Button variant="outline">
                             <ArrowLeft className="mr-2 h-4 w-4" />
                             Volver
@@ -342,7 +342,7 @@ export default function Create({ programs, students }: Props) {
 
                             {/* Actions */}
                             <div className="flex justify-end gap-4 pt-4">
-                                <Link href="/inscripciones">
+                                <Link href="/matriculas">
                                     <Button type="button" variant="outline">
                                         Cancelar
                                     </Button>
