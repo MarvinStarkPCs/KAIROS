@@ -26,7 +26,8 @@
       "Bash(composer show:*)",
       "Bash(del \"C:\\\\laragon\\\\www\\\\KAIROS\\\\resources\\\\js\\\\pages\\\\propuesta_1.tsx\" \"C:\\\\laragon\\\\www\\\\KAIROS\\\\resources\\\\js\\\\pages\\\\propuesta_2.tsx\" \"C:\\\\laragon\\\\www\\\\KAIROS\\\\resources\\\\js\\\\pages\\\\propuesta_3.tsx\")",
       "Bash(del \"C:\\\\laragon\\\\www\\\\KAIROS\\\\resources\\\\js\\\\pages\\\\dashboard.tsx\")",
-      "Bash(npm install:*)"
+      "Bash(npm install:*)",
+      "Bash(npm run types:*)"
     ],
     "deny": [],
     "ask": []

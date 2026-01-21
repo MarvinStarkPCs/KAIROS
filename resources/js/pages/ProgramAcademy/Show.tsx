@@ -1,12 +1,23 @@
-import { Head, Link } from '@inertiajs/react';
-import { ArrowLeft, Plus, Book, ListChecks, Award } from 'lucide-react';
+import { Head, Link, router } from '@inertiajs/react';
+import { ArrowLeft, Plus, Book, ListChecks, Award, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import ProgramAcademyController from '@/actions/App/Http/Controllers/program_academy';
+import StudyPlanController from '@/actions/App/Http/Controllers/StudyPlanController';
 import AppLayout from '@/layouts/app-layout';
 import { useState } from 'react';
 import StudyPlanDialog from '@/components/StudyPlanDialog';
 import ActivityDialog from '@/components/ActivityDialog';
 import EvaluationCriteriaDialog from '@/components/EvaluationCriteriaDialog';
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 interface EvaluationCriteria {
     id: number;
@@ -71,6 +82,50 @@ export default function Show({ program, studyPlans }: ShowProps) {
         criteria?: EvaluationCriteria;
         nextOrder?: number;
     }>({ open: false });
+
+    // State for delete confirmations
+    const [deleteStudyPlan, setDeleteStudyPlan] = useState<{
+        open: boolean;
+        studyPlan?: StudyPlan;
+    }>({ open: false });
+
+    const [deleteActivity, setDeleteActivity] = useState<{
+        open: boolean;
+        activity?: Activity;
+    }>({ open: false });
+
+    const [deleteCriteria, setDeleteCriteria] = useState<{
+        open: boolean;
+        criteria?: EvaluationCriteria;
+    }>({ open: false });
+
+    // Delete handlers
+    const handleDeleteStudyPlan = () => {
+        if (deleteStudyPlan.studyPlan) {
+            router.delete(StudyPlanController.destroy(deleteStudyPlan.studyPlan.id).url, {
+                preserveScroll: true,
+                onSuccess: () => setDeleteStudyPlan({ open: false }),
+            });
+        }
+    };
+
+    const handleDeleteActivity = () => {
+        if (deleteActivity.activity) {
+            router.delete(StudyPlanController.destroyActivity(deleteActivity.activity.id).url, {
+                preserveScroll: true,
+                onSuccess: () => setDeleteActivity({ open: false }),
+            });
+        }
+    };
+
+    const handleDeleteCriteria = () => {
+        if (deleteCriteria.criteria) {
+            router.delete(StudyPlanController.destroyCriteria(deleteCriteria.criteria.id).url, {
+                preserveScroll: true,
+                onSuccess: () => setDeleteCriteria({ open: false }),
+            });
+        }
+    };
 
     return (
         <AppLayout>
@@ -176,6 +231,16 @@ export default function Show({ program, studyPlans }: ShowProps) {
                                             >
                                                 <Plus className="h-4 w-4" />
                                             </Button>
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                className="text-red-600 hover:bg-red-50 hover:text-red-700"
+                                                onClick={() =>
+                                                    setDeleteStudyPlan({ open: true, studyPlan })
+                                                }
+                                            >
+                                                <Trash2 className="h-4 w-4" />
+                                            </Button>
                                         </div>
                                     </div>
 
@@ -247,6 +312,16 @@ export default function Show({ program, studyPlans }: ShowProps) {
                                                             >
                                                                 <Plus className="h-4 w-4" />
                                                             </Button>
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="sm"
+                                                                className="text-red-600 hover:bg-red-50 hover:text-red-700"
+                                                                onClick={() =>
+                                                                    setDeleteActivity({ open: true, activity })
+                                                                }
+                                                            >
+                                                                <Trash2 className="h-4 w-4" />
+                                                            </Button>
                                                         </div>
                                                     </div>
 
@@ -274,7 +349,7 @@ export default function Show({ program, studyPlans }: ShowProps) {
                                                                             )}
                                                                         </div>
                                                                     </div>
-                                                                    <div className="flex items-center gap-3">
+                                                                    <div className="flex items-center gap-2">
                                                                         <span className="text-sm font-medium text-gray-700">
                                                                             {criteria.max_points} pts
                                                                         </span>
@@ -290,6 +365,16 @@ export default function Show({ program, studyPlans }: ShowProps) {
                                                                             }
                                                                         >
                                                                             Editar
+                                                                        </Button>
+                                                                        <Button
+                                                                            variant="ghost"
+                                                                            size="sm"
+                                                                            className="text-red-600 hover:bg-red-50 hover:text-red-700"
+                                                                            onClick={() =>
+                                                                                setDeleteCriteria({ open: true, criteria })
+                                                                            }
+                                                                        >
+                                                                            <Trash2 className="h-4 w-4" />
                                                                         </Button>
                                                                     </div>
                                                                 </div>
@@ -375,6 +460,81 @@ export default function Show({ program, studyPlans }: ShowProps) {
                     nextOrder={criteriaDialog.nextOrder}
                 />
             )}
+
+            {/* Delete Confirmation Dialogs */}
+            <AlertDialog
+                open={deleteStudyPlan.open}
+                onOpenChange={(open) => setDeleteStudyPlan({ open, studyPlan: undefined })}
+            >
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Eliminar Módulo</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            ¿Estás seguro de que deseas eliminar el módulo &quot;{deleteStudyPlan.studyPlan?.module_name}&quot;?
+                            Esta acción eliminará también todas las actividades y criterios de evaluación asociados.
+                            Esta acción no se puede deshacer.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                        <AlertDialogAction
+                            onClick={handleDeleteStudyPlan}
+                            className="bg-red-600 hover:bg-red-700"
+                        >
+                            Eliminar
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+
+            <AlertDialog
+                open={deleteActivity.open}
+                onOpenChange={(open) => setDeleteActivity({ open, activity: undefined })}
+            >
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Eliminar Actividad</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            ¿Estás seguro de que deseas eliminar la actividad &quot;{deleteActivity.activity?.name}&quot;?
+                            Esta acción eliminará también todos los criterios de evaluación asociados.
+                            Esta acción no se puede deshacer.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                        <AlertDialogAction
+                            onClick={handleDeleteActivity}
+                            className="bg-red-600 hover:bg-red-700"
+                        >
+                            Eliminar
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+
+            <AlertDialog
+                open={deleteCriteria.open}
+                onOpenChange={(open) => setDeleteCriteria({ open, criteria: undefined })}
+            >
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Eliminar Criterio de Evaluación</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            ¿Estás seguro de que deseas eliminar el criterio &quot;{deleteCriteria.criteria?.name}&quot;?
+                            Esta acción no se puede deshacer.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                        <AlertDialogAction
+                            onClick={handleDeleteCriteria}
+                            className="bg-red-600 hover:bg-red-700"
+                        >
+                            Eliminar
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </AppLayout>
     );
 }
