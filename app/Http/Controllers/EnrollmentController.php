@@ -45,8 +45,9 @@ class EnrollmentController extends Controller
             'withdrawn' => Enrollment::where('status', 'withdrawn')->count(),
         ];
 
-        // Listas para filtros
+        // Listas para filtros (excluyendo programas demo)
         $programs = AcademicProgram::where('status', 'active')
+            ->where('is_demo', false)
             ->orderBy('name')
             ->get(['id', 'name']);
 
@@ -66,6 +67,7 @@ class EnrollmentController extends Controller
     public function create()
     {
         $programs = AcademicProgram::where('status', 'active')
+            ->where('is_demo', false)
             ->withCount(['enrollments as active_count' => function ($query) {
                 $query->where('status', 'active');
             }])
@@ -211,6 +213,7 @@ class EnrollmentController extends Controller
         $enrollment->load('student', 'program');
 
         $programs = AcademicProgram::where('status', 'active')
+            ->where('is_demo', false)
             ->orderBy('name')
             ->get(['id', 'name']);
 

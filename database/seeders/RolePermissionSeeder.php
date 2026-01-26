@@ -138,13 +138,8 @@ class RolePermissionSeeder extends Seeder
         ];
         $profesorRole->syncPermissions($profesorPermissions);
 
-        // Permisos del Estudiante
+        // Permisos del Estudiante (solo comunicación, tiene su propia vista)
         $estudiantePermissions = [
-            'ver_dashboard',
-            'ver_programas',
-            'ver_horarios',
-            'ver_asistencia',
-            'ver_pagos',
             'ver_comunicacion',
         ];
         $estudianteRole->syncPermissions($estudiantePermissions);

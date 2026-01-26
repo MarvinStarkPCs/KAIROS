@@ -45,6 +45,15 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
+        // Redirigir según el rol del usuario (sin intended para roles específicos)
+        if ($user->hasRole('Estudiante')) {
+            return redirect()->route('estudiante.dashboard');
+        }
+
+        if ($user->hasRole('Profesor')) {
+            return redirect()->route('profesor.mis-grupos');
+        }
+
         return redirect()->intended(route('programas_academicos.index', absolute: false));
     }
 

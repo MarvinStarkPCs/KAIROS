@@ -23,7 +23,7 @@ class MatriculaController extends Controller
     public function create()
     {
         $programs = AcademicProgram::where('status', 'active')
-            ->where('is_demo', true)
+            ->where('is_demo', false)
             ->with(['schedules' => function ($query) {
                 $query->where('status', 'active')
                     ->with('professor:id,name')
@@ -84,7 +84,22 @@ class MatriculaController extends Controller
 
             $payments = $result['payments'];
 
-            // Redirigir al checkout
+            // Verificar método de pago
+            $paymentMethod = $request->input('payment_method', 'online');
+
+            if ($paymentMethod === 'manual') {
+                // Pago manual - marcar pagos como pendientes de pago manual y mostrar confirmación
+                foreach ($payments as $payment) {
+                    $payment->update([
+                        'payment_method' => 'manual',
+                        'notes' => 'Pago manual - pendiente de confirmación por administrador',
+                    ]);
+                }
+
+                return redirect()->route('matricula.confirmation')->with('success', 'Tu matrícula ha sido registrada exitosamente. Un asesor se comunicará contigo para coordinar el pago.');
+            }
+
+            // Redirigir al checkout para pago en línea
             return $this->redirectToCheckout($payments);
 
         } catch (\Exception $e) {
@@ -385,6 +400,16 @@ class MatriculaController extends Controller
     {
         $paymentId = $request->query('id');
 
+        // Si no hay paymentId pero hay mensaje de éxito, es pago manual
+        if (!$paymentId && session('success')) {
+            return Inertia::render('Matricula/Confirmation', [
+                'payment' => null,
+                'status' => 'MANUAL',
+                'transactionId' => null,
+                'message' => session('success'),
+            ]);
+        }
+
         if (!$paymentId) {
             flash_error('No se encontró información del pago.');
             return redirect()->route('home');
@@ -400,6 +425,8 @@ class MatriculaController extends Controller
 
         return Inertia::render('Matricula/Confirmation', [
             'payment' => $payment,
+            'status' => $payment->status ?? 'PENDING',
+            'transactionId' => $payment->transaction_id ?? $payment->id,
         ]);
     }
 

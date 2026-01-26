@@ -77,12 +77,6 @@ import { useState } from 'react';
 const allNavItems: NavItem[] = [
     // Portal de Estudiantes
     {
-        title: 'Mi Portal',
-        href: estudiante.dashboard().url,
-        icon: User,
-        role: 'Estudiante',
-    },
-    {
         title: 'Mis Calificaciones',
         href: estudiante.calificaciones().url,
         icon: Award,
@@ -213,9 +207,9 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
     return (
         <>
             <div className="border-b border-gray-200 bg-white">
-                <div className="mx-auto flex h-24 items-center justify-between px-6">
+                <div className="mx-auto flex h-14 sm:h-16 lg:h-18 items-center justify-between px-3 sm:px-4 lg:px-6">
                     {/* Logo y título */}
-                    <div className="flex items-center space-x-3">
+                    <div className="flex items-center space-x-2 sm:space-x-3">
                         <Link
                             href={programas_academicos.index().url}
                             prefetch
@@ -224,14 +218,14 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
                             <img
                                 src="/logo_academia.png"
                                 alt="Academia Linaje"
-                                className="h-24 w-auto"
+                                className="h-10 sm:h-12 lg:h-14 w-auto"
                             />
                         </Link>
 
-                        {/* Toggle Button - Al lado del logo */}
+                        {/* Toggle Button - Al lado del logo (solo desktop) */}
                         <button
                             onClick={() => setIsMenuOpen(!isMenuOpen)}
-                            className="flex items-center justify-center h-9 w-9 rounded-md hover:bg-gray-100 text-gray-600 hover:text-gray-900 transition-colors ml-2"
+                            className="hidden lg:flex items-center justify-center h-9 w-9 rounded-md hover:bg-gray-100 text-gray-600 hover:text-gray-900 transition-colors ml-2"
                             title={isMenuOpen ? "Ocultar menú" : "Mostrar menú"}
                         >
                             {isMenuOpen ? (
@@ -258,7 +252,7 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
                     </div>
 
                     {/* Acciones de la derecha */}
-                    <div className="flex items-center space-x-3">
+                    <div className="flex items-center space-x-1 sm:space-x-2 lg:space-x-3">
                         {/* Botón Nuevo */}
                         <Button className="hidden bg-[#7a9b3c] hover:bg-[#6a8a2c] text-white lg:flex">
                             + Nuevo
@@ -333,34 +327,76 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
                                     <Button
                                         variant="ghost"
                                         size="icon"
-                                        className="h-10 w-10"
+                                        className="h-11 w-11 sm:h-10 sm:w-10"
                                     >
-                                        <Menu className="h-5 w-5" />
+                                        <Menu className="h-6 w-6 sm:h-5 sm:w-5" />
                                     </Button>
                                 </SheetTrigger>
                                 <SheetContent
                                     side="left"
-                                    className="flex h-full w-64 flex-col bg-white"
+                                    className="flex h-full w-[280px] sm:w-72 flex-col bg-white p-0"
                                 >
                                     <SheetTitle className="sr-only">
                                         Menú de Navegación
                                     </SheetTitle>
-                                    <SheetHeader className="flex items-start justify-start text-left">
+                                    <SheetHeader className="flex items-start justify-start text-left p-4 border-b">
                                         <img
                                             src="/logo_academia.png"
                                             alt="Academia Linaje"
                                             className="h-10 w-auto"
                                         />
                                     </SheetHeader>
-                                    <div className="mt-6 flex flex-col space-y-1">
-                                        {mainNavItems.map((item) => (
-                                            <div key={item.title || 'home'}>
-                                                {item.submenu ? (
-                                                    <>
+                                    <div className="flex-1 overflow-y-auto py-4 px-3">
+                                        <div className="flex flex-col space-y-1">
+                                            {mainNavItems.map((item) => (
+                                                <div key={item.title || 'home'}>
+                                                    {item.submenu ? (
+                                                        <>
+                                                            <Link
+                                                                href={item.href}
+                                                                className={cn(
+                                                                    "flex items-center space-x-3 rounded-lg px-4 py-3.5 text-base font-medium transition-colors active:bg-gray-200",
+                                                                    page.url === item.href
+                                                                        ? "bg-[#7a9b3c]/10 text-[#7a9b3c]"
+                                                                        : "text-gray-700 hover:bg-gray-100"
+                                                                )}
+                                                            >
+                                                                {item.icon && (
+                                                                    <Icon
+                                                                        iconNode={item.icon}
+                                                                        className="h-5 w-5"
+                                                                    />
+                                                                )}
+                                                                <span>{item.title}</span>
+                                                            </Link>
+                                                            <div className="ml-6 space-y-1">
+                                                                {item.submenu.map((subitem) => (
+                                                                    <Link
+                                                                        key={subitem.title}
+                                                                        href={subitem.href}
+                                                                        className={cn(
+                                                                            "flex items-center space-x-3 rounded-lg px-4 py-3 text-base transition-colors active:bg-gray-200",
+                                                                            page.url === subitem.href
+                                                                                ? "bg-[#7a9b3c]/10 text-[#7a9b3c]"
+                                                                                : "text-gray-600 hover:bg-gray-100"
+                                                                        )}
+                                                                    >
+                                                                        {subitem.icon && (
+                                                                            <Icon
+                                                                                iconNode={subitem.icon}
+                                                                                className="h-5 w-5"
+                                                                            />
+                                                                        )}
+                                                                        <span>{subitem.title}</span>
+                                                                    </Link>
+                                                                ))}
+                                                            </div>
+                                                        </>
+                                                    ) : (
                                                         <Link
                                                             href={item.href}
                                                             className={cn(
-                                                                "flex items-center space-x-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
+                                                                "flex items-center space-x-3 rounded-lg px-4 py-3.5 text-base font-medium transition-colors active:bg-gray-200",
                                                                 page.url === item.href
                                                                     ? "bg-[#7a9b3c]/10 text-[#7a9b3c]"
                                                                     : "text-gray-700 hover:bg-gray-100"
@@ -374,50 +410,10 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
                                                             )}
                                                             <span>{item.title}</span>
                                                         </Link>
-                                                        <div className="ml-6 space-y-1">
-                                                            {item.submenu.map((subitem) => (
-                                                                <Link
-                                                                    key={subitem.title}
-                                                                    href={subitem.href}
-                                                                    className={cn(
-                                                                        "flex items-center space-x-3 rounded-lg px-3 py-2 text-sm transition-colors",
-                                                                        page.url === subitem.href
-                                                                            ? "bg-[#7a9b3c]/10 text-[#7a9b3c]"
-                                                                            : "text-gray-600 hover:bg-gray-100"
-                                                                    )}
-                                                                >
-                                                                    {subitem.icon && (
-                                                                        <Icon
-                                                                            iconNode={subitem.icon}
-                                                                            className="h-4 w-4"
-                                                                        />
-                                                                    )}
-                                                                    <span>{subitem.title}</span>
-                                                                </Link>
-                                                            ))}
-                                                        </div>
-                                                    </>
-                                                ) : (
-                                                    <Link
-                                                        href={item.href}
-                                                        className={cn(
-                                                            "flex items-center space-x-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
-                                                            page.url === item.href
-                                                                ? "bg-[#7a9b3c]/10 text-[#7a9b3c]"
-                                                                : "text-gray-700 hover:bg-gray-100"
-                                                        )}
-                                                    >
-                                                        {item.icon && (
-                                                            <Icon
-                                                                iconNode={item.icon}
-                                                                className="h-5 w-5"
-                                                            />
-                                                        )}
-                                                        <span>{item.title}</span>
-                                                    </Link>
-                                                )}
-                                            </div>
-                                        ))}
+                                                    )}
+                                                </div>
+                                            ))}
+                                        </div>
                                     </div>
                                 </SheetContent>
                             </Sheet>

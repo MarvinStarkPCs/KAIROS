@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Attendance;
 use App\Models\Schedule;
+use App\Models\AcademicProgram;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -15,11 +16,19 @@ class AttendanceController extends Controller
     /**
      * Display attendance control dashboard
      */
-    public function index()
+    public function index(Request $request)
     {
         $today = Carbon::today();
         $startOfMonth = Carbon::now()->startOfMonth();
         $endOfMonth = Carbon::now()->endOfMonth();
+
+        // Filtros
+        $search = $request->input('search');
+        $status = $request->input('status');
+        $programId = $request->input('program_id');
+        $professorId = $request->input('professor_id');
+        $dateFrom = $request->input('date_from');
+        $dateTo = $request->input('date_to');
 
         // Obtener el día de la semana en español
         $daysMapping = [
@@ -41,10 +50,8 @@ class AttendanceController extends Controller
             ->where('days_of_week', 'like', '%' . $todayDayName . '%')
             ->get();
 
-        // Get today's attendance records
-        $todayAttendances = Attendance::with(['student', 'schedule.professor', 'schedule.academicProgram'])
-            ->whereDate('class_date', $today)
-            ->get();
+        // Get today's attendance records for stats
+        $todayAttendances = Attendance::whereDate('class_date', $today)->get();
 
         // Calculate today's stats
         $totalStudentsToday = $todaySchedules->sum(fn($schedule) => $schedule->enrollments->count());
@@ -66,8 +73,48 @@ class AttendanceController extends Controller
             ? round(($monthlyPresent / $monthlyTotal) * 100, 1) . '%'
             : '0%';
 
+        // Build query for all attendances with filters
+        $attendancesQuery = Attendance::with(['student', 'schedule.professor', 'schedule.academicProgram', 'recordedBy'])
+            ->orderBy('class_date', 'desc')
+            ->orderBy('created_at', 'desc');
+
+        // Apply filters
+        if ($search) {
+            $attendancesQuery->whereHas('student', function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%");
+            });
+        }
+
+        if ($status && $status !== 'all') {
+            $attendancesQuery->where('status', $status);
+        }
+
+        if ($programId && $programId !== 'all') {
+            $attendancesQuery->whereHas('schedule.academicProgram', function ($q) use ($programId) {
+                $q->where('id', $programId);
+            });
+        }
+
+        if ($professorId && $professorId !== 'all') {
+            $attendancesQuery->whereHas('schedule', function ($q) use ($professorId) {
+                $q->where('professor_id', $professorId);
+            });
+        }
+
+        if ($dateFrom) {
+            $attendancesQuery->whereDate('class_date', '>=', $dateFrom);
+        }
+
+        if ($dateTo) {
+            $attendancesQuery->whereDate('class_date', '<=', $dateTo);
+        }
+
+        // Paginate results
+        $attendancesPaginated = $attendancesQuery->paginate(20)->withQueryString();
+
         // Format attendance records for display
-        $asistencias = $todayAttendances->map(function ($attendance) {
+        $asistencias = $attendancesPaginated->getCollection()->map(function ($attendance) {
             $status = match($attendance->status) {
                 'present' => 'presente',
                 'absent' => 'ausente',
@@ -78,26 +125,47 @@ class AttendanceController extends Controller
 
             return [
                 'id' => $attendance->id,
+                'fecha' => $attendance->class_date->format('Y-m-d'),
+                'fecha_formato' => $attendance->class_date->format('d/m/Y'),
                 'hora' => $attendance->schedule?->start_time ?? 'N/A',
                 'estudiante' => [
+                    'id' => $attendance->student->id,
                     'nombre' => $attendance->student->name,
-                    'nivel' => 'Estudiante',
+                    'email' => $attendance->student->email,
                     'avatar' => null,
                 ],
-                'clase' => $attendance->schedule?->academicProgram?->name ?? 'Clase General',
-                'tipoClase' => 'general',
+                'programa' => [
+                    'id' => $attendance->schedule?->academicProgram?->id,
+                    'nombre' => $attendance->schedule?->academicProgram?->name ?? 'Sin programa',
+                    'color' => $attendance->schedule?->academicProgram?->color ?? '#7a9b3c',
+                ],
                 'profesor' => [
+                    'id' => $attendance->schedule?->professor?->id,
                     'nombre' => $attendance->schedule?->professor?->name ?? 'N/A',
                     'avatar' => null,
                 ],
                 'estado' => $status,
-                'horaLlegada' => $attendance->created_at->format('H:i'),
-                'acciones' => ['editar', 'contactar'],
+                'estado_original' => $attendance->status,
+                'notas' => $attendance->notes,
+                'registrado_por' => $attendance->recordedBy?->name ?? 'Sistema',
+                'created_at' => $attendance->created_at->format('d/m/Y H:i'),
             ];
         });
 
+        // Replace collection in paginator
+        $attendancesPaginated->setCollection($asistencias);
+
         // Find students with attendance issues
         $alertas = $this->getStudentAlerts();
+
+        // Get programs and professors for filters
+        $programs = AcademicProgram::where('status', 'active')
+            ->orderBy('name')
+            ->get(['id', 'name']);
+
+        $professors = User::role('Profesor')
+            ->orderBy('name')
+            ->get(['id', 'name']);
 
         return Inertia::render('Assists/Index', [
             'asistenciaHoy' => [
@@ -108,8 +176,18 @@ class AttendanceController extends Controller
             'ausencias' => $absentToday,
             'tardanzas' => $lateToday,
             'promedioMensual' => $monthlyAverage,
-            'asistencias' => $asistencias,
+            'asistencias' => $attendancesPaginated,
             'alertas' => $alertas,
+            'filters' => [
+                'search' => $search,
+                'status' => $status,
+                'program_id' => $programId,
+                'professor_id' => $professorId,
+                'date_from' => $dateFrom,
+                'date_to' => $dateTo,
+            ],
+            'programs' => $programs,
+            'professors' => $professors,
         ]);
     }
 

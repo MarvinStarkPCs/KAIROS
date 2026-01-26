@@ -1,7 +1,7 @@
 import { Head, Link } from '@inertiajs/react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { CheckCircle2, XCircle, Clock, Home, Mail } from 'lucide-react';
+import { CheckCircle2, XCircle, Clock, Home, Mail, Banknote, Phone } from 'lucide-react';
 import { Toaster } from '@/components/toaster';
 
 interface Payment {
@@ -22,15 +22,17 @@ interface Payment {
 }
 
 interface ConfirmationProps {
-    payment: Payment;
+    payment: Payment | null;
     status: string;
-    transactionId: string;
+    transactionId: string | null;
+    message?: string;
 }
 
-export default function Confirmation({ payment, status, transactionId }: ConfirmationProps) {
+export default function Confirmation({ payment, status, transactionId, message }: ConfirmationProps) {
     const isApproved = status === 'APPROVED';
     const isPending = status === 'PENDING';
     const isDeclined = status === 'DECLINED' || status === 'ERROR';
+    const isManual = status === 'MANUAL';
 
     return (
         <>
@@ -56,16 +58,23 @@ export default function Confirmation({ payment, status, transactionId }: Confirm
                                 <XCircle className="h-12 w-12 text-red-600" />
                             </div>
                         )}
+                        {isManual && (
+                            <div className="inline-flex items-center justify-center w-20 h-20 bg-amber-100 rounded-full mb-4">
+                                <Banknote className="h-12 w-12 text-amber-600" />
+                            </div>
+                        )}
 
                         <h1 className="text-3xl font-bold text-gray-900 mb-2">
                             {isApproved && '¡Pago Exitoso!'}
                             {isPending && 'Pago Pendiente'}
                             {isDeclined && 'Pago No Procesado'}
+                            {isManual && '¡Matrícula Registrada!'}
                         </h1>
                         <p className="text-gray-600">
                             {isApproved && 'Tu matrícula ha sido completada exitosamente'}
                             {isPending && 'Tu pago está siendo procesado'}
                             {isDeclined && 'No pudimos procesar tu pago'}
+                            {isManual && 'Tu inscripción ha sido registrada exitosamente'}
                         </p>
                     </div>
 

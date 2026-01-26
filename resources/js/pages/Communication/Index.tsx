@@ -2,7 +2,6 @@ import AppLayout from '@/layouts/app-layout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Head, router, useForm } from '@inertiajs/react';
 import { MessageSquare, Plus, Search } from 'lucide-react';
 import { useState, useEffect } from 'react';
@@ -39,6 +38,7 @@ interface Props {
 export default function Index({ conversations, availableUsers }: Props) {
     const [dialogOpen, setDialogOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
+    const [userSearchQuery, setUserSearchQuery] = useState('');
 
     const { data, setData, post, processing, errors, reset } = useForm({
         user_id: '',
@@ -82,6 +82,21 @@ export default function Index({ conversations, availableUsers }: Props) {
         conv.other_user?.email.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
+    const filteredUsers = availableUsers.filter((user) =>
+        user.name.toLowerCase().includes(userSearchQuery.toLowerCase()) ||
+        user.email.toLowerCase().includes(userSearchQuery.toLowerCase())
+    );
+
+    const selectedUser = availableUsers.find((u) => u.id.toString() === data.user_id);
+
+    const handleDialogChange = (open: boolean) => {
+        setDialogOpen(open);
+        if (!open) {
+            setUserSearchQuery('');
+            reset();
+        }
+    };
+
     // Polling: Auto-refresh conversations every 5 seconds
     useEffect(() => {
         const interval = setInterval(() => {
@@ -99,48 +114,90 @@ export default function Index({ conversations, availableUsers }: Props) {
         <AppLayout>
             <Head title="Comunicaciones" />
 
-            <div className="space-y-6">
-                <div className="flex items-center justify-between">
+            <div className="space-y-4 sm:space-y-6">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                     <div>
-                        <h1 className="text-3xl font-bold text-gray-900">Comunicaciones</h1>
-                        <p className="mt-2 text-gray-600">Conversa con otros usuarios del sistema</p>
+                        <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl">Comunicaciones</h1>
+                        <p className="mt-1 text-sm text-gray-600 sm:mt-2 sm:text-base">Conversa con otros usuarios del sistema</p>
                     </div>
-                    <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+                    <Dialog open={dialogOpen} onOpenChange={handleDialogChange}>
                         <DialogTrigger asChild>
-                            <Button>
+                            <Button className="w-full sm:w-auto">
                                 <Plus className="mr-2 h-4 w-4" />
-                                Nueva conversación
+                                <span className="sm:inline">Nueva conversación</span>
                             </Button>
                         </DialogTrigger>
-                        <DialogContent>
+                        <DialogContent className="max-h-[90vh] overflow-hidden sm:max-w-md">
                             <DialogHeader>
                                 <DialogTitle>Iniciar nueva conversación</DialogTitle>
                                 <DialogDescription>
-                                    Selecciona un usuario para iniciar una conversación
+                                    Busca y selecciona un usuario
                                 </DialogDescription>
                             </DialogHeader>
                             <form onSubmit={handleSubmit} className="space-y-4">
-                                <div className="space-y-2">
-                                    <Select
-                                        value={data.user_id}
-                                        onValueChange={(value) => setData('user_id', value)}
-                                    >
-                                        <SelectTrigger>
-                                            <SelectValue placeholder="Seleccionar usuario" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {availableUsers.map((user) => (
-                                                <SelectItem key={user.id} value={user.id.toString()}>
-                                                    {user.name} ({user.email})
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
+                                <div className="space-y-3">
+                                    <div className="relative">
+                                        <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                                        <Input
+                                            type="text"
+                                            placeholder="Buscar por nombre o email..."
+                                            value={userSearchQuery}
+                                            onChange={(e) => setUserSearchQuery(e.target.value)}
+                                            className="pl-10"
+                                            autoFocus
+                                        />
+                                    </div>
+
+                                    {selectedUser && (
+                                        <div className="flex items-center justify-between rounded-lg border border-primary bg-primary/5 p-3">
+                                            <div className="min-w-0 flex-1">
+                                                <p className="truncate font-medium text-sm">{selectedUser.name}</p>
+                                                <p className="truncate text-xs text-muted-foreground">{selectedUser.email}</p>
+                                            </div>
+                                            <Button
+                                                type="button"
+                                                variant="ghost"
+                                                size="sm"
+                                                onClick={() => setData('user_id', '')}
+                                                className="ml-2 shrink-0 text-xs"
+                                            >
+                                                Cambiar
+                                            </Button>
+                                        </div>
+                                    )}
+
+                                    {!selectedUser && (
+                                        <div className="max-h-[40vh] overflow-y-auto rounded-lg border">
+                                            {filteredUsers.length === 0 ? (
+                                                <div className="p-4 text-center text-sm text-muted-foreground">
+                                                    {userSearchQuery ? 'No se encontraron usuarios' : 'No hay usuarios disponibles'}
+                                                </div>
+                                            ) : (
+                                                <div className="divide-y">
+                                                    {filteredUsers.map((user) => (
+                                                        <button
+                                                            key={user.id}
+                                                            type="button"
+                                                            onClick={() => {
+                                                                setData('user_id', user.id.toString());
+                                                                setUserSearchQuery('');
+                                                            }}
+                                                            className="w-full p-3 text-left transition-colors hover:bg-accent"
+                                                        >
+                                                            <p className="truncate font-medium text-sm">{user.name}</p>
+                                                            <p className="truncate text-xs text-muted-foreground">{user.email}</p>
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+
                                     {errors.user_id && (
                                         <p className="text-sm text-destructive">{errors.user_id}</p>
                                     )}
                                 </div>
-                                <Button type="submit" disabled={processing} className="w-full">
+                                <Button type="submit" disabled={processing || !data.user_id} className="w-full">
                                     Iniciar conversación
                                 </Button>
                             </form>
@@ -198,32 +255,32 @@ export default function Index({ conversations, availableUsers }: Props) {
                                     onClick={() =>
                                         router.visit(route('comunicacion.show', { conversation: conversation.id }))
                                     }
-                                    className="w-full rounded-lg border p-4 text-left transition-colors hover:bg-accent"
+                                    className="w-full rounded-lg border p-3 text-left transition-colors hover:bg-accent sm:p-4"
                                 >
-                                    <div className="flex items-start justify-between">
-                                        <div className="flex-1">
-                                            <div className="flex items-center justify-between">
-                                                <h3 className="font-semibold">
+                                    <div className="flex items-start justify-between gap-2">
+                                        <div className="min-w-0 flex-1">
+                                            <div className="flex flex-wrap items-center justify-between gap-1">
+                                                <h3 className="truncate font-semibold text-sm sm:text-base">
                                                     {conversation.other_user?.name || 'Usuario desconocido'}
                                                 </h3>
                                                 {conversation.last_message_at && (
-                                                    <span className="text-xs text-muted-foreground">
+                                                    <span className="shrink-0 text-xs text-muted-foreground">
                                                         {formatDate(conversation.last_message_at)}
                                                     </span>
                                                 )}
                                             </div>
-                                            <p className="text-sm text-muted-foreground">
+                                            <p className="truncate text-xs text-muted-foreground sm:text-sm">
                                                 {conversation.other_user?.email}
                                             </p>
                                             {conversation.latest_message && (
-                                                <p className="mt-1 text-sm text-muted-foreground">
+                                                <p className="mt-1 truncate text-xs text-muted-foreground sm:text-sm">
                                                     {conversation.latest_message.is_mine && 'Tú: '}
                                                     {truncateMessage(conversation.latest_message.body)}
                                                 </p>
                                             )}
                                         </div>
                                         {conversation.unread_count > 0 && (
-                                            <div className="ml-4 flex h-6 w-6 items-center justify-center rounded-full bg-primary text-xs font-medium text-primary-foreground">
+                                            <div className="ml-2 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-medium text-primary-foreground sm:ml-4 sm:h-6 sm:w-6">
                                                 {conversation.unread_count}
                                             </div>
                                         )}

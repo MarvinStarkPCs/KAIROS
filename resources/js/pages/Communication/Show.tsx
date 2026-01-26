@@ -149,29 +149,31 @@ export default function Show({ conversation, messages: initialMessages }: Props)
         <AppLayout>
             <Head title={`Conversación con ${conversation.other_user.name}`} />
 
-            <div className="space-y-6">
+            <div className="space-y-4 sm:space-y-6">
                 <div>
                     <Button
                         variant="ghost"
                         onClick={() => router.visit(route('comunicacion.index'))}
-                        className="mb-4"
+                        className="mb-2 sm:mb-4"
+                        size="sm"
                     >
-                        <ArrowLeft className="mr-2 h-4 w-4" />
-                        Volver a conversaciones
+                        <ArrowLeft className="mr-1 h-4 w-4 sm:mr-2" />
+                        <span className="hidden sm:inline">Volver a conversaciones</span>
+                        <span className="sm:hidden">Volver</span>
                     </Button>
                     <div>
-                        <h1 className="text-3xl font-bold text-gray-900">
+                        <h1 className="text-xl font-bold text-gray-900 sm:text-3xl">
                             {conversation.other_user.name}
                         </h1>
-                        <p className="mt-2 text-gray-600">{conversation.other_user.email}</p>
+                        <p className="mt-1 text-sm text-gray-600 sm:mt-2 sm:text-base">{conversation.other_user.email}</p>
                     </div>
                 </div>
 
-                <Card className="flex h-[600px] flex-col">
-                    <CardHeader className="border-b">
-                        <CardTitle>Mensajes</CardTitle>
+                <Card className="flex h-[calc(100vh-16rem)] min-h-[400px] flex-col sm:h-[600px]">
+                    <CardHeader className="border-b px-3 py-2 sm:px-6 sm:py-4">
+                        <CardTitle className="text-base sm:text-lg">Mensajes</CardTitle>
                     </CardHeader>
-                    <CardContent className="flex-1 overflow-y-auto p-4">
+                    <CardContent className="flex-1 overflow-y-auto p-3 sm:p-4">
                         {messages.length === 0 ? (
                             <div className="flex h-full items-center justify-center text-center text-muted-foreground">
                                 <div>
@@ -199,7 +201,7 @@ export default function Show({ conversation, messages: initialMessages }: Props)
                                                 >
                                                     <div
                                                         className={cn(
-                                                            'max-w-[70%] rounded-lg px-4 py-2',
+                                                            'max-w-[85%] rounded-lg px-3 py-2 sm:max-w-[70%] sm:px-4',
                                                             message.is_mine
                                                                 ? 'bg-primary text-primary-foreground'
                                                                 : 'bg-muted'
@@ -210,7 +212,7 @@ export default function Show({ conversation, messages: initialMessages }: Props)
                                                                 {message.user.name}
                                                             </p>
                                                         )}
-                                                        <p className="whitespace-pre-wrap break-words">
+                                                        <p className="whitespace-pre-wrap break-words text-sm sm:text-base">
                                                             {message.body}
                                                         </p>
                                                         <p
@@ -233,7 +235,7 @@ export default function Show({ conversation, messages: initialMessages }: Props)
                             </div>
                         )}
                     </CardContent>
-                    <div className="border-t p-4">
+                    <div className="border-t p-3 sm:p-4">
                         <form onSubmit={handleSubmit} className="flex gap-2">
                             <Textarea
                                 ref={textareaRef}
@@ -241,17 +243,17 @@ export default function Show({ conversation, messages: initialMessages }: Props)
                                 value={data.body}
                                 onChange={(e) => setData('body', e.target.value)}
                                 onKeyDown={handleKeyDown}
-                                className="min-h-[60px] resize-none"
+                                className="min-h-[50px] resize-none text-sm sm:min-h-[60px] sm:text-base"
                                 disabled={processing}
                             />
-                            <Button type="submit" disabled={processing || !data.body.trim()} size="icon">
+                            <Button type="submit" disabled={processing || !data.body.trim()} size="icon" className="shrink-0">
                                 <Send className="h-4 w-4" />
                             </Button>
                         </form>
                         {errors.body && (
                             <p className="mt-2 text-sm text-destructive">{errors.body}</p>
                         )}
-                        <p className="mt-2 text-xs text-muted-foreground">
+                        <p className="mt-2 hidden text-xs text-muted-foreground sm:block">
                             Presiona Enter para enviar, Shift+Enter para nueva línea
                         </p>
                     </div>

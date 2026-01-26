@@ -8,7 +8,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ChevronLeft, ChevronRight, CheckCircle, Plus, Trash2, User, AlertCircle, Check, Music2, GraduationCap, MapPin, FileText, Sparkles } from 'lucide-react';
+import { ChevronLeft, ChevronRight, CheckCircle, Plus, Trash2, User, AlertCircle, Check, Music2, GraduationCap, MapPin, FileText, Sparkles, CreditCard, Banknote } from 'lucide-react';
 import InputError from '@/components/input-error';
 import { cn } from '@/lib/utils';
 import { Toaster } from '@/components/toaster';
@@ -94,6 +94,8 @@ export default function Create({ programs }: CreateProps) {
         // Autorizaciones
         parental_authorization: false,
         payment_commitment: false,
+        // Método de pago: 'online' (pasarela) o 'manual' (efectivo/transferencia)
+        payment_method: 'online' as 'online' | 'manual',
     });
 
     // Debug: Monitorear cambios en errors
@@ -166,6 +168,7 @@ export default function Create({ programs }: CreateProps) {
                     responsable: data.responsable,
                     is_minor: data.is_minor,
                     payment_commitment: data.payment_commitment,
+                    payment_method: data.payment_method,
                 };
 
                 console.log('🔍 Valor de is_minor antes del transform:', data.is_minor, typeof data.is_minor);
@@ -539,7 +542,7 @@ export default function Create({ programs }: CreateProps) {
                                     <CardTitle className="text-xl sm:text-2xl">Datos Musicales y Programa</CardTitle>
                                 </div>
                                 <CardDescription className="text-sm sm:text-base">
-                                    Completa tu información musical y selecciona el programa demo al que deseas asistir
+                                    Completa tu información musical y selecciona el programa al que deseas inscribirte
                                 </CardDescription>
                             </CardHeader>
                             <CardContent className="space-y-6 pt-6">
@@ -757,7 +760,7 @@ export default function Create({ programs }: CreateProps) {
                                 <CardTitle className="text-xl sm:text-2xl">Datos de los Estudiantes</CardTitle>
                             </div>
                             <CardDescription className="text-sm sm:text-base">
-                                Ingrese los datos de cada estudiante menor de edad para la clase demo
+                                Ingrese los datos de cada estudiante menor de edad
                             </CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-6 pt-6">
@@ -1232,7 +1235,7 @@ export default function Create({ programs }: CreateProps) {
                                 <CardTitle className="text-xl sm:text-2xl">Autorizaciones y Compromiso</CardTitle>
                             </div>
                             <CardDescription className="text-sm sm:text-base">
-                                Lea y acepte los términos antes de completar la matrícula a la clase demo
+                                Lea y acepte los términos antes de completar la matrícula
                             </CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-6 pt-6">
@@ -1321,11 +1324,72 @@ export default function Create({ programs }: CreateProps) {
                                 )}
                             </div>
 
+                            {/* Método de Pago */}
+                            <div className="p-4 border rounded-lg space-y-4">
+                                <h4 className="font-semibold">Método de Pago</h4>
+                                <p className="text-sm text-gray-700">
+                                    Selecciona cómo deseas realizar el pago de la matrícula:
+                                </p>
+
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    {/* Opción Pago en Línea */}
+                                    <div
+                                        onClick={() => setData('payment_method', 'online')}
+                                        className={cn(
+                                            "p-4 border-2 rounded-lg cursor-pointer transition-all duration-200",
+                                            data.payment_method === 'online'
+                                                ? "border-amber-500 bg-amber-50 shadow-md"
+                                                : "border-gray-200 hover:border-amber-300 hover:bg-amber-50/50"
+                                        )}
+                                    >
+                                        <div className="flex items-center gap-3 mb-2">
+                                            <div className={cn(
+                                                "p-2 rounded-full",
+                                                data.payment_method === 'online' ? "bg-amber-500 text-white" : "bg-gray-100 text-gray-500"
+                                            )}>
+                                                <CreditCard className="h-5 w-5" />
+                                            </div>
+                                            <span className="font-semibold">Pago en Línea</span>
+                                        </div>
+                                        <p className="text-sm text-gray-600">
+                                            Paga de forma segura con tarjeta de crédito, débito o PSE a través de nuestra pasarela de pagos.
+                                        </p>
+                                    </div>
+
+                                    {/* Opción Pago Manual */}
+                                    <div
+                                        onClick={() => setData('payment_method', 'manual')}
+                                        className={cn(
+                                            "p-4 border-2 rounded-lg cursor-pointer transition-all duration-200",
+                                            data.payment_method === 'manual'
+                                                ? "border-green-500 bg-green-50 shadow-md"
+                                                : "border-gray-200 hover:border-green-300 hover:bg-green-50/50"
+                                        )}
+                                    >
+                                        <div className="flex items-center gap-3 mb-2">
+                                            <div className={cn(
+                                                "p-2 rounded-full",
+                                                data.payment_method === 'manual' ? "bg-green-500 text-white" : "bg-gray-100 text-gray-500"
+                                            )}>
+                                                <Banknote className="h-5 w-5" />
+                                            </div>
+                                            <span className="font-semibold">Pago Manual</span>
+                                        </div>
+                                        <p className="text-sm text-gray-600">
+                                            Realiza el pago en efectivo o por transferencia bancaria. Un asesor se comunicará contigo.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
                             <div className="p-4 bg-green-50 border border-green-200 rounded-lg text-center">
                                 <CheckCircle className="h-12 w-12 text-green-600 mx-auto mb-2" />
                                 <p className="text-lg font-semibold text-green-900">¡Todo listo!</p>
                                 <p className="text-sm text-green-700 mt-1">
-                                    Haz clic en "Completar Matrícula" para finalizar el proceso
+                                    {data.payment_method === 'online'
+                                        ? 'Haz clic en "Completar Matrícula" para proceder al pago en línea'
+                                        : 'Haz clic en "Completar Matrícula" para registrar tu inscripción'
+                                    }
                                 </p>
                             </div>
                         </CardContent>
@@ -1342,44 +1406,11 @@ export default function Create({ programs }: CreateProps) {
 
     return (
         <>
-            <Head title="Matrícula - Academia Linaje" />
+            <Head title="Matrícula" />
             <Toaster />
 
             <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-amber-100 py-8 sm:py-12 px-3 sm:px-4 lg:px-6">
                 <div className="max-w-5xl mx-auto">
-                    {/* Header - Mejorado con animaciones e iconos */}
-                    <div className="text-center mb-6 sm:mb-10 animate-fade-in">
-                        <div className="relative inline-block mb-4">
-                            <div className="absolute inset-0 bg-gradient-to-r from-amber-400 to-orange-400 rounded-full blur-xl opacity-30 animate-pulse"></div>
-                            <Music2 className="relative h-14 w-14 sm:h-16 sm:w-16 text-amber-600 mx-auto animate-bounce-once" />
-                        </div>
-                        <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold bg-gradient-to-r from-amber-600 via-orange-600 to-amber-700 bg-clip-text text-transparent mb-3">
-                            Clase Demo - Matrícula
-                        </h1>
-                        <p className="text-base sm:text-lg text-gray-700 font-medium mb-2">
-                            Academia de Formación Musical y Espiritual LINAJE
-                        </p>
-                        <p className="text-sm sm:text-base text-gray-600 max-w-2xl mx-auto px-4">
-                            Completa el formulario para registrarte en nuestra clase demo gratuita
-                        </p>
-                        <div className="mt-4 flex items-center justify-center gap-4 text-sm text-gray-600">
-                            <div className="flex items-center gap-1.5">
-                                <Sparkles className="h-4 w-4 text-amber-500" />
-                                <span className="hidden sm:inline">Experiencia única</span>
-                                <span className="sm:hidden">Único</span>
-                            </div>
-                            <div className="flex items-center gap-1.5">
-                                <GraduationCap className="h-4 w-4 text-amber-500" />
-                                <span className="hidden sm:inline">Profesores expertos</span>
-                                <span className="sm:hidden">Expertos</span>
-                            </div>
-                            <div className="flex items-center gap-1.5">
-                                <CheckCircle className="h-4 w-4 text-amber-500" />
-                                <span>Gratis</span>
-                            </div>
-                        </div>
-                    </div>
-
                     {/* Banner de errores */}
                     {Object.keys(errors).length > 0 && (
                         <Card className="mb-6 border-red-200 bg-red-50">

@@ -38,12 +38,6 @@ import StudentController from '@/actions/App/Http/Controllers/StudentController'
 const allNavItems: NavItem[] = [
     // Portal de Estudiantes
     {
-        title: 'Mi Portal',
-        href: StudentController.dashboard(),
-        icon: User,
-        role: 'Estudiante',
-    },
-    {
         title: 'Mis Calificaciones',
         href: StudentController.grades(),
         icon: Award,

@@ -100,7 +100,7 @@ export default function Index({ enrollments, stats, programs, students, filters 
 
     const handleDelete = (id: number) => {
         if (confirm('¿Estás seguro de eliminar esta matrícula?')) {
-            router.delete(`/matrículas/${id}`);
+            router.delete(`/matriculas/${id}`);
         }
     };
 
@@ -126,7 +126,7 @@ export default function Index({ enrollments, stats, programs, students, filters 
                             Gestiona las matrículas de estudiantes a programas académicos
                         </p>
                     </div>
-                    <Link href="/matrículas/create">
+                    <Link href="/matriculas/create">
                         <Button>
                             <Plus className="mr-2 h-4 w-4" />
                             Nueva Matrícula
@@ -276,12 +276,12 @@ export default function Index({ enrollments, stats, programs, students, filters 
                                             <TableCell>{getStatusBadge(enrollment.status)}</TableCell>
                                             <TableCell className="text-right">
                                                 <div className="flex justify-end gap-2">
-                                                    <Link href={`/matrículas/${enrollment.id}`}>
+                                                    <Link href={`/matriculas/${enrollment.id}`}>
                                                         <Button variant="ghost" size="sm">
                                                             <Eye className="h-4 w-4" />
                                                         </Button>
                                                     </Link>
-                                                    <Link href={`/matrículas/${enrollment.id}/edit`}>
+                                                    <Link href={`/matriculas/${enrollment.id}/edit`}>
                                                         <Button variant="ghost" size="sm">
                                                             <Edit className="h-4 w-4" />
                                                         </Button>
@@ -312,7 +312,7 @@ export default function Index({ enrollments, stats, programs, students, filters 
                                         <Button
                                             variant="outline"
                                             onClick={() =>
-                                                router.get(`/matrículas?page=${enrollments.current_page - 1}`)
+                                                router.get(`/matriculas?page=${enrollments.current_page - 1}`)
                                             }
                                         >
                                             Anterior
@@ -322,7 +322,7 @@ export default function Index({ enrollments, stats, programs, students, filters 
                                         <Button
                                             variant="outline"
                                             onClick={() =>
-                                                router.get(`/matrículas?page=${enrollments.current_page + 1}`)
+                                                router.get(`/matriculas?page=${enrollments.current_page + 1}`)
                                             }
                                         >
                                             Siguiente

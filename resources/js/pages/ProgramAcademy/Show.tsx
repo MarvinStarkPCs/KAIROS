@@ -1,10 +1,11 @@
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 import { ArrowLeft, Plus, Book, ListChecks, Award, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import ProgramAcademyController from '@/actions/App/Http/Controllers/program_academy';
 import StudyPlanController from '@/actions/App/Http/Controllers/StudyPlanController';
 import AppLayout from '@/layouts/app-layout';
 import { useState } from 'react';
+import { SharedData } from '@/types';
 import StudyPlanDialog from '@/components/StudyPlanDialog';
 import ActivityDialog from '@/components/ActivityDialog';
 import EvaluationCriteriaDialog from '@/components/EvaluationCriteriaDialog';
@@ -61,6 +62,12 @@ interface ShowProps {
 }
 
 export default function Show({ program, studyPlans }: ShowProps) {
+    const { auth } = usePage<SharedData>().props;
+    const permissions = auth?.permissions ?? [];
+
+    // Permission check helper
+    const can = (permission: string) => permissions.includes(permission);
+
     // State for StudyPlan dialog
     const [studyPlanDialog, setStudyPlanDialog] = useState<{
         open: boolean;
@@ -231,16 +238,18 @@ export default function Show({ program, studyPlans }: ShowProps) {
                                             >
                                                 <Plus className="h-4 w-4" />
                                             </Button>
-                                            <Button
-                                                variant="outline"
-                                                size="sm"
-                                                className="text-red-600 hover:bg-red-50 hover:text-red-700"
-                                                onClick={() =>
-                                                    setDeleteStudyPlan({ open: true, studyPlan })
-                                                }
-                                            >
-                                                <Trash2 className="h-4 w-4" />
-                                            </Button>
+                                            {can('eliminar_plan_estudio') && (
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    className="text-red-600 hover:bg-red-50 hover:text-red-700"
+                                                    onClick={() =>
+                                                        setDeleteStudyPlan({ open: true, studyPlan })
+                                                    }
+                                                >
+                                                    <Trash2 className="h-4 w-4" />
+                                                </Button>
+                                            )}
                                         </div>
                                     </div>
 
@@ -312,16 +321,18 @@ export default function Show({ program, studyPlans }: ShowProps) {
                                                             >
                                                                 <Plus className="h-4 w-4" />
                                                             </Button>
-                                                            <Button
-                                                                variant="ghost"
-                                                                size="sm"
-                                                                className="text-red-600 hover:bg-red-50 hover:text-red-700"
-                                                                onClick={() =>
-                                                                    setDeleteActivity({ open: true, activity })
-                                                                }
-                                                            >
-                                                                <Trash2 className="h-4 w-4" />
-                                                            </Button>
+                                                            {can('eliminar_actividad') && (
+                                                                <Button
+                                                                    variant="ghost"
+                                                                    size="sm"
+                                                                    className="text-red-600 hover:bg-red-50 hover:text-red-700"
+                                                                    onClick={() =>
+                                                                        setDeleteActivity({ open: true, activity })
+                                                                    }
+                                                                >
+                                                                    <Trash2 className="h-4 w-4" />
+                                                                </Button>
+                                                            )}
                                                         </div>
                                                     </div>
 
@@ -366,16 +377,18 @@ export default function Show({ program, studyPlans }: ShowProps) {
                                                                         >
                                                                             Editar
                                                                         </Button>
-                                                                        <Button
-                                                                            variant="ghost"
-                                                                            size="sm"
-                                                                            className="text-red-600 hover:bg-red-50 hover:text-red-700"
-                                                                            onClick={() =>
-                                                                                setDeleteCriteria({ open: true, criteria })
-                                                                            }
-                                                                        >
-                                                                            <Trash2 className="h-4 w-4" />
-                                                                        </Button>
+                                                                        {can('eliminar_criterio_evaluacion') && (
+                                                                            <Button
+                                                                                variant="ghost"
+                                                                                size="sm"
+                                                                                className="text-red-600 hover:bg-red-50 hover:text-red-700"
+                                                                                onClick={() =>
+                                                                                    setDeleteCriteria({ open: true, criteria })
+                                                                                }
+                                                                            >
+                                                                                <Trash2 className="h-4 w-4" />
+                                                                            </Button>
+                                                                        )}
                                                                     </div>
                                                                 </div>
                                                             ))}

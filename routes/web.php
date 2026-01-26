@@ -14,14 +14,10 @@ use App\Http\Controllers\StudyPlanController;
 use App\Http\Controllers\TeacherController;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\CommunicationController;
-use App\Http\Controllers\Auth\GoogleAuthController;
 use App\Http\Controllers\MatriculaController;
 use App\Http\Controllers\DemoLeadController;
 use App\Http\Controllers\Admin\DemoLeadController as AdminDemoLeadController;
-
-// Google OAuth Routes
-Route::get('/auth/google', [GoogleAuthController::class, 'redirectToGoogle'])->name('auth.google');
-Route::get('/auth/google/callback', [GoogleAuthController::class, 'handleGoogleCallback'])->name('auth.google.callback');
+use App\Http\Controllers\TeacherRegistrationController;
 
 // Demo Lead desde Welcome (sin autenticación, con rate limiting)
 Route::middleware(['throttle:5,1'])->group(function () {
@@ -44,6 +40,13 @@ Route::middleware(['throttle:20,1'])->group(function () {
 
 // Webhook de Wompi (sin autenticación)
 Route::post('/webhook/wompi', [PaymentController::class, 'wompiWebhook'])->name('webhook.wompi');
+
+// Registro Público de Profesores (sin autenticación, con rate limiting)
+Route::middleware(['throttle:10,1'])->group(function () {
+    Route::get('/registro-profesor', [TeacherRegistrationController::class, 'create'])->name('registro-profesor.create');
+    Route::post('/registro-profesor', [TeacherRegistrationController::class, 'store'])->name('registro-profesor.store');
+    Route::get('/registro-profesor/confirmacion/{teacher}', [TeacherRegistrationController::class, 'confirmation'])->name('registro-profesor.confirmacion');
+});
 
 // TEST: Ruta de prueba para verificar errores de Inertia
 Route::get('/test-errors', function () {
@@ -308,7 +311,6 @@ Route::middleware(['auth'])->group(function () {
     // === PORTAL DE ESTUDIANTES ===
     Route::prefix('estudiante')->group(function () {
         Route::middleware(['role:Estudiante'])->group(function () {
-            Route::get('/mi-portal', [StudentController::class, 'dashboard'])->name('estudiante.dashboard');
             Route::get('/calificaciones/{programId?}', [StudentController::class, 'grades'])->name('estudiante.calificaciones');
         });
     });

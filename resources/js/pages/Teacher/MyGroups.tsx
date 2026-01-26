@@ -15,30 +15,58 @@ interface Program {
 interface Group {
     id: number;
     program: Program;
-    day_of_week: string;
+    days_of_week: string;
     start_time: string;
     end_time: string;
-    location: string;
+    classroom: string | null;
     total_students: number;
-    start_date: string;
-    end_date: string;
 }
 
 interface Props {
     groups: Group[];
 }
 
-const dayNames: Record<string, string> = {
-    'monday': 'Lunes',
-    'tuesday': 'Martes',
-    'wednesday': 'Miércoles',
-    'thursday': 'Jueves',
-    'friday': 'Viernes',
-    'saturday': 'Sábado',
-    'sunday': 'Domingo',
-};
-
 export default function MyGroups({ groups }: Props) {
+    // Función para formatear los días de la semana
+    const formatDays = (daysStr: string) => {
+        if (!daysStr) return 'Sin días asignados';
+
+        const dayMap: Record<string, string> = {
+            'lunes': 'Lun',
+            'martes': 'Mar',
+            'miércoles': 'Mié',
+            'miercoles': 'Mié',
+            'jueves': 'Jue',
+            'viernes': 'Vie',
+            'sábado': 'Sáb',
+            'sabado': 'Sáb',
+            'domingo': 'Dom',
+        };
+
+        const days = daysStr.split(',').map(d => d.trim().toLowerCase());
+        return days.map(d => dayMap[d] || d).join(', ');
+    };
+
+    // Función para obtener los días completos
+    const getFullDayNames = (daysStr: string) => {
+        if (!daysStr) return [];
+
+        const dayMap: Record<string, string> = {
+            'lunes': 'Lunes',
+            'martes': 'Martes',
+            'miércoles': 'Miércoles',
+            'miercoles': 'Miércoles',
+            'jueves': 'Jueves',
+            'viernes': 'Viernes',
+            'sábado': 'Sábado',
+            'sabado': 'Sábado',
+            'domingo': 'Domingo',
+        };
+
+        const days = daysStr.split(',').map(d => d.trim().toLowerCase());
+        return days.map(d => dayMap[d] || d);
+    };
+
     return (
         <AppLayout
             variant="sidebar"
@@ -127,12 +155,17 @@ export default function MyGroups({ groups }: Props) {
                                             <CardTitle className="text-xl mb-2">
                                                 {group.program.name}
                                             </CardTitle>
-                                            <Badge
-                                                style={{ backgroundColor: group.program.color }}
-                                                className="text-white"
-                                            >
-                                                {dayNames[group.day_of_week] || group.day_of_week}
-                                            </Badge>
+                                            <div className="flex flex-wrap gap-1">
+                                                {getFullDayNames(group.days_of_week).map((day, idx) => (
+                                                    <Badge
+                                                        key={idx}
+                                                        style={{ backgroundColor: group.program.color }}
+                                                        className="text-white"
+                                                    >
+                                                        {day}
+                                                    </Badge>
+                                                ))}
+                                            </div>
                                         </div>
                                         <div className="text-right">
                                             <div className="text-2xl font-bold text-gray-900">
@@ -145,24 +178,23 @@ export default function MyGroups({ groups }: Props) {
                                 <CardContent>
                                     <div className="space-y-3 mb-4">
                                         <div className="flex items-center text-gray-700">
+                                            <Icon iconNode={Calendar} className="w-4 h-4 mr-2 text-gray-500" />
+                                            <span className="text-sm font-medium">
+                                                {formatDays(group.days_of_week)}
+                                            </span>
+                                        </div>
+                                        <div className="flex items-center text-gray-700">
                                             <Icon iconNode={Clock} className="w-4 h-4 mr-2 text-gray-500" />
                                             <span className="text-sm">
                                                 {group.start_time} - {group.end_time}
                                             </span>
                                         </div>
-                                        {group.location && (
+                                        {group.classroom && (
                                             <div className="flex items-center text-gray-700">
                                                 <Icon iconNode={MapPin} className="w-4 h-4 mr-2 text-gray-500" />
-                                                <span className="text-sm">{group.location}</span>
+                                                <span className="text-sm">{group.classroom}</span>
                                             </div>
                                         )}
-                                        <div className="flex items-center text-gray-700">
-                                            <Icon iconNode={Calendar} className="w-4 h-4 mr-2 text-gray-500" />
-                                            <span className="text-sm">
-                                                {new Date(group.start_date).toLocaleDateString('es-ES')} - {' '}
-                                                {new Date(group.end_date).toLocaleDateString('es-ES')}
-                                            </span>
-                                        </div>
                                     </div>
 
                                     <Link href={`/profesor/grupo/${group.id}`}>

@@ -2,6 +2,7 @@ import Auth from './Auth'
 import DemoLeadController from './DemoLeadController'
 import MatriculaController from './MatriculaController'
 import PaymentController from './PaymentController'
+import TeacherRegistrationController from './TeacherRegistrationController'
 import UserController from './UserController'
 import program_academy from './program_academy'
 import RoleController from './RoleController'
@@ -20,6 +21,7 @@ const Controllers = {
 DemoLeadController: Object.assign(DemoLeadController, DemoLeadController),
 MatriculaController: Object.assign(MatriculaController, MatriculaController),
 PaymentController: Object.assign(PaymentController, PaymentController),
+TeacherRegistrationController: Object.assign(TeacherRegistrationController, TeacherRegistrationController),
 UserController: Object.assign(UserController, UserController),
 program_academy: Object.assign(program_academy, program_academy),
 RoleController: Object.assign(RoleController, RoleController),

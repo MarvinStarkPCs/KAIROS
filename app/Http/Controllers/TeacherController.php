@@ -41,13 +41,11 @@ class TeacherController extends Controller
                     'name' => $schedule->academicProgram->name,
                     'color' => $schedule->academicProgram->color ?? '#7a9b3c',
                 ],
-                'day_of_week' => $schedule->day_of_week,
+                'days_of_week' => $schedule->days_of_week,
                 'start_time' => $schedule->start_time,
                 'end_time' => $schedule->end_time,
-                'location' => $schedule->location,
+                'classroom' => $schedule->classroom,
                 'total_students' => $schedule->enrollments->count(),
-                'start_date' => $schedule->start_date,
-                'end_date' => $schedule->end_date,
             ];
         });
 
@@ -75,21 +73,66 @@ class TeacherController extends Controller
             }
         ]);
 
-        // Obtener asistencias recientes de este horario
-        $recentAttendances = Attendance::where('schedule_id', $schedule->id)
-            ->where('class_date', '>=', Carbon::now()->subWeeks(2))
+        // Generar fechas de clase basándose en los días del horario
+        $classDates = $this->generateClassDates($schedule);
+
+        // Obtener todas las asistencias de este horario
+        $allAttendances = Attendance::where('schedule_id', $schedule->id)
             ->with('student')
+            ->get();
+
+        // Agrupar asistencias por fecha
+        $attendancesByDate = $allAttendances->groupBy(function($item) {
+            return $item->class_date->format('Y-m-d');
+        });
+
+        // Obtener el total de actividades del programa
+        $totalActivities = Activity::whereHas('studyPlan', function($query) use ($schedule) {
+            $query->where('program_id', $schedule->academic_program_id);
+        })->where('status', 'active')->count();
+
+        // Obtener todas las evaluaciones de los estudiantes de este horario
+        $studentEvaluations = ActivityEvaluation::where('schedule_id', $schedule->id)
+            ->with(['activity', 'evaluationCriteria'])
             ->get()
             ->groupBy('student_id');
 
-        // Formatear estudiantes con sus estadísticas de asistencia
-        $students = $schedule->enrollments->map(function ($enrollment) use ($recentAttendances) {
-            $studentAttendances = $recentAttendances->get($enrollment->student_id, collect());
+        // Agrupar asistencias por estudiante para estadísticas
+        $attendancesByStudent = $allAttendances->groupBy('student_id');
 
-            $totalClasses = $studentAttendances->count();
+        // Formatear estudiantes con sus estadísticas de asistencia y progreso
+        $students = $schedule->enrollments->map(function ($enrollment) use ($attendancesByStudent, $studentEvaluations, $totalActivities, $classDates) {
+            $studentAttendances = $attendancesByStudent->get($enrollment->student_id, collect());
+
+            $totalClasses = count($classDates);
             $presentCount = $studentAttendances->where('status', 'present')->count();
             $lateCount = $studentAttendances->where('status', 'late')->count();
             $absentCount = $studentAttendances->where('status', 'absent')->count();
+            $markedClasses = $studentAttendances->count();
+
+            // Calcular progreso académico
+            $evaluations = $studentEvaluations->get($enrollment->student_id, collect());
+            $evaluatedActivityIds = $evaluations->pluck('activity_id')->unique()->count();
+
+            // Calcular promedio de calificaciones
+            $totalPointsEarned = 0;
+            $totalMaxPoints = 0;
+            foreach ($evaluations as $eval) {
+                if ($eval->evaluationCriteria) {
+                    $totalPointsEarned += $eval->points_earned;
+                    $totalMaxPoints += $eval->evaluationCriteria->max_points;
+                }
+            }
+            $averageGrade = $totalMaxPoints > 0 ? round(($totalPointsEarned / $totalMaxPoints) * 100, 1) : 0;
+
+            // Crear mapa de asistencias por fecha
+            $attendanceByDate = [];
+            foreach ($studentAttendances as $att) {
+                $attendanceByDate[$att->class_date->format('Y-m-d')] = [
+                    'status' => $att->status,
+                    'notes' => $att->notes,
+                ];
+            }
 
             return [
                 'id' => $enrollment->student->id,
@@ -98,11 +141,19 @@ class TeacherController extends Controller
                 'enrollment_date' => $enrollment->enrollment_date,
                 'attendance_stats' => [
                     'total' => $totalClasses,
+                    'marked' => $markedClasses,
                     'present' => $presentCount,
                     'late' => $lateCount,
                     'absent' => $absentCount,
-                    'percentage' => $totalClasses > 0 ? round((($presentCount + $lateCount) / $totalClasses) * 100, 1) : 0,
+                    'percentage' => $markedClasses > 0 ? round((($presentCount + $lateCount) / $markedClasses) * 100, 1) : 0,
                 ],
+                'progress_stats' => [
+                    'evaluated_activities' => $evaluatedActivityIds,
+                    'total_activities' => $totalActivities,
+                    'progress_percentage' => $totalActivities > 0 ? round(($evaluatedActivityIds / $totalActivities) * 100, 1) : 0,
+                    'average_grade' => $averageGrade,
+                ],
+                'attendance_by_date' => $attendanceByDate,
             ];
         });
 
@@ -115,6 +166,24 @@ class TeacherController extends Controller
         ->orderBy('order')
         ->get();
 
+        // Formatear fechas de clase con resumen de asistencia
+        $classDatesList = collect($classDates)->map(function($date) use ($attendancesByDate, $schedule) {
+            $dateStr = $date->format('Y-m-d');
+            $attendances = $attendancesByDate->get($dateStr, collect());
+
+            return [
+                'date' => $dateStr,
+                'day_name' => $this->getDayNameInSpanish($date->dayOfWeek),
+                'is_past' => $date->isPast(),
+                'is_today' => $date->isToday(),
+                'total_students' => $schedule->enrollments->count(),
+                'marked_count' => $attendances->count(),
+                'present_count' => $attendances->where('status', 'present')->count(),
+                'late_count' => $attendances->where('status', 'late')->count(),
+                'absent_count' => $attendances->where('status', 'absent')->count(),
+            ];
+        })->sortByDesc('date')->values();
+
         return Inertia::render('Teacher/GroupDetail', [
             'schedule' => [
                 'id' => $schedule->id,
@@ -123,16 +192,86 @@ class TeacherController extends Controller
                     'name' => $schedule->academicProgram->name,
                     'color' => $schedule->academicProgram->color ?? '#7a9b3c',
                 ],
-                'day_of_week' => $schedule->day_of_week,
+                'days_of_week' => $schedule->days_of_week,
                 'start_time' => $schedule->start_time,
                 'end_time' => $schedule->end_time,
-                'location' => $schedule->location,
+                'location' => $schedule->location ?? $schedule->classroom,
                 'start_date' => $schedule->start_date,
                 'end_date' => $schedule->end_date,
             ],
             'students' => $students,
             'activities' => $activities,
+            'classDates' => $classDatesList,
         ]);
+    }
+
+    /**
+     * Generar fechas de clase basándose en los días del horario
+     */
+    private function generateClassDates(Schedule $schedule): array
+    {
+        $days = array_map('trim', explode(',', $schedule->days_of_week));
+
+        // Mapeo de días en español a número de día de la semana (Carbon)
+        $dayMap = [
+            'lunes' => Carbon::MONDAY,
+            'martes' => Carbon::TUESDAY,
+            'miércoles' => Carbon::WEDNESDAY,
+            'miercoles' => Carbon::WEDNESDAY,
+            'jueves' => Carbon::THURSDAY,
+            'viernes' => Carbon::FRIDAY,
+            'sábado' => Carbon::SATURDAY,
+            'sabado' => Carbon::SATURDAY,
+            'domingo' => Carbon::SUNDAY,
+        ];
+
+        // Fecha de inicio (usar start_date del horario o hace 3 meses)
+        $startDate = $schedule->start_date
+            ? Carbon::parse($schedule->start_date)
+            : Carbon::now()->subMonths(3)->startOfWeek();
+
+        // Fecha de fin (usar end_date del horario o hoy + 1 semana para ver próximas clases)
+        $endDate = $schedule->end_date
+            ? Carbon::parse($schedule->end_date)
+            : Carbon::now()->addWeek();
+
+        // No ir más allá de hoy + 1 semana
+        if ($endDate->gt(Carbon::now()->addWeek())) {
+            $endDate = Carbon::now()->addWeek();
+        }
+
+        $classDates = [];
+        $current = $startDate->copy();
+
+        while ($current->lte($endDate)) {
+            foreach ($days as $day) {
+                $dayNumber = $dayMap[strtolower($day)] ?? null;
+                if ($dayNumber !== null && $current->dayOfWeek === $dayNumber) {
+                    $classDates[] = $current->copy();
+                }
+            }
+            $current->addDay();
+        }
+
+        return $classDates;
+    }
+
+    /**
+     * Obtener nombre del día en español
+     */
+    private function getDayNameInSpanish(int $dayOfWeek): string
+    {
+        $days = [
+            Carbon::SUNDAY => 'Domingo',
+            Carbon::MONDAY => 'Lunes',
+            Carbon::TUESDAY => 'Martes',
+            Carbon::WEDNESDAY => 'Miércoles',
+            Carbon::THURSDAY => 'Jueves',
+            Carbon::FRIDAY => 'Viernes',
+            Carbon::SATURDAY => 'Sábado',
+        ];
+
+        return $days[$dayOfWeek] ?? '';
     }
 
     /**
@@ -204,23 +343,44 @@ class TeacherController extends Controller
 
         $activity->load(['studyPlan', 'evaluationCriteria']);
 
-        // Obtener estudiantes del horario
+        // Obtener estudiantes del horario con su información de asistencia
         $students = ScheduleEnrollment::where('schedule_id', $schedule->id)
             ->where('status', 'enrolled')
             ->with(['student'])
             ->get()
-            ->map(function ($enrollment) use ($activity) {
+            ->map(function ($enrollment) use ($activity, $schedule) {
                 // Obtener evaluaciones existentes de este estudiante para esta actividad
                 $existingEvaluations = ActivityEvaluation::where('student_id', $enrollment->student_id)
                     ->where('activity_id', $activity->id)
                     ->with('evaluationCriteria')
                     ->get();
 
+                // Verificar si el estudiante tiene al menos una asistencia registrada en este horario
+                $hasAttendance = Attendance::where('student_id', $enrollment->student_id)
+                    ->where('schedule_id', $schedule->id)
+                    ->exists();
+
+                // Obtener estadísticas de asistencia
+                $attendanceStats = Attendance::where('student_id', $enrollment->student_id)
+                    ->where('schedule_id', $schedule->id)
+                    ->selectRaw('COUNT(*) as total')
+                    ->selectRaw('SUM(CASE WHEN status = "present" THEN 1 ELSE 0 END) as present')
+                    ->selectRaw('SUM(CASE WHEN status = "late" THEN 1 ELSE 0 END) as late')
+                    ->selectRaw('SUM(CASE WHEN status = "absent" THEN 1 ELSE 0 END) as absent')
+                    ->first();
+
                 return [
                     'id' => $enrollment->student->id,
                     'name' => $enrollment->student->name,
                     'email' => $enrollment->student->email,
                     'existing_evaluations' => $existingEvaluations,
+                    'has_attendance' => $hasAttendance,
+                    'attendance_stats' => [
+                        'total' => $attendanceStats->total ?? 0,
+                        'present' => $attendanceStats->present ?? 0,
+                        'late' => $attendanceStats->late ?? 0,
+                        'absent' => $attendanceStats->absent ?? 0,
+                    ],
                 ];
             });
 
@@ -271,7 +431,21 @@ class TeacherController extends Controller
 
         DB::beginTransaction();
         try {
+            $studentsWithoutAttendance = [];
+
             foreach ($validated['evaluations'] as $evaluationData) {
+                // Verificar que el estudiante tenga asistencia registrada
+                $hasAttendance = Attendance::where('student_id', $evaluationData['student_id'])
+                    ->where('schedule_id', $schedule->id)
+                    ->exists();
+
+                if (!$hasAttendance) {
+                    // Obtener nombre del estudiante para el mensaje de error
+                    $student = \App\Models\User::find($evaluationData['student_id']);
+                    $studentsWithoutAttendance[] = $student->name ?? 'ID: ' . $evaluationData['student_id'];
+                    continue; // Saltar este estudiante
+                }
+
                 foreach ($evaluationData['criteria'] as $criteriaData) {
                     ActivityEvaluation::updateOrCreate(
                         [
@@ -291,7 +465,12 @@ class TeacherController extends Controller
             }
 
             DB::commit();
-            flash_success('Evaluaciones guardadas exitosamente');
+
+            if (!empty($studentsWithoutAttendance)) {
+                flash_warning('Evaluaciones guardadas parcialmente. Los siguientes estudiantes no tienen asistencia registrada: ' . implode(', ', $studentsWithoutAttendance));
+            } else {
+                flash_success('Evaluaciones guardadas exitosamente');
+            }
 
             return redirect()->route('profesor.grupo.detalle', $schedule);
         } catch (\Exception $e) {

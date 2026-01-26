@@ -4,92 +4,14 @@ namespace App\Http\Controllers;
 
 use App\Models\Enrollment;
 use App\Models\ActivityEvaluation;
-use App\Models\StudentProgress;
+use App\Models\Attendance;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
+use Carbon\Carbon;
 
 class StudentController extends Controller
 {
-    /**
-     * Dashboard del estudiante con resumen de su progreso
-     */
-    public function dashboard()
-    {
-        $student = Auth::user();
-
-        // Obtener matrículas activas del estudiante con sus programas
-        $enrollments = Enrollment::with([
-            'program' => function ($query) {
-                $query->with(['studyPlans' => function ($q) {
-                    $q->orderBy('level')->with(['activities' => function ($a) {
-                        $a->where('status', 'active')->orderBy('order');
-                    }]);
-                }]);
-            }
-        ])
-            ->where('student_id', $student->id)
-            ->whereIn('status', ['active', 'waiting'])
-            ->get();
-
-        // Calcular estadísticas generales
-        $stats = [
-            'total_programs' => $enrollments->count(),
-            'active_programs' => $enrollments->where('status', 'active')->count(),
-            'total_evaluations' => ActivityEvaluation::where('student_id', $student->id)->count(),
-            'average_score' => $this->calculateOverallAverage($student->id),
-        ];
-
-        // Obtener últimas evaluaciones
-        $recentEvaluations = ActivityEvaluation::with(['activity.studyPlan.program', 'teacher'])
-            ->where('student_id', $student->id)
-            ->orderBy('evaluation_date', 'desc')
-            ->limit(5)
-            ->get()
-            ->map(function ($eval) {
-                $maxPoints = $eval->activity->evaluationCriteria()
-                    ->where('id', $eval->evaluation_criteria_id)
-                    ->value('max_points') ?? $eval->activity->getTotalMaxPoints();
-
-                return [
-                    'id' => $eval->id,
-                    'activity_name' => $eval->activity->name,
-                    'program_name' => $eval->activity->studyPlan->program->name ?? 'N/A',
-                    'points_earned' => $eval->points_earned,
-                    'max_points' => $maxPoints,
-                    'percentage' => $maxPoints > 0 ? round(($eval->points_earned / $maxPoints) * 100, 1) : 0,
-                    'feedback' => $eval->feedback,
-                    'evaluation_date' => $eval->evaluation_date,
-                    'teacher_name' => $eval->teacher->name ?? 'N/A',
-                ];
-            });
-
-        // Progreso por programa
-        $programsProgress = $enrollments->map(function ($enrollment) use ($student) {
-            $program = $enrollment->program;
-            $progress = $this->calculateProgramProgress($student->id, $program->id);
-
-            return [
-                'enrollment_id' => $enrollment->id,
-                'program_id' => $program->id,
-                'program_name' => $program->name,
-                'program_color' => $program->color ?? '#6b5544',
-                'enrollment_date' => $enrollment->enrollment_date,
-                'status' => $enrollment->status,
-                'progress_percentage' => $progress['percentage'],
-                'completed_activities' => $progress['completed'],
-                'total_activities' => $progress['total'],
-                'average_score' => $progress['average_score'],
-            ];
-        });
-
-        return Inertia::render('Student/Dashboard', [
-            'stats' => $stats,
-            'programsProgress' => $programsProgress,
-            'recentEvaluations' => $recentEvaluations,
-        ]);
-    }
-
     /**
      * Ver calificaciones detalladas de un programa
      */
@@ -195,6 +117,9 @@ class StudentController extends Controller
             }
         }
 
+        // Obtener asistencias del estudiante
+        $attendanceData = $this->getStudentAttendance($student->id);
+
         return Inertia::render('Student/Grades', [
             'enrollments' => $enrollments->map(fn($e) => [
                 'id' => $e->id,
@@ -212,78 +137,60 @@ class StudentController extends Controller
             ] : null,
             'modules' => $modules,
             'programStats' => $programStats,
+            'attendanceStats' => $attendanceData['stats'],
+            'recentAttendances' => $attendanceData['recent'],
         ]);
     }
 
     /**
-     * Calcular promedio general del estudiante
+     * Obtener estadísticas y registros de asistencia del estudiante
      */
-    private function calculateOverallAverage($studentId)
+    private function getStudentAttendance($studentId)
     {
-        $evaluations = ActivityEvaluation::where('student_id', $studentId)
-            ->with('activity.evaluationCriteria')
-            ->get();
+        // Obtener todas las asistencias del estudiante
+        $allAttendances = Attendance::where('student_id', $studentId)->get();
 
-        if ($evaluations->isEmpty()) {
-            return null;
-        }
+        // Calcular estadísticas generales
+        $totalClasses = $allAttendances->count();
+        $presentCount = $allAttendances->where('status', 'present')->count();
+        $lateCount = $allAttendances->where('status', 'late')->count();
+        $absentCount = $allAttendances->where('status', 'absent')->count();
+        $excusedCount = $allAttendances->where('status', 'excused')->count();
 
-        $totalPercentage = 0;
-        $count = 0;
+        $attendancePercentage = $totalClasses > 0
+            ? round((($presentCount + $lateCount + $excusedCount) / $totalClasses) * 100, 1)
+            : 0;
 
-        foreach ($evaluations as $eval) {
-            $maxPoints = $eval->evaluationCriteria?->max_points
-                ?? $eval->activity->getTotalMaxPoints();
-
-            if ($maxPoints > 0) {
-                $totalPercentage += ($eval->points_earned / $maxPoints) * 100;
-                $count++;
-            }
-        }
-
-        return $count > 0 ? round($totalPercentage / $count, 1) : null;
-    }
-
-    /**
-     * Calcular progreso de un programa específico
-     */
-    private function calculateProgramProgress($studentId, $programId)
-    {
-        $program = \App\Models\AcademicProgram::with(['studyPlans.activities' => function ($q) {
-            $q->where('status', 'active');
-        }])->find($programId);
-
-        if (!$program) {
-            return ['percentage' => 0, 'completed' => 0, 'total' => 0, 'average_score' => null];
-        }
-
-        $totalActivities = 0;
-        $completedActivities = 0;
-        $scores = [];
-
-        foreach ($program->studyPlans as $module) {
-            foreach ($module->activities as $activity) {
-                $totalActivities++;
-
-                $evaluation = ActivityEvaluation::where('student_id', $studentId)
-                    ->where('activity_id', $activity->id)
-                    ->first();
-
-                if ($evaluation) {
-                    $completedActivities++;
-                    $maxPoints = $activity->getTotalMaxPoints();
-                    if ($maxPoints > 0) {
-                        $scores[] = ($evaluation->points_earned / $maxPoints) * 100;
-                    }
-                }
-            }
-        }
+        // Obtener asistencias recientes (últimos 30 días) con detalles del horario
+        $recentAttendances = Attendance::with(['schedule.academicProgram'])
+            ->where('student_id', $studentId)
+            ->where('class_date', '>=', Carbon::now()->subDays(30))
+            ->orderBy('class_date', 'desc')
+            ->limit(10)
+            ->get()
+            ->map(function ($attendance) {
+                return [
+                    'id' => $attendance->id,
+                    'class_date' => $attendance->class_date->format('Y-m-d'),
+                    'status' => $attendance->status,
+                    'notes' => $attendance->notes,
+                    'program_name' => $attendance->schedule->academicProgram->name ?? 'N/A',
+                    'program_color' => $attendance->schedule->academicProgram->color ?? '#6b5544',
+                    'schedule_day' => $attendance->schedule->day_of_week ?? null,
+                    'schedule_time' => $attendance->schedule->start_time ?? null,
+                ];
+            });
 
         return [
-            'percentage' => $totalActivities > 0 ? round(($completedActivities / $totalActivities) * 100, 1) : 0,
-            'completed' => $completedActivities,
-            'total' => $totalActivities,
-            'average_score' => count($scores) > 0 ? round(array_sum($scores) / count($scores), 1) : null,
+            'stats' => [
+                'total_classes' => $totalClasses,
+                'present' => $presentCount,
+                'late' => $lateCount,
+                'absent' => $absentCount,
+                'excused' => $excusedCount,
+                'percentage' => $attendancePercentage,
+            ],
+            'recent' => $recentAttendances,
         ];
     }
 }
