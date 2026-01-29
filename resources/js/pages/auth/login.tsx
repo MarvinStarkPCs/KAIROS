@@ -114,19 +114,27 @@ export default function Login({ status }: { status?: string }) {
                                 )}
                             </div>
 
-                            {/* Remember Me */}
-                            <label className="flex items-center">
-                                <input
-                                    type="checkbox"
-                                    name="remember"
-                                    checked={data.remember}
-                                    onChange={(e) => setData('remember', e.target.checked)}
-                                    className="h-4 w-4 rounded border-gray-300 text-amber-800 focus:ring-amber-500"
-                                />
-                                <span className="ml-2 text-sm text-gray-600">
-                                    Recordarme
-                                </span>
-                            </label>
+                            {/* Remember Me & Forgot Password */}
+                            <div className="flex items-center justify-between">
+                                <label className="flex items-center">
+                                    <input
+                                        type="checkbox"
+                                        name="remember"
+                                        checked={data.remember}
+                                        onChange={(e) => setData('remember', e.target.checked)}
+                                        className="h-4 w-4 rounded border-gray-300 text-amber-800 focus:ring-amber-500"
+                                    />
+                                    <span className="ml-2 text-sm text-gray-600">
+                                        Recordarme
+                                    </span>
+                                </label>
+                                <Link
+                                    href="/forgot-password"
+                                    className="text-sm text-amber-800 hover:text-amber-900 hover:underline"
+                                >
+                                    ¿Olvidaste tu contraseña?
+                                </Link>
+                            </div>
 
                             {/* Submit Button */}
                             <button

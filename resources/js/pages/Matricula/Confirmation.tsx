@@ -79,6 +79,7 @@ export default function Confirmation({ payment, status, transactionId, message }
                     </div>
 
                     {/* Payment Details */}
+                    {payment && (
                     <Card className="mb-6">
                         <CardHeader>
                             <CardTitle>Detalles de la Transacción</CardTitle>
@@ -87,10 +88,12 @@ export default function Confirmation({ payment, status, transactionId, message }
                             </CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-4">
+                            {transactionId && (
                             <div className="flex justify-between py-2 border-b">
                                 <span className="text-gray-600">ID de Transacción:</span>
                                 <span className="font-mono text-sm">{transactionId}</span>
                             </div>
+                            )}
                             <div className="flex justify-between py-2 border-b">
                                 <span className="text-gray-600">Estudiante:</span>
                                 <span className="font-medium">
@@ -116,18 +119,21 @@ export default function Confirmation({ payment, status, transactionId, message }
                                 <span className={`font-semibold px-3 py-1 rounded-full text-sm ${
                                     isApproved ? 'bg-green-100 text-green-800' :
                                     isPending ? 'bg-yellow-100 text-yellow-800' :
+                                    isManual ? 'bg-amber-100 text-amber-800' :
                                     'bg-red-100 text-red-800'
                                 }`}>
                                     {isApproved && 'Aprobado'}
                                     {isPending && 'Pendiente'}
+                                    {isManual && 'Pago Manual Pendiente'}
                                     {isDeclined && 'Rechazado'}
                                 </span>
                             </div>
                         </CardContent>
                     </Card>
+                    )}
 
                     {/* Success Message */}
-                    {isApproved && (
+                    {isApproved && payment && (
                         <Card className="mb-6 border-green-200 bg-green-50">
                             <CardContent className="pt-6">
                                 <div className="flex items-start gap-3">
@@ -152,7 +158,7 @@ export default function Confirmation({ payment, status, transactionId, message }
                     )}
 
                     {/* Pending Message */}
-                    {isPending && (
+                    {isPending && payment && (
                         <Card className="mb-6 border-yellow-200 bg-yellow-50">
                             <CardContent className="pt-6">
                                 <div className="flex items-start gap-3">
@@ -199,6 +205,31 @@ export default function Confirmation({ payment, status, transactionId, message }
                         </Card>
                     )}
 
+                    {/* Manual Payment Message */}
+                    {isManual && (
+                        <Card className="mb-6 border-amber-200 bg-amber-50">
+                            <CardContent className="pt-6">
+                                <div className="flex items-start gap-3">
+                                    <Banknote className="h-5 w-5 text-amber-600 mt-0.5" />
+                                    <div>
+                                        <h3 className="font-semibold text-amber-900 mb-1">
+                                            Matrícula Registrada - Pago Pendiente
+                                        </h3>
+                                        <p className="text-sm text-amber-800 mb-2">
+                                            {message || 'Tu matrícula ha sido registrada exitosamente.'}
+                                        </p>
+                                        <p className="text-sm text-amber-800 font-medium">
+                                            Acércate a nuestras instalaciones para realizar el pago por transferencia bancaria o en efectivo.
+                                        </p>
+                                        <p className="text-sm text-amber-800 mt-2">
+                                            Te hemos enviado un correo con los detalles de tu matrícula.
+                                        </p>
+                                    </div>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    )}
+
                     {/* Actions */}
                     <div className="flex flex-col sm:flex-row gap-4 justify-center">
                         <Button asChild size="lg" variant={isApproved ? 'default' : 'outline'}>
@@ -207,7 +238,7 @@ export default function Confirmation({ payment, status, transactionId, message }
                                 Volver al Inicio
                             </Link>
                         </Button>
-                        {isDeclined && (
+                        {isDeclined && payment && (
                             <Button asChild size="lg">
                                 <Link href={`/matricula/checkout/${payment.id}`}>
                                     Intentar Nuevamente

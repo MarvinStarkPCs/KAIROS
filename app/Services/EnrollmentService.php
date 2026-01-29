@@ -7,6 +7,7 @@ use App\Models\Enrollment;
 use App\Models\Payment;
 use App\Models\PaymentSetting;
 use App\Models\ParentGuardian;
+use App\Models\ScheduleEnrollment;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -82,15 +83,41 @@ class EnrollmentService
     }
 
     /**
-     * Obtener monto de pago configurado
+     * Obtener monto de pago configurado según la modalidad
      */
-    public function getPaymentAmount(): float
+    public function getPaymentAmount(string $modality): float
     {
         $paymentSetting = PaymentSetting::where('is_active', true)->first();
-        $amount = $paymentSetting ? (float) $paymentSetting->monthly_amount : 100000;
+
+        if (!$paymentSetting) {
+            // Valores por defecto si no hay configuración
+            return 100000;
+        }
+
+        $amount = $paymentSetting->getAmountForModality($modality);
 
         // Validar mínimo de Wompi (1,500 COP)
         return max($amount, 1500);
+    }
+
+    /**
+     * Crear pago de matrícula
+     */
+    /**
+     * Crear inscripción en horario
+     */
+    public function createScheduleEnrollment(User $student, int $scheduleId): ScheduleEnrollment
+    {
+        return ScheduleEnrollment::firstOrCreate(
+            [
+                'student_id' => $student->id,
+                'schedule_id' => $scheduleId,
+            ],
+            [
+                'enrollment_date' => Carbon::today(),
+                'status' => 'enrolled',
+            ]
+        );
     }
 
     /**
@@ -100,15 +127,18 @@ class EnrollmentService
         User $student,
         int $programId,
         int $enrollmentId,
-        string $programName
+        string $programName,
+        string $modality,
+        ?int $scheduleId = null
     ): Payment {
-        $amount = $this->getPaymentAmount();
+        $amount = $this->getPaymentAmount($modality);
 
         return Payment::create([
             'student_id' => $student->id,
             'program_id' => $programId,
             'enrollment_id' => $enrollmentId,
-            'concept' => "Matrícula {$programName} - {$student->name}",
+            'concept' => "Matrícula {$programName} - {$student->name} ({$modality})",
+            'modality' => $modality,
             'payment_type' => 'single',
             'amount' => $amount,
             'original_amount' => $amount,
@@ -176,13 +206,22 @@ class EnrollmentService
                 $data['responsable']['program_id']
             );
 
-            // 4. Crear pago
+            // 3.5. Inscribir en horario si se seleccionó uno
+            $scheduleId = $data['responsable']['schedule_id'] ?? null;
+            if ($scheduleId) {
+                $this->createScheduleEnrollment($responsible, $scheduleId);
+            }
+
+            // 4. Crear pago - Adultos siempre son Linaje Big
             $programName = \App\Models\AcademicProgram::find($data['responsable']['program_id'])->name;
+            $modality = 'Linaje Big';
             $payment = $this->createPayment(
                 $responsible,
                 $data['responsable']['program_id'],
                 $enrollment->id,
-                $programName
+                $programName,
+                $modality,
+                $scheduleId
             );
 
             return [
@@ -223,13 +262,22 @@ class EnrollmentService
                     $estudianteData['program_id']
                 );
 
+                // Inscribir en horario si se seleccionó uno
+                $scheduleId = $estudianteData['schedule_id'] ?? null;
+                if ($scheduleId) {
+                    $this->createScheduleEnrollment($student, $scheduleId);
+                }
+
                 // Crear pago
                 $programName = \App\Models\AcademicProgram::find($estudianteData['program_id'])->name;
+                $modality = $estudianteData['datos_musicales']['modality'] ?? 'Linaje Kids';
                 $payment = $this->createPayment(
                     $student,
                     $estudianteData['program_id'],
                     $enrollment->id,
-                    $programName
+                    $programName,
+                    $modality,
+                    $scheduleId
                 );
 
                 $payments[] = $payment;

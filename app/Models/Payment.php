@@ -19,6 +19,7 @@ class Payment extends Model
         'installment_number',
         'total_installments',
         'concept',
+        'modality',
         'payment_type',
         'amount',
         'original_amount',
@@ -62,6 +63,7 @@ class Payment extends Model
                 'program_id',
                 'enrollment_id',
                 'concept',
+                'modality',
                 'amount',
                 'due_date',
                 'payment_date',
@@ -169,12 +171,19 @@ class Payment extends Model
         $newPaidAmount = $this->paid_amount + $amount;
         $newRemainingAmount = ($this->original_amount ?? $this->amount) - $newPaidAmount;
 
+        $isCompleted = $newRemainingAmount <= 0;
+
         $this->update([
             'paid_amount' => $newPaidAmount,
             'remaining_amount' => max(0, $newRemainingAmount),
-            'status' => $newRemainingAmount <= 0 ? 'completed' : 'pending',
-            'payment_date' => $newRemainingAmount <= 0 ? now() : $this->payment_date,
+            'status' => $isCompleted ? 'completed' : 'pending',
+            'payment_date' => $isCompleted ? now() : $this->payment_date,
         ]);
+
+        // Activar la matrícula cuando el pago se completa
+        if ($isCompleted && $this->enrollment_id) {
+            $this->enrollment()->update(['status' => 'active']);
+        }
 
         return $transaction;
     }

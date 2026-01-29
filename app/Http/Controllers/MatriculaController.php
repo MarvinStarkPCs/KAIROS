@@ -8,6 +8,10 @@ use App\Http\Requests\EnrollmentRequest;
 use App\Services\EnrollmentService;
 use App\Services\WompiService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\EnrollmentManualPayment;
+use App\Models\SmtpSetting;
+use App\Models\PaymentSetting;
 use Inertia\Inertia;
 
 class MatriculaController extends Controller
@@ -46,8 +50,19 @@ class MatriculaController extends Controller
         // Filtrar solo programas que tienen horarios
         $programs = $programs->filter(fn($program) => $program->schedules->count() > 0)->values();
 
+        $paymentSetting = PaymentSetting::where('is_active', true)->first();
+
         return Inertia::render('Matricula/Create', [
             'programs' => $programs,
+            'paymentMethods' => [
+                'online' => $paymentSetting?->enable_online_payment ?? true,
+                'manual' => $paymentSetting?->enable_manual_payment ?? true,
+            ],
+            'modalityPrices' => [
+                'Linaje Kids' => (float) ($paymentSetting?->amount_linaje_kids ?? 100000),
+                'Linaje Teens' => (float) ($paymentSetting?->amount_linaje_teens ?? 100000),
+                'Linaje Big' => (float) ($paymentSetting?->amount_linaje_big ?? 100000),
+            ],
         ]);
     }
 
@@ -94,9 +109,24 @@ class MatriculaController extends Controller
                         'payment_method' => 'manual',
                         'notes' => 'Pago manual - pendiente de confirmación por administrador',
                     ]);
+
+                    // Enviar correo de matrícula con pago pendiente
+                    try {
+                        $payment->load(['student', 'program']);
+                        $email = $payment->student->email ?? null;
+                        if ($email) {
+                            $this->configureSmtpFromDatabase();
+                            Mail::to($email)->send(new EnrollmentManualPayment($payment));
+                        }
+                    } catch (\Exception $e) {
+                        \Log::error('Error al enviar correo de pago manual', [
+                            'payment_id' => $payment->id,
+                            'error' => $e->getMessage(),
+                        ]);
+                    }
                 }
 
-                return redirect()->route('matricula.confirmation')->with('success', 'Tu matrícula ha sido registrada exitosamente. Un asesor se comunicará contigo para coordinar el pago.');
+                return redirect()->route('matricula.confirmation')->with('success', 'Tu matrícula ha sido registrada exitosamente. Acércate a nuestras instalaciones para realizar el pago.');
             }
 
             // Redirigir al checkout para pago en línea
@@ -313,11 +343,17 @@ class MatriculaController extends Controller
             $config['integrity_secret']
         );
 
+        $paymentSetting = PaymentSetting::first();
+
         return Inertia::render('Matricula/Checkout', [
             'payment' => $payment,
             'wompi_config' => [
                 'public_key' => $config['public_key'],
                 'integrity_signature' => $checkoutData['integrity_signature'],
+            ],
+            'paymentMethods' => [
+                'online' => $paymentSetting?->enable_online_payment ?? true,
+                'manual' => $paymentSetting?->enable_manual_payment ?? true,
             ],
         ]);
     }
@@ -394,6 +430,41 @@ class MatriculaController extends Controller
     }
 
     /**
+     * Procesar pago manual desde la página de checkout
+     */
+    public function checkoutManualPayment($paymentId)
+    {
+        $payment = Payment::with(['student', 'program'])->findOrFail($paymentId);
+
+        if ($payment->status !== 'pending') {
+            flash_error('Este pago ya ha sido procesado.');
+            return redirect()->route('home');
+        }
+
+        $payment->update([
+            'payment_method' => 'manual',
+            'notes' => 'Pago manual - pendiente de confirmación por administrador',
+        ]);
+
+        // Enviar correo de confirmación de matrícula con pago pendiente
+        try {
+            $email = $payment->student->email;
+            if ($email) {
+                $this->configureSmtpFromDatabase();
+                Mail::to($email)->send(new EnrollmentManualPayment($payment));
+            }
+        } catch (\Exception $e) {
+            \Log::error('Error al enviar correo de pago manual', [
+                'payment_id' => $payment->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
+
+        return redirect()->route('matricula.confirmation')
+            ->with('success', 'Tu matrícula ha sido registrada exitosamente. Acércate a nuestras instalaciones para realizar el pago.');
+    }
+
+    /**
      * Página de confirmación después del pago
      */
     public function confirmation(Request $request)
@@ -441,5 +512,29 @@ class MatriculaController extends Controller
         return Inertia::render('Matricula/DemoConfirmation', [
             'demoRequest' => $demoRequest,
         ]);
+    }
+
+    /**
+     * Configurar SMTP dinámicamente desde la base de datos y purgar el mailer cacheado.
+     */
+    private function configureSmtpFromDatabase(): void
+    {
+        $smtpSetting = SmtpSetting::where('is_active', true)->first();
+
+        if ($smtpSetting) {
+            config([
+                'mail.default' => 'smtp',
+                'mail.mailers.smtp.host' => $smtpSetting->host,
+                'mail.mailers.smtp.port' => $smtpSetting->port,
+                'mail.mailers.smtp.username' => $smtpSetting->username,
+                'mail.mailers.smtp.password' => $smtpSetting->password,
+                'mail.mailers.smtp.encryption' => $smtpSetting->encryption,
+                'mail.from.address' => $smtpSetting->from_address,
+                'mail.from.name' => $smtpSetting->from_name,
+            ]);
+
+            // Purgar el mailer cacheado para que use la nueva configuración
+            Mail::purge('smtp');
+        }
     }
 }

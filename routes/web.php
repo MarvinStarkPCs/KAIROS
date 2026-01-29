@@ -34,6 +34,7 @@ Route::middleware(['throttle:10,1'])->group(function () {
 Route::middleware(['throttle:20,1'])->group(function () {
     Route::get('/matricula/checkout/{payment}', [MatriculaController::class, 'checkout'])->name('matricula.checkout');
     Route::post('/matricula/checkout/{payment}/create-payment-link', [MatriculaController::class, 'createPaymentLink'])->name('matricula.create-payment-link');
+    Route::post('/matricula/checkout/{payment}/manual', [MatriculaController::class, 'checkoutManualPayment'])->name('matricula.checkout.manual');
     Route::get('/matricula/checkout-multiple', [MatriculaController::class, 'checkoutMultiple'])->name('matricula.checkout.multiple');
     Route::get('/matricula/confirmacion', [MatriculaController::class, 'confirmation'])->name('matricula.confirmation');
 });

@@ -32,8 +32,13 @@ class PaymentController extends Controller
             $query->where('status', $request->status);
         }
 
-        if ($request->filled('student_id')) {
-            $query->where('student_id', $request->student_id);
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->whereHas('student', function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('last_name', 'like', "%{$search}%")
+                  ->orWhere('document_number', 'like', "%{$search}%");
+            });
         }
 
         if ($request->filled('program_id')) {
@@ -56,14 +61,12 @@ class PaymentController extends Controller
             return $payment;
         });
 
-        $students = User::role('Estudiante')->orderBy('name')->get(['id', 'name']);
         $programs = AcademicProgram::where('status', 'active')->orderBy('name')->get(['id', 'name']);
 
         return Inertia::render('Payments/Index', [
             'payments' => $payments,
-            'students' => $students,
             'programs' => $programs,
-            'filters' => $request->only(['status', 'student_id', 'program_id', 'payment_type']),
+            'filters' => $request->only(['status', 'search', 'program_id', 'payment_type']),
         ]);
     }
 
@@ -154,7 +157,8 @@ class PaymentController extends Controller
      */
     public function show(Payment $payment)
     {
-        $payment->load(['student', 'program', 'enrollment', 'recordedBy']);
+        $payment->load(['student', 'program', 'enrollment', 'recordedBy', 'transactions.recordedBy']);
+        $payment->pending_balance = $payment->getPendingBalance();
 
         return Inertia::render('Payments/Show', [
             'payment' => $payment,
@@ -166,6 +170,9 @@ class PaymentController extends Controller
      */
     public function edit(Payment $payment)
     {
+        $payment->load('transactions.recordedBy');
+        $payment->pending_balance = $payment->getPendingBalance();
+
         // Cargar inscripciones activas con estudiante y programa
         $enrollments = Enrollment::with(['student', 'program'])
             ->where('status', 'active')
@@ -374,15 +381,31 @@ class PaymentController extends Controller
     public function updateSettings(Request $request)
     {
         $validated = $request->validate([
-            'monthly_amount' => ['required', 'numeric', 'min:1000'],
+            'amount_linaje_kids' => ['required', 'numeric', 'min:1500'],
+            'amount_linaje_teens' => ['required', 'numeric', 'min:1500'],
+            'amount_linaje_big' => ['required', 'numeric', 'min:1500'],
             'is_active' => ['required', 'boolean'],
+            'enable_online_payment' => ['required', 'boolean'],
+            'enable_manual_payment' => ['required', 'boolean'],
         ], [
-            'monthly_amount.required' => 'El monto mensual es obligatorio',
-            'monthly_amount.numeric' => 'El monto debe ser un número',
-            'monthly_amount.min' => 'El monto debe ser al menos $1,000 COP',
+            'amount_linaje_kids.required' => 'El monto de Linaje Kids es obligatorio',
+            'amount_linaje_kids.numeric' => 'El monto debe ser un número',
+            'amount_linaje_kids.min' => 'El monto debe ser al menos $1,500 COP',
+            'amount_linaje_teens.required' => 'El monto de Linaje Teens es obligatorio',
+            'amount_linaje_teens.numeric' => 'El monto debe ser un número',
+            'amount_linaje_teens.min' => 'El monto debe ser al menos $1,500 COP',
+            'amount_linaje_big.required' => 'El monto de Linaje Big es obligatorio',
+            'amount_linaje_big.numeric' => 'El monto debe ser un número',
+            'amount_linaje_big.min' => 'El monto debe ser al menos $1,500 COP',
             'is_active.required' => 'El estado es obligatorio',
             'is_active.boolean' => 'El estado debe ser verdadero o falso',
         ]);
+
+        // Al menos un método de pago debe estar habilitado
+        if (!$validated['enable_online_payment'] && !$validated['enable_manual_payment']) {
+            flash_error('Debe haber al menos un método de pago habilitado.');
+            return redirect()->back();
+        }
 
         $paymentSetting = PaymentSetting::first();
 

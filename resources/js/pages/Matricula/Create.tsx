@@ -30,7 +30,25 @@ import { GenderRadioGroup } from '@/components/matricula/GenderRadioGroup';
 import { ModalitySelect } from '@/components/matricula/ModalitySelect';
 import { FormField } from '@/components/matricula/FormField';
 
-export default function Create({ programs }: CreateProps) {
+export default function Create({ programs, paymentMethods, modalityPrices }: CreateProps) {
+    const onlineEnabled = paymentMethods?.online ?? true;
+    const manualEnabled = paymentMethods?.manual ?? true;
+
+    // Función para formatear precio
+    const formatPrice = (price: number) => {
+        return new Intl.NumberFormat('es-CO', {
+            style: 'currency',
+            currency: 'COP',
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0,
+        }).format(price);
+    };
+
+    // Obtener precio según modalidad seleccionada
+    const getModalityPrice = (modality: string) => {
+        if (!modalityPrices || !modality || modality === '') return null;
+        return modalityPrices[modality as keyof typeof modalityPrices] ?? null;
+    };
     const [step, setStep] = useState(1);
     const { props } = usePage();
 
@@ -95,7 +113,7 @@ export default function Create({ programs }: CreateProps) {
         parental_authorization: false,
         payment_commitment: false,
         // Método de pago: 'online' (pasarela) o 'manual' (efectivo/transferencia)
-        payment_method: 'online' as 'online' | 'manual',
+        payment_method: (onlineEnabled ? 'online' : 'manual') as 'online' | 'manual',
     });
 
     // Debug: Monitorear cambios en errors
@@ -631,27 +649,15 @@ export default function Create({ programs }: CreateProps) {
                                     </div>
 
                                     <div>
-                                        <Label>Modalidad *</Label>
-                                        <Select
-                                            value={data.responsable.modality}
-                                            onValueChange={(value) =>
-                                                setData('responsable', { ...data.responsable, modality: value as StudyModality })
-                                            }
-                                        >
-                                            <SelectTrigger>
-                                                <SelectValue placeholder="Seleccione una modalidad" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                {Object.entries(MODALITIES)
-                                                    .filter(([key]) => key !== '')
-                                                    .map(([value, label]) => (
-                                                        <SelectItem key={value} value={value}>
-                                                            {label}
-                                                        </SelectItem>
-                                                    ))}
-                                            </SelectContent>
-                                        </Select>
-                                        <InputError message={errors['responsable.modality']} />
+                                        <Label>Modalidad</Label>
+                                        <div className="p-3 bg-green-50 border border-green-200 rounded-md">
+                                            <p className="font-medium text-green-800">Linaje Big (18+ años)</p>
+                                            {getModalityPrice('Linaje Big') && (
+                                                <p className="text-sm text-primary font-medium mt-1">
+                                                    Valor de matrícula: {formatPrice(getModalityPrice('Linaje Big')!)}
+                                                </p>
+                                            )}
+                                        </div>
                                     </div>
 
                                     <div>
@@ -1106,15 +1112,15 @@ export default function Create({ programs }: CreateProps) {
                                                     <SelectValue placeholder="Seleccione una modalidad" />
                                                 </SelectTrigger>
                                                 <SelectContent>
-                                                    {Object.entries(MODALITIES)
-                                                        .filter(([key]) => key !== '')
-                                                        .map(([value, label]) => (
-                                                            <SelectItem key={value} value={value}>
-                                                                {label}
-                                                            </SelectItem>
-                                                        ))}
+                                                    <SelectItem value="Linaje Kids">Linaje Kids (4-9 años)</SelectItem>
+                                                    <SelectItem value="Linaje Teens">Linaje Teens (10-17 años)</SelectItem>
                                                 </SelectContent>
                                             </Select>
+                                            {estudianteActual.datos_musicales.modality && getModalityPrice(estudianteActual.datos_musicales.modality) && (
+                                                <p className="text-sm text-primary font-medium mt-1">
+                                                    Valor de matrícula: {formatPrice(getModalityPrice(estudianteActual.datos_musicales.modality)!)}
+                                                </p>
+                                            )}
                                             <InputError
                                                 message={errors[`estudiantes.${currentEstudianteIndex}.datos_musicales.modality`]}
                                             />
@@ -1261,6 +1267,11 @@ export default function Create({ programs }: CreateProps) {
                                                     Programa: {programs.find((p) => p.id.toString() === est.program_id)?.name || 'No seleccionado'}
                                                 </p>
                                                 <p className="text-gray-600">Modalidad: {est.datos_musicales.modality}</p>
+                                                {est.datos_musicales.modality && getModalityPrice(est.datos_musicales.modality) && (
+                                                    <p className="text-primary font-medium">
+                                                        Valor: {formatPrice(getModalityPrice(est.datos_musicales.modality)!)}
+                                                    </p>
+                                                )}
                                             </div>
                                         ))}
                                     </div>
@@ -1331,8 +1342,9 @@ export default function Create({ programs }: CreateProps) {
                                     Selecciona cómo deseas realizar el pago de la matrícula:
                                 </p>
 
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div className={cn("grid gap-4", onlineEnabled && manualEnabled ? "grid-cols-1 sm:grid-cols-2" : "grid-cols-1")}>
                                     {/* Opción Pago en Línea */}
+                                    {onlineEnabled && (
                                     <div
                                         onClick={() => setData('payment_method', 'online')}
                                         className={cn(
@@ -1355,8 +1367,10 @@ export default function Create({ programs }: CreateProps) {
                                             Paga de forma segura con tarjeta de crédito, débito o PSE a través de nuestra pasarela de pagos.
                                         </p>
                                     </div>
+                                    )}
 
                                     {/* Opción Pago Manual */}
+                                    {manualEnabled && (
                                     <div
                                         onClick={() => setData('payment_method', 'manual')}
                                         className={cn(
@@ -1379,6 +1393,7 @@ export default function Create({ programs }: CreateProps) {
                                             Realiza el pago en efectivo o por transferencia bancaria. Un asesor se comunicará contigo.
                                         </p>
                                     </div>
+                                    )}
                                 </div>
                             </div>
 

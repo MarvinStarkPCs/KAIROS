@@ -95,9 +95,17 @@ export interface AcademicProgram {
     schedules: Schedule[];
 }
 
+// Precios por modalidad
+export type ModalityPrices = Record<'Linaje Kids' | 'Linaje Teens' | 'Linaje Big', number>;
+
 // Props del componente Create
 export interface CreateProps {
     programs: AcademicProgram[];
+    paymentMethods?: {
+        online: boolean;
+        manual: boolean;
+    };
+    modalityPrices?: ModalityPrices;
 }
 
 // Constantes

@@ -1,5 +1,5 @@
-import { Head, Link, useForm } from '@inertiajs/react';
-import { ArrowLeft, Save, Search, Check } from 'lucide-react';
+import { Head, Link, useForm, router } from '@inertiajs/react';
+import { ArrowLeft, Save, Search, Check, Plus, DollarSign, Receipt } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -17,6 +17,16 @@ interface Enrollment {
     program_name: string;
 }
 
+interface PaymentTransaction {
+    id: number;
+    amount: number;
+    payment_method: string;
+    reference_number?: string;
+    notes?: string;
+    created_at: string;
+    recorded_by?: { id: number; name: string };
+}
+
 interface Payment {
     id?: number;
     student_id: number;
@@ -25,17 +35,28 @@ interface Payment {
     concept: string;
     payment_type: 'single' | 'partial';
     amount: number;
+    original_amount?: number;
+    paid_amount?: number;
+    remaining_amount?: number;
+    pending_balance?: number;
     due_date: string;
     status: 'pending' | 'completed' | 'overdue' | 'cancelled';
     payment_method?: string;
     reference_number?: string;
     notes?: string;
+    transactions?: PaymentTransaction[];
 }
 
 interface Props {
     payment?: Payment;
     enrollments: Enrollment[];
 }
+
+const PAYMENT_METHODS: Record<string, string> = {
+    cash: 'Efectivo',
+    transfer: 'Transferencia',
+    credit_card: 'Tarjeta de Crédito',
+};
 
 export default function PaymentForm({ payment, enrollments }: Props) {
     const [searchTerm, setSearchTerm] = useState('');
@@ -44,6 +65,15 @@ export default function PaymentForm({ payment, enrollments }: Props) {
             ? enrollments.find((e) => e.id === payment.enrollment_id) || null
             : null
     );
+
+    const [showAbonoForm, setShowAbonoForm] = useState(false);
+    const [abonoData, setAbonoData] = useState({
+        amount: '',
+        payment_method: 'cash',
+        reference_number: '',
+        notes: '',
+    });
+    const [abonoProcessing, setAbonoProcessing] = useState(false);
 
     const { data, setData, post, put, processing, errors } = useForm({
         student_id: payment?.student_id || '',
@@ -80,11 +110,35 @@ export default function PaymentForm({ payment, enrollments }: Props) {
         }
     };
 
+    const handleAbonoSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!payment?.id) return;
+
+        setAbonoProcessing(true);
+        router.post(`/pagos/${payment.id}/add-transaction`, abonoData, {
+            onSuccess: () => {
+                setAbonoData({ amount: '', payment_method: 'cash', reference_number: '', notes: '' });
+                setShowAbonoForm(false);
+                setAbonoProcessing(false);
+            },
+            onError: () => {
+                setAbonoProcessing(false);
+            },
+        });
+    };
+
     const filteredEnrollments = enrollments.filter((enrollment) =>
         enrollment.student_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         enrollment.student_email.toLowerCase().includes(searchTerm.toLowerCase()) ||
         enrollment.program_name.toLowerCase().includes(searchTerm.toLowerCase())
     );
+
+    const isEditing = !!payment?.id;
+    const totalAmount = payment?.original_amount ?? payment?.amount ?? 0;
+    const paidAmount = payment?.paid_amount ?? 0;
+    const pendingBalance = payment?.pending_balance ?? payment?.remaining_amount ?? totalAmount;
+    const progressPercent = totalAmount > 0 ? Math.min((paidAmount / totalAmount) * 100, 100) : 0;
+    const canAddAbono = isEditing && payment?.status !== 'completed' && payment?.status !== 'cancelled' && pendingBalance > 0;
 
     return (
         <AppLayout>
@@ -106,6 +160,177 @@ export default function PaymentForm({ payment, enrollments }: Props) {
                         </p>
                     </div>
                 </div>
+
+                {/* Abono Section - Only when editing a pending payment */}
+                {canAddAbono && (
+                    <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+                        <h2 className="flex items-center gap-2 text-lg font-semibold text-gray-900">
+                            <DollarSign className="h-5 w-5 text-green-600" />
+                            Sistema de Abonos
+                        </h2>
+
+                        {/* Progress Bar */}
+                        <div className="mt-4">
+                            <div className="flex items-center justify-between text-sm">
+                                <span className="text-gray-600">Progreso de pago</span>
+                                <span className="font-medium text-gray-900">{progressPercent.toFixed(0)}%</span>
+                            </div>
+                            <div className="mt-2 h-3 w-full overflow-hidden rounded-full bg-gray-200">
+                                <div
+                                    className="h-full rounded-full bg-green-500 transition-all"
+                                    style={{ width: `${progressPercent}%` }}
+                                />
+                            </div>
+                            <div className="mt-2 grid grid-cols-3 gap-4 text-center text-sm">
+                                <div>
+                                    <div className="text-gray-500">Total</div>
+                                    <div className="font-semibold text-gray-900">${totalAmount.toLocaleString('es-CO')}</div>
+                                </div>
+                                <div>
+                                    <div className="text-gray-500">Pagado</div>
+                                    <div className="font-semibold text-green-600">${paidAmount.toLocaleString('es-CO')}</div>
+                                </div>
+                                <div>
+                                    <div className="text-gray-500">Pendiente</div>
+                                    <div className="font-semibold text-orange-600">${pendingBalance.toLocaleString('es-CO')}</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Transaction History */}
+                        <div className="mt-6">
+                            <h3 className="flex items-center gap-2 text-sm font-semibold text-gray-700">
+                                <Receipt className="h-4 w-4" />
+                                Historial de Abonos
+                            </h3>
+                            {payment.transactions && payment.transactions.length > 0 ? (
+                                <div className="mt-3 overflow-hidden rounded-lg border border-gray-200">
+                                    <table className="w-full text-sm">
+                                        <thead className="bg-gray-50">
+                                            <tr>
+                                                <th className="px-4 py-2 text-left font-medium text-gray-600">Fecha</th>
+                                                <th className="px-4 py-2 text-left font-medium text-gray-600">Monto</th>
+                                                <th className="px-4 py-2 text-left font-medium text-gray-600">Método</th>
+                                                <th className="px-4 py-2 text-left font-medium text-gray-600">Referencia</th>
+                                                <th className="px-4 py-2 text-left font-medium text-gray-600">Notas</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-gray-200">
+                                            {payment.transactions.map((tx) => (
+                                                <tr key={tx.id}>
+                                                    <td className="px-4 py-2 text-gray-700">
+                                                        {new Date(tx.created_at).toLocaleDateString('es-CO')}
+                                                    </td>
+                                                    <td className="px-4 py-2 font-medium text-green-700">
+                                                        ${Number(tx.amount).toLocaleString('es-CO')}
+                                                    </td>
+                                                    <td className="px-4 py-2 text-gray-700">
+                                                        {PAYMENT_METHODS[tx.payment_method] ?? tx.payment_method}
+                                                    </td>
+                                                    <td className="px-4 py-2 text-gray-500">
+                                                        {tx.reference_number || '—'}
+                                                    </td>
+                                                    <td className="px-4 py-2 text-gray-500">
+                                                        {tx.notes || '—'}
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            ) : (
+                                <p className="mt-3 text-sm text-gray-500">No hay abonos registrados aún.</p>
+                            )}
+                        </div>
+
+                        {/* Add Abono */}
+                        {!showAbonoForm ? (
+                            <Button
+                                type="button"
+                                onClick={() => setShowAbonoForm(true)}
+                                className="mt-4"
+                            >
+                                <Plus className="mr-2 h-4 w-4" />
+                                Agregar Abono
+                            </Button>
+                        ) : (
+                            <form onSubmit={handleAbonoSubmit} className="mt-4 rounded-lg border border-green-200 bg-green-50 p-4">
+                                <h4 className="mb-3 font-medium text-green-900">Nuevo Abono</h4>
+                                <div className="grid gap-4 md:grid-cols-2">
+                                    <div>
+                                        <Label htmlFor="abono_amount">Monto *</Label>
+                                        <Input
+                                            id="abono_amount"
+                                            type="number"
+                                            step="1"
+                                            min="1"
+                                            max={pendingBalance}
+                                            value={abonoData.amount}
+                                            onChange={(e) => setAbonoData({ ...abonoData, amount: e.target.value })}
+                                            placeholder={`Máx: $${pendingBalance.toLocaleString('es-CO')}`}
+                                            required
+                                        />
+                                    </div>
+                                    <div>
+                                        <Label htmlFor="abono_method">Método de Pago *</Label>
+                                        <select
+                                            id="abono_method"
+                                            value={abonoData.payment_method}
+                                            onChange={(e) => setAbonoData({ ...abonoData, payment_method: e.target.value })}
+                                            className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
+                                            required
+                                        >
+                                            <option value="cash">Efectivo</option>
+                                            <option value="transfer">Transferencia</option>
+                                            <option value="credit_card">Tarjeta de Crédito</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <Label htmlFor="abono_reference">Número de Referencia</Label>
+                                        <Input
+                                            id="abono_reference"
+                                            type="text"
+                                            value={abonoData.reference_number}
+                                            onChange={(e) => setAbonoData({ ...abonoData, reference_number: e.target.value })}
+                                            placeholder="Comprobante"
+                                        />
+                                    </div>
+                                    <div>
+                                        <Label htmlFor="abono_notes">Notas</Label>
+                                        <Input
+                                            id="abono_notes"
+                                            type="text"
+                                            value={abonoData.notes}
+                                            onChange={(e) => setAbonoData({ ...abonoData, notes: e.target.value })}
+                                            placeholder="Observaciones"
+                                        />
+                                    </div>
+                                </div>
+                                <div className="mt-4 flex gap-2">
+                                    <Button type="submit" disabled={abonoProcessing}>
+                                        {abonoProcessing ? 'Registrando...' : 'Registrar Abono'}
+                                    </Button>
+                                    <Button type="button" variant="outline" onClick={() => setShowAbonoForm(false)}>
+                                        Cancelar
+                                    </Button>
+                                </div>
+                            </form>
+                        )}
+                    </div>
+                )}
+
+                {/* Completed payment summary */}
+                {isEditing && payment?.status === 'completed' && payment.transactions && payment.transactions.length > 0 && (
+                    <div className="rounded-xl border border-green-200 bg-green-50 p-6 shadow-sm">
+                        <h2 className="flex items-center gap-2 text-lg font-semibold text-green-800">
+                            <Check className="h-5 w-5" />
+                            Pago Completado
+                        </h2>
+                        <p className="mt-1 text-sm text-green-700">
+                            Total pagado: ${paidAmount.toLocaleString('es-CO')} en {payment.transactions.length} abono(s)
+                        </p>
+                    </div>
+                )}
 
                 {/* Form */}
                 <form onSubmit={handleSubmit} className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">

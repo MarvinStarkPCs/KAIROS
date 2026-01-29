@@ -39,11 +39,6 @@ interface Payment {
     wompi_reference?: string;
 }
 
-interface Student {
-    id: number;
-    name: string;
-}
-
 interface Program {
     id: number;
     name: string;
@@ -55,16 +50,15 @@ interface Props {
         links: any;
         meta: any;
     };
-    students: Student[];
     programs: Program[];
     filters: {
         status?: string;
-        student_id?: number;
+        search?: string;
         program_id?: number;
     };
 }
 
-export default function PaymentsList({ payments, students, programs, filters }: Props) {
+export default function PaymentsList({ payments, programs, filters }: Props) {
     const [deleteDialog, setDeleteDialog] = useState<{ open: boolean; paymentId: number | null }>({
         open: false,
         paymentId: null,
@@ -72,7 +66,7 @@ export default function PaymentsList({ payments, students, programs, filters }: 
 
     const [localFilters, setLocalFilters] = useState({
         status: filters.status || '',
-        student_id: filters.student_id || '',
+        search: filters.search || '',
         program_id: filters.program_id || '',
     });
 
@@ -156,20 +150,16 @@ export default function PaymentsList({ payments, students, programs, filters }: 
                             </select>
                         </div>
                         <div>
-                            <Label htmlFor="student">Estudiante</Label>
-                            <select
-                                id="student"
-                                value={localFilters.student_id}
-                                onChange={(e) => setLocalFilters({ ...localFilters, student_id: Number(e.target.value) || '' })}
-                                className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
-                            >
-                                <option value="">Todos</option>
-                                {students.map((student) => (
-                                    <option key={student.id} value={student.id}>
-                                        {student.name}
-                                    </option>
-                                ))}
-                            </select>
+                            <Label htmlFor="search">Estudiante (nombre o identificación)</Label>
+                            <Input
+                                id="search"
+                                type="text"
+                                value={localFilters.search}
+                                onChange={(e) => setLocalFilters({ ...localFilters, search: e.target.value })}
+                                placeholder="Buscar por nombre o documento..."
+                                className="mt-1"
+                                onKeyDown={(e) => e.key === 'Enter' && handleFilter()}
+                            />
                         </div>
                         <div>
                             <Label htmlFor="program">Programa</Label>

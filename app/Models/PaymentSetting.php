@@ -11,13 +11,21 @@ class PaymentSetting extends Model
     use LogsActivity;
 
     protected $fillable = [
-        'monthly_amount',
+        'amount_linaje_kids',
+        'amount_linaje_teens',
+        'amount_linaje_big',
         'is_active',
+        'enable_online_payment',
+        'enable_manual_payment',
     ];
 
     protected $casts = [
-        'monthly_amount' => 'decimal:2',
+        'amount_linaje_kids' => 'decimal:2',
+        'amount_linaje_teens' => 'decimal:2',
+        'amount_linaje_big' => 'decimal:2',
         'is_active' => 'boolean',
+        'enable_online_payment' => 'boolean',
+        'enable_manual_payment' => 'boolean',
     ];
 
     // Activity Log configuration
@@ -25,10 +33,27 @@ class PaymentSetting extends Model
     {
         return LogOptions::defaults()
             ->logOnly([
-                'monthly_amount',
+                'amount_linaje_kids',
+                'amount_linaje_teens',
+                'amount_linaje_big',
                 'is_active',
+                'enable_online_payment',
+                'enable_manual_payment',
             ])
             ->logOnlyDirty()
             ->useLogName('payment_settings');
+    }
+
+    /**
+     * Obtener el monto de pago según la modalidad
+     */
+    public function getAmountForModality(string $modality): float
+    {
+        return match ($modality) {
+            'Linaje Kids' => (float) $this->amount_linaje_kids,
+            'Linaje Teens' => (float) $this->amount_linaje_teens,
+            'Linaje Big' => (float) $this->amount_linaje_big,
+            default => (float) $this->amount_linaje_kids,
+        };
     }
 }

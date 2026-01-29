@@ -40,5 +40,10 @@ class DatabaseSeeder extends Seeder
         $this->call([
             MusicAcademicProgramSeeder::class,
         ]);
+
+        // Seed schedules for academic programs
+        $this->call([
+            ScheduleSeeder::class,
+        ]);
     }
 }
