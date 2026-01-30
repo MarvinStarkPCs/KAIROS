@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { useForm, router } from '@inertiajs/react';
+import { useEffect } from 'react';
+import { useForm } from '@inertiajs/react';
 import {
     Dialog,
     DialogContent,
@@ -12,6 +12,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Info, AlertTriangle, CheckCircle2, Wand2 } from 'lucide-react';
 import StudyPlanController from '@/actions/App/Http/Controllers/StudyPlanController';
 
 interface Activity {
@@ -29,6 +31,7 @@ interface ActivityDialogProps {
     studyPlanId: number;
     activity?: Activity;
     nextOrder?: number;
+    currentTotalWeight?: number;
 }
 
 export default function ActivityDialog({
@@ -36,9 +39,12 @@ export default function ActivityDialog({
     onOpenChange,
     studyPlanId,
     activity,
-    nextOrder = 0
+    nextOrder = 0,
+    currentTotalWeight = 0
 }: ActivityDialogProps) {
     const isEditing = !!activity;
+    const normalizedTotalWeight = Number(currentTotalWeight) || 0;
+    const remainingWeightAvailable = Math.max(0, 100 - normalizedTotalWeight);
 
     const { data, setData, post, put, processing, errors, reset } = useForm({
         name: activity?.name || '',
@@ -98,6 +104,101 @@ export default function ActivityDialog({
                         </DialogDescription>
                     </DialogHeader>
 
+                    {/* Weight Status Indicator */}
+                    {(() => {
+                        const activityWeight = Number(data.weight) || 0;
+                        const projectedTotal = normalizedTotalWeight + activityWeight;
+                        const isComplete = projectedTotal === 100;
+                        const isOver = projectedTotal > 100;
+
+                        return (
+                            <div className="space-y-2">
+                                {/* Current Module Status */}
+                                <div className={`rounded-lg border p-3 ${
+                                    isComplete ? 'border-green-200 bg-green-50' :
+                                    isOver ? 'border-red-200 bg-red-50' : 'border-amber-200 bg-amber-50'
+                                }`}>
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-2">
+                                            {isComplete ? (
+                                                <CheckCircle2 className="h-4 w-4 text-green-600" />
+                                            ) : isOver ? (
+                                                <AlertTriangle className="h-4 w-4 text-red-600" />
+                                            ) : (
+                                                <Info className="h-4 w-4 text-amber-600" />
+                                            )}
+                                            <span className={`text-sm font-medium ${
+                                                isComplete ? 'text-green-800' :
+                                                isOver ? 'text-red-800' : 'text-amber-800'
+                                            }`}>
+                                                Estado del módulo
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div className="mt-2 grid grid-cols-3 gap-2 text-center text-xs">
+                                        <div className="rounded bg-white/60 p-2">
+                                            <div className="font-semibold text-gray-700">{normalizedTotalWeight.toFixed(1)}%</div>
+                                            <div className="text-gray-500">Asignado</div>
+                                        </div>
+                                        <div className="rounded bg-white/60 p-2">
+                                            <div className={`font-semibold ${remainingWeightAvailable > 0 ? 'text-amber-700' : 'text-green-700'}`}>
+                                                {remainingWeightAvailable.toFixed(1)}%
+                                            </div>
+                                            <div className="text-gray-500">Disponible</div>
+                                        </div>
+                                        <div className="rounded bg-white/60 p-2">
+                                            <div className={`font-semibold ${
+                                                isComplete ? 'text-green-700' :
+                                                isOver ? 'text-red-700' : 'text-gray-700'
+                                            }`}>
+                                                {projectedTotal.toFixed(1)}%
+                                            </div>
+                                            <div className="text-gray-500">Proyectado</div>
+                                        </div>
+                                    </div>
+                                    {/* Progress Bar */}
+                                    <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-gray-200">
+                                        <div className="flex h-full">
+                                            <div
+                                                className="bg-blue-400 transition-all duration-300"
+                                                style={{ width: `${Math.min(normalizedTotalWeight, 100)}%` }}
+                                            />
+                                            <div
+                                                className={`transition-all duration-300 ${
+                                                    isOver ? 'bg-red-500' : 'bg-green-500'
+                                                }`}
+                                                style={{ width: `${Math.min(activityWeight, 100 - Math.min(normalizedTotalWeight, 100))}%` }}
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className="mt-1 flex justify-between text-xs text-gray-500">
+                                        <span>Otras actividades: {normalizedTotalWeight.toFixed(1)}%</span>
+                                        <span>Esta actividad: {activityWeight}%</span>
+                                    </div>
+                                </div>
+
+                                {/* Warning/Success Messages */}
+                                {isOver && (
+                                    <Alert className="border-red-300 bg-red-50">
+                                        <AlertTriangle className="h-4 w-4 text-red-600" />
+                                        <AlertDescription className="text-red-700 text-xs">
+                                            La suma total ({projectedTotal.toFixed(1)}%) excede el 100%.
+                                            Reduce el peso a máximo <strong>{remainingWeightAvailable.toFixed(1)}%</strong>.
+                                        </AlertDescription>
+                                    </Alert>
+                                )}
+                                {isComplete && (
+                                    <Alert className="border-green-300 bg-green-50">
+                                        <CheckCircle2 className="h-4 w-4 text-green-600" />
+                                        <AlertDescription className="text-green-700 text-xs">
+                                            ¡Perfecto! La suma total es exactamente 100%.
+                                        </AlertDescription>
+                                    </Alert>
+                                )}
+                            </div>
+                        );
+                    })()}
+
                     <div className="grid gap-4 py-4">
                         <div className="grid gap-2">
                             <Label htmlFor="name">Nombre de la Actividad *</Label>
@@ -128,33 +229,43 @@ export default function ActivityDialog({
                             )}
                         </div>
 
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="grid gap-2">
-                                <Label htmlFor="order">Orden *</Label>
-                                <Input
-                                    id="order"
-                                    type="number"
-                                    min="0"
-                                    value={data.order}
-                                    onChange={(e) => setData('order', parseInt(e.target.value) || 0)}
-                                    className={errors.order ? 'border-red-500' : ''}
-                                />
-                                {errors.order && <p className="text-sm text-red-600">{errors.order}</p>}
-                            </div>
-
+                        <div className="grid gap-4">
                             <div className="grid gap-2">
                                 <Label htmlFor="weight">Peso (%) *</Label>
-                                <Input
-                                    id="weight"
-                                    type="number"
-                                    min="0"
-                                    max="100"
-                                    step="0.01"
-                                    value={data.weight}
-                                    onChange={(e) => setData('weight', parseFloat(e.target.value) || 0)}
-                                    className={errors.weight ? 'border-red-500' : ''}
-                                />
+                                <div className="flex gap-2">
+                                    <Input
+                                        id="weight"
+                                        type="number"
+                                        min="0"
+                                        max="100"
+                                        step="0.01"
+                                        value={data.weight}
+                                        onChange={(e) => setData('weight', parseFloat(e.target.value) || 0)}
+                                        className={`flex-1 ${errors.weight ? 'border-red-500' : ''}`}
+                                    />
+                                    {remainingWeightAvailable > 0 && (
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            size="sm"
+                                            className="shrink-0 text-xs"
+                                            onClick={() => setData('weight', Math.round(remainingWeightAvailable * 100) / 100)}
+                                            title={`Usar peso restante: ${remainingWeightAvailable.toFixed(1)}%`}
+                                        >
+                                            <Wand2 className="mr-1 h-3 w-3" />
+                                            {remainingWeightAvailable.toFixed(1)}%
+                                        </Button>
+                                    )}
+                                </div>
                                 {errors.weight && <p className="text-sm text-red-600">{errors.weight}</p>}
+                                <p className="text-xs text-gray-500">
+                                    % de la nota final del módulo
+                                    {remainingWeightAvailable > 0 && data.weight === 0 && (
+                                        <span className="ml-1 text-amber-600">
+                                            (Haz clic en el botón para usar el restante)
+                                        </span>
+                                    )}
+                                </p>
                             </div>
                         </div>
 

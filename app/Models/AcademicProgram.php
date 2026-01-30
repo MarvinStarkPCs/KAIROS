@@ -19,6 +19,7 @@ class AcademicProgram extends Model
         'monthly_fee',
         'status',
         'color',
+        'icon',
         'is_demo',
     ];
 

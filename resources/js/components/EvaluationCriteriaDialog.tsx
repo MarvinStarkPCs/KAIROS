@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { useForm, router } from '@inertiajs/react';
+import { useEffect } from 'react';
+import { useForm } from '@inertiajs/react';
 import {
     Dialog,
     DialogContent,
@@ -12,6 +12,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Info } from 'lucide-react';
 import StudyPlanController from '@/actions/App/Http/Controllers/StudyPlanController';
 
 interface EvaluationCriteria {
@@ -97,6 +99,18 @@ export default function EvaluationCriteriaDialog({
                         </DialogDescription>
                     </DialogHeader>
 
+                    <Alert className="border-amber-200 bg-amber-50">
+                        <Info className="h-4 w-4 text-amber-600" />
+                        <AlertTitle className="text-amber-800">Sistema de Puntos</AlertTitle>
+                        <AlertDescription className="text-amber-700">
+                            <ul className="mt-1 list-disc space-y-1 pl-4 text-xs">
+                                <li><strong>Puntuación Máxima:</strong> Es el número máximo de puntos que un estudiante puede obtener en este criterio.</li>
+                                <li><strong>Cálculo de nota:</strong> La nota del criterio se calcula como: (puntos obtenidos / puntuación máxima) × 100.</li>
+                                <li><strong>Ejemplo:</strong> Si el máximo es 10 pts y el estudiante obtiene 8 pts, su nota en este criterio será 80%.</li>
+                            </ul>
+                        </AlertDescription>
+                    </Alert>
+
                     <div className="grid gap-4 py-4">
                         <div className="grid gap-2">
                             <Label htmlFor="name">Nombre del Criterio *</Label>
@@ -127,35 +141,21 @@ export default function EvaluationCriteriaDialog({
                             )}
                         </div>
 
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="grid gap-2">
-                                <Label htmlFor="max_points">Puntuación Máxima *</Label>
-                                <Input
-                                    id="max_points"
-                                    type="number"
-                                    min="0"
-                                    step="0.01"
-                                    value={data.max_points}
-                                    onChange={(e) => setData('max_points', parseFloat(e.target.value) || 0)}
-                                    className={errors.max_points ? 'border-red-500' : ''}
-                                />
-                                {errors.max_points && (
-                                    <p className="text-sm text-red-600">{errors.max_points}</p>
-                                )}
-                            </div>
-
-                            <div className="grid gap-2">
-                                <Label htmlFor="order">Orden *</Label>
-                                <Input
-                                    id="order"
-                                    type="number"
-                                    min="0"
-                                    value={data.order}
-                                    onChange={(e) => setData('order', parseInt(e.target.value) || 0)}
-                                    className={errors.order ? 'border-red-500' : ''}
-                                />
-                                {errors.order && <p className="text-sm text-red-600">{errors.order}</p>}
-                            </div>
+                        <div className="grid gap-2">
+                            <Label htmlFor="max_points">Puntuación Máxima *</Label>
+                            <Input
+                                id="max_points"
+                                type="number"
+                                min="0"
+                                step="0.01"
+                                value={data.max_points}
+                                onChange={(e) => setData('max_points', parseFloat(e.target.value) || 0)}
+                                className={errors.max_points ? 'border-red-500' : ''}
+                            />
+                            {errors.max_points && (
+                                <p className="text-sm text-red-600">{errors.max_points}</p>
+                            )}
+                            <p className="text-xs text-gray-500">Puntos máximos a obtener</p>
                         </div>
                     </div>
 

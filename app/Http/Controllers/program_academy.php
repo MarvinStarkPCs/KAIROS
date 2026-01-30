@@ -8,13 +8,35 @@ use Inertia\Inertia;
 
 class program_academy extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        // Obtener todos los programas con sus relaciones y contadores
-        $programs = AcademicProgram::withCount(['activeStudents', 'schedules', 'activeSchedules'])
-            ->orderBy('created_at', 'desc')
-            ->get()
-            ->map(function ($program) {
+        // Obtener parámetros de búsqueda y filtros
+        $search = $request->input('search', '');
+        $status = $request->input('status', '');
+        $perPage = $request->input('per_page', 9);
+
+        // Query base con contadores
+        $query = AcademicProgram::withCount(['activeStudents', 'schedules', 'activeSchedules']);
+
+        // Aplicar búsqueda
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('description', 'like', "%{$search}%");
+            });
+        }
+
+        // Filtrar por estado
+        if ($status) {
+            $query->where('status', $status);
+        }
+
+        // Paginar resultados
+        $paginator = $query->orderBy('created_at', 'desc')->paginate($perPage)->withQueryString();
+
+        // Transformar los items manualmente para asegurar estructura correcta
+        $programs = [
+            'data' => $paginator->map(function ($program) {
                 return [
                     'id' => $program->id,
                     'name' => $program->name,
@@ -22,13 +44,23 @@ class program_academy extends Controller
                     'duration_months' => $program->duration_months,
                     'status' => $program->status,
                     'color' => $program->color,
+                    'icon' => $program->icon ?? 'music',
                     'is_demo' => $program->is_demo,
                     'active_students_count' => $program->active_students_count,
                     'schedules_count' => $program->schedules_count,
                     'active_schedules_count' => $program->active_schedules_count,
                     'created_at' => $program->created_at->format('Y-m-d'),
                 ];
-            });
+            })->values()->all(),
+            'current_page' => $paginator->currentPage(),
+            'last_page' => $paginator->lastPage(),
+            'per_page' => $paginator->perPage(),
+            'total' => $paginator->total(),
+            'from' => $paginator->firstItem(),
+            'to' => $paginator->lastItem(),
+            'prev_page_url' => $paginator->previousPageUrl(),
+            'next_page_url' => $paginator->nextPageUrl(),
+        ];
 
         // Estadísticas generales
         $stats = [
@@ -45,6 +77,10 @@ class program_academy extends Controller
         return Inertia::render('ProgramAcademy/Index', [
             'programs' => $programs,
             'stats' => $stats,
+            'filters' => [
+                'search' => $search,
+                'status' => $status,
+            ],
         ]);
     }
 
@@ -111,6 +147,7 @@ class program_academy extends Controller
             'duration_months' => 'required|integer|min:1',
             'status' => 'required|in:active,inactive',
             'color' => 'required|string|regex:/^#[0-9A-Fa-f]{6}$/',
+            'icon' => 'nullable|string|max:50',
             'is_demo' => 'boolean',
         ], [
             'name.required' => 'El nombre del programa es obligatorio.',
@@ -119,6 +156,9 @@ class program_academy extends Controller
             'color.required' => 'El color es obligatorio.',
             'color.regex' => 'El color debe ser un código hexadecimal válido (ej: #3B82F6).',
         ]);
+
+        // Si no se proporciona icono, usar el predeterminado
+        $validated['icon'] = $validated['icon'] ?? 'music';
 
         AcademicProgram::create($validated);
 
@@ -136,6 +176,7 @@ class program_academy extends Controller
                 'duration_months' => $program->duration_months,
                 'status' => $program->status,
                 'color' => $program->color,
+                'icon' => $program->icon ?? 'music',
                 'is_demo' => $program->is_demo,
             ],
         ]);
@@ -149,6 +190,7 @@ class program_academy extends Controller
             'duration_months' => 'required|integer|min:1',
             'status' => 'required|in:active,inactive',
             'color' => 'required|string|regex:/^#[0-9A-Fa-f]{6}$/',
+            'icon' => 'nullable|string|max:50',
             'is_demo' => 'boolean',
         ], [
             'name.required' => 'El nombre del programa es obligatorio.',

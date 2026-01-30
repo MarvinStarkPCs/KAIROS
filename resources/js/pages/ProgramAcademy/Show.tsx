@@ -1,6 +1,7 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
-import { ArrowLeft, Plus, Book, ListChecks, Award, Trash2 } from 'lucide-react';
+import { ArrowLeft, Plus, Book, ListChecks, Award, Trash2, Info, AlertTriangle, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import ProgramAcademyController from '@/actions/App/Http/Controllers/program_academy';
 import StudyPlanController from '@/actions/App/Http/Controllers/StudyPlanController';
 import AppLayout from '@/layouts/app-layout';
@@ -80,7 +81,27 @@ export default function Show({ program, studyPlans }: ShowProps) {
         studyPlanId?: number;
         activity?: Activity;
         nextOrder?: number;
+        currentTotalWeight?: number;
     }>({ open: false });
+
+    // Helper function to calculate total weight of activities in a study plan
+    const calculateTotalWeight = (activities: Activity[], excludeActivityId?: number): number => {
+        return activities
+            .filter(a => a.id !== excludeActivityId)
+            .reduce((sum, activity) => sum + (Number(activity.weight) || 0), 0);
+    };
+
+    // Helper function to get weight status
+    const getWeightStatus = (totalWeight: number) => {
+        const weight = Number(totalWeight) || 0;
+        if (weight === 100) {
+            return { status: 'complete', color: 'green', message: 'Completo' };
+        } else if (weight > 100) {
+            return { status: 'over', color: 'red', message: `Excede por ${(weight - 100).toFixed(1)}%` };
+        } else {
+            return { status: 'incomplete', color: 'amber', message: `Faltan ${(100 - weight).toFixed(1)}%` };
+        }
+    };
 
     // State for EvaluationCriteria dialog
     const [criteriaDialog, setCriteriaDialog] = useState<{
@@ -186,6 +207,32 @@ export default function Show({ program, studyPlans }: ShowProps) {
                         </Button>
                     </div>
 
+                    {/* Info Alert about Points and Percentages */}
+                    <Alert className="border-blue-200 bg-blue-50">
+                        <Info className="h-4 w-4 text-blue-600" />
+                        <AlertTitle className="text-blue-800">Sistema de Evaluación: Puntos y Porcentajes</AlertTitle>
+                        <AlertDescription className="text-blue-700">
+                            <div className="mt-2 grid gap-3 text-sm md:grid-cols-2">
+                                <div className="rounded-md bg-white/60 p-3">
+                                    <strong className="text-blue-900">Peso de Actividades (%):</strong>
+                                    <ul className="mt-1 list-disc pl-4 text-xs">
+                                        <li>Cada actividad tiene un peso porcentual dentro del módulo</li>
+                                        <li>La suma de todos los pesos debe ser <strong>100%</strong></li>
+                                        <li>Ejemplo: Tarea 30% + Examen 40% + Proyecto 30% = 100%</li>
+                                    </ul>
+                                </div>
+                                <div className="rounded-md bg-white/60 p-3">
+                                    <strong className="text-blue-900">Puntos de Criterios:</strong>
+                                    <ul className="mt-1 list-disc pl-4 text-xs">
+                                        <li>Cada criterio tiene una puntuación máxima (ej: 10 pts)</li>
+                                        <li>El estudiante recibe puntos según su desempeño</li>
+                                        <li>La nota se calcula: (obtenidos / máximo) × peso de actividad</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </AlertDescription>
+                    </Alert>
+
                     {studyPlans.length > 0 ? (
                         <div className="space-y-4">
                             {studyPlans.map((studyPlan, index) => (
@@ -233,6 +280,7 @@ export default function Show({ program, studyPlans }: ShowProps) {
                                                         open: true,
                                                         studyPlanId: studyPlan.id,
                                                         nextOrder: studyPlan.activities.length,
+                                                        currentTotalWeight: calculateTotalWeight(studyPlan.activities),
                                                     })
                                                 }
                                             >
@@ -256,7 +304,48 @@ export default function Show({ program, studyPlans }: ShowProps) {
                                     {/* Activities */}
                                     {studyPlan.activities.length > 0 ? (
                                         <div className="ml-14 space-y-3">
-                                            <h4 className="text-sm font-semibold text-gray-700">Actividades:</h4>
+                                            {/* Weight Progress Indicator */}
+                                            {(() => {
+                                                const totalWeight = Number(calculateTotalWeight(studyPlan.activities)) || 0;
+                                                const weightStatus = getWeightStatus(totalWeight);
+                                                return (
+                                                    <div className="rounded-lg border border-gray-200 bg-gray-50 p-3">
+                                                        <div className="mb-2 flex items-center justify-between">
+                                                            <h4 className="text-sm font-semibold text-gray-700">Actividades:</h4>
+                                                            <div className="flex items-center gap-2">
+                                                                {weightStatus.status === 'complete' ? (
+                                                                    <CheckCircle2 className="h-4 w-4 text-green-600" />
+                                                                ) : (
+                                                                    <AlertTriangle className={`h-4 w-4 ${weightStatus.status === 'over' ? 'text-red-600' : 'text-amber-600'}`} />
+                                                                )}
+                                                                <span className={`text-sm font-medium ${
+                                                                    weightStatus.status === 'complete' ? 'text-green-700' :
+                                                                    weightStatus.status === 'over' ? 'text-red-700' : 'text-amber-700'
+                                                                }`}>
+                                                                    {totalWeight.toFixed(1)}% de 100% — {weightStatus.message}
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                        {/* Progress Bar */}
+                                                        <div className="h-2 w-full overflow-hidden rounded-full bg-gray-200">
+                                                            <div
+                                                                className={`h-full transition-all duration-300 ${
+                                                                    weightStatus.status === 'complete' ? 'bg-green-500' :
+                                                                    weightStatus.status === 'over' ? 'bg-red-500' : 'bg-amber-500'
+                                                                }`}
+                                                                style={{ width: `${Math.min(totalWeight, 100)}%` }}
+                                                            />
+                                                        </div>
+                                                        {weightStatus.status !== 'complete' && (
+                                                            <p className="mt-1 text-xs text-gray-500">
+                                                                {weightStatus.status === 'over'
+                                                                    ? 'La suma de pesos excede el 100%. Ajusta los pesos de las actividades.'
+                                                                    : 'La suma de pesos debe ser exactamente 100% para que las calificaciones se calculen correctamente.'}
+                                                            </p>
+                                                        )}
+                                                    </div>
+                                                );
+                                            })()}
                                             {studyPlan.activities.map((activity) => (
                                                 <div
                                                     key={activity.id}
@@ -303,6 +392,7 @@ export default function Show({ program, studyPlans }: ShowProps) {
                                                                         open: true,
                                                                         studyPlanId: studyPlan.id,
                                                                         activity,
+                                                                        currentTotalWeight: calculateTotalWeight(studyPlan.activities, activity.id),
                                                                     })
                                                                 }
                                                             >
@@ -411,6 +501,7 @@ export default function Show({ program, studyPlans }: ShowProps) {
                                                         open: true,
                                                         studyPlanId: studyPlan.id,
                                                         nextOrder: 0,
+                                                        currentTotalWeight: 0,
                                                     })
                                                 }
                                             >
@@ -454,11 +545,12 @@ export default function Show({ program, studyPlans }: ShowProps) {
                 <ActivityDialog
                     open={activityDialog.open}
                     onOpenChange={(open) =>
-                        setActivityDialog({ open, studyPlanId: undefined, activity: undefined })
+                        setActivityDialog({ open, studyPlanId: undefined, activity: undefined, currentTotalWeight: undefined })
                     }
                     studyPlanId={activityDialog.studyPlanId}
                     activity={activityDialog.activity}
                     nextOrder={activityDialog.nextOrder}
+                    currentTotalWeight={activityDialog.currentTotalWeight}
                 />
             )}
 

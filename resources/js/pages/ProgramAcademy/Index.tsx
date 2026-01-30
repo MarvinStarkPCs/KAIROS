@@ -1,10 +1,93 @@
 import { Head, Link, router } from '@inertiajs/react';
-import { GraduationCap, Users, Clock, Plus, Edit, Trash2, Calendar, CheckCircle } from 'lucide-react';
+import { useState } from 'react';
+import {
+    GraduationCap,
+    Users,
+    Clock,
+    Plus,
+    Edit,
+    Trash2,
+    Calendar,
+    CheckCircle,
+    Search,
+    X,
+    ChevronLeft,
+    ChevronRight,
+    Music,
+    Music2,
+    Music3,
+    Music4,
+    Piano,
+    Guitar,
+    Drum,
+    Mic,
+    Mic2,
+    MicVocal,
+    Radio,
+    Headphones,
+    Headset,
+    Volume2,
+    Volume1,
+    AudioLines,
+    AudioWaveform,
+    ListMusic,
+    Disc,
+    Disc2,
+    Disc3,
+    DiscAlbum,
+    PlayCircle,
+    PauseCircle,
+    SkipForward,
+    Shuffle,
+    Repeat,
+    Speaker,
+    Megaphone,
+    Bell,
+    BellRing,
+    Waves,
+    Activity,
+    Airplay,
+    Cast,
+    Tv,
+    Monitor,
+    Smartphone,
+    Tablet,
+    Watch,
+    Star,
+    Heart,
+    Award,
+    Trophy,
+    Medal,
+    Crown,
+    Sparkles,
+    Zap,
+    Flame,
+    Sun,
+    Moon,
+    CloudSun,
+    Rainbow,
+    Palette,
+    Brush,
+    PenTool,
+    Feather,
+    BookOpen,
+    School,
+    Library,
+    UserCircle,
+    Baby,
+    PersonStanding,
+    Hand,
+    ThumbsUp,
+    Smile,
+    PartyPopper,
+    Gift,
+    Cake,
+    type LucideIcon,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import ProgramAcademyController from '@/actions/App/Http/Controllers/program_academy';
 import AppLayout from '@/layouts/app-layout';
-
-import { useState } from 'react';
 import {
     AlertDialog,
     AlertDialogAction,
@@ -16,18 +99,97 @@ import {
     AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 
+// Mapa de iconos
+const ICON_MAP: Record<string, LucideIcon> = {
+    music: Music,
+    music2: Music2,
+    music3: Music3,
+    music4: Music4,
+    listMusic: ListMusic,
+    audioLines: AudioLines,
+    audioWaveform: AudioWaveform,
+    waves: Waves,
+    activity: Activity,
+    piano: Piano,
+    guitar: Guitar,
+    drum: Drum,
+    mic: Mic,
+    mic2: Mic2,
+    micVocal: MicVocal,
+    speaker: Speaker,
+    megaphone: Megaphone,
+    disc: Disc,
+    disc2: Disc2,
+    disc3: Disc3,
+    discAlbum: DiscAlbum,
+    playCircle: PlayCircle,
+    pauseCircle: PauseCircle,
+    skipForward: SkipForward,
+    shuffle: Shuffle,
+    repeat: Repeat,
+    headphones: Headphones,
+    headset: Headset,
+    volume2: Volume2,
+    volume1: Volume1,
+    radio: Radio,
+    airplay: Airplay,
+    cast: Cast,
+    graduationCap: GraduationCap,
+    school: School,
+    library: Library,
+    bookOpen: BookOpen,
+    award: Award,
+    trophy: Trophy,
+    medal: Medal,
+    crown: Crown,
+    users: Users,
+    userCircle: UserCircle,
+    baby: Baby,
+    personStanding: PersonStanding,
+    hand: Hand,
+    thumbsUp: ThumbsUp,
+    smile: Smile,
+    palette: Palette,
+    brush: Brush,
+    penTool: PenTool,
+    feather: Feather,
+    sparkles: Sparkles,
+    star: Star,
+    heart: Heart,
+    zap: Zap,
+    flame: Flame,
+    sun: Sun,
+    moon: Moon,
+    cloudSun: CloudSun,
+    rainbow: Rainbow,
+    bell: Bell,
+    bellRing: BellRing,
+    partyPopper: PartyPopper,
+    gift: Gift,
+    cake: Cake,
+    tv: Tv,
+    monitor: Monitor,
+    smartphone: Smartphone,
+    tablet: Tablet,
+    watch: Watch,
+};
+
+const getIconComponent = (iconName: string | undefined | null): LucideIcon => {
+    if (!iconName) return Music;
+    return ICON_MAP[iconName] || Music;
+};
+
 interface Program {
     id: number;
-    
     name: string;
     description: string | null;
     duration_months: number;
     status: 'active' | 'inactive';
     color: string;
+    icon: string;
     active_students_count: number;
     schedules_count: number;
     active_schedules_count: number;
-    created_at: string;
 }
 
 interface Stats {
@@ -37,89 +199,155 @@ interface Stats {
     total_professors: number;
 }
 
-interface ProgramasAcademicosProps {
-    programs: Program[];
-    stats: Stats;
+interface PaginationLink {
+    url: string | null;
+    label: string;
+    active: boolean;
 }
 
-export default function ProgramasAcademicos({ programs, stats }: ProgramasAcademicosProps) {
+interface Props {
+    programs: {
+        data: Program[];
+        current_page: number;
+        last_page: number;
+        total: number;
+        from: number | null;
+        to: number | null;
+        links: PaginationLink[];
+        prev_page_url: string | null;
+        next_page_url: string | null;
+    };
+    stats: Stats;
+    filters?: {
+        search?: string;
+        status?: string;
+    };
+}
+
+export default function Index({ programs, stats, filters }: Props) {
+    const [search, setSearch] = useState(filters?.search || '');
+    const [statusFilter, setStatusFilter] = useState(filters?.status || '');
     const [deleteDialog, setDeleteDialog] = useState<{ open: boolean; programId: number | null }>({
         open: false,
         programId: null,
     });
 
+    const programsList = programs?.data || [];
+    const pagination = {
+        currentPage: programs?.current_page || 1,
+        lastPage: programs?.last_page || 1,
+        total: programs?.total || 0,
+        from: programs?.from,
+        to: programs?.to,
+        links: programs?.links || [],
+        prevUrl: programs?.prev_page_url,
+        nextUrl: programs?.next_page_url,
+    };
+
+    const handleSearch = () => {
+        const params: Record<string, string> = {};
+        if (search) params.search = search;
+        if (statusFilter) params.status = statusFilter;
+
+        router.get(ProgramAcademyController.index().url, params, {
+            preserveState: true,
+        });
+    };
+
+    const handleStatusChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        const value = e.target.value;
+        setStatusFilter(value);
+
+        const params: Record<string, string> = {};
+        if (search) params.search = search;
+        if (value) params.status = value;
+
+        router.get(ProgramAcademyController.index().url, params, {
+            preserveState: true,
+        });
+    };
+
+    const clearFilters = () => {
+        setSearch('');
+        setStatusFilter('');
+        router.get(ProgramAcademyController.index().url);
+    };
+
+    const goToPage = (url: string | null) => {
+        if (url) {
+            router.get(url, {}, { preserveState: true });
+        }
+    };
+
     const handleDelete = () => {
         if (deleteDialog.programId) {
             router.delete(ProgramAcademyController.destroy({ program: deleteDialog.programId }).url, {
-                onSuccess: () => {
-                    setDeleteDialog({ open: false, programId: null });
-                },
+                onSuccess: () => setDeleteDialog({ open: false, programId: null }),
             });
         }
     };
+
+    const hasFilters = search || statusFilter;
 
     return (
         <AppLayout>
             <Head title="Programas Académicos" />
 
             <div className="space-y-6">
-                {/* Header Section */}
+                {/* Header */}
                 <div className="flex items-center justify-between">
                     <div>
                         <h1 className="text-3xl font-bold text-gray-900">Programas Académicos</h1>
                         <p className="mt-2 text-gray-600">Gestiona los programas y cursos de la academia</p>
                     </div>
                     <Link href={ProgramAcademyController.create().url}>
-                        <Button className="flex items-center space-x-2">
-                            <Plus className="h-5 w-5" />
-                            <span>Nuevo Programa</span>
+                        <Button>
+                            <Plus className="mr-2 h-5 w-5" />
+                            Nuevo Programa
                         </Button>
                     </Link>
                 </div>
 
-                {/* Stats Cards */}
+                {/* Stats */}
                 <div className="grid gap-6 md:grid-cols-4">
                     <div className="rounded-xl bg-white p-6 shadow-sm border border-gray-200">
                         <div className="flex items-center justify-between">
                             <div>
                                 <p className="text-sm font-medium text-gray-600">Total Programas</p>
-                                <p className="text-3xl font-bold text-gray-900">{stats.total_programs}</p>
+                                <p className="text-3xl font-bold text-gray-900">{stats?.total_programs || 0}</p>
                             </div>
                             <div className="rounded-full bg-blue-100 p-3">
                                 <GraduationCap className="h-6 w-6 text-blue-600" />
                             </div>
                         </div>
                     </div>
-
                     <div className="rounded-xl bg-white p-6 shadow-sm border border-gray-200">
                         <div className="flex items-center justify-between">
                             <div>
                                 <p className="text-sm font-medium text-gray-600">Programas Activos</p>
-                                <p className="text-3xl font-bold text-green-600">{stats.active_programs}</p>
+                                <p className="text-3xl font-bold text-green-600">{stats?.active_programs || 0}</p>
                             </div>
                             <div className="rounded-full bg-green-100 p-3">
                                 <CheckCircle className="h-6 w-6 text-green-600" />
                             </div>
                         </div>
                     </div>
-
                     <div className="rounded-xl bg-white p-6 shadow-sm border border-gray-200">
                         <div className="flex items-center justify-between">
                             <div>
                                 <p className="text-sm font-medium text-gray-600">Estudiantes</p>
-                                <p className="text-3xl font-bold text-blue-600">{stats.total_students}</p>
+                                <p className="text-3xl font-bold text-blue-600">{stats?.total_students || 0}</p>
                             </div>
                             <div className="rounded-full bg-blue-100 p-3">
                                 <Users className="h-6 w-6 text-blue-600" />
                             </div>
                         </div>
                     </div>
-
                     <div className="rounded-xl bg-white p-6 shadow-sm border border-gray-200">
                         <div className="flex items-center justify-between">
                             <div>
                                 <p className="text-sm font-medium text-gray-600">Profesores</p>
-                                <p className="text-3xl font-bold text-purple-600">{stats.total_professors}</p>
+                                <p className="text-3xl font-bold text-purple-600">{stats?.total_professors || 0}</p>
                             </div>
                             <div className="rounded-full bg-purple-100 p-3">
                                 <Users className="h-6 w-6 text-purple-600" />
@@ -128,112 +356,182 @@ export default function ProgramasAcademicos({ programs, stats }: ProgramasAcadem
                     </div>
                 </div>
 
+                {/* Search and Filters */}
+                <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+                    <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+                        <div className="relative flex-1">
+                            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                            <Input
+                                type="text"
+                                placeholder="Buscar programas..."
+                                value={search}
+                                onChange={(e) => setSearch(e.target.value)}
+                                onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                                className="pl-10"
+                            />
+                        </div>
+                        <select
+                            value={statusFilter}
+                            onChange={handleStatusChange}
+                            className="h-10 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                            <option value="">Todos</option>
+                            <option value="active">Activos</option>
+                            <option value="inactive">Inactivos</option>
+                        </select>
+                        <Button onClick={handleSearch}>
+                            <Search className="mr-2 h-4 w-4" />
+                            Buscar
+                        </Button>
+                        {hasFilters && (
+                            <Button variant="outline" onClick={clearFilters}>
+                                <X className="mr-2 h-4 w-4" />
+                                Limpiar
+                            </Button>
+                        )}
+                    </div>
+                    {pagination.total > 0 && (
+                        <p className="mt-3 text-sm text-gray-500">
+                            Mostrando {pagination.from} - {pagination.to} de {pagination.total} programas
+                        </p>
+                    )}
+                </div>
+
                 {/* Programs Grid */}
-                {programs.length > 0 ? (
+                {programsList.length > 0 ? (
                     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                        {programs.map((program) => (
-                            <div
-                                key={program.id}
-                                className="group rounded-xl border border-gray-200 bg-white p-6 transition-all hover:border-blue-300 hover:shadow-lg"
-                            >
-                                {/* Header */}
-                                <div className="mb-4 flex items-start justify-between">
-                                    <div
-                                        className="flex h-12 w-12 items-center justify-center rounded-lg border-2"
-                                        style={{
-                                            backgroundColor: `${program.color}20`,
-                                            borderColor: program.color,
-                                        }}
-                                    >
-                                        <GraduationCap className="h-6 w-6" style={{ color: program.color }} />
-                                    </div>
-                                    <span
-                                        className={`rounded-full px-2.5 py-1 text-xs font-medium ${
-                                            program.status === 'active'
-                                                ? 'bg-green-100 text-green-700'
-                                                : 'bg-gray-100 text-gray-700'
-                                        }`}
-                                    >
-                                        {program.status === 'active' ? 'Activo' : 'Inactivo'}
-                                    </span>
-                                </div>
-
-                                {/* Content */}
-                                <h3 className="mb-2 text-xl font-bold text-gray-900">{program.name}</h3>
-                                <p className="mb-4 line-clamp-2 text-sm text-gray-600">
-                                    {program.description || 'Sin descripción'}
-                                </p>
-
-                                {/* Info */}
-                                <div className="mb-4 space-y-2">
-                                    <div className="flex items-center text-sm text-gray-600">
-                                        <Clock className="mr-2 h-4 w-4" />
-                                        <span>{program.duration_months} meses</span>
-                                    </div>
-                                    <div className="flex items-center text-sm text-gray-600">
-                                        <Users className="mr-2 h-4 w-4" />
-                                        <span>{program.active_students_count} estudiantes</span>
-                                    </div>
-                                    <div className="flex items-center text-sm text-gray-600">
-                                        <Calendar className="mr-2 h-4 w-4" />
-                                        <span>{program.active_schedules_count} horarios activos</span>
-                                    </div>
-                                </div>
-
-                                {/* Actions */}
-                                <div className="flex flex-col gap-2 border-t border-gray-200 pt-4">
-                                    <Link href={ProgramAcademyController.show({ program: program.id }).url}>
-                                        <Button size="sm" className="w-full">
-                                            Ver Plan de Estudios
-                                        </Button>
-                                    </Link>
-                                    <div className="flex items-center gap-2">
-                                        <Link
-                                            href={ProgramAcademyController.edit({ program: program.id }).url}
-                                            className="flex-1"
+                        {programsList.map((program) => {
+                            const IconComponent = getIconComponent(program?.icon);
+                            if (!program) return null;
+                            return (
+                                <div
+                                    key={program.id}
+                                    className="group rounded-xl border border-gray-200 bg-white p-6 transition-all hover:border-blue-300 hover:shadow-lg"
+                                >
+                                    <div className="mb-4 flex items-start justify-between">
+                                        <div
+                                            className="flex h-12 w-12 items-center justify-center rounded-lg border-2"
+                                            style={{
+                                                backgroundColor: program.color ? `${program.color}20` : '#3B82F620',
+                                                borderColor: program.color || '#3B82F6',
+                                            }}
                                         >
-                                            <Button variant="outline" size="sm" className="w-full">
-                                                <Edit className="mr-1 h-4 w-4" />
-                                                Editar
+                                            <IconComponent className="h-6 w-6" style={{ color: program.color || '#3B82F6' }} />
+                                        </div>
+                                        <span
+                                            className={`rounded-full px-2.5 py-1 text-xs font-medium ${
+                                                program.status === 'active'
+                                                    ? 'bg-green-100 text-green-700'
+                                                    : 'bg-gray-100 text-gray-700'
+                                            }`}
+                                        >
+                                            {program.status === 'active' ? 'Activo' : 'Inactivo'}
+                                        </span>
+                                    </div>
+                                    <h3 className="mb-2 text-xl font-bold text-gray-900">{program.name}</h3>
+                                    <p className="mb-4 line-clamp-2 text-sm text-gray-600">
+                                        {program.description || 'Sin descripción'}
+                                    </p>
+                                    <div className="mb-4 space-y-2">
+                                        <div className="flex items-center text-sm text-gray-600">
+                                            <Clock className="mr-2 h-4 w-4" />
+                                            <span>{program.duration_months || 0} meses</span>
+                                        </div>
+                                        <div className="flex items-center text-sm text-gray-600">
+                                            <Users className="mr-2 h-4 w-4" />
+                                            <span>{program.active_students_count ?? 0} estudiantes</span>
+                                        </div>
+                                        <div className="flex items-center text-sm text-gray-600">
+                                            <Calendar className="mr-2 h-4 w-4" />
+                                            <span>{program.active_schedules_count ?? 0} horarios activos</span>
+                                        </div>
+                                    </div>
+                                    <div className="flex flex-col gap-2 border-t border-gray-200 pt-4">
+                                        <Link href={ProgramAcademyController.show({ program: program.id }).url}>
+                                            <Button size="sm" className="w-full">
+                                                Ver Plan de Estudios
                                             </Button>
                                         </Link>
-                                        <Button
-                                            variant="outline"
-                                            size="sm"
-                                            className="text-red-600 hover:bg-red-50 hover:text-red-700"
-                                            onClick={() =>
-                                                setDeleteDialog({ open: true, programId: program.id })
-                                            }
-                                        >
-                                            <Trash2 className="h-4 w-4" />
-                                        </Button>
+                                        <div className="flex items-center gap-2">
+                                            <Link
+                                                href={ProgramAcademyController.edit({ program: program.id }).url}
+                                                className="flex-1"
+                                            >
+                                                <Button variant="outline" size="sm" className="w-full">
+                                                    <Edit className="mr-1 h-4 w-4" />
+                                                    Editar
+                                                </Button>
+                                            </Link>
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                className="text-red-600 hover:bg-red-50"
+                                                onClick={() => setDeleteDialog({ open: true, programId: program.id })}
+                                            >
+                                                <Trash2 className="h-4 w-4" />
+                                            </Button>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                        ))}
+                            );
+                        })}
                     </div>
                 ) : (
                     <div className="rounded-xl border-2 border-dashed border-gray-300 bg-white p-12 text-center">
                         <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gray-100">
-                            <GraduationCap className="h-8 w-8 text-gray-400" />
+                            {hasFilters ? <Search className="h-8 w-8 text-gray-400" /> : <GraduationCap className="h-8 w-8 text-gray-400" />}
                         </div>
                         <h3 className="mb-2 text-xl font-semibold text-gray-900">
-                            No hay programas académicos
+                            {hasFilters ? 'No se encontraron programas' : 'No hay programas académicos'}
                         </h3>
                         <p className="mb-6 text-gray-600">
-                            Comienza agregando tu primer programa académico
+                            {hasFilters ? 'Intenta con otros términos de búsqueda' : 'Comienza agregando tu primer programa'}
                         </p>
-                        <Link href={ProgramAcademyController.create().url}>
-                            <Button>
-                                <Plus className="mr-2 h-5 w-5" />
-                                Crear Primer Programa
+                        {hasFilters ? (
+                            <Button variant="outline" onClick={clearFilters}>
+                                <X className="mr-2 h-5 w-5" />
+                                Limpiar filtros
                             </Button>
-                        </Link>
+                        ) : (
+                            <Link href={ProgramAcademyController.create().url}>
+                                <Button>
+                                    <Plus className="mr-2 h-5 w-5" />
+                                    Crear Primer Programa
+                                </Button>
+                            </Link>
+                        )}
+                    </div>
+                )}
+
+                {/* Pagination */}
+                {pagination.lastPage > 1 && (
+                    <div className="flex items-center justify-center gap-2">
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => goToPage(pagination.prevUrl)}
+                            disabled={!pagination.prevUrl}
+                        >
+                            <ChevronLeft className="mr-1 h-4 w-4" />
+                            Anterior
+                        </Button>
+                        <span className="px-4 text-sm text-gray-600">
+                            Página {pagination.currentPage} de {pagination.lastPage}
+                        </span>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => goToPage(pagination.nextUrl)}
+                            disabled={!pagination.nextUrl}
+                        >
+                            Siguiente
+                            <ChevronRight className="ml-1 h-4 w-4" />
+                        </Button>
                     </div>
                 )}
             </div>
 
-            {/* Delete Confirmation Dialog */}
+            {/* Delete Dialog */}
             <AlertDialog open={deleteDialog.open} onOpenChange={(open) => setDeleteDialog({ ...deleteDialog, open })}>
                 <AlertDialogContent>
                     <AlertDialogHeader>
