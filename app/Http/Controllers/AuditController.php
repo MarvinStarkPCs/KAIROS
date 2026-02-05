@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use Spatie\ActivityLog\Models\Activity;
+use Spatie\Activitylog\Models\Activity;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -13,42 +13,52 @@ class AuditController extends Controller
      */
     public function index()
     {
-        $activities = Activity::with(['causer', 'subject'])
+        $paginator = Activity::with(['causer', 'subject'])
             ->latest('created_at')
             ->paginate(50);
 
         return Inertia::render('Security/Audit/Index', [
-            'activities' => $activities->through(fn($activity) => [
-                'id' => $activity->id,
-                'description' => $activity->description,
-                'causer' => $activity->causer ? [
-                    'id' => $activity->causer->id,
-                    'name' => $activity->causer->name,
-                    'email' => $activity->causer->email,
-                ] : null,
-                'subject' => $activity->subject ? [
-                    'type' => $activity->subject_type,
-                    'id' => $activity->subject_id,
-                    'name' => $this->getSubjectName($activity),
-                ] : null,
-                'properties' => $activity->properties,
-                'created_at' => $activity->created_at->toIso8601String(),
-            ])->toArray(),
+            'activities' => [
+                'data' => $paginator->getCollection()->map(fn($activity) => $this->formatActivity($activity))->values()->toArray(),
+            ],
             'links' => [
-                'first' => $activities->url(1),
-                'last' => $activities->lastPage() ? $activities->url($activities->lastPage()) : null,
-                'prev' => $activities->previousPageUrl(),
-                'next' => $activities->nextPageUrl(),
+                'first' => $paginator->url(1),
+                'last' => $paginator->lastPage() ? $paginator->url($paginator->lastPage()) : null,
+                'prev' => $paginator->previousPageUrl(),
+                'next' => $paginator->nextPageUrl(),
             ],
             'meta' => [
-                'current_page' => $activities->currentPage(),
-                'from' => $activities->from(),
-                'last_page' => $activities->lastPage(),
-                'per_page' => $activities->perPage(),
-                'to' => $activities->to(),
-                'total' => $activities->total(),
+                'current_page' => $paginator->currentPage(),
+                'from' => $paginator->firstItem(),
+                'last_page' => $paginator->lastPage(),
+                'per_page' => $paginator->perPage(),
+                'to' => $paginator->lastItem(),
+                'total' => $paginator->total(),
             ],
         ]);
+    }
+
+    /**
+     * Formatear un registro de actividad
+     */
+    private function formatActivity($activity): array
+    {
+        return [
+            'id' => $activity->id,
+            'description' => $activity->description,
+            'causer' => $activity->causer ? [
+                'id' => $activity->causer->id,
+                'name' => $activity->causer->name,
+                'email' => $activity->causer->email,
+            ] : null,
+            'subject' => $activity->subject_type ? [
+                'type' => $activity->subject_type,
+                'id' => $activity->subject_id,
+                'name' => $this->getSubjectName($activity),
+            ] : null,
+            'properties' => $activity->properties,
+            'created_at' => $activity->created_at->toIso8601String(),
+        ];
     }
 
     /**
@@ -56,13 +66,35 @@ class AuditController extends Controller
      */
     private function getSubjectName($activity)
     {
-        if ($activity->subject_type === 'App\\Models\\User') {
-            return $activity->subject?->name ?? 'Eliminado';
+        if (!$activity->subject) {
+            // Intentar obtener el nombre de las propiedades si el registro fue eliminado
+            return $activity->properties['old']['name']
+                ?? $activity->properties['attributes']['name']
+                ?? 'Eliminado';
         }
-        if ($activity->subject_type === 'App\\Models\\Role') {
-            return $activity->properties['attributes']['name'] ?? 'Rol';
+
+        $subject = $activity->subject;
+
+        // Modelos con campo 'name'
+        if (isset($subject->name)) {
+            $name = $subject->name;
+            if (isset($subject->last_name)) {
+                $name = trim($name.' '.$subject->last_name);
+            }
+            return $name;
         }
-        return 'Elemento';
+
+        // StudyPlan
+        if (isset($subject->module_name)) {
+            return $subject->module_name;
+        }
+
+        // Payment
+        if (isset($subject->concept)) {
+            return $subject->concept;
+        }
+
+        return 'Elemento #'.$subject->id;
     }
 
     /**
@@ -88,25 +120,26 @@ class AuditController extends Controller
             $query->where('description', 'like', "%{$request->action}%");
         }
 
-        $activities = $query->latest('created_at')->paginate(50);
+        $paginator = $query->latest('created_at')->paginate(50);
 
         return Inertia::render('Security/Audit/Index', [
-            'activities' => $activities->through(fn($activity) => [
-                'id' => $activity->id,
-                'description' => $activity->description,
-                'causer' => $activity->causer ? [
-                    'id' => $activity->causer->id,
-                    'name' => $activity->causer->name,
-                    'email' => $activity->causer->email,
-                ] : null,
-                'subject' => $activity->subject ? [
-                    'type' => $activity->subject_type,
-                    'id' => $activity->subject_id,
-                    'name' => $this->getSubjectName($activity),
-                ] : null,
-                'properties' => $activity->properties,
-                'created_at' => $activity->created_at->toIso8601String(),
-            ])->toArray(),
+            'activities' => [
+                'data' => $paginator->getCollection()->map(fn($activity) => $this->formatActivity($activity))->values()->toArray(),
+            ],
+            'links' => [
+                'first' => $paginator->url(1),
+                'last' => $paginator->lastPage() ? $paginator->url($paginator->lastPage()) : null,
+                'prev' => $paginator->previousPageUrl(),
+                'next' => $paginator->nextPageUrl(),
+            ],
+            'meta' => [
+                'current_page' => $paginator->currentPage(),
+                'from' => $paginator->firstItem(),
+                'last_page' => $paginator->lastPage(),
+                'per_page' => $paginator->perPage(),
+                'to' => $paginator->lastItem(),
+                'total' => $paginator->total(),
+            ],
             'filters' => $request->only(['start_date', 'end_date', 'user_id', 'action']),
         ]);
     }

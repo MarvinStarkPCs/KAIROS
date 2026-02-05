@@ -132,7 +132,9 @@ Route::middleware(['auth'])->group(function () {
 
     // Usuarios (requiere permisos específicos)
     Route::middleware(['permission:ver_usuarios'])->group(function () {
+        Route::get('/usuarios/search', [UserController::class, 'search'])->name('usuarios.search');
         Route::get('/usuarios', [UserController::class, 'index'])->name('usuarios.index');
+        Route::get('/usuarios/{user}', [UserController::class, 'show'])->name('usuarios.show');
     });
     Route::middleware(['permission:crear_usuario'])->group(function () {
         Route::post('/usuarios', [UserController::class, 'store'])->name('usuarios.store');

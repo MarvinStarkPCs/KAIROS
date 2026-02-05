@@ -48,7 +48,7 @@ interface NavItem {
     }>;
 }
 
-import { Link, usePage } from '@inertiajs/react';
+import { Link, usePage, router } from '@inertiajs/react';
 import {
     CreditCard,
     Calendar,
@@ -56,8 +56,6 @@ import {
     MessageSquare,
     FileText,
     Menu,
-    Music,
-    Bell,
     Mail,
     ChevronDown,
     Search,
@@ -69,9 +67,19 @@ import {
     GraduationCap,
     Users,
     User,
-    Award
+    Award,
+    Loader2,
+    X,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
+
+interface SearchResult {
+    id: number;
+    name: string;
+    email: string;
+    avatar: string | null;
+    role: string;
+}
 
 // Navegación principal personalizada para Academia Linaje
 const allNavItems: NavItem[] = [
@@ -177,8 +185,71 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
     const getInitials = useInitials();
     const [isMenuOpen, setIsMenuOpen] = useState(true);
 
-    // Simulación de notificaciones - reemplaza con tu lógica real
-    const notificationCount = 3;
+    // Estado de búsqueda
+    const [searchQuery, setSearchQuery] = useState('');
+    const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
+    const [isSearching, setIsSearching] = useState(false);
+    const [showResults, setShowResults] = useState(false);
+    const searchRef = useRef<HTMLDivElement>(null);
+    const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    const isAdmin = auth.roles?.includes('Administrador') || auth.permissions?.includes('ver_usuarios');
+
+    const performSearch = useCallback(async (query: string) => {
+        if (query.length < 2) {
+            setSearchResults([]);
+            setIsSearching(false);
+            return;
+        }
+        setIsSearching(true);
+        try {
+            const res = await fetch(`/usuarios/search?q=${encodeURIComponent(query)}`, {
+                headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+            });
+            if (res.ok) {
+                const data = await res.json();
+                setSearchResults(data);
+            }
+        } catch {
+            setSearchResults([]);
+        } finally {
+            setIsSearching(false);
+        }
+    }, []);
+
+    const handleSearchChange = (value: string) => {
+        setSearchQuery(value);
+        setShowResults(true);
+        if (debounceRef.current) clearTimeout(debounceRef.current);
+        debounceRef.current = setTimeout(() => performSearch(value), 300);
+    };
+
+    const clearSearch = () => {
+        setSearchQuery('');
+        setSearchResults([]);
+        setShowResults(false);
+    };
+
+    const handleSelectUser = (userId: number) => {
+        clearSearch();
+        router.visit(`/usuarios/${userId}`);
+    };
+
+    // Cerrar resultados al hacer clic fuera
+    useEffect(() => {
+        const handleClickOutside = (e: MouseEvent) => {
+            if (searchRef.current && !searchRef.current.contains(e.target as Node)) {
+                setShowResults(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
+    const getAvatarUrl = (avatar: string | null) => {
+        if (!avatar) return undefined;
+        return avatar.startsWith('http') ? avatar : `/storage/${avatar}`;
+    };
 
     // Mensajes no leídos desde el servidor
     const unreadMessagesCount = auth.unreadMessages || 0;
@@ -236,48 +307,91 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
                         </button>
                     </div>
 
-                    {/* Barra de búsqueda central */}
-                    <div className="hidden flex-1 max-w-md mx-8 lg:block">
-                        <div className="relative">
-                            <input
-                                type="text"
-                                placeholder="Buscar estudiantes, profesores..."
-                                className="w-full rounded-lg border border-gray-300 bg-gray-50 px-4 py-2 pl-10 text-sm focus:border-[#7a9b3c] focus:outline-none focus:ring-1 focus:ring-[#7a9b3c]"
-                            />
-                            <Icon
-                                iconNode={Search}
-                                className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400"
-                            />
+                    {/* Barra de búsqueda central - Solo para admin */}
+                    {isAdmin && (
+                        <div className="hidden flex-1 max-w-md mx-8 lg:block" ref={searchRef}>
+                            <div className="relative">
+                                <input
+                                    type="text"
+                                    value={searchQuery}
+                                    onChange={(e) => handleSearchChange(e.target.value)}
+                                    onFocus={() => searchQuery.length >= 2 && setShowResults(true)}
+                                    placeholder="Buscar estudiantes, profesores..."
+                                    className="w-full rounded-lg border border-gray-300 bg-gray-50 px-4 py-2 pl-10 pr-9 text-sm focus:border-[#7a9b3c] focus:outline-none focus:ring-1 focus:ring-[#7a9b3c]"
+                                />
+                                {isSearching ? (
+                                    <Loader2 className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400 animate-spin" />
+                                ) : (
+                                    <Icon
+                                        iconNode={Search}
+                                        className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400"
+                                    />
+                                )}
+                                {searchQuery && (
+                                    <button
+                                        onClick={clearSearch}
+                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                                    >
+                                        <X className="h-4 w-4" />
+                                    </button>
+                                )}
+
+                                {/* Dropdown de resultados */}
+                                {showResults && searchQuery.length >= 2 && (
+                                    <div className="absolute top-full left-0 right-0 mt-1 rounded-lg border border-gray-200 bg-white shadow-lg z-50 max-h-80 overflow-y-auto">
+                                        {isSearching && searchResults.length === 0 ? (
+                                            <div className="flex items-center justify-center py-6 text-sm text-gray-500">
+                                                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                                                Buscando...
+                                            </div>
+                                        ) : searchResults.length > 0 ? (
+                                            searchResults.map((user) => (
+                                                <button
+                                                    key={user.id}
+                                                    onClick={() => handleSelectUser(user.id)}
+                                                    className="flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0"
+                                                >
+                                                    <Avatar className="h-8 w-8 shrink-0 overflow-hidden rounded-full">
+                                                        <AvatarImage
+                                                            src={getAvatarUrl(user.avatar)}
+                                                            alt={user.name}
+                                                        />
+                                                        <AvatarFallback className="rounded-full bg-[#7a9b3c] text-white text-xs">
+                                                            {getInitials(user.name)}
+                                                        </AvatarFallback>
+                                                    </Avatar>
+                                                    <div className="min-w-0 flex-1">
+                                                        <div className="truncate text-sm font-medium text-gray-900">
+                                                            {user.name}
+                                                        </div>
+                                                        <div className="truncate text-xs text-gray-500">
+                                                            {user.email}
+                                                        </div>
+                                                    </div>
+                                                    <span className="shrink-0 rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600">
+                                                        {user.role}
+                                                    </span>
+                                                </button>
+                                            ))
+                                        ) : (
+                                            <div className="py-6 text-center text-sm text-gray-500">
+                                                No se encontraron usuarios
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
                         </div>
-                    </div>
+                    )}
 
                     {/* Acciones de la derecha */}
                     <div className="flex items-center space-x-1 sm:space-x-2 lg:space-x-3">
-                        {/* Botón Nuevo */}
-                        <Button className="hidden bg-[#7a9b3c] hover:bg-[#6a8a2c] text-white lg:flex">
-                            + Nuevo
-                        </Button>
-
-                        {/* Notificaciones */}
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            className="relative h-10 w-10"
-                        >
-                            <Bell className="h-5 w-5 text-gray-600" />
-                            {notificationCount > 0 && (
-                                <span className="absolute right-1 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-semibold text-white">
-                                    {notificationCount}
-                                </span>
-                            )}
-                        </Button>
-
                         {/* Mensajes */}
                         <Link href="/comunicacion">
                             <Button
                                 variant="ghost"
                                 size="icon"
-                                className="relative hidden h-10 w-10 lg:flex"
+                                className="relative h-10 w-10"
                             >
                                 <Mail className="h-5 w-5 text-gray-600" />
                                 {unreadMessagesCount > 0 && (
@@ -297,7 +411,7 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
                                 >
                                     <Avatar className="h-9 w-9 overflow-hidden rounded-full">
                                         <AvatarImage
-                                            src={auth.user.avatar}
+                                            src={auth.user.avatar ? (auth.user.avatar.startsWith('http') ? auth.user.avatar : `/storage/${auth.user.avatar}`) : undefined}
                                             alt={auth.user.name}
                                         />
                                         <AvatarFallback className="rounded-full bg-[#7a9b3c] text-white text-sm">

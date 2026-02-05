@@ -18,7 +18,7 @@
         "laravel/socialite": "^5.23",
         "laravel/tinker": "^2.10.1",
         "laravel/wayfinder": "^0.1.9",
-        "spatie/laravel-activitylog": "^4.10",
+        "spatie/laravel-activitylog": "^4.11",
         "spatie/laravel-permission": "^6.21",
         "tightenco/ziggy": "^2.6"
     },

@@ -8,17 +8,14 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Fortify\TwoFactorAuthenticatable;
-use Spatie\ActivityLog\LogOptions;
-use Spatie\ActivityLog\Traits\LogsActivity;
 use Spatie\Permission\Traits\HasRoles;
-
-
 
 class User extends Authenticatable
 {
-    use HasRoles;
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable, TwoFactorAuthenticatable;
+
+    use HasRoles;
 
     /**
      * The attributes that are mass assignable.
@@ -47,14 +44,6 @@ class User extends Authenticatable
         'mobile',
         'city',
         'department',
-        // DATOS MUSICALES
-        'plays_instrument',
-        'instruments_played',
-        'has_music_studies',
-        'music_schools',
-        'desired_instrument',
-        'modality',
-        'current_level',
     ];
 
     /**
@@ -78,8 +67,6 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'birth_date' => 'date',
-            'plays_instrument' => 'boolean',
-            'has_music_studies' => 'boolean',
         ];
     }
 
@@ -235,7 +222,7 @@ class User extends Authenticatable
     // Verificar si es menor de edad
     public function isMinor(): bool
     {
-        return !is_null($this->parent_id);
+        return ! is_null($this->parent_id);
     }
 
     // Obtener el responsable de pagos (el mismo si es adulto, o su parent si es menor)
@@ -244,4 +231,86 @@ class User extends Authenticatable
         return $this->isMinor() ? $this->parent : $this;
     }
 
+    // ========== Relaciones con Perfiles ==========
+
+    /**
+     * Get the student profile for this user.
+     */
+    public function studentProfile()
+    {
+        return $this->hasOne(StudentProfile::class);
+    }
+
+    /**
+     * Get the teacher profile for this user.
+     */
+    public function teacherProfile()
+    {
+        return $this->hasOne(TeacherProfile::class);
+    }
+
+    // ========== Helpers de Tipo de Usuario ==========
+
+    /**
+     * Check if user is a student (has Estudiante role).
+     */
+    public function isStudent(): bool
+    {
+        return $this->hasRole('Estudiante');
+    }
+
+    /**
+     * Check if user is a teacher (has Profesor role).
+     */
+    public function isTeacher(): bool
+    {
+        return $this->hasRole('Profesor');
+    }
+
+    /**
+     * Check if user is an admin (has Administrador role).
+     */
+    public function isAdmin(): bool
+    {
+        return $this->hasRole('Administrador');
+    }
+
+    /**
+     * Get the appropriate profile for this user based on their role.
+     * Returns student profile if student, teacher profile if teacher.
+     */
+    public function getProfile()
+    {
+        if ($this->isTeacher()) {
+            return $this->teacherProfile;
+        }
+
+        if ($this->isStudent()) {
+            return $this->studentProfile;
+        }
+
+        return null;
+    }
+
+    /**
+     * Create or update the student profile for this user.
+     */
+    public function createOrUpdateStudentProfile(array $data): StudentProfile
+    {
+        return $this->studentProfile()->updateOrCreate(
+            ['user_id' => $this->id],
+            $data
+        );
+    }
+
+    /**
+     * Create or update the teacher profile for this user.
+     */
+    public function createOrUpdateTeacherProfile(array $data): TeacherProfile
+    {
+        return $this->teacherProfile()->updateOrCreate(
+            ['user_id' => $this->id],
+            $data
+        );
+    }
 }

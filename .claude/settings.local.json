@@ -30,7 +30,12 @@
       "Bash(npm run types:*)",
       "Bash(dir:*)",
       "Bash(find:*)",
-      "Bash(npm run lint:*)"
+      "Bash(npm run lint:*)",
+      "Bash(./vendor/bin/pint:*)",
+      "Bash(npm run format:check:*)",
+      "Bash(findstr:*)",
+      "Bash(composer require:*)",
+      "Bash(grep:*)"
     ],
     "deny": [],
     "ask": []

@@ -8,44 +8,54 @@ import { edit } from '@/routes/profile';
 import { edit as editSmtp } from '@/routes/smtp';
 import { edit as editWompi } from '@/routes/wompi';
 import { show } from '@/routes/two-factor';
-import { type NavItem } from '@/types';
-import { Link } from '@inertiajs/react';
-import { type PropsWithChildren } from 'react';
+import { type NavItem, type SharedData } from '@/types';
+import { Link, usePage } from '@inertiajs/react';
+import { type PropsWithChildren, useMemo } from 'react';
 
-const sidebarNavItems: NavItem[] = [
+interface SettingsNavItem extends NavItem {
+    adminOnly?: boolean;
+}
+
+const allSidebarNavItems: SettingsNavItem[] = [
     {
-        title: 'Profile',
+        title: 'Perfil',
         href: edit(),
         icon: null,
     },
     {
-        title: 'Password',
+        title: 'Contraseña',
         href: editPassword(),
         icon: null,
     },
     {
-        title: 'Two-Factor Auth',
+        title: 'Autenticación 2FA',
         href: show(),
         icon: null,
+        adminOnly: true,
     },
     {
-        title: 'Appearance',
+        title: 'Apariencia',
         href: editAppearance(),
         icon: null,
+        adminOnly: true,
     },
     {
         title: 'Servidor SMTP',
         href: editSmtp(),
         icon: null,
+        adminOnly: true,
     },
     {
         title: 'Pasarela Wompi',
         href: editWompi(),
         icon: null,
+        adminOnly: true,
     },
 ];
 
 export default function SettingsLayout({ children }: PropsWithChildren) {
+    const { auth } = usePage<SharedData>().props;
+
     // When server-side rendering, we only render the layout on the client...
     if (typeof window === 'undefined') {
         return null;
@@ -53,11 +63,21 @@ export default function SettingsLayout({ children }: PropsWithChildren) {
 
     const currentPath = window.location.pathname;
 
+    // Filtrar items del menú según el rol del usuario
+    const isAdmin = auth.roles.includes('Administrador');
+    const sidebarNavItems = useMemo(() => {
+        if (isAdmin) {
+            return allSidebarNavItems;
+        }
+        // Para Profesor y Estudiante, solo mostrar Perfil y Contraseña
+        return allSidebarNavItems.filter(item => !item.adminOnly);
+    }, [isAdmin]);
+
     return (
         <div className="px-4 py-6">
             <Heading
-                title="Settings"
-                description="Manage your profile and account settings"
+                title="Configuración"
+                description="Administra tu perfil y configuración de cuenta"
             />
 
             <div className="flex flex-col lg:flex-row lg:space-x-12">

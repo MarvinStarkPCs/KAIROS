@@ -46,13 +46,66 @@ export interface SharedData {
 export interface User {
     id: number;
     name: string;
+    last_name?: string;
     email: string;
     avatar?: string;
     email_verified_at: string | null;
     two_factor_enabled?: boolean;
+    // Datos personales
+    document_type?: 'CC' | 'TI' | 'CE' | 'Pasaporte';
+    document_number?: string;
+    birth_date?: string;
+    birth_place?: string;
+    gender?: 'M' | 'F';
+    // Datos de contacto
+    phone?: string;
+    mobile?: string;
+    address?: string;
+    neighborhood?: string;
+    city?: string;
+    department?: string;
+    // Relación padre/tutor
+    parent_id?: number;
+    user_type?: 'guardian' | 'student' | 'both';
+    // Relaciones con perfiles
+    student_profile?: StudentProfile;
+    teacher_profile?: TeacherProfile;
+    // Timestamps
     created_at: string;
     updated_at: string;
-    [key: string]: unknown; // This allows for additional properties...
+    [key: string]: unknown;
+}
+
+export interface StudentProfile {
+    id: number;
+    user_id: number;
+    modality?: 'Linaje Kids' | 'Linaje Teens' | 'Linaje Big';
+    desired_instrument?: string;
+    plays_instrument: boolean;
+    instruments_played?: string;
+    has_music_studies: boolean;
+    music_schools?: string;
+    current_level?: number;
+    emergency_contact_name?: string;
+    emergency_contact_phone?: string;
+    medical_conditions?: string;
+    allergies?: string;
+    created_at: string;
+    updated_at: string;
+}
+
+export interface TeacherProfile {
+    id: number;
+    user_id: number;
+    instruments_played: string;
+    music_schools?: string;
+    experience_years?: number;
+    bio?: string;
+    specialization?: string;
+    hourly_rate?: number;
+    is_active: boolean;
+    created_at: string;
+    updated_at: string;
 }
 
 export interface PageProps {

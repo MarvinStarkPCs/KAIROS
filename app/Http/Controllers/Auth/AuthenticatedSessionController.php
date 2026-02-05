@@ -47,7 +47,7 @@ class AuthenticatedSessionController extends Controller
 
         // Redirigir según el rol del usuario (sin intended para roles específicos)
         if ($user->hasRole('Estudiante')) {
-            return redirect()->route('estudiante.dashboard');
+            return redirect()->route('estudiante.calificaciones');
         }
 
         if ($user->hasRole('Profesor')) {

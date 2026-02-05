@@ -72,7 +72,7 @@ class TeacherRegistrationController extends Controller
         ]);
 
         try {
-            // Crear el usuario profesor
+            // Crear el usuario profesor (solo datos básicos)
             $teacher = User::create([
                 'name' => $validated['name'],
                 'last_name' => $validated['last_name'],
@@ -88,10 +88,6 @@ class TeacherRegistrationController extends Controller
                 'neighborhood' => $validated['neighborhood'],
                 'city' => $validated['city'],
                 'department' => $validated['department'],
-                'instruments_played' => $validated['instruments_played'],
-                'music_schools' => $validated['music_schools'],
-                'plays_instrument' => true,
-                'has_music_studies' => !empty($validated['music_schools']),
             ]);
 
             // Asignar rol de Profesor
@@ -99,6 +95,15 @@ class TeacherRegistrationController extends Controller
             if ($profesorRole) {
                 $teacher->assignRole($profesorRole);
             }
+
+            // Crear el perfil de profesor con la información musical
+            $teacher->teacherProfile()->create([
+                'instruments_played' => $validated['instruments_played'],
+                'music_schools' => $validated['music_schools'] ?? null,
+                'experience_years' => $validated['experience_years'] ?? null,
+                'bio' => $validated['bio'] ?? null,
+                'is_active' => true,
+            ]);
 
             \Log::info('Nuevo profesor registrado', [
                 'teacher_id' => $teacher->id,
@@ -110,7 +115,7 @@ class TeacherRegistrationController extends Controller
         } catch (\Exception $e) {
             \Log::error('Error al registrar profesor:', [
                 'message' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
 
             return back()
@@ -125,7 +130,7 @@ class TeacherRegistrationController extends Controller
     public function confirmation(User $teacher)
     {
         // Verificar que el usuario tiene rol de profesor
-        if (!$teacher->hasRole('Profesor')) {
+        if (! $teacher->hasRole('Profesor')) {
             abort(404);
         }
 
