@@ -17,11 +17,6 @@ class DependentController extends Controller
     {
         $user = auth()->user();
 
-        // Verificar que tenga permiso
-        if (!$user->hasPermissionTo('ver_dependientes')) {
-            abort(403, 'No tienes permiso para ver dependientes');
-        }
-
         $dependents = $user->dependents()
             ->with(['programEnrollments.academicProgram', 'payments'])
             ->get()
@@ -51,12 +46,6 @@ class DependentController extends Controller
      */
     public function create()
     {
-        $user = auth()->user();
-
-        if (!$user->hasPermissionTo('crear_dependiente')) {
-            abort(403, 'No tienes permiso para crear dependientes');
-        }
-
         return Inertia::render('Dependents/Create');
     }
 
@@ -66,10 +55,6 @@ class DependentController extends Controller
     public function store(Request $request)
     {
         $user = auth()->user();
-
-        if (!$user->hasPermissionTo('crear_dependiente')) {
-            abort(403, 'No tienes permiso para crear dependientes');
-        }
 
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],

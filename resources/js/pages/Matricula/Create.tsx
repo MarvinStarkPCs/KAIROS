@@ -30,9 +30,11 @@ import { GenderRadioGroup } from '@/components/matricula/GenderRadioGroup';
 import { ModalitySelect } from '@/components/matricula/ModalitySelect';
 import { FormField } from '@/components/matricula/FormField';
 
-export default function Create({ programs, paymentMethods, modalityPrices }: CreateProps) {
+export default function Create({ programs, paymentMethods, modalityPrices, discountInfo }: CreateProps) {
     const onlineEnabled = paymentMethods?.online ?? true;
     const manualEnabled = paymentMethods?.manual ?? true;
+    const discountMinStudents = discountInfo?.min_students ?? 3;
+    const discountPercentage = discountInfo?.percentage ?? 0;
 
     // Función para formatear precio
     const formatPrice = (price: number) => {
@@ -71,7 +73,8 @@ export default function Create({ programs, paymentMethods, modalityPrices }: Cre
         createNewStudent: crearNuevoEstudiante,
         addStudent: agregarEstudiante,
         removeStudent: eliminarEstudiante,
-        updateStudent: actualizarEstudiante,
+        updateStudentField,
+        updateMusicalData,
         setStudentsData
     } = studentManagement;
 
@@ -81,8 +84,6 @@ export default function Create({ programs, paymentMethods, modalityPrices }: Cre
             name: '',
             last_name: '',
             email: '',
-            password: '',
-            password_confirmation: '',
             document_type: 'CC',
             document_number: '',
             birth_place: '',
@@ -99,9 +100,7 @@ export default function Create({ programs, paymentMethods, modalityPrices }: Cre
             instruments_played: '',
             has_music_studies: false,
             music_schools: '',
-            desired_instrument: '',
-            modality: '',
-            current_level: 1,
+            modality: 'Linaje Big',
             program_id: '',
             schedule_id: '',
         },
@@ -138,7 +137,13 @@ export default function Create({ programs, paymentMethods, modalityPrices }: Cre
     };
 
     const handleUpdateStudent = (index: number, field: string, value: any) => {
-        const newStudents = actualizarEstudiante(index, field, value);
+        let newStudents: Student[];
+        if (field.startsWith('datos_musicales.')) {
+            const musicalField = field.replace('datos_musicales.', '') as keyof Student['datos_musicales'];
+            newStudents = updateMusicalData(index, musicalField, value);
+        } else {
+            newStudents = updateStudentField(index, field as keyof Student, value);
+        }
         setData('estudiantes', newStudents);
     };
 
@@ -382,34 +387,6 @@ export default function Create({ programs, paymentMethods, modalityPrices }: Cre
                                 </div>
                             </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                    <Label htmlFor="responsable_password">Contraseña *</Label>
-                                    <Input
-                                        id="responsable_password"
-                                        type="password"
-                                        value={data.responsable.password}
-                                        onChange={(e) => setData('responsable', { ...data.responsable, password: e.target.value })}
-                                        placeholder="Mínimo 8 caracteres"
-                                        aria-invalid={!!errors['responsable.password']}
-                                    />
-                                    <InputError message={errors['responsable.password']} />
-                                </div>
-                                <div>
-                                    <Label htmlFor="responsable_password_confirmation">Confirmar Contraseña *</Label>
-                                    <Input
-                                        id="responsable_password_confirmation"
-                                        type="password"
-                                        value={data.responsable.password_confirmation}
-                                        onChange={(e) =>
-                                            setData('responsable', { ...data.responsable, password_confirmation: e.target.value })
-                                        }
-                                        placeholder="Repita la contraseña"
-                                        aria-invalid={!!errors['responsable.password_confirmation']}
-                                    />
-                                    <InputError message={errors['responsable.password_confirmation']} />
-                                </div>
-                            </div>
                         </CardContent>
                     </Card>
                 );
@@ -524,10 +501,23 @@ export default function Create({ programs, paymentMethods, modalityPrices }: Cre
                                                 ...data,
                                                 is_minor: true,
                                                 estudiantes: [newStudent],
+                                                responsable: { ...data.responsable, modality: '' },
                                             });
                                             setCurrentEstudianteIndex(0);
+                                        } else if (esMinor) {
+                                            // Es menor pero ya hay estudiantes
+                                            setData({
+                                                ...data,
+                                                is_minor: true,
+                                                responsable: { ...data.responsable, modality: '' },
+                                            });
                                         } else {
-                                            setData('is_minor', esMinor);
+                                            // Es adulto, asignar modalidad automáticamente
+                                            setData({
+                                                ...data,
+                                                is_minor: false,
+                                                responsable: { ...data.responsable, modality: 'Linaje Big' },
+                                            });
                                         }
                                     }}
                                     className="flex gap-4"
@@ -637,18 +627,6 @@ export default function Create({ programs, paymentMethods, modalityPrices }: Cre
                                     )}
 
                                     <div>
-                                        <Label>Instrumento que deseas estudiar *</Label>
-                                        <Input
-                                            value={data.responsable.desired_instrument || ''}
-                                            onChange={(e) =>
-                                                setData('responsable', { ...data.responsable, desired_instrument: e.target.value })
-                                            }
-                                            placeholder="Ej: Piano, Guitarra, Canto"
-                                        />
-                                        <InputError message={errors['responsable.desired_instrument']} />
-                                    </div>
-
-                                    <div>
                                         <Label>Modalidad</Label>
                                         <div className="p-3 bg-green-50 border border-green-200 rounded-md">
                                             <p className="font-medium text-green-800">Linaje Big (18+ años)</p>
@@ -660,22 +638,6 @@ export default function Create({ programs, paymentMethods, modalityPrices }: Cre
                                         </div>
                                     </div>
 
-                                    <div>
-                                        <Label>Nivel a inscribirse *</Label>
-                                        <Input
-                                            type="number"
-                                            min="1"
-                                            max="10"
-                                            value={data.responsable.current_level || 1}
-                                            onChange={(e) =>
-                                                setData('responsable', { ...data.responsable, current_level: parseInt(e.target.value) || 1 })
-                                            }
-                                        />
-                                        <p className="text-xs text-gray-600 mt-1">
-                                            Si eres principiante, deja el nivel en 1
-                                        </p>
-                                        <InputError message={errors['responsable.current_level']} />
-                                    </div>
                                 </div>
 
                                 {/* Selección de Programa */}
@@ -738,7 +700,7 @@ export default function Create({ programs, paymentMethods, modalityPrices }: Cre
                                                             <SelectContent>
                                                                 {availableSchedules.map((schedule) => (
                                                                     <SelectItem key={schedule.id} value={schedule.id.toString()}>
-                                                                        {schedule.days_of_week} | {schedule.start_time} - {schedule.end_time} | Prof. {schedule.professor.name} | Cupos: {schedule.available_slots}
+                                                                        {schedule.days_of_week} | {schedule.start_time} - {schedule.end_time} | Prof. {schedule.professor?.name ?? 'Sin asignar'} | Cupos: {schedule.available_slots}
                                                                     </SelectItem>
                                                                 ))}
                                                             </SelectContent>
@@ -1083,24 +1045,6 @@ export default function Create({ programs, paymentMethods, modalityPrices }: Cre
                                         )}
 
                                         <div>
-                                            <Label>Instrumento que desea estudiar *</Label>
-                                            <Input
-                                                value={estudianteActual.datos_musicales.desired_instrument}
-                                                onChange={(e) =>
-                                                    handleUpdateStudent(
-                                                        currentEstudianteIndex,
-                                                        'datos_musicales.desired_instrument',
-                                                        e.target.value
-                                                    )
-                                                }
-                                                placeholder="Ej: Piano, Guitarra, Canto"
-                                            />
-                                            <InputError
-                                                message={errors[`estudiantes.${currentEstudianteIndex}.datos_musicales.desired_instrument`]}
-                                            />
-                                        </div>
-
-                                        <div>
                                             <Label>Modalidad según edad *</Label>
                                             <Select
                                                 value={estudianteActual.datos_musicales.modality}
@@ -1126,26 +1070,6 @@ export default function Create({ programs, paymentMethods, modalityPrices }: Cre
                                             />
                                         </div>
 
-                                        <div>
-                                            <Label>Nivel a inscribirse *</Label>
-                                            <Input
-                                                type="number"
-                                                min="1"
-                                                max="10"
-                                                value={estudianteActual.datos_musicales.current_level}
-                                                onChange={(e) =>
-                                                    handleUpdateStudent(
-                                                        currentEstudianteIndex,
-                                                        'datos_musicales.current_level',
-                                                        parseInt(e.target.value) || 1
-                                                    )
-                                                }
-                                            />
-                                            <p className="text-xs text-gray-600 mt-1">
-                                                Si es principiante, deja el nivel en 1
-                                            </p>
-                                            <InputError message={errors[`estudiantes.${currentEstudianteIndex}.datos_musicales.current_level`]} />
-                                        </div>
                                     </div>
 
                                     {/* Selección de Programa */}
@@ -1212,7 +1136,7 @@ export default function Create({ programs, paymentMethods, modalityPrices }: Cre
                                                                     {availableSchedules.map((schedule) => (
                                                                         <SelectItem key={schedule.id} value={schedule.id.toString()}>
                                                                             {schedule.days_of_week} | {schedule.start_time} -{' '}
-                                                                            {schedule.end_time} | Prof. {schedule.professor.name} | Cupos:{' '}
+                                                                            {schedule.end_time} | Prof. {schedule.professor?.name ?? 'Sin asignar'} | Cupos:{' '}
                                                                             {schedule.available_slots}
                                                                         </SelectItem>
                                                                     ))}
@@ -1306,19 +1230,71 @@ export default function Create({ programs, paymentMethods, modalityPrices }: Cre
                                     dicho acuerdo, es usted quien tiene la responsabilidad final de los pagos con la Academia.
                                 </p>
 
-                                {data.is_minor && data.estudiantes.length > 0 && (
-                                    <div className="pt-2 space-y-2">
-                                        <p className="text-sm font-semibold">Resumen de matrículas:</p>
-                                        {data.estudiantes.map((est, index) => (
-                                            <div key={index} className="text-sm p-2 bg-gray-50 rounded">
+                                {data.is_minor && data.estudiantes.length > 0 && (() => {
+                                    const hasDiscount = discountPercentage > 0 && data.estudiantes.length >= discountMinStudents;
+                                    return (
+                                        <div className="pt-2 space-y-2">
+                                            <p className="text-sm font-semibold">Resumen de matrículas:</p>
+                                            {data.estudiantes.map((est, index) => {
+                                                const price = getModalityPrice(est.datos_musicales.modality);
+                                                const discountAmount = hasDiscount && price ? Math.round(price * (discountPercentage / 100)) : 0;
+                                                const finalPrice = price ? price - discountAmount : null;
+                                                return (
+                                                    <div key={index} className="text-sm p-2 bg-gray-50 rounded">
+                                                        <div className="flex items-center justify-between">
+                                                            <p>
+                                                                <strong>{est.name} {est.last_name}</strong> - {est.datos_musicales.modality} -{' '}
+                                                                {programs.find((p) => p.id.toString() === est.program_id)?.name}
+                                                            </p>
+                                                            {finalPrice !== null && (
+                                                                <div className="text-right">
+                                                                    {hasDiscount ? (
+                                                                        <>
+                                                                            <span className="line-through text-gray-400 text-xs mr-1">
+                                                                                {formatPrice(price!)}
+                                                                            </span>
+                                                                            <span className="font-semibold text-green-700">
+                                                                                {formatPrice(finalPrice)}
+                                                                            </span>
+                                                                        </>
+                                                                    ) : (
+                                                                        <span className="font-semibold">
+                                                                            {formatPrice(finalPrice)}
+                                                                        </span>
+                                                                    )}
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
+                                            {hasDiscount && (
+                                                <div className="p-2 bg-green-50 border border-green-200 rounded text-sm text-green-800 flex items-center gap-2">
+                                                    <CheckCircle className="h-4 w-4 flex-shrink-0" />
+                                                    <span>
+                                                        <strong>{discountPercentage}% de descuento</strong> aplicado por matricular {data.estudiantes.length} estudiantes
+                                                    </span>
+                                                </div>
+                                            )}
+                                        </div>
+                                    );
+                                })()}
+
+                                {!data.is_minor && (() => {
+                                    const price = getModalityPrice(data.responsable.modality);
+                                    return price !== null ? (
+                                        <div className="pt-2 space-y-2">
+                                            <p className="text-sm font-semibold">Resumen de matrícula:</p>
+                                            <div className="text-sm p-2 bg-gray-50 rounded flex items-center justify-between">
                                                 <p>
-                                                    <strong>{est.name} {est.last_name}</strong> - {est.datos_musicales.modality} -{' '}
-                                                    {programs.find((p) => p.id.toString() === est.program_id)?.name}
+                                                    <strong>{data.responsable.name} {data.responsable.last_name}</strong> - {data.responsable.modality} -{' '}
+                                                    {programs.find((p) => p.id.toString() === data.responsable.program_id)?.name}
                                                 </p>
+                                                <span className="font-semibold">{formatPrice(price)}</span>
                                             </div>
-                                        ))}
-                                    </div>
-                                )}
+                                        </div>
+                                    ) : null;
+                                })()}
 
                                 <div className="flex items-center space-x-2 pt-2">
                                     <Checkbox

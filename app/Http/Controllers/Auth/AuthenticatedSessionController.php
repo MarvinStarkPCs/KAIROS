@@ -54,6 +54,10 @@ class AuthenticatedSessionController extends Controller
             return redirect()->route('profesor.mis-grupos');
         }
 
+        if ($user->hasRole('Padre/Madre')) {
+            return redirect()->route('padre.dashboard');
+        }
+
         return redirect()->intended(route('programas_academicos.index', absolute: false));
     }
 

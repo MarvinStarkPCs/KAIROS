@@ -25,7 +25,6 @@ class EnrollmentRequest extends FormRequest
             'responsable.name' => ['required', 'string', 'max:255'],
             'responsable.last_name' => ['required', 'string', 'max:255'],
             'responsable.email' => ['required', 'email', 'max:255', 'unique:users,email'],
-            'responsable.password' => ['required', 'string', 'min:8', 'confirmed'],
             'responsable.document_type' => ['required', Rule::in(['TI', 'CC', 'CE', 'Pasaporte'])],
             'responsable.document_number' => ['required', 'string', 'max:50', 'unique:users,document_number'],
             'responsable.birth_place' => ['nullable', 'string', 'max:255'],
@@ -42,14 +41,12 @@ class EnrollmentRequest extends FormRequest
             'is_minor' => ['required', 'boolean'],
 
             // Datos musicales del responsable (si es adulto)
-            'responsable.plays_instrument' => ['required_if:is_minor,false', 'boolean'],
+            'responsable.plays_instrument' => ['nullable', 'required_if:is_minor,false', 'boolean'],
             'responsable.instruments_played' => ['nullable', 'string'],
-            'responsable.has_music_studies' => ['required_if:is_minor,false', 'boolean'],
+            'responsable.has_music_studies' => ['nullable', 'required_if:is_minor,false', 'boolean'],
             'responsable.music_schools' => ['nullable', 'string'],
-            'responsable.desired_instrument' => ['required_if:is_minor,false', 'string', 'max:255'],
-            'responsable.modality' => ['required_if:is_minor,false', Rule::in(['Linaje Kids', 'Linaje Teens', 'Linaje Big'])],
-            'responsable.current_level' => ['required_if:is_minor,false', 'integer', 'min:1', 'max:10'],
-            'responsable.program_id' => ['required_if:is_minor,false', 'exists:academic_programs,id'],
+            'responsable.modality' => ['nullable', 'required_if:is_minor,false', Rule::in(['Linaje Kids', 'Linaje Teens', 'Linaje Big'])],
+            'responsable.program_id' => ['nullable', 'required_if:is_minor,false', 'exists:academic_programs,id'],
             'responsable.schedule_id' => ['nullable', 'exists:schedules,id'],
 
             // Estudiantes (si es menor)
@@ -78,9 +75,7 @@ class EnrollmentRequest extends FormRequest
             'estudiantes.*.datos_musicales.instruments_played' => ['nullable', 'string'],
             'estudiantes.*.datos_musicales.has_music_studies' => ['required', 'boolean'],
             'estudiantes.*.datos_musicales.music_schools' => ['nullable', 'string'],
-            'estudiantes.*.datos_musicales.desired_instrument' => ['required', 'string', 'max:255'],
             'estudiantes.*.datos_musicales.modality' => ['required', Rule::in(['Linaje Kids', 'Linaje Teens', 'Linaje Big'])],
-            'estudiantes.*.datos_musicales.current_level' => ['required', 'integer', 'min:1', 'max:10'],
             'estudiantes.*.program_id' => ['required', 'exists:academic_programs,id'],
             'estudiantes.*.schedule_id' => ['nullable', 'exists:schedules,id'],
 
@@ -109,8 +104,6 @@ class EnrollmentRequest extends FormRequest
             'responsable.last_name.required' => 'Los apellidos del responsable son obligatorios',
             'responsable.email.required' => 'El correo electrónico es obligatorio',
             'responsable.email.unique' => 'Este correo electrónico ya está registrado',
-            'responsable.password.min' => 'La contraseña debe tener al menos 8 caracteres',
-            'responsable.password.confirmed' => 'Las contraseñas no coinciden',
             'responsable.document_number.required' => 'El número de documento es obligatorio',
             'responsable.document_number.unique' => 'Este número de documento ya está registrado',
             'responsable.birth_date.required' => 'La fecha de nacimiento es obligatoria',
@@ -121,7 +114,6 @@ class EnrollmentRequest extends FormRequest
             'responsable.department.required' => 'El departamento es obligatorio',
 
             // Datos musicales responsable
-            'responsable.desired_instrument.required_if' => 'Debe indicar el instrumento que desea estudiar',
             'responsable.modality.required_if' => 'Debe seleccionar una modalidad',
             'responsable.program_id.required_if' => 'Debe seleccionar un programa académico',
 
@@ -137,7 +129,6 @@ class EnrollmentRequest extends FormRequest
             'estudiantes.*.birth_date.required' => 'La fecha de nacimiento del estudiante es obligatoria',
             'estudiantes.*.birth_date.before' => 'La fecha de nacimiento debe ser anterior a hoy',
             'estudiantes.*.gender.required' => 'El género del estudiante es obligatorio',
-            'estudiantes.*.datos_musicales.desired_instrument.required' => 'Debe indicar el instrumento que el estudiante desea estudiar',
             'estudiantes.*.datos_musicales.modality.required' => 'Debe seleccionar una modalidad para el estudiante',
             'estudiantes.*.program_id.required' => 'Debe seleccionar un programa académico para cada estudiante',
 

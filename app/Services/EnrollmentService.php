@@ -11,6 +11,7 @@ use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 
 class EnrollmentService
 {
@@ -23,7 +24,7 @@ class EnrollmentService
             'name' => $data['name'],
             'last_name' => $data['last_name'],
             'email' => $data['email'],
-            'password' => Hash::make($data['password']),
+            'password' => Hash::make(Str::random(16)),
             'document_type' => $data['document_type'],
             'document_number' => $data['document_number'],
             'birth_place' => $data['birth_place'] ?? null,
@@ -64,7 +65,7 @@ class EnrollmentService
             'name' => $data['name'],
             'last_name' => $data['last_name'],
             'email' => $data['email'] ?? null,
-            'password' => Hash::make('temporal123'), // Temporal
+            'password' => Hash::make(Str::random(16)),
             'document_type' => $data['document_type'],
             'document_number' => $data['document_number'],
             'birth_place' => $data['birth_place'] ?? null,
@@ -114,21 +115,45 @@ class EnrollmentService
     }
 
     /**
-     * Obtener monto de pago configurado según la modalidad
+     * Obtener monto de pago configurado según la modalidad, con descuento si aplica
+     *
+     * @return array{amount: float, original_amount: float, discount_percentage: float, discount_amount: float}
      */
-    public function getPaymentAmount(string $modality): float
+    public function getPaymentAmount(string $modality, int $totalStudents = 1): array
     {
         $paymentSetting = PaymentSetting::where('is_active', true)->first();
 
         if (! $paymentSetting) {
             // Valores por defecto si no hay configuración
-            return 100000;
+            $defaultAmount = 100000;
+
+            return [
+                'amount' => $defaultAmount,
+                'original_amount' => $defaultAmount,
+                'discount_percentage' => 0,
+                'discount_amount' => 0,
+            ];
         }
 
-        $amount = $paymentSetting->getAmountForModality($modality);
+        $originalAmount = $paymentSetting->getAmountForModality($modality);
+        $discountPercentage = $paymentSetting->getDiscountPercentage($totalStudents);
+        $discountAmount = 0;
+        $finalAmount = $originalAmount;
+
+        if ($discountPercentage > 0) {
+            $discountAmount = round($originalAmount * ($discountPercentage / 100), 2);
+            $finalAmount = $originalAmount - $discountAmount;
+        }
 
         // Validar mínimo de Wompi (1,500 COP)
-        return max($amount, 1500);
+        $finalAmount = max($finalAmount, 1500);
+
+        return [
+            'amount' => $finalAmount,
+            'original_amount' => $originalAmount,
+            'discount_percentage' => $discountPercentage,
+            'discount_amount' => $discountAmount,
+        ];
     }
 
     /**
@@ -160,21 +185,29 @@ class EnrollmentService
         int $enrollmentId,
         string $programName,
         string $modality,
-        ?int $scheduleId = null
+        ?int $scheduleId = null,
+        int $totalStudents = 1
     ): Payment {
-        $amount = $this->getPaymentAmount($modality);
+        $paymentInfo = $this->getPaymentAmount($modality, $totalStudents);
+
+        $concept = "Matrícula {$programName} - {$student->name} ({$modality})";
+        if ($paymentInfo['discount_percentage'] > 0) {
+            $concept .= " - Descuento {$paymentInfo['discount_percentage']}%";
+        }
 
         return Payment::create([
             'student_id' => $student->id,
             'program_id' => $programId,
             'enrollment_id' => $enrollmentId,
-            'concept' => "Matrícula {$programName} - {$student->name} ({$modality})",
+            'concept' => $concept,
             'modality' => $modality,
             'payment_type' => 'single',
-            'amount' => $amount,
-            'original_amount' => $amount,
+            'amount' => $paymentInfo['amount'],
+            'original_amount' => $paymentInfo['original_amount'],
+            'discount_percentage' => $paymentInfo['discount_percentage'] > 0 ? $paymentInfo['discount_percentage'] : null,
+            'discount_amount' => $paymentInfo['discount_amount'] > 0 ? $paymentInfo['discount_amount'] : null,
             'paid_amount' => 0,
-            'remaining_amount' => $amount,
+            'remaining_amount' => $paymentInfo['amount'],
             'due_date' => Carbon::today(),
             'status' => 'pending',
             'wompi_reference' => "MAT-{$enrollmentId}-".time(),
@@ -283,6 +316,7 @@ class EnrollmentService
             $parentGuardianName = $responsible->name.' '.$responsible->last_name;
 
             $payments = [];
+            $totalStudents = count($data['estudiantes']);
 
             // 3. Procesar cada estudiante
             foreach ($data['estudiantes'] as $estudianteData) {
@@ -315,7 +349,7 @@ class EnrollmentService
                     $this->createScheduleEnrollment($student, $scheduleId);
                 }
 
-                // Crear pago
+                // Crear pago (con descuento si aplica por múltiples estudiantes)
                 $programName = \App\Models\AcademicProgram::find($estudianteData['program_id'])->name;
                 $modality = $datosMusicales['modality'] ?? 'Linaje Kids';
                 $payment = $this->createPayment(
@@ -324,7 +358,8 @@ class EnrollmentService
                     $enrollment->id,
                     $programName,
                     $modality,
-                    $scheduleId
+                    $scheduleId,
+                    $totalStudents
                 );
 
                 $payments[] = $payment;

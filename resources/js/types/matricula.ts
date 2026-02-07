@@ -13,9 +13,7 @@ export interface DatosMusicales {
     instruments_played: string;
     has_music_studies: boolean;
     music_schools: string;
-    desired_instrument: string;
     modality: StudyModality;
-    current_level: number;
 }
 
 // Interfaz para estudiante
@@ -38,8 +36,6 @@ export interface Responsable {
     name: string;
     last_name: string;
     email: string;
-    password: string;
-    password_confirmation: string;
     document_type: DocumentType;
     document_number: string;
     birth_place: string;
@@ -56,9 +52,7 @@ export interface Responsable {
     instruments_played: string;
     has_music_studies: boolean;
     music_schools: string;
-    desired_instrument: string;
     modality: StudyModality;
-    current_level: number;
     program_id: string;
     schedule_id: string;
 }
@@ -98,6 +92,12 @@ export interface AcademicProgram {
 // Precios por modalidad
 export type ModalityPrices = Record<'Linaje Kids' | 'Linaje Teens' | 'Linaje Big', number>;
 
+// Info de descuento por múltiples estudiantes
+export interface DiscountInfo {
+    min_students: number;
+    percentage: number;
+}
+
 // Props del componente Create
 export interface CreateProps {
     programs: AcademicProgram[];
@@ -106,6 +106,7 @@ export interface CreateProps {
         manual: boolean;
     };
     modalityPrices?: ModalityPrices;
+    discountInfo?: DiscountInfo;
 }
 
 // Constantes

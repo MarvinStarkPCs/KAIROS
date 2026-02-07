@@ -17,6 +17,8 @@ class PaymentSetting extends Model
         'is_active',
         'enable_online_payment',
         'enable_manual_payment',
+        'discount_min_students',
+        'discount_percentage',
     ];
 
     protected $casts = [
@@ -26,6 +28,8 @@ class PaymentSetting extends Model
         'is_active' => 'boolean',
         'enable_online_payment' => 'boolean',
         'enable_manual_payment' => 'boolean',
+        'discount_min_students' => 'integer',
+        'discount_percentage' => 'decimal:2',
     ];
 
     // Activity Log configuration
@@ -39,6 +43,8 @@ class PaymentSetting extends Model
                 'is_active',
                 'enable_online_payment',
                 'enable_manual_payment',
+                'discount_min_students',
+                'discount_percentage',
             ])
             ->logOnlyDirty()
             ->useLogName('payment_settings');
@@ -55,5 +61,18 @@ class PaymentSetting extends Model
             'Linaje Big' => (float) $this->amount_linaje_big,
             default => (float) $this->amount_linaje_kids,
         };
+    }
+
+    /**
+     * Obtener el porcentaje de descuento según la cantidad de estudiantes
+     * Retorna 0 si no aplica descuento
+     */
+    public function getDiscountPercentage(int $totalStudents): float
+    {
+        if ($totalStudents >= $this->discount_min_students && $this->discount_percentage > 0) {
+            return (float) $this->discount_percentage;
+        }
+
+        return 0;
     }
 }

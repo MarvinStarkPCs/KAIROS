@@ -11,10 +11,6 @@ export const validateResponsableStep = (
                 data.name &&
                 data.last_name &&
                 data.email &&
-                data.password &&
-                data.password_confirmation &&
-                data.password === data.password_confirmation &&
-                data.password.length >= 8 &&
                 data.document_type &&
                 data.document_number &&
                 // birth_place es opcional
@@ -45,7 +41,6 @@ export const validateStudent = (student: Student): boolean => {
         // birth_place es opcional
         student.birth_date &&
         student.gender &&
-        student.datos_musicales.desired_instrument &&
         student.datos_musicales.modality &&
         student.program_id
         // schedule_id es opcional
@@ -62,7 +57,6 @@ export const validateAllStudents = (students: Student[]): boolean => {
 // Nota: modality ya no se requiere porque los adultos son automáticamente "Linaje Big"
 export const validateAdultMusicalData = (data: MatriculaFormData['responsable']): boolean => {
     return !!(
-        data.desired_instrument &&
         data.program_id
         // schedule_id es opcional
         // modality es automático (Linaje Big) para adultos

@@ -1,6 +1,6 @@
 import { type BreadcrumbItem } from '@/types';
 import { useForm, Head } from '@inertiajs/react';
-import { DollarSign, CreditCard, Banknote, AlertTriangle, Users } from 'lucide-react';
+import { DollarSign, CreditCard, Banknote, AlertTriangle, Users, Percent, Tag } from 'lucide-react';
 import { FormEventHandler } from 'react';
 
 import HeadingSmall from '@/components/heading-small';
@@ -27,6 +27,8 @@ interface PaymentSetting {
     is_active: boolean;
     enable_online_payment: boolean;
     enable_manual_payment: boolean;
+    discount_min_students: number;
+    discount_percentage: string;
 }
 
 const MODALITIES = [
@@ -62,6 +64,8 @@ export default function PaymentSettings({
         is_active: paymentSetting?.is_active ?? true,
         enable_online_payment: paymentSetting?.enable_online_payment ?? true,
         enable_manual_payment: paymentSetting?.enable_manual_payment ?? true,
+        discount_min_students: paymentSetting?.discount_min_students ?? 3,
+        discount_percentage: paymentSetting?.discount_percentage ?? '0',
     });
 
     // No permitir desactivar ambos métodos
@@ -158,7 +162,7 @@ export default function PaymentSettings({
                                                         id={modality.key}
                                                         type="number"
                                                         min="1500"
-                                                        step="1000"
+                                                        step="1"
                                                         className="w-36 text-right font-semibold"
                                                         value={data[modality.key]}
                                                         onChange={(e) => setData(modality.key, e.target.value)}
@@ -281,6 +285,118 @@ export default function PaymentSettings({
                             )}
                         </div>
 
+                        {/* Descuento por Múltiples Estudiantes */}
+                        <div className="rounded-lg border p-6 space-y-4">
+                            <div className="flex items-center gap-2">
+                                <Tag className="h-5 w-5 text-primary" />
+                                <h3 className="text-base font-semibold">Descuento por Múltiples Estudiantes</h3>
+                            </div>
+                            <p className="text-sm text-muted-foreground -mt-2">
+                                Configura un descuento automático cuando un responsable matricula varios estudiantes a la vez.
+                            </p>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                {/* Mínimo de estudiantes */}
+                                <div className="rounded-lg border p-4 border-purple-200 bg-purple-50/50">
+                                    <div className="flex items-center gap-3 mb-3">
+                                        <div className="p-2 rounded-full bg-purple-500 text-white">
+                                            <Users className="h-4 w-4" />
+                                        </div>
+                                        <div>
+                                            <Label htmlFor="discount_min_students" className="text-base font-medium">
+                                                Mínimo de estudiantes
+                                            </Label>
+                                            <p className="text-sm text-muted-foreground">
+                                                A partir de cuántos estudiantes aplica
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <Input
+                                        id="discount_min_students"
+                                        type="number"
+                                        min="2"
+                                        max="20"
+                                        step="1"
+                                        className="w-full text-center font-semibold text-lg"
+                                        value={data.discount_min_students}
+                                        onChange={(e) => setData('discount_min_students', parseInt(e.target.value) || 2)}
+                                        required
+                                    />
+                                    <InputError message={errors.discount_min_students} />
+                                </div>
+
+                                {/* Porcentaje de descuento */}
+                                <div className="rounded-lg border p-4 border-purple-200 bg-purple-50/50">
+                                    <div className="flex items-center gap-3 mb-3">
+                                        <div className="p-2 rounded-full bg-purple-500 text-white">
+                                            <Percent className="h-4 w-4" />
+                                        </div>
+                                        <div>
+                                            <Label htmlFor="discount_percentage" className="text-base font-medium">
+                                                Porcentaje de descuento
+                                            </Label>
+                                            <p className="text-sm text-muted-foreground">
+                                                Descuento aplicado a cada matrícula
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <Input
+                                            id="discount_percentage"
+                                            type="number"
+                                            min="0"
+                                            max="100"
+                                            step="0.5"
+                                            className="w-full text-center font-semibold text-lg"
+                                            value={data.discount_percentage}
+                                            onChange={(e) => setData('discount_percentage', e.target.value)}
+                                            required
+                                        />
+                                        <span className="text-lg font-semibold text-muted-foreground">%</span>
+                                    </div>
+                                    <InputError message={errors.discount_percentage} />
+                                </div>
+                            </div>
+
+                            {/* Vista previa del descuento */}
+                            {Number(data.discount_percentage) > 0 && (
+                                <div className="rounded-lg bg-purple-50 border border-purple-200 p-4 space-y-2">
+                                    <p className="text-sm font-medium text-purple-900">Vista Previa del Descuento</p>
+                                    <p className="text-sm text-purple-800">
+                                        Si un responsable matricula <strong>{data.discount_min_students} o más estudiantes</strong>,
+                                        cada uno recibe un <strong>{Number(data.discount_percentage)}% de descuento</strong>.
+                                    </p>
+                                    <div className="grid grid-cols-3 gap-3 pt-2">
+                                        {MODALITIES.map((modality) => {
+                                            const original = Number(data[modality.key]);
+                                            const discount = original * (Number(data.discount_percentage) / 100);
+                                            const final_amount = original - discount;
+                                            return (
+                                                <div key={modality.key} className="text-center">
+                                                    <p className="text-xs text-purple-600 mb-1">{modality.name}</p>
+                                                    <p className="text-xs text-muted-foreground line-through">
+                                                        ${original.toLocaleString('es-CO')}
+                                                    </p>
+                                                    <p className="text-base font-bold text-purple-700">
+                                                        ${Math.round(final_amount).toLocaleString('es-CO')}
+                                                    </p>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            )}
+
+                            {Number(data.discount_percentage) === 0 && (
+                                <div className="flex items-center gap-2 rounded-lg bg-gray-50 border border-gray-200 p-3 text-sm text-gray-600">
+                                    <AlertTriangle className="h-4 w-4 flex-shrink-0" />
+                                    <span>
+                                        El descuento está desactivado. Establece un porcentaje mayor a 0 para activarlo.
+                                    </span>
+                                </div>
+                            )}
+                        </div>
+
                         <div className="flex gap-3">
                             <Button type="submit" disabled={processing}>
                                 <DollarSign className="mr-2 h-4 w-4" />
@@ -316,6 +432,12 @@ export default function PaymentSettings({
                             </li>
                             <li>
                                 El monto mínimo permitido es de $1,500 COP (requerido por Wompi).
+                            </li>
+                            <li>
+                                <strong>Descuento:</strong> Se aplica automáticamente cuando un responsable matricula el número mínimo de estudiantes configurado.
+                            </li>
+                            <li>
+                                El descuento se aplica a <strong>cada matrícula</strong> individual, no al total.
                             </li>
                         </ul>
                     </div>

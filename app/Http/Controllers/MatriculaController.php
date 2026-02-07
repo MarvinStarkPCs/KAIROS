@@ -10,6 +10,7 @@ use App\Services\WompiService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\EnrollmentManualPayment;
+use App\Mail\EnrollmentWelcome;
 use App\Models\SmtpSetting;
 use App\Models\PaymentSetting;
 use Inertia\Inertia;
@@ -63,6 +64,10 @@ class MatriculaController extends Controller
                 'Linaje Teens' => (float) ($paymentSetting?->amount_linaje_teens ?? 100000),
                 'Linaje Big' => (float) ($paymentSetting?->amount_linaje_big ?? 100000),
             ],
+            'discountInfo' => [
+                'min_students' => $paymentSetting?->discount_min_students ?? 3,
+                'percentage' => (float) ($paymentSetting?->discount_percentage ?? 0),
+            ],
         ]);
     }
 
@@ -98,6 +103,23 @@ class MatriculaController extends Controller
                 : $this->enrollmentService->processAdultEnrollment($request->validated());
 
             $payments = $result['payments'];
+
+            // Enviar correo de bienvenida con datos de matrícula y enlace para establecer contraseña
+            try {
+                $this->configureSmtpFromDatabase();
+                Mail::to($result['responsible']->email)
+                    ->send(new EnrollmentWelcome(
+                        $result['responsible'],
+                        $payments,
+                        (bool) $request->is_minor
+                    ));
+            } catch (\Exception $e) {
+                \Log::error('Error al enviar correo de bienvenida', [
+                    'user_id' => $result['responsible']->id,
+                    'email' => $result['responsible']->email,
+                    'error' => $e->getMessage(),
+                ]);
+            }
 
             // Verificar método de pago
             $paymentMethod = $request->input('payment_method', 'online');

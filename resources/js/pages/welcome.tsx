@@ -666,7 +666,7 @@ export default function Welcome() {
                                                                             {schedule.start_time} - {schedule.end_time}
                                                                         </p>
                                                                         <p className="text-xs text-gray-500 mt-1">
-                                                                            Prof. {schedule.professor.name}
+                                                                            Prof. {schedule.professor?.name ?? 'Sin asignar'}
                                                                         </p>
                                                                     </div>
                                                                     <div className="flex items-center gap-2">

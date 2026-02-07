@@ -17,6 +17,8 @@ use App\Http\Controllers\CommunicationController;
 use App\Http\Controllers\MatriculaController;
 use App\Http\Controllers\DemoLeadController;
 use App\Http\Controllers\Admin\DemoLeadController as AdminDemoLeadController;
+use App\Http\Controllers\ParentController;
+use App\Http\Controllers\DependentController;
 use App\Http\Controllers\TeacherRegistrationController;
 
 // Demo Lead desde Welcome (sin autenticación, con rate limiting)
@@ -317,6 +319,38 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/calificaciones/{programId?}', [StudentController::class, 'grades'])->name('estudiante.calificaciones');
         });
     });
+
+    // === PORTAL DE PADRES/RESPONSABLES ===
+    Route::prefix('padre')->middleware(['role:Padre/Madre'])->group(function () {
+        Route::get('/dashboard', [ParentController::class, 'dashboard'])->name('padre.dashboard');
+        Route::get('/hijo/{child}/calificaciones/{programId?}', [ParentController::class, 'childGrades'])->name('padre.hijo.calificaciones');
+    });
+
+    // === GESTIÓN DE DEPENDIENTES (para Padre/Madre) ===
+    Route::prefix('dependientes')->middleware(['role:Padre/Madre'])->group(function () {
+        Route::get('/', [DependentController::class, 'index'])->name('dependientes.index');
+        Route::get('/crear', [DependentController::class, 'create'])->name('dependientes.create');
+        Route::post('/', [DependentController::class, 'store'])->name('dependientes.store');
+        Route::get('/{dependent}', [DependentController::class, 'show'])->name('dependientes.show');
+        Route::get('/{dependent}/editar', [DependentController::class, 'edit'])->name('dependientes.edit');
+        Route::put('/{dependent}', [DependentController::class, 'update'])->name('dependientes.update');
+        Route::delete('/{dependent}', [DependentController::class, 'destroy'])->name('dependientes.destroy');
+    });
+
+    // === RUTA DASHBOARD (redirect por rol - para Fortify two-factor y otros redirects) ===
+    Route::get('/dashboard', function () {
+        $user = auth()->user();
+        if ($user->hasRole('Estudiante')) {
+            return redirect()->route('estudiante.calificaciones');
+        }
+        if ($user->hasRole('Profesor')) {
+            return redirect()->route('profesor.mis-grupos');
+        }
+        if ($user->hasRole('Padre/Madre')) {
+            return redirect()->route('padre.dashboard');
+        }
+        return redirect()->route('programas_academicos.index');
+    })->name('dashboard');
 
     // Comunicaciones
     Route::middleware(['permission:ver_comunicacion'])->group(function () {

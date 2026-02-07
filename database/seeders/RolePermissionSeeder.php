@@ -108,6 +108,13 @@ class RolePermissionSeeder extends Seeder
             // Permisos de Demo Leads
             'ver_demo_leads',
             'gestionar_demo_leads',
+
+            // Permisos del Portal de Padres/Responsables
+            'ver_dependientes',
+            'crear_dependiente',
+            'editar_dependiente',
+            'eliminar_dependiente',
+            'ver_progreso_dependiente',
         ];
 
         foreach ($permissions as $permission) {
@@ -143,5 +150,17 @@ class RolePermissionSeeder extends Seeder
             'ver_comunicacion',
         ];
         $estudianteRole->syncPermissions($estudiantePermissions);
+
+        // Crear rol Padre/Madre y asignar permisos
+        $padreRole = Role::firstOrCreate(['name' => 'Padre/Madre', 'guard_name' => 'web']);
+        $padrePermissions = [
+            'ver_dependientes',
+            'crear_dependiente',
+            'editar_dependiente',
+            'eliminar_dependiente',
+            'ver_progreso_dependiente',
+            'ver_comunicacion',
+        ];
+        $padreRole->syncPermissions($padrePermissions);
     }
 }

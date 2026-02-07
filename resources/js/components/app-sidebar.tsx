@@ -43,6 +43,13 @@ const allNavItems: NavItem[] = [
         icon: Award,
         role: 'Estudiante',
     },
+    // Portal de Padres/Responsables
+    {
+        title: 'Mis Hijos',
+        href: { url: '/padre/dashboard', method: 'get' },
+        icon: Users,
+        role: 'Padre/Madre',
+    },
     // Portal de Profesores
     {
         title: 'Mis Grupos',
@@ -115,6 +122,14 @@ export function AppSidebar() {
         return item.role || item.permission ? true : true;
     });
 
+    // Determinar URL del logo según el rol del usuario
+    const getHomeUrl = () => {
+        if (userRoles.includes('Estudiante')) return StudentController.grades().url;
+        if (userRoles.includes('Profesor')) return TeacherController.myGroups().url;
+        if (userRoles.includes('Padre/Madre')) return '/padre/dashboard';
+        return ProgramAcademyController.index().url;
+    };
+
     return (
         <Sidebar collapsible="icon" variant="inset">
             {/* 🔹 Logo */}
@@ -122,7 +137,7 @@ export function AppSidebar() {
                 <SidebarMenu>
                     <SidebarMenuItem>
                         <SidebarMenuButton size="lg" asChild>
-                            <Link href={ProgramAcademyController.index().url} prefetch>
+                            <Link href={getHomeUrl()} prefetch>
                                 <AppLogo />
                             </Link>
                         </SidebarMenuButton>

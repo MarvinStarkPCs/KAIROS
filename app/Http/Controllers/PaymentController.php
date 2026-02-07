@@ -387,6 +387,8 @@ class PaymentController extends Controller
             'is_active' => ['required', 'boolean'],
             'enable_online_payment' => ['required', 'boolean'],
             'enable_manual_payment' => ['required', 'boolean'],
+            'discount_min_students' => ['required', 'integer', 'min:2', 'max:20'],
+            'discount_percentage' => ['required', 'numeric', 'min:0', 'max:100'],
         ], [
             'amount_linaje_kids.required' => 'El monto de Linaje Kids es obligatorio',
             'amount_linaje_kids.numeric' => 'El monto debe ser un número',
@@ -399,6 +401,10 @@ class PaymentController extends Controller
             'amount_linaje_big.min' => 'El monto debe ser al menos $1,500 COP',
             'is_active.required' => 'El estado es obligatorio',
             'is_active.boolean' => 'El estado debe ser verdadero o falso',
+            'discount_min_students.required' => 'El mínimo de estudiantes es obligatorio',
+            'discount_min_students.min' => 'El mínimo de estudiantes debe ser al menos 2',
+            'discount_percentage.required' => 'El porcentaje de descuento es obligatorio',
+            'discount_percentage.max' => 'El porcentaje de descuento no puede ser mayor a 100%',
         ]);
 
         // Al menos un método de pago debe estar habilitado

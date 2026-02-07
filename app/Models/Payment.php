@@ -23,6 +23,8 @@ class Payment extends Model
         'payment_type',
         'amount',
         'original_amount',
+        'discount_percentage',
+        'discount_amount',
         'paid_amount',
         'remaining_amount',
         'due_date',
@@ -48,6 +50,8 @@ class Payment extends Model
     protected $casts = [
         'amount' => 'decimal:2',
         'original_amount' => 'decimal:2',
+        'discount_percentage' => 'decimal:2',
+        'discount_amount' => 'decimal:2',
         'paid_amount' => 'decimal:2',
         'remaining_amount' => 'decimal:2',
         'due_date' => 'date',
