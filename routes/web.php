@@ -99,20 +99,21 @@ Route::get('/', function () {
         return $program->schedules->where('has_capacity', true)->count() > 0;
     })->values();
 
+    // Programas académicos normales (no demo) para mostrar en la sección de programas
+    // Agrupamos por nombre para evitar duplicados (pueden existir varios registros del mismo programa)
+    $academicPrograms = \App\Models\AcademicProgram::where('is_demo', false)
+        ->where('status', 'active')
+        ->select('id', 'name', 'description', 'monthly_fee', 'icon', 'color')
+        ->orderBy('name')
+        ->get()
+        ->unique('name')
+        ->values();
+
     return Inertia::render('welcome', [
         'demoPrograms' => $demoPrograms,
+        'academicPrograms' => $academicPrograms,
     ]);
 })->name('home');
-
-Route::get('/pagos/create', [PaymentController::class, 'create'])->name('pagos.create');
-Route::get('/usuarios/create', [UserController::class, 'create'])->name('usuarios.create');
-Route::get('/programas_academicos/create', [program_academy::class, 'create'])->name('programas_academicos.create');
-Route::get('/roles/create', [RoleController::class, 'create'])->name('roles.create');
-Route::get('/matriculas/create', [EnrollmentController::class, 'create'])->name('inscripciones.create');
-Route::get('/horarios/create', [ScheduleController::class, 'create'])->name('horarios.create');
-Route::get('/pagos/create', [PaymentController::class, 'create'])->name('pagos.create');
-Route::post('/pagos/create-installments', [PaymentController::class, 'createInstallments'])->name('pagos.create-installments');
-
 
 Route::middleware(['auth'])->group(function () {
     // === RUTAS ADMINISTRATIVAS ===
@@ -122,6 +123,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/roles', [RoleController::class, 'index'])->name('roles.index');
     });
     Route::middleware(['permission:crear_rol'])->group(function () {
+        Route::get('/roles/create', [RoleController::class, 'create'])->name('roles.create');
         Route::post('/roles', [RoleController::class, 'store'])->name('roles.store');
     });
     Route::middleware(['permission:editar_rol'])->group(function () {
@@ -139,6 +141,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/usuarios/{user}', [UserController::class, 'show'])->name('usuarios.show');
     });
     Route::middleware(['permission:crear_usuario'])->group(function () {
+        Route::get('/usuarios/create', [UserController::class, 'create'])->name('usuarios.create');
         Route::post('/usuarios', [UserController::class, 'store'])->name('usuarios.store');
     });
     Route::middleware(['permission:editar_usuario'])->group(function () {
@@ -156,7 +159,7 @@ Route::middleware(['auth'])->group(function () {
     });
 
     // Demo Leads (Gestión de solicitudes de clases demo)
-    Route::prefix('admin/demo-leads')->name('admin.demo-leads.')->group(function () {
+    Route::prefix('admin/demo-leads')->name('admin.demo-leads.')->middleware(['permission:ver_demo_leads'])->group(function () {
         Route::get('/', [AdminDemoLeadController::class, 'index'])->name('index');
         Route::get('/{lead}', [AdminDemoLeadController::class, 'show'])->name('show');
         Route::patch('/{lead}/status', [AdminDemoLeadController::class, 'updateStatus'])->name('update-status');
@@ -170,6 +173,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/programas_academicos/{program}', [program_academy::class, 'show'])->name('programas_academicos.show');
     });
     Route::middleware(['permission:crear_programa'])->group(function () {
+        Route::get('/programas_academicos/create', [program_academy::class, 'create'])->name('programas_academicos.create');
         Route::post('/programas_academicos', [program_academy::class, 'store'])->name('programas_academicos.store');
     });
     Route::middleware(['permission:editar_programa'])->group(function () {
@@ -216,6 +220,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/programs/{program}/available-students', [EnrollmentController::class, 'availableStudents'])->name('programs.available-students');
     });
     Route::middleware(['permission:crear_inscripcion'])->group(function () {
+        Route::get('/matriculas/create', [EnrollmentController::class, 'create'])->name('inscripciones.create');
         Route::post('/matriculas', [EnrollmentController::class, 'store'])->name('inscripciones.store');
         Route::post('/matriculas/quick-enroll', [EnrollmentController::class, 'quickEnroll'])->name('inscripciones.quick-enroll');
     });
@@ -236,6 +241,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/horarios/{schedule}', [ScheduleController::class, 'show'])->name('horarios.show');
     });
     Route::middleware(['permission:crear_horario'])->group(function () {
+        Route::get('/horarios/create', [ScheduleController::class, 'create'])->name('horarios.create');
         Route::post('/horarios', [ScheduleController::class, 'store'])->name('horarios.store');
     });
     Route::middleware(['permission:editar_horario'])->group(function () {
@@ -280,7 +286,9 @@ Route::middleware(['auth'])->group(function () {
         Route::patch('/pagos/settings', [PaymentController::class, 'updateSettings'])->name('pagos.settings.update');
     });
     Route::middleware(['permission:crear_pago'])->group(function () {
+        Route::get('/pagos/create', [PaymentController::class, 'create'])->name('pagos.create');
         Route::post('/pagos', [PaymentController::class, 'store'])->name('pagos.store');
+        Route::post('/pagos/create-installments', [PaymentController::class, 'createInstallments'])->name('pagos.create-installments');
     });
     Route::middleware(['permission:editar_pago'])->group(function () {
         Route::get('/pagos/{payment}/edit', [PaymentController::class, 'edit'])->name('pagos.edit');
@@ -315,19 +323,19 @@ Route::middleware(['auth'])->group(function () {
 
     // === PORTAL DE ESTUDIANTES ===
     Route::prefix('estudiante')->group(function () {
-        Route::middleware(['role:Estudiante'])->group(function () {
+        Route::middleware(['role:Estudiante|Administrador'])->group(function () {
             Route::get('/calificaciones/{programId?}', [StudentController::class, 'grades'])->name('estudiante.calificaciones');
         });
     });
 
     // === PORTAL DE PADRES/RESPONSABLES ===
-    Route::prefix('padre')->middleware(['role:Padre/Madre'])->group(function () {
+    Route::prefix('padre')->middleware(['role:Padre/Madre|Administrador'])->group(function () {
         Route::get('/dashboard', [ParentController::class, 'dashboard'])->name('padre.dashboard');
         Route::get('/hijo/{child}/calificaciones/{programId?}', [ParentController::class, 'childGrades'])->name('padre.hijo.calificaciones');
     });
 
     // === GESTIÓN DE DEPENDIENTES (para Padre/Madre) ===
-    Route::prefix('dependientes')->middleware(['role:Padre/Madre'])->group(function () {
+    Route::prefix('dependientes')->middleware(['role:Padre/Madre|Administrador'])->group(function () {
         Route::get('/', [DependentController::class, 'index'])->name('dependientes.index');
         Route::get('/crear', [DependentController::class, 'create'])->name('dependientes.create');
         Route::post('/', [DependentController::class, 'store'])->name('dependientes.store');
@@ -340,6 +348,9 @@ Route::middleware(['auth'])->group(function () {
     // === RUTA DASHBOARD (redirect por rol - para Fortify two-factor y otros redirects) ===
     Route::get('/dashboard', function () {
         $user = auth()->user();
+        if ($user->hasRole('Administrador')) {
+            return redirect()->route('programas_academicos.index');
+        }
         if ($user->hasRole('Estudiante')) {
             return redirect()->route('estudiante.calificaciones');
         }

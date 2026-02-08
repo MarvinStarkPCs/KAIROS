@@ -6,7 +6,7 @@
 <img src="https://laravel.com/img/notification-logo.png" class="logo" alt="Laravel Logo">
 @else
 <h1 style="color: #92400e; font-size: 24px; font-weight: bold; margin: 0;">
-{!! $slot !!}
+🎵 {!! $slot !!}
 </h1>
 @endif
 </a>

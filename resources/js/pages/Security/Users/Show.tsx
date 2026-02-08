@@ -2,7 +2,11 @@ import { Head, Link } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ChevronLeft, Edit2, User, GraduationCap, Music, Phone, MapPin, Calendar, FileText, Heart, AlertCircle, BookOpen, CheckCircle, XCircle } from 'lucide-react';
+import {
+    ChevronLeft, Edit2, User, GraduationCap, Music, Phone, MapPin,
+    Calendar, FileText, Heart, AlertCircle, BookOpen, CheckCircle,
+    XCircle, Clock, DollarSign, Users, CalendarDays, CreditCard, School
+} from 'lucide-react';
 import { route } from 'ziggy-js';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
@@ -57,6 +61,68 @@ interface Enrollment {
     parent_guardian_name: string | null;
 }
 
+interface TeachingSchedule {
+    id: number;
+    name: string | null;
+    program_name: string | null;
+    days_of_week: string | null;
+    start_time: string | null;
+    end_time: string | null;
+    classroom: string | null;
+    status: string | null;
+    students_count: number;
+    max_students: number | null;
+}
+
+interface EnrolledSchedule {
+    id: number;
+    schedule_name: string | null;
+    program_name: string | null;
+    professor_name: string | null;
+    days_of_week: string | null;
+    start_time: string | null;
+    end_time: string | null;
+    classroom: string | null;
+    status: string | null;
+}
+
+interface PaymentSummary {
+    total: number;
+    pending: number;
+    completed: number;
+    overdue: number;
+    total_amount: number;
+    paid_amount: number;
+    pending_amount: number;
+}
+
+interface RecentPayment {
+    id: number;
+    concept: string | null;
+    program_name: string | null;
+    amount: number;
+    paid_amount: number;
+    status: string;
+    due_date: string | null;
+    payment_date: string | null;
+    installment_number: number | null;
+    total_installments: number | null;
+}
+
+interface DependentEnrollment {
+    program_name: string | null;
+    status: string;
+}
+
+interface DependentWithSummary {
+    id: number;
+    name: string;
+    email: string | null;
+    enrollments: DependentEnrollment[];
+    payments_pending: number;
+    payments_pending_amount: number;
+}
+
 interface UserData {
     id: number;
     name: string;
@@ -78,10 +144,15 @@ interface UserData {
     parent_id: number | null;
     parent: Parent | null;
     dependents: Parent[];
+    dependents_with_summary: DependentWithSummary[];
     roles: Role[];
     user_type: string;
     student_profile: StudentProfile | null;
     teacher_profile: TeacherProfile | null;
+    teaching_schedules: TeachingSchedule[];
+    enrolled_schedules: EnrolledSchedule[];
+    payment_summary: PaymentSummary;
+    recent_payments: RecentPayment[];
     enrollments: Enrollment[];
     created_at: string;
     updated_at: string;
@@ -105,6 +176,16 @@ export default function UsersShow({ user }: ShowProps) {
             month: 'long',
             day: 'numeric',
         });
+    };
+
+    const formatCurrency = (amount: number | null) => {
+        if (amount === null || amount === undefined) return '$0';
+        return '$' + Number(amount).toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+    };
+
+    const formatTime = (time: string | null) => {
+        if (!time) return '';
+        return time.substring(0, 5);
     };
 
     const getGenderLabel = (gender: string | null) => {
@@ -131,6 +212,34 @@ export default function UsersShow({ user }: ShowProps) {
         };
         return colors[type] || 'bg-gray-100 text-gray-800';
     };
+
+    const getStatusBadge = (status: string) => {
+        const map: Record<string, { label: string; variant: 'default' | 'secondary' | 'outline' | 'destructive' }> = {
+            'active': { label: 'Activo', variant: 'default' },
+            'enrolled': { label: 'Inscrito', variant: 'default' },
+            'waiting': { label: 'En espera', variant: 'secondary' },
+            'completed': { label: 'Completado', variant: 'outline' },
+            'cancelled': { label: 'Cancelado', variant: 'destructive' },
+            'suspended': { label: 'Suspendido', variant: 'destructive' },
+        };
+        const s = map[status] || { label: status, variant: 'secondary' as const };
+        return <Badge variant={s.variant}>{s.label}</Badge>;
+    };
+
+    const getPaymentStatusBadge = (status: string) => {
+        const map: Record<string, { label: string; className: string }> = {
+            'pending': { label: 'Pendiente', className: 'bg-yellow-100 text-yellow-800' },
+            'completed': { label: 'Pagado', className: 'bg-green-100 text-green-800' },
+            'overdue': { label: 'Vencido', className: 'bg-red-100 text-red-800' },
+            'partial': { label: 'Parcial', className: 'bg-blue-100 text-blue-800' },
+        };
+        const s = map[status] || { label: status, className: 'bg-gray-100 text-gray-800' };
+        return <Badge className={s.className}>{s.label}</Badge>;
+    };
+
+    const isTeacher = user.roles.some(r => r.name === 'Profesor');
+    const isStudent = user.roles.some(r => r.name === 'Estudiante');
+    const isParent = user.roles.some(r => r.name === 'Padre/Madre');
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -396,19 +505,215 @@ export default function UsersShow({ user }: ShowProps) {
                                 {user.teacher_profile.hourly_rate !== null && (
                                     <div>
                                         <p className="text-sm text-gray-500">Tarifa por Hora</p>
-                                        <p className="font-medium">${user.teacher_profile.hourly_rate.toLocaleString('es-CO')}</p>
+                                        <p className="font-medium">{formatCurrency(user.teacher_profile.hourly_rate)}</p>
                                     </div>
                                 )}
                             </CardContent>
                         </Card>
                     )}
 
-                    {/* Relaciones Familiares */}
-                    {(user.parent || user.dependents.length > 0) && (
+                    {/* === HORARIOS DEL PROFESOR === */}
+                    {isTeacher && user.teaching_schedules.length > 0 && (
+                        <Card className="md:col-span-2">
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-2">
+                                    <CalendarDays className="h-5 w-5" />
+                                    Horarios de Clase Asignados
+                                </CardTitle>
+                                <CardDescription>
+                                    {user.teaching_schedules.length} grupo{user.teaching_schedules.length !== 1 ? 's' : ''} asignado{user.teaching_schedules.length !== 1 ? 's' : ''}
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="overflow-x-auto">
+                                    <table className="w-full text-sm">
+                                        <thead>
+                                            <tr className="border-b bg-gray-50">
+                                                <th className="px-4 py-3 text-left font-medium text-gray-600">Grupo</th>
+                                                <th className="px-4 py-3 text-left font-medium text-gray-600">Programa</th>
+                                                <th className="px-4 py-3 text-left font-medium text-gray-600">Dias</th>
+                                                <th className="px-4 py-3 text-left font-medium text-gray-600">Horario</th>
+                                                <th className="px-4 py-3 text-left font-medium text-gray-600">Aula</th>
+                                                <th className="px-4 py-3 text-center font-medium text-gray-600">Estudiantes</th>
+                                                <th className="px-4 py-3 text-center font-medium text-gray-600">Estado</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y">
+                                            {user.teaching_schedules.map((schedule) => (
+                                                <tr key={schedule.id} className="hover:bg-gray-50 transition-colors">
+                                                    <td className="px-4 py-3 font-medium">{schedule.name || `Grupo #${schedule.id}`}</td>
+                                                    <td className="px-4 py-3 text-gray-700">{schedule.program_name || '-'}</td>
+                                                    <td className="px-4 py-3">
+                                                        <span className="capitalize text-gray-700">{schedule.days_of_week || '-'}</span>
+                                                    </td>
+                                                    <td className="px-4 py-3">
+                                                        <span className="flex items-center gap-1 text-gray-700">
+                                                            <Clock className="h-3.5 w-3.5 text-gray-400" />
+                                                            {formatTime(schedule.start_time)} - {formatTime(schedule.end_time)}
+                                                        </span>
+                                                    </td>
+                                                    <td className="px-4 py-3 text-gray-700">{schedule.classroom || '-'}</td>
+                                                    <td className="px-4 py-3 text-center">
+                                                        <span className="inline-flex items-center gap-1 font-medium">
+                                                            <Users className="h-3.5 w-3.5 text-gray-400" />
+                                                            {schedule.students_count}{schedule.max_students ? `/${schedule.max_students}` : ''}
+                                                        </span>
+                                                    </td>
+                                                    <td className="px-4 py-3 text-center">
+                                                        {getStatusBadge(schedule.status || 'active')}
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    )}
+
+                    {/* === HORARIOS INSCRITOS DEL ESTUDIANTE === */}
+                    {isStudent && user.enrolled_schedules.length > 0 && (
+                        <Card className="md:col-span-2">
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-2">
+                                    <CalendarDays className="h-5 w-5" />
+                                    Horarios Inscritos
+                                </CardTitle>
+                                <CardDescription>
+                                    Clases en las que esta inscrito el estudiante
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="overflow-x-auto">
+                                    <table className="w-full text-sm">
+                                        <thead>
+                                            <tr className="border-b bg-gray-50">
+                                                <th className="px-4 py-3 text-left font-medium text-gray-600">Grupo</th>
+                                                <th className="px-4 py-3 text-left font-medium text-gray-600">Programa</th>
+                                                <th className="px-4 py-3 text-left font-medium text-gray-600">Profesor</th>
+                                                <th className="px-4 py-3 text-left font-medium text-gray-600">Dias</th>
+                                                <th className="px-4 py-3 text-left font-medium text-gray-600">Horario</th>
+                                                <th className="px-4 py-3 text-left font-medium text-gray-600">Aula</th>
+                                                <th className="px-4 py-3 text-center font-medium text-gray-600">Estado</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y">
+                                            {user.enrolled_schedules.map((es) => (
+                                                <tr key={es.id} className="hover:bg-gray-50 transition-colors">
+                                                    <td className="px-4 py-3 font-medium">{es.schedule_name || '-'}</td>
+                                                    <td className="px-4 py-3 text-gray-700">{es.program_name || '-'}</td>
+                                                    <td className="px-4 py-3 text-gray-700">{es.professor_name || '-'}</td>
+                                                    <td className="px-4 py-3">
+                                                        <span className="capitalize text-gray-700">{es.days_of_week || '-'}</span>
+                                                    </td>
+                                                    <td className="px-4 py-3">
+                                                        <span className="flex items-center gap-1 text-gray-700">
+                                                            <Clock className="h-3.5 w-3.5 text-gray-400" />
+                                                            {formatTime(es.start_time)} - {formatTime(es.end_time)}
+                                                        </span>
+                                                    </td>
+                                                    <td className="px-4 py-3 text-gray-700">{es.classroom || '-'}</td>
+                                                    <td className="px-4 py-3 text-center">
+                                                        {getStatusBadge(es.status || 'enrolled')}
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    )}
+
+                    {/* === RESUMEN DE PAGOS (ESTUDIANTE) === */}
+                    {isStudent && user.payment_summary.total > 0 && (
+                        <Card className="md:col-span-2">
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-2">
+                                    <CreditCard className="h-5 w-5" />
+                                    Resumen de Pagos
+                                </CardTitle>
+                                <CardDescription>
+                                    Estado financiero del estudiante
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent className="space-y-6">
+                                {/* Tarjetas de resumen */}
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                    <div className="rounded-lg bg-blue-50 p-4 text-center">
+                                        <p className="text-2xl font-bold text-blue-700">{user.payment_summary.total}</p>
+                                        <p className="text-sm text-blue-600">Total Pagos</p>
+                                    </div>
+                                    <div className="rounded-lg bg-green-50 p-4 text-center">
+                                        <p className="text-2xl font-bold text-green-700">{formatCurrency(user.payment_summary.paid_amount)}</p>
+                                        <p className="text-sm text-green-600">Pagado</p>
+                                    </div>
+                                    <div className="rounded-lg bg-yellow-50 p-4 text-center">
+                                        <p className="text-2xl font-bold text-yellow-700">{user.payment_summary.pending}</p>
+                                        <p className="text-sm text-yellow-600">Pendientes</p>
+                                    </div>
+                                    {user.payment_summary.overdue > 0 ? (
+                                        <div className="rounded-lg bg-red-50 p-4 text-center">
+                                            <p className="text-2xl font-bold text-red-700">{user.payment_summary.overdue}</p>
+                                            <p className="text-sm text-red-600">Vencidos</p>
+                                        </div>
+                                    ) : (
+                                        <div className="rounded-lg bg-gray-50 p-4 text-center">
+                                            <p className="text-2xl font-bold text-gray-700">{formatCurrency(user.payment_summary.pending_amount)}</p>
+                                            <p className="text-sm text-gray-600">Por Pagar</p>
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Ultimos pagos */}
+                                {user.recent_payments.length > 0 && (
+                                    <div>
+                                        <h4 className="text-sm font-semibold text-gray-700 mb-3">Ultimos Pagos</h4>
+                                        <div className="overflow-x-auto">
+                                            <table className="w-full text-sm">
+                                                <thead>
+                                                    <tr className="border-b bg-gray-50">
+                                                        <th className="px-4 py-2 text-left font-medium text-gray-600">Concepto</th>
+                                                        <th className="px-4 py-2 text-left font-medium text-gray-600">Programa</th>
+                                                        <th className="px-4 py-2 text-right font-medium text-gray-600">Monto</th>
+                                                        <th className="px-4 py-2 text-left font-medium text-gray-600">Vencimiento</th>
+                                                        <th className="px-4 py-2 text-center font-medium text-gray-600">Cuota</th>
+                                                        <th className="px-4 py-2 text-center font-medium text-gray-600">Estado</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody className="divide-y">
+                                                    {user.recent_payments.map((payment) => (
+                                                        <tr key={payment.id} className="hover:bg-gray-50 transition-colors">
+                                                            <td className="px-4 py-2 font-medium">{payment.concept || '-'}</td>
+                                                            <td className="px-4 py-2 text-gray-700">{payment.program_name || '-'}</td>
+                                                            <td className="px-4 py-2 text-right font-medium">{formatCurrency(payment.amount)}</td>
+                                                            <td className="px-4 py-2 text-gray-700">{payment.due_date ? new Date(payment.due_date).toLocaleDateString('es-ES') : '-'}</td>
+                                                            <td className="px-4 py-2 text-center text-gray-700">
+                                                                {payment.installment_number && payment.total_installments
+                                                                    ? `${payment.installment_number}/${payment.total_installments}`
+                                                                    : '-'
+                                                                }
+                                                            </td>
+                                                            <td className="px-4 py-2 text-center">
+                                                                {getPaymentStatusBadge(payment.status)}
+                                                            </td>
+                                                        </tr>
+                                                    ))}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                )}
+                            </CardContent>
+                        </Card>
+                    )}
+
+                    {/* Relaciones Familiares (simple - para no-padres) */}
+                    {(user.parent || (user.dependents.length > 0 && !isParent)) && (
                         <Card>
                             <CardHeader>
                                 <CardTitle className="flex items-center gap-2">
-                                    <User className="h-5 w-5" />
+                                    <Users className="h-5 w-5" />
                                     Relaciones Familiares
                                 </CardTitle>
                             </CardHeader>
@@ -424,7 +729,7 @@ export default function UsersShow({ user }: ShowProps) {
                                         )}
                                     </div>
                                 )}
-                                {user.dependents.length > 0 && (
+                                {user.dependents.length > 0 && !isParent && (
                                     <div>
                                         <p className="text-sm text-gray-500 mb-2">Dependientes ({user.dependents.length})</p>
                                         <div className="space-y-2">
@@ -443,6 +748,62 @@ export default function UsersShow({ user }: ShowProps) {
                                         </div>
                                     </div>
                                 )}
+                            </CardContent>
+                        </Card>
+                    )}
+
+                    {/* === PORTAL DE PADRE/RESPONSABLE: Dependientes con resumen === */}
+                    {isParent && user.dependents_with_summary && user.dependents_with_summary.length > 0 && (
+                        <Card className="md:col-span-2">
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-2">
+                                    <Users className="h-5 w-5" />
+                                    Hijos / Dependientes
+                                </CardTitle>
+                                <CardDescription>
+                                    Resumen de inscripciones y pagos de cada dependiente
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="space-y-4">
+                                    {user.dependents_with_summary.map((dep) => (
+                                        <div key={dep.id} className="rounded-lg border bg-white p-5">
+                                            <div className="flex items-center justify-between mb-3">
+                                                <div>
+                                                    <Link href={route('usuarios.show', dep.id)} className="text-lg font-semibold text-blue-700 hover:underline">
+                                                        {dep.name}
+                                                    </Link>
+                                                    {dep.email && (
+                                                        <p className="text-sm text-gray-500">{dep.email}</p>
+                                                    )}
+                                                </div>
+                                                {dep.payments_pending > 0 && (
+                                                    <div className="text-right">
+                                                        <Badge className="bg-yellow-100 text-yellow-800">
+                                                            {dep.payments_pending} pago{dep.payments_pending !== 1 ? 's' : ''} pendiente{dep.payments_pending !== 1 ? 's' : ''}
+                                                        </Badge>
+                                                        <p className="text-sm text-yellow-700 mt-1 font-medium">
+                                                            {formatCurrency(dep.payments_pending_amount)}
+                                                        </p>
+                                                    </div>
+                                                )}
+                                            </div>
+                                            {dep.enrollments.length > 0 ? (
+                                                <div className="flex flex-wrap gap-2">
+                                                    {dep.enrollments.map((enr, idx) => (
+                                                        <div key={idx} className="inline-flex items-center gap-2 rounded-full bg-gray-100 px-3 py-1.5 text-sm">
+                                                            <School className="h-3.5 w-3.5 text-gray-500" />
+                                                            <span className="font-medium text-gray-800">{enr.program_name || 'Sin programa'}</span>
+                                                            {getStatusBadge(enr.status)}
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            ) : (
+                                                <p className="text-sm text-gray-400">Sin inscripciones</p>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
                             </CardContent>
                         </Card>
                     )}
@@ -471,17 +832,7 @@ export default function UsersShow({ user }: ShowProps) {
                                                         {enrollment.enrolled_level && ` - Nivel ${enrollment.enrolled_level}`}
                                                     </p>
                                                 </div>
-                                                <Badge variant={
-                                                    enrollment.status === 'active' ? 'default' :
-                                                    enrollment.status === 'waiting' ? 'secondary' :
-                                                    enrollment.status === 'completed' ? 'outline' : 'destructive'
-                                                }>
-                                                    {enrollment.status === 'active' ? 'Activo' :
-                                                     enrollment.status === 'waiting' ? 'En espera' :
-                                                     enrollment.status === 'completed' ? 'Completado' :
-                                                     enrollment.status === 'cancelled' ? 'Cancelado' :
-                                                     enrollment.status === 'suspended' ? 'Suspendido' : enrollment.status}
-                                                </Badge>
+                                                {getStatusBadge(enrollment.status)}
                                             </div>
 
                                             {/* Autorizaciones */}

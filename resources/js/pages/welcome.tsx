@@ -2,8 +2,42 @@ import { login } from '@/routes';
 import * as programas_academicos from '@/routes/programas_academicos';
 import { type SharedData } from '@/types';
 import { Head, Link, usePage, useForm } from '@inertiajs/react';
-import { Music, Users, Award, MapPin, Phone, Mail, Clock, Star, CheckCircle, Gift, ArrowRight, Play } from 'lucide-react';
-import { FormEventHandler } from 'react';
+import {
+    Music, Music2, Music3, Music4, ListMusic, AudioLines, AudioWaveform, Waves,
+    Piano, Guitar, Drum, Mic, Mic2, MicVocal, Speaker, Megaphone,
+    Disc, Disc2, Disc3, DiscAlbum, PlayCircle, Headphones, Headset,
+    Volume2, Radio, GraduationCap, School, Library, BookOpen,
+    Award, Trophy, Medal, Crown, Users, Baby, PersonStanding,
+    Palette, Brush, Sparkles, Star, Heart, Zap, Flame,
+    Sun, Moon, Rainbow, Bell, BellRing, PartyPopper,
+    Gift, Cake, MapPin, Phone, Mail, Clock, CheckCircle, ArrowRight,
+    ChevronLeft, ChevronRight,
+    type LucideIcon,
+} from 'lucide-react';
+import { FormEventHandler, useState } from 'react';
+
+// Mapa de iconos para programas académicos
+const ICON_MAP: Record<string, LucideIcon> = {
+    music: Music, music2: Music2, music3: Music3, music4: Music4,
+    listMusic: ListMusic, audioLines: AudioLines, audioWaveform: AudioWaveform, waves: Waves,
+    piano: Piano, guitar: Guitar, drum: Drum,
+    mic: Mic, mic2: Mic2, micVocal: MicVocal, speaker: Speaker, megaphone: Megaphone,
+    disc: Disc, disc2: Disc2, disc3: Disc3, discAlbum: DiscAlbum, playCircle: PlayCircle,
+    headphones: Headphones, headset: Headset, volume2: Volume2, radio: Radio,
+    graduationCap: GraduationCap, school: School, library: Library, bookOpen: BookOpen,
+    award: Award, trophy: Trophy, medal: Medal, crown: Crown,
+    users: Users, baby: Baby, personStanding: PersonStanding,
+    palette: Palette, brush: Brush, sparkles: Sparkles, star: Star,
+    heart: Heart, zap: Zap, flame: Flame,
+    sun: Sun, moon: Moon, rainbow: Rainbow,
+    bell: Bell, bellRing: BellRing, partyPopper: PartyPopper,
+    gift: Gift, cake: Cake,
+};
+
+const getIconComponent = (iconName: string | undefined | null): LucideIcon => {
+    if (!iconName) return Music;
+    return ICON_MAP[iconName] || Music;
+};
 
 interface Schedule {
     id: number;
@@ -25,12 +59,22 @@ interface DemoProgram {
     schedules?: Schedule[];
 }
 
+interface AcademicProgramData {
+    id: number;
+    name: string;
+    description: string | null;
+    monthly_fee: string;
+    icon: string | null;
+    color: string | null;
+}
+
 interface WelcomeProps extends SharedData {
     demoPrograms: DemoProgram[];
+    academicPrograms: AcademicProgramData[];
 }
 
 export default function Welcome() {
-    const { auth, demoPrograms } = usePage<WelcomeProps>().props;
+    const { auth, demoPrograms, academicPrograms } = usePage<WelcomeProps>().props;
 
     const { data, setData, post, processing, errors, reset } = useForm({
         name: '',
@@ -50,36 +94,14 @@ export default function Welcome() {
         });
     };
 
-    const programs = [
-        {
-            icon: Music,
-            title: 'Piano',
-            description: 'Clases personalizadas desde nivel principiante hasta avanzado.',
-            duration: 'Desde 1 hora/semana',
-            students: '200+'
-        },
-        {
-            icon: Music,
-            title: 'Guitarra',
-            description: 'Aprende guitarra clásica, acústica o eléctrica con expertos.',
-            duration: 'Desde 1 hora/semana',
-            students: '150+'
-        },
-        {
-            icon: Music,
-            title: 'Canto',
-            description: 'Técnica vocal, repertorio y preparación escénica.',
-            duration: 'Desde 1 hora/semana',
-            students: '100+'
-        },
-        {
-            icon: Users,
-            title: 'Ensambles',
-            description: 'Clases grupales, ensambles y talleres musicales.',
-            duration: 'Consultar horarios',
-            students: '80+'
-        }
-    ];
+    // Paginador de programas
+    const PROGRAMS_PER_PAGE = 3;
+    const [programPage, setProgramPage] = useState(0);
+    const totalProgramPages = Math.ceil(academicPrograms.length / PROGRAMS_PER_PAGE);
+    const paginatedPrograms = academicPrograms.slice(
+        programPage * PROGRAMS_PER_PAGE,
+        (programPage + 1) * PROGRAMS_PER_PAGE,
+    );
 
     const benefits = [
         'Profesores certificados con años de experiencia',
@@ -150,12 +172,16 @@ export default function Welcome() {
                     </div>
 
                     <div className="mx-auto max-w-7xl px-4 sm:px-6">
-                        {/* Free Class Badge */}
+                        {/* Free Class Badge → lleva al formulario */}
                         <div className="flex justify-center mb-8">
-                            <div className="inline-flex items-center space-x-2 rounded-full bg-gradient-to-r from-amber-600 to-orange-600 px-6 py-3 text-white shadow-xl animate-bounce-slow">
+                            <a
+                                href="#contacto"
+                                className="inline-flex items-center space-x-2 rounded-full bg-gradient-to-r from-amber-600 to-orange-600 px-6 py-3 text-white shadow-xl animate-bounce-slow hover:from-amber-700 hover:to-orange-700 hover:shadow-2xl transition-all cursor-pointer no-underline"
+                            >
                                 <Gift className="h-5 w-5" />
                                 <span className="text-sm font-bold uppercase tracking-wide">¡Primera Clase Totalmente GRATIS!</span>
-                            </div>
+                                <ArrowRight className="h-4 w-4" />
+                            </a>
                         </div>
 
                         <div className="grid gap-12 lg:grid-cols-2 lg:gap-20 items-center">
@@ -206,18 +232,20 @@ export default function Welcome() {
                                 </div>
                             </div>
 
-                            {/* Hero Image */}
+                            {/* Hero Video */}
                             <div className="relative">
-                                <div className="relative aspect-square rounded-3xl bg-gradient-to-br from-amber-300 to-orange-300 shadow-2xl overflow-hidden transform hover:scale-105 transition-transform duration-500">
-                                    <div className="absolute inset-0 flex items-center justify-center">
-                                        <Music className="h-48 w-48 text-white opacity-30" />
-                                    </div>
-                                    {/* Play button overlay */}
-                                    <div className="absolute inset-0 flex items-center justify-center bg-black/20 hover:bg-black/30 transition-colors cursor-pointer group">
-                                        <div className="flex h-20 w-20 items-center justify-center rounded-full bg-white shadow-xl group-hover:scale-110 transition-transform">
-                                            <Play className="h-10 w-10 text-amber-700 ml-1" fill="currentColor" />
-                                        </div>
-                                    </div>
+                                <div className="relative aspect-video rounded-3xl bg-gradient-to-br from-amber-300 to-orange-300 shadow-2xl overflow-hidden">
+                                    <video
+                                        className="absolute inset-0 w-full h-full object-cover"
+                                        autoPlay
+                                        muted
+                                        loop
+                                        playsInline
+                                        poster=""
+                                    >
+                                        <source src="/linaje.mp4" type="video/mp4" />
+                                        Tu navegador no soporta el elemento de video.
+                                    </video>
                                 </div>
                                 {/* Floating card */}
                                 <div className="absolute -bottom-6 -right-6 rounded-2xl bg-white p-6 shadow-2xl max-w-xs">
@@ -274,33 +302,78 @@ export default function Welcome() {
                             </p>
                         </div>
 
-                        <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4">
-                            {programs.map((program, index) => {
-                                const Icon = program.icon;
-                                return (
-                                    <div
-                                        key={index}
-                                        className="group rounded-2xl border-2 border-gray-200 bg-white p-6 transition-all hover:border-amber-400 hover:shadow-2xl transform hover:-translate-y-2"
-                                    >
-                                        <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-xl bg-gradient-to-br from-amber-100 to-orange-100 text-amber-800 group-hover:from-amber-600 group-hover:to-orange-600 group-hover:text-white transition-all">
-                                            <Icon className="h-8 w-8" />
+                        {academicPrograms.length > 0 ? (
+                            <>
+                                <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+                                    {paginatedPrograms.map((program) => {
+                                        const IconComponent = getIconComponent(program.icon);
+                                        const programColor = program.color || '#d97706';
+                                        return (
+                                            <a
+                                                key={program.id}
+                                                href="/matricula"
+                                                className="group rounded-2xl border-2 border-gray-200 bg-white p-8 transition-all hover:shadow-2xl transform hover:-translate-y-2 block no-underline"
+                                                style={{ '--program-color': programColor } as React.CSSProperties}
+                                            >
+                                                <div
+                                                    className="mb-5 flex h-16 w-16 items-center justify-center rounded-xl transition-all"
+                                                    style={{
+                                                        backgroundColor: `${programColor}15`,
+                                                    }}
+                                                >
+                                                    <IconComponent
+                                                        className="h-8 w-8 transition-all"
+                                                        style={{ color: programColor }}
+                                                    />
+                                                </div>
+                                                <h3 className="mb-2 text-xl font-bold text-gray-900 group-hover:text-amber-800 transition-colors">{program.name}</h3>
+                                                {program.description && (
+                                                    <p className="text-sm text-gray-600 mb-4 line-clamp-2">{program.description}</p>
+                                                )}
+                                                <div className="flex items-center font-semibold text-sm transition-transform group-hover:translate-x-1" style={{ color: programColor }}>
+                                                    Matricúlate <ArrowRight className="h-4 w-4 ml-1" />
+                                                </div>
+                                            </a>
+                                        );
+                                    })}
+                                </div>
+
+                                {/* Paginador */}
+                                {totalProgramPages > 1 && (
+                                    <div className="flex items-center justify-center gap-4 mt-10">
+                                        <button
+                                            onClick={() => setProgramPage((p) => Math.max(0, p - 1))}
+                                            disabled={programPage === 0}
+                                            className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-amber-300 bg-white text-amber-700 hover:bg-amber-50 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                                        >
+                                            <ChevronLeft className="h-5 w-5" />
+                                        </button>
+                                        <div className="flex items-center gap-2">
+                                            {Array.from({ length: totalProgramPages }).map((_, i) => (
+                                                <button
+                                                    key={i}
+                                                    onClick={() => setProgramPage(i)}
+                                                    className={`h-3 w-3 rounded-full transition-all ${
+                                                        i === programPage
+                                                            ? 'bg-amber-600 scale-125'
+                                                            : 'bg-amber-200 hover:bg-amber-400'
+                                                    }`}
+                                                />
+                                            ))}
                                         </div>
-                                        <h3 className="mb-2 text-xl font-bold text-gray-900">{program.title}</h3>
-                                        <p className="text-sm text-gray-600 mb-4">{program.description}</p>
-                                        <div className="flex items-center justify-between text-xs">
-                                            <div className="flex items-center text-amber-800 font-medium">
-                                                <Clock className="h-4 w-4 mr-1" />
-                                                {program.duration}
-                                            </div>
-                                            <div className="flex items-center text-gray-600 font-medium">
-                                                <Users className="h-4 w-4 mr-1" />
-                                                {program.students}
-                                            </div>
-                                        </div>
+                                        <button
+                                            onClick={() => setProgramPage((p) => Math.min(totalProgramPages - 1, p + 1))}
+                                            disabled={programPage === totalProgramPages - 1}
+                                            className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-amber-300 bg-white text-amber-700 hover:bg-amber-50 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                                        >
+                                            <ChevronRight className="h-5 w-5" />
+                                        </button>
                                     </div>
-                                );
-                            })}
-                        </div>
+                                )}
+                            </>
+                        ) : (
+                            <p className="text-center text-gray-500">Próximamente más programas disponibles.</p>
+                        )}
                     </div>
                 </section>
 

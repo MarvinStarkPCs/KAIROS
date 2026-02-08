@@ -3,14 +3,14 @@ import DemoLeadController from './DemoLeadController'
 import MatriculaController from './MatriculaController'
 import PaymentController from './PaymentController'
 import TeacherRegistrationController from './TeacherRegistrationController'
-import UserController from './UserController'
-import program_academy from './program_academy'
 import RoleController from './RoleController'
-import EnrollmentController from './EnrollmentController'
-import ScheduleController from './ScheduleController'
+import UserController from './UserController'
 import AuditController from './AuditController'
 import Admin from './Admin'
+import program_academy from './program_academy'
 import StudyPlanController from './StudyPlanController'
+import EnrollmentController from './EnrollmentController'
+import ScheduleController from './ScheduleController'
 import AttendanceController from './AttendanceController'
 import TeacherController from './TeacherController'
 import StudentController from './StudentController'
@@ -24,14 +24,14 @@ DemoLeadController: Object.assign(DemoLeadController, DemoLeadController),
 MatriculaController: Object.assign(MatriculaController, MatriculaController),
 PaymentController: Object.assign(PaymentController, PaymentController),
 TeacherRegistrationController: Object.assign(TeacherRegistrationController, TeacherRegistrationController),
-UserController: Object.assign(UserController, UserController),
-program_academy: Object.assign(program_academy, program_academy),
 RoleController: Object.assign(RoleController, RoleController),
-EnrollmentController: Object.assign(EnrollmentController, EnrollmentController),
-ScheduleController: Object.assign(ScheduleController, ScheduleController),
+UserController: Object.assign(UserController, UserController),
 AuditController: Object.assign(AuditController, AuditController),
 Admin: Object.assign(Admin, Admin),
+program_academy: Object.assign(program_academy, program_academy),
 StudyPlanController: Object.assign(StudyPlanController, StudyPlanController),
+EnrollmentController: Object.assign(EnrollmentController, EnrollmentController),
+ScheduleController: Object.assign(ScheduleController, ScheduleController),
 AttendanceController: Object.assign(AttendanceController, AttendanceController),
 TeacherController: Object.assign(TeacherController, TeacherController),
 StudentController: Object.assign(StudentController, StudentController),

@@ -35,7 +35,9 @@
       "Bash(npm run format:check:*)",
       "Bash(findstr:*)",
       "Bash(composer require:*)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(identify:*)",
+      "Bash(ls:*)"
     ],
     "deny": [],
     "ask": []

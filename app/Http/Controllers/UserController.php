@@ -130,7 +130,85 @@ class UserController extends Controller
      */
     public function show(User $user)
     {
-        $user->load(['roles', 'studentProfile', 'teacherProfile', 'parent', 'dependents', 'enrollments.program']);
+        $user->load([
+            'roles',
+            'studentProfile',
+            'teacherProfile',
+            'parent',
+            'dependents.enrollments.program',
+            'dependents.payments',
+            'enrollments.program',
+            'teachingSchedules.program',
+            'teachingSchedules.enrolledStudents',
+            'scheduleEnrollments.schedule.program',
+            'scheduleEnrollments.schedule.professor',
+            'payments.program',
+        ]);
+
+        // Horarios de enseñanza (para profesores)
+        $teachingSchedules = $user->teachingSchedules->map(fn ($schedule) => [
+            'id' => $schedule->id,
+            'name' => $schedule->name,
+            'program_name' => $schedule->program?->name,
+            'days_of_week' => $schedule->days_of_week,
+            'start_time' => $schedule->start_time,
+            'end_time' => $schedule->end_time,
+            'classroom' => $schedule->classroom,
+            'status' => $schedule->status,
+            'students_count' => $schedule->enrolledStudents->count(),
+            'max_students' => $schedule->max_students,
+        ])->toArray();
+
+        // Horarios inscritos (para estudiantes)
+        $enrolledSchedules = $user->scheduleEnrollments->map(fn ($se) => [
+            'id' => $se->id,
+            'schedule_name' => $se->schedule?->name,
+            'program_name' => $se->schedule?->program?->name,
+            'professor_name' => $se->schedule?->professor ? trim($se->schedule->professor->name.' '.($se->schedule->professor->last_name ?? '')) : null,
+            'days_of_week' => $se->schedule?->days_of_week,
+            'start_time' => $se->schedule?->start_time,
+            'end_time' => $se->schedule?->end_time,
+            'classroom' => $se->schedule?->classroom,
+            'status' => $se->status,
+        ])->toArray();
+
+        // Resumen de pagos (para estudiantes)
+        $paymentSummary = [
+            'total' => $user->payments->count(),
+            'pending' => $user->payments->where('status', 'pending')->count(),
+            'completed' => $user->payments->where('status', 'completed')->count(),
+            'overdue' => $user->payments->where('status', 'pending')->where('due_date', '<', now())->count(),
+            'total_amount' => $user->payments->sum('amount'),
+            'paid_amount' => $user->payments->where('status', 'completed')->sum('paid_amount'),
+            'pending_amount' => $user->payments->where('status', 'pending')->sum('remaining_amount'),
+        ];
+
+        // Últimos pagos
+        $recentPayments = $user->payments->sortByDesc('created_at')->take(5)->map(fn ($payment) => [
+            'id' => $payment->id,
+            'concept' => $payment->concept,
+            'program_name' => $payment->program?->name,
+            'amount' => $payment->amount,
+            'paid_amount' => $payment->paid_amount,
+            'status' => $payment->status,
+            'due_date' => $payment->due_date?->format('Y-m-d'),
+            'payment_date' => $payment->payment_date?->format('Y-m-d'),
+            'installment_number' => $payment->installment_number,
+            'total_installments' => $payment->total_installments,
+        ])->values()->toArray();
+
+        // Dependientes con resumen (para padres/responsables)
+        $dependentsWithSummary = $user->dependents->map(fn ($dep) => [
+            'id' => $dep->id,
+            'name' => trim($dep->name.' '.($dep->last_name ?? '')),
+            'email' => $dep->email,
+            'enrollments' => $dep->enrollments->map(fn ($e) => [
+                'program_name' => $e->program?->name,
+                'status' => $e->status,
+            ])->toArray(),
+            'payments_pending' => $dep->payments->where('status', 'pending')->count(),
+            'payments_pending_amount' => $dep->payments->where('status', 'pending')->sum('remaining_amount'),
+        ]);
 
         return Inertia::render('Security/Users/Show', [
             'user' => [
@@ -165,6 +243,7 @@ class UserController extends Controller
                     'name' => trim($dep->name.' '.($dep->last_name ?? '')),
                     'email' => $dep->email,
                 ]),
+                'dependents_with_summary' => $dependentsWithSummary,
                 // Roles
                 'roles' => $user->roles->map(fn ($role) => [
                     'id' => $role->id,
@@ -196,6 +275,12 @@ class UserController extends Controller
                     'hourly_rate' => $user->teacherProfile->hourly_rate,
                     'is_active' => $user->teacherProfile->is_active,
                 ] : null,
+                // Horarios
+                'teaching_schedules' => $teachingSchedules,
+                'enrolled_schedules' => $enrolledSchedules,
+                // Pagos
+                'payment_summary' => $paymentSummary,
+                'recent_payments' => $recentPayments,
                 // Inscripciones (con autorizaciones)
                 'enrollments' => $user->enrollments->map(fn ($enrollment) => [
                     'id' => $enrollment->id,

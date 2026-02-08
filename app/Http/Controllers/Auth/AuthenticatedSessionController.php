@@ -58,7 +58,8 @@ class AuthenticatedSessionController extends Controller
             return redirect()->route('padre.dashboard');
         }
 
-        return redirect()->intended(route('programas_academicos.index', absolute: false));
+        // Admin y otros roles sin portal específico van a programas académicos
+        return redirect()->route('programas_academicos.index');
     }
 
     /**
