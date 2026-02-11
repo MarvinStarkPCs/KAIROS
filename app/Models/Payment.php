@@ -172,8 +172,9 @@ class Payment extends Model
         ]);
 
         // Actualizar el pago
+        // Usar 'amount' (monto con descuento aplicado) como base, no 'original_amount' (monto sin descuento)
         $newPaidAmount = $this->paid_amount + $amount;
-        $newRemainingAmount = ($this->original_amount ?? $this->amount) - $newPaidAmount;
+        $newRemainingAmount = $this->amount - $newPaidAmount;
 
         $isCompleted = $newRemainingAmount <= 0;
 
@@ -230,14 +231,31 @@ class Payment extends Model
         string $concept,
         float $totalAmount,
         int $numberOfInstallments,
-        string $startDate
+        string $startDate,
+        ?string $modality = null,
+        ?float $originalAmount = null,
+        ?float $discountPercentage = null,
+        ?float $discountAmount = null
     ): array {
         $installmentAmount = round($totalAmount / $numberOfInstallments, 2);
         $installments = [];
 
+        // Calcular original_amount por cuota si hay descuento
+        $originalInstallmentAmount = $originalAmount
+            ? round($originalAmount / $numberOfInstallments, 2)
+            : $installmentAmount;
+
         for ($i = 1; $i <= $numberOfInstallments; $i++) {
             // Calcular fecha de vencimiento (día 5 de cada mes)
             $dueDate = \Carbon\Carbon::parse($startDate)->addMonths($i - 1)->day(5);
+
+            $cuotaAmount = $i === $numberOfInstallments
+                ? $totalAmount - ($installmentAmount * ($numberOfInstallments - 1)) // Ajustar última cuota
+                : $installmentAmount;
+
+            $cuotaOriginalAmount = $i === $numberOfInstallments
+                ? ($originalAmount ?? $totalAmount) - ($originalInstallmentAmount * ($numberOfInstallments - 1))
+                : $originalInstallmentAmount;
 
             $installments[] = self::create([
                 'student_id' => $studentId,
@@ -247,12 +265,13 @@ class Payment extends Model
                 'total_installments' => $numberOfInstallments,
                 'concept' => $concept . " - Cuota {$i}/{$numberOfInstallments}",
                 'payment_type' => 'installment',
-                'amount' => $i === $numberOfInstallments
-                    ? $totalAmount - ($installmentAmount * ($numberOfInstallments - 1)) // Ajustar última cuota
-                    : $installmentAmount,
-                'original_amount' => $installmentAmount,
+                'modality' => $modality,
+                'amount' => $cuotaAmount,
+                'original_amount' => $cuotaOriginalAmount,
+                'discount_percentage' => $discountPercentage,
+                'discount_amount' => $discountAmount ? round($discountAmount / $numberOfInstallments, 2) : null,
                 'paid_amount' => 0,
-                'remaining_amount' => $installmentAmount,
+                'remaining_amount' => $cuotaAmount,
                 'due_date' => $dueDate,
                 'status' => 'pending',
                 'recorded_by' => auth()->id(),

@@ -114,7 +114,91 @@ export default function Welcome() {
 
     return (
         <>
-            <Head title="Academia Linaje - Tu Primera Clase es GRATIS">
+            <Head title="Academia de Música en Las Llanadas | Primera Clase GRATIS">
+                {/* SEO Meta Tags */}
+                <meta name="description" content="Academia Linaje - Clases de piano, guitarra, canto y más en Las Llanadas. Profesores certificados, metodología personalizada. ¡Tu primera clase es totalmente GRATIS! Horario: Lunes a Sábado." />
+                <meta name="keywords" content="academia de música, clases de piano, clases de guitarra, clases de canto, escuela de música Las Llanadas, academia musical, clases de música para niños, clases de música para adultos, Academia Linaje, clase gratis de música, aprender instrumento musical" />
+                <meta name="robots" content="index, follow" />
+                <meta name="author" content="Academia Linaje" />
+                <link rel="canonical" href="https://academialinaje.com" />
+
+                {/* Open Graph / Facebook */}
+                <meta property="og:type" content="website" />
+                <meta property="og:url" content="https://academialinaje.com" />
+                <meta property="og:title" content="Academia Linaje | Clases de Música - Primera Clase GRATIS" />
+                <meta property="og:description" content="Aprende piano, guitarra, canto y más con profesores certificados. Metodología personalizada según tu nivel. ¡Primera clase totalmente gratis!" />
+                <meta property="og:image" content="https://academialinaje.com/logo_academia.png" />
+                <meta property="og:locale" content="es_CO" />
+                <meta property="og:site_name" content="Academia Linaje" />
+
+                {/* Twitter Card */}
+                <meta name="twitter:card" content="summary_large_image" />
+                <meta name="twitter:title" content="Academia Linaje | Clases de Música - Primera Clase GRATIS" />
+                <meta name="twitter:description" content="Aprende piano, guitarra, canto y más con profesores certificados. ¡Tu primera clase es completamente gratis!" />
+                <meta name="twitter:image" content="https://academialinaje.com/logo_academia.png" />
+
+                {/* Geo Tags */}
+                <meta name="geo.region" content="CO" />
+                <meta name="geo.placename" content="Las Llanadas" />
+
+                {/* JSON-LD Structured Data */}
+                <script type="application/ld+json">{JSON.stringify({
+                    "@context": "https://schema.org",
+                    "@type": "MusicSchool",
+                    "name": "Academia Linaje",
+                    "description": "Academia de música con clases de piano, guitarra, canto y más. Profesores certificados con metodología personalizada.",
+                    "url": "https://academialinaje.com",
+                    "logo": "https://academialinaje.com/logo_academia.png",
+                    "image": "https://academialinaje.com/logo_academia.png",
+                    "telephone": "+573004218146",
+                    "email": "Linajeacademia@gmail.com",
+                    "address": {
+                        "@type": "PostalAddress",
+                        "streetAddress": "Calle 11 #25A - 15",
+                        "addressLocality": "Las Llanadas",
+                        "addressCountry": "CO"
+                    },
+                    "openingHoursSpecification": [
+                        {
+                            "@type": "OpeningHoursSpecification",
+                            "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
+                            "opens": "08:30",
+                            "closes": "12:00"
+                        },
+                        {
+                            "@type": "OpeningHoursSpecification",
+                            "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
+                            "opens": "14:00",
+                            "closes": "18:00"
+                        }
+                    ],
+                    "sameAs": [
+                        "https://wa.me/573004218146"
+                    ],
+                    "priceRange": "$$",
+                    "aggregateRating": {
+                        "@type": "AggregateRating",
+                        "ratingValue": "4.9",
+                        "reviewCount": "500"
+                    },
+                    "hasOfferCatalog": {
+                        "@type": "OfferCatalog",
+                        "name": "Programas Musicales",
+                        "itemListElement": [
+                            {
+                                "@type": "Offer",
+                                "itemOffered": {
+                                    "@type": "Course",
+                                    "name": "Clase Demo Gratuita",
+                                    "description": "Primera clase de música completamente gratis con profesor certificado"
+                                },
+                                "price": "0",
+                                "priceCurrency": "COP"
+                            }
+                        ]
+                    }
+                })}</script>
+
                 <link rel="preconnect" href="https://fonts.bunny.net" />
                 <link
                     href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600,700"
@@ -124,21 +208,25 @@ export default function Welcome() {
 
             <div className="min-h-screen bg-white">
                 {/* Header */}
-                <header className="border-b border-gray-200 bg-white/95 backdrop-blur-sm sticky top-0 z-50 shadow-sm">
-                    <div className="mx-auto max-w-7xl px-4 sm:px-6 py-4">
+                <header role="banner" className="bg-white sticky top-0 z-50 shadow-md border-b-2 border-amber-600/40">
+                    <nav aria-label="Navegación principal" className="mx-auto max-w-7xl px-4 sm:px-6 py-3">
                         <div className="flex items-center justify-between">
-                            <div className="flex items-center">
+                            <a href="/" className="flex items-center" aria-label="Academia Linaje - Inicio">
                                 <img
                                     src="/logo_academia.png"
-                                    alt="Academia Linaje"
+                                    alt="Academia Linaje - Escuela de Música en Las Llanadas"
                                     className="h-12 w-auto"
+                                    width="150"
+                                    height="48"
+                                    fetchPriority="high"
+                                    decoding="async"
                                 />
-                            </div>
+                            </a>
                             <div className="flex items-center space-x-4">
                                 {auth.user ? (
                                     <Link
                                         href={programas_academicos.index().url}
-                                        className="rounded-lg bg-amber-700 px-6 py-2.5 text-sm font-semibold text-white shadow-md hover:bg-amber-800 transition-all hover:shadow-lg"
+                                        className="rounded-lg bg-gradient-to-r from-amber-600 to-amber-700 px-6 py-2.5 text-sm font-semibold text-white shadow-md hover:from-amber-700 hover:to-amber-800 transition-all hover:shadow-lg"
                                     >
                                         Mi Portal
                                     </Link>
@@ -146,7 +234,7 @@ export default function Welcome() {
                                     <>
                                         <Link
                                             href={login()}
-                                            className="hidden sm:block text-sm font-medium text-gray-700 hover:text-amber-800 transition-colors"
+                                            className="hidden sm:block text-sm font-medium text-amber-800 hover:text-amber-950 transition-colors"
                                         >
                                             Acceso
                                         </Link>
@@ -160,11 +248,12 @@ export default function Welcome() {
                                 )}
                             </div>
                         </div>
-                    </div>
+                    </nav>
                 </header>
 
+                <main>
                 {/* Hero Section with Free Class Highlight */}
-                <section className="relative overflow-hidden bg-gradient-to-br from-amber-50 via-orange-50 to-amber-50 py-16 sm:py-24 lg:py-32">
+                <section aria-label="Bienvenida - Academia de Música" className="relative overflow-hidden bg-gradient-to-br from-amber-50 via-orange-50 to-amber-50 py-16 sm:py-24 lg:py-32">
                     {/* Background decorative elements */}
                     <div className="absolute inset-0 -z-10 opacity-10">
                         <div className="absolute top-20 left-0 h-96 w-96 rounded-full bg-amber-500 blur-3xl animate-pulse"></div>
@@ -241,7 +330,10 @@ export default function Welcome() {
                                         muted
                                         loop
                                         playsInline
+                                        preload="metadata"
                                         poster=""
+                                        aria-label="Video promocional de Academia Linaje - Clases de música"
+                                        title="Academia Linaje - Aprende música con nosotros"
                                     >
                                         <source src="/linaje.mp4" type="video/mp4" />
                                         Tu navegador no soporta el elemento de video.
@@ -265,7 +357,7 @@ export default function Welcome() {
                 </section>
 
                 {/* Benefits Section */}
-                <section className="py-20 bg-white">
+                <section aria-label="Beneficios de Academia Linaje" className="py-20 bg-white">
                     <div className="mx-auto max-w-7xl px-4 sm:px-6">
                         <div className="text-center mb-16">
                             <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
@@ -291,7 +383,7 @@ export default function Welcome() {
                 </section>
 
                 {/* Programs Section */}
-                <section id="programas" className="py-20 bg-gradient-to-br from-gray-50 to-amber-50">
+                <section id="programas" aria-label="Programas musicales disponibles" className="py-20 bg-gradient-to-br from-gray-50 to-amber-50">
                     <div className="mx-auto max-w-7xl px-4 sm:px-6">
                         <div className="text-center mb-16">
                             <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
@@ -378,7 +470,7 @@ export default function Welcome() {
                 </section>
 
                 {/* Free Class CTA Section */}
-                <section id="clase-gratis" className="py-20 bg-gradient-to-r from-amber-600 to-orange-600 text-white">
+                <section id="clase-gratis" aria-label="Clase gratis de música" className="py-20 bg-gradient-to-r from-amber-600 to-orange-600 text-white">
                     <div className="mx-auto max-w-5xl px-4 sm:px-6 text-center">
                         <div className="inline-flex items-center space-x-2 rounded-full bg-white/20 px-6 py-2 text-sm font-semibold mb-6">
                             <Gift className="h-5 w-5" />
@@ -421,7 +513,7 @@ export default function Welcome() {
                 </section>
 
                 {/* Testimonials */}
-                <section className="py-20 bg-white">
+                <section aria-label="Testimonios de estudiantes" className="py-20 bg-white">
                     <div className="mx-auto max-w-7xl px-4 sm:px-6">
                         <div className="text-center mb-16">
                             <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
@@ -485,7 +577,7 @@ export default function Welcome() {
                 </section>
 
                 {/* Contact Section */}
-                <section id="contacto" className="py-20 bg-gradient-to-br from-gray-50 to-amber-50">
+                <section id="contacto" aria-label="Formulario de contacto y reserva de clase gratis" className="py-20 bg-gradient-to-br from-gray-50 to-amber-50">
                     <div className="mx-auto max-w-7xl px-4 sm:px-6">
                         <div className="grid gap-12 lg:grid-cols-2 items-start">
                             <div>
@@ -500,28 +592,29 @@ export default function Welcome() {
                                         <MapPin className="h-6 w-6 text-amber-700 flex-shrink-0 mt-1" />
                                         <div>
                                             <div className="font-semibold text-gray-900">Nuestra Ubicación</div>
-                                            <div className="text-gray-600">Calle Principal #123, Ciudad</div>
+                                            <div className="text-gray-600">Calle 11 #25A - 15, Barrio Las Llanadas</div>
                                         </div>
                                     </div>
                                     <div className="flex items-start space-x-4 p-4 rounded-xl bg-white shadow-sm">
                                         <Phone className="h-6 w-6 text-amber-700 flex-shrink-0 mt-1" />
                                         <div>
-                                            <div className="font-semibold text-gray-900">Llámanos</div>
-                                            <div className="text-gray-600">+57 (123) 456-7890</div>
+                                            <div className="font-semibold text-gray-900">WhatsApp</div>
+                                            <a href="https://wa.me/573004218146" target="_blank" rel="noopener noreferrer" className="text-amber-700 hover:underline">300 421 8146</a>
                                         </div>
                                     </div>
                                     <div className="flex items-start space-x-4 p-4 rounded-xl bg-white shadow-sm">
                                         <Mail className="h-6 w-6 text-amber-700 flex-shrink-0 mt-1" />
                                         <div>
-                                            <div className="font-semibold text-gray-900">Escríbenos</div>
-                                            <div className="text-gray-600">info@academialinaje.com</div>
+                                            <div className="font-semibold text-gray-900">Correo</div>
+                                            <a href="mailto:Linajeacademia@gmail.com" className="text-amber-700 hover:underline">Linajeacademia@gmail.com</a>
                                         </div>
                                     </div>
                                     <div className="flex items-start space-x-4 p-4 rounded-xl bg-white shadow-sm">
                                         <Clock className="h-6 w-6 text-amber-700 flex-shrink-0 mt-1" />
                                         <div>
-                                            <div className="font-semibold text-gray-900">Horario</div>
-                                            <div className="text-gray-600">Lunes a Sábado: 8:00 AM - 8:00 PM</div>
+                                            <div className="font-semibold text-gray-900">Horario de Atención</div>
+                                            <div className="text-gray-600">Lunes a Sábado</div>
+                                            <div className="text-gray-600 text-sm">8:30 AM - 12:00 PM / 2:00 PM - 6:00 PM</div>
                                         </div>
                                     </div>
                                 </div>
@@ -863,30 +956,66 @@ export default function Welcome() {
                     </div>
                 </section>
 
+                </main>
+
                 {/* Footer */}
-                <footer className="border-t border-gray-200 bg-gradient-to-br from-gray-900 to-gray-800 text-white py-12">
+                <footer role="contentinfo" className="border-t border-gray-200 bg-gradient-to-br from-gray-900 to-gray-800 text-white py-12">
                     <div className="mx-auto max-w-7xl px-4 sm:px-6">
                         <div className="text-center">
                             <div className="flex items-center justify-center mb-6">
                                 <img
                                     src="/logo_academia.png"
-                                    alt="Academia Linaje"
+                                    alt="Academia Linaje - Escuela de Música"
                                     className="h-14 w-auto"
+                                    width="175"
+                                    height="56"
+                                    loading="lazy"
+                                    decoding="async"
                                 />
                             </div>
                             <p className="text-gray-300 mb-6 text-lg">
                                 Formando músicos con excelencia y pasión desde hace más de 10 años
                             </p>
+
+                            {/* Datos de contacto en footer para SEO */}
+                            <div className="flex flex-wrap justify-center gap-6 text-sm text-gray-400 mb-6">
+                                <a href="https://wa.me/573004218146" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 hover:text-amber-400 transition-colors">
+                                    <Phone className="h-4 w-4" />
+                                    300 421 8146
+                                </a>
+                                <a href="mailto:Linajeacademia@gmail.com" className="flex items-center gap-2 hover:text-amber-400 transition-colors">
+                                    <Mail className="h-4 w-4" />
+                                    Linajeacademia@gmail.com
+                                </a>
+                                <span className="flex items-center gap-2">
+                                    <MapPin className="h-4 w-4" />
+                                    Calle 11 #25A - 15, Las Llanadas
+                                </span>
+                            </div>
+
                             <div className="inline-flex items-center space-x-2 rounded-full bg-amber-600 px-6 py-3 text-sm font-semibold mb-8">
                                 <Gift className="h-4 w-4" />
                                 <span>Tu primera clase es GRATIS</span>
                             </div>
                             <div className="text-sm text-gray-400 border-t border-gray-700 pt-8">
-                                © 2025 Academia Linaje. Todos los derechos reservados.
+                                © 2026 Academia Linaje. Todos los derechos reservados.
                             </div>
                         </div>
                     </div>
                 </footer>
+
+                {/* Botón flotante de WhatsApp */}
+                <a
+                    href="https://wa.me/573004218146"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-green-500 text-white shadow-lg hover:bg-green-600 hover:shadow-xl transition-all transform hover:scale-110"
+                    aria-label="Contactar por WhatsApp"
+                >
+                    <svg viewBox="0 0 24 24" className="h-7 w-7 fill-current">
+                        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
+                    </svg>
+                </a>
             </div>
 
             <style>{`

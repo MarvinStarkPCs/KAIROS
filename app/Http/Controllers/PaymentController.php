@@ -286,6 +286,7 @@ class PaymentController extends Controller
             'total_amount' => 'required|numeric|min:0',
             'number_of_installments' => 'required|integer|min:2|max:12',
             'start_date' => 'required|date',
+            'modality' => 'nullable|string',
         ], [
             'student_id.required' => 'El estudiante es obligatorio',
             'student_id.exists' => 'El estudiante seleccionado no existe',
@@ -301,17 +302,55 @@ class PaymentController extends Controller
             'start_date.date' => 'La fecha debe ser válida',
         ]);
 
+        // Calcular descuento familiar si el estudiante tiene hermanos
+        $student = User::findOrFail($validated['student_id']);
+        $modality = $validated['modality'] ?? null;
+        $originalAmount = $validated['total_amount'];
+        $discountPercentage = null;
+        $discountAmount = null;
+        $finalAmount = $validated['total_amount'];
+
+        // Verificar si el estudiante tiene descuento familiar (hermanos matriculados)
+        if ($student->parent_id) {
+            $siblingsCount = User::where('parent_id', $student->parent_id)
+                ->whereHas('programEnrollments', function ($q) {
+                    $q->whereIn('status', ['active', 'waiting']);
+                })
+                ->count();
+
+            if ($siblingsCount > 0 && $modality) {
+                $enrollmentService = app(\App\Services\EnrollmentService::class);
+                $paymentInfo = $enrollmentService->getPaymentAmount($modality, $siblingsCount);
+
+                if ($paymentInfo['discount_percentage'] > 0) {
+                    $originalAmount = $paymentInfo['original_amount'];
+                    $finalAmount = $paymentInfo['amount'];
+                    $discountPercentage = $paymentInfo['discount_percentage'];
+                    $discountAmount = $paymentInfo['discount_amount'];
+                }
+            }
+        }
+
         $installments = Payment::createInstallmentPlan(
             $validated['student_id'],
             $validated['program_id'],
             $validated['enrollment_id'],
-            $validated['concept'],
-            $validated['total_amount'],
+            $validated['concept'] . ($discountPercentage ? " - Descuento {$discountPercentage}%" : ''),
+            $finalAmount,
             $validated['number_of_installments'],
-            $validated['start_date']
+            $validated['start_date'],
+            $modality,
+            $discountPercentage ? $originalAmount : null,
+            $discountPercentage,
+            $discountAmount
         );
 
-        flash_success("Plan de {$validated['number_of_installments']} cuotas creado exitosamente");
+        $message = "Plan de {$validated['number_of_installments']} cuotas creado exitosamente";
+        if ($discountPercentage) {
+            $message .= " (Descuento familiar del {$discountPercentage}% aplicado)";
+        }
+
+        flash_success($message);
         return redirect()->route('pagos.index');
     }
 

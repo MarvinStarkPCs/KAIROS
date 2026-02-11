@@ -3,7 +3,7 @@ import { Head, Link } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Users, Clock, MapPin, Calendar } from 'lucide-react';
+import { Users, Clock, MapPin, Calendar, GraduationCap } from 'lucide-react';
 import { Icon } from '@/components/icon';
 
 interface Program {
@@ -14,6 +14,7 @@ interface Program {
 
 interface Group {
     id: number;
+    name: string;
     program: Program;
     days_of_week: string;
     start_time: string;
@@ -148,13 +149,17 @@ export default function MyGroups({ groups }: Props) {
                 ) : (
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                         {groups.map((group) => (
-                            <Card key={group.id} className="hover:shadow-lg transition-shadow">
+                            <Card key={group.id} className="hover:shadow-lg transition-shadow border-l-4" style={{ borderLeftColor: group.program.color }}>
                                 <CardHeader>
                                     <div className="flex items-start justify-between">
                                         <div>
-                                            <CardTitle className="text-xl mb-2">
-                                                {group.program.name}
+                                            <CardTitle className="text-xl mb-1">
+                                                {group.name}
                                             </CardTitle>
+                                            <p className="text-sm text-muted-foreground flex items-center gap-1.5 mb-2">
+                                                <Icon iconNode={GraduationCap} className="w-4 h-4 flex-shrink-0" />
+                                                {group.program.name}
+                                            </p>
                                             <div className="flex flex-wrap gap-1">
                                                 {getFullDayNames(group.days_of_week).map((day, idx) => (
                                                     <Badge

@@ -37,7 +37,9 @@
       "Bash(composer require:*)",
       "Bash(grep:*)",
       "Bash(identify:*)",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "Bash(tasklist:*)",
+      "Bash(powershell -Command:*)"
     ],
     "deny": [],
     "ask": []

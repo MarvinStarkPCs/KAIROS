@@ -22,10 +22,14 @@ import {
     GraduationCap,
     ChevronRight,
     Eye,
-    ClipboardCheck
+    ClipboardCheck,
+    Book,
+    ListChecks,
+    Award,
+    Lock,
 } from 'lucide-react';
 import { Icon } from '@/components/icon';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 
 interface Program {
     id: number;
@@ -69,6 +73,8 @@ interface Student {
     id: number;
     name: string;
     email: string;
+    document_type: string | null;
+    document_number: string | null;
     enrollment_date: string;
     attendance_stats: AttendanceStats;
     progress_stats: ProgressStats;
@@ -83,6 +89,14 @@ interface EvaluationCriteria {
     order: number;
 }
 
+interface StudyPlanInfo {
+    id: number;
+    module_name: string;
+    description: string | null;
+    hours: number;
+    level: number;
+}
+
 interface Activity {
     id: number;
     name: string;
@@ -90,10 +104,11 @@ interface Activity {
     weight: number;
     order: number;
     status: string;
-    study_plan: {
-        module_name: string;
-    };
+    study_plan: StudyPlanInfo;
     evaluation_criteria: EvaluationCriteria[];
+    evaluated_count: number;
+    total_students: number;
+    is_fully_evaluated: boolean;
 }
 
 interface ClassDate {
@@ -120,6 +135,51 @@ export default function GroupDetail({ schedule, students, activities, classDates
     const [studentNotes, setStudentNotes] = useState<Record<number, string>>({});
     const [selectedDate, setSelectedDate] = useState<string | null>(null);
     const [showStudentDetail, setShowStudentDetail] = useState<Student | null>(null);
+
+    // Agrupar actividades por módulo (study_plan)
+    const activitiesByModule = useMemo(() => {
+        const grouped: Record<string, {
+            moduleName: string;
+            description: string | null;
+            hours: number;
+            level: number;
+            activities: Activity[];
+            isFullyEvaluated: boolean;
+        }> = {};
+        activities.forEach((activity) => {
+            const key = activity.study_plan.module_name;
+            if (!grouped[key]) {
+                grouped[key] = {
+                    moduleName: activity.study_plan.module_name,
+                    description: activity.study_plan.description,
+                    hours: activity.study_plan.hours ?? 0,
+                    level: activity.study_plan.level ?? 0,
+                    activities: [],
+                    isFullyEvaluated: true,
+                };
+            }
+            grouped[key].activities.push(activity);
+            if (!activity.is_fully_evaluated) {
+                grouped[key].isFullyEvaluated = false;
+            }
+        });
+        const sorted = Object.values(grouped).sort((a, b) => a.level - b.level || a.moduleName.localeCompare(b.moduleName));
+
+        // Determinar si cada módulo está bloqueado (módulos previos no completamente evaluados)
+        return sorted.map((group, index) => {
+            let isLocked = false;
+            if (index > 0) {
+                // Verificar si todos los módulos anteriores están completamente evaluados
+                for (let i = 0; i < index; i++) {
+                    if (!sorted[i].isFullyEvaluated) {
+                        isLocked = true;
+                        break;
+                    }
+                }
+            }
+            return { ...group, isLocked };
+        });
+    }, [activities]);
 
     // Inicializar asistencias cuando se selecciona una fecha
     const handleSelectDate = (date: string) => {
@@ -409,7 +469,13 @@ export default function GroupDetail({ schedule, students, activities, classDates
                                                                     </Button>
                                                                     <div>
                                                                         <h4 className="font-medium text-gray-900">{student.name}</h4>
-                                                                        <p className="text-xs text-gray-500">{student.email}</p>
+                                                                        <div className="flex items-center gap-2">
+                                                                            {student.document_number && (
+                                                                                <span className="text-xs font-medium text-gray-700">
+                                                                                    {student.document_type}: {student.document_number}
+                                                                                </span>
+                                                                            )}
+                                                                        </div>
                                                                     </div>
                                                                 </div>
                                                                 <div className="flex gap-1">
@@ -497,7 +563,14 @@ export default function GroupDetail({ schedule, students, activities, classDates
                                                 <div className="flex items-center gap-4">
                                                     <div>
                                                         <h4 className="font-semibold text-gray-900">{student.name}</h4>
-                                                        <p className="text-sm text-gray-600">{student.email}</p>
+                                                        <div className="flex items-center gap-3 text-sm text-gray-600">
+                                                            {student.document_number && (
+                                                                <span className="font-medium text-gray-700">
+                                                                    {student.document_type}: {student.document_number}
+                                                                </span>
+                                                            )}
+                                                            <span>{student.email}</span>
+                                                        </div>
                                                     </div>
                                                 </div>
                                                 <div className="flex items-center gap-6">
@@ -527,56 +600,176 @@ export default function GroupDetail({ schedule, students, activities, classDates
                         </Card>
                     </TabsContent>
 
-                    {/* Tab: Activities */}
+                    {/* Tab: Activities grouped by Module */}
                     <TabsContent value="activities">
-                        <Card>
-                            <CardHeader>
-                                <CardTitle>Actividades para Evaluar</CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                {activities.length === 0 ? (
-                                    <div className="text-center py-12 text-gray-500">
-                                        No hay actividades configuradas para este programa
-                                    </div>
-                                ) : (
-                                    <div className="space-y-4">
-                                        {activities.map((activity) => (
-                                            <div
-                                                key={activity.id}
-                                                className="p-4 border rounded-lg hover:bg-gray-50"
-                                            >
-                                                <div className="flex items-start justify-between mb-3">
+                        {activities.length === 0 ? (
+                            <div className="rounded-xl border-2 border-dashed border-gray-300 bg-white p-12 text-center">
+                                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gray-100">
+                                    <Book className="h-8 w-8 text-gray-400" />
+                                </div>
+                                <h3 className="mb-2 text-xl font-semibold text-gray-900">
+                                    No hay actividades configuradas
+                                </h3>
+                                <p className="text-gray-600">
+                                    Este programa aún no tiene actividades para evaluar.
+                                </p>
+                            </div>
+                        ) : (
+                            <div className="space-y-6">
+                                {activitiesByModule.map((group, groupIndex) => (
+                                    <div
+                                        key={group.moduleName}
+                                        className={`rounded-xl border bg-white shadow-sm ${
+                                            group.isLocked
+                                                ? 'border-gray-300 opacity-75'
+                                                : 'border-gray-200'
+                                        }`}
+                                    >
+                                        {/* Module Header - similar a ProgramAcademy/Show */}
+                                        <div className="p-6 pb-4">
+                                            <div className="flex items-start justify-between">
+                                                <div className="flex items-start gap-4">
+                                                    <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${
+                                                        group.isLocked ? 'bg-gray-200' : 'bg-blue-100'
+                                                    }`}>
+                                                        {group.isLocked
+                                                            ? <Lock className="h-5 w-5 text-gray-500" />
+                                                            : <Book className="h-5 w-5 text-blue-600" />
+                                                        }
+                                                    </div>
                                                     <div>
-                                                        <h4 className="font-semibold text-gray-900">{activity.name}</h4>
-                                                        <p className="text-sm text-gray-600 mt-1">{activity.description}</p>
-                                                        <div className="flex items-center gap-2 mt-2">
-                                                            <Badge variant="outline">{activity.study_plan.module_name}</Badge>
-                                                            <Badge variant="secondary">Peso: {activity.weight}%</Badge>
+                                                        <h3 className="text-lg font-semibold text-gray-900">
+                                                            Módulo {groupIndex + 1}: {group.moduleName}
+                                                        </h3>
+                                                        {group.description && (
+                                                            <p className="mt-1 text-sm text-gray-600">
+                                                                {group.description}
+                                                            </p>
+                                                        )}
+                                                        <div className="mt-2 flex items-center gap-4 text-sm text-gray-500">
+                                                            {group.hours > 0 && <span>{group.hours} horas</span>}
+                                                            {group.hours > 0 && <span>•</span>}
+                                                            <span>Nivel {group.level}</span>
+                                                            <span>•</span>
+                                                            <span>{group.activities.length} {group.activities.length === 1 ? 'actividad' : 'actividades'}</span>
                                                         </div>
                                                     </div>
                                                 </div>
-                                                <div className="mb-3">
-                                                    <h5 className="text-sm font-medium text-gray-700 mb-2">Criterios de Evaluación:</h5>
-                                                    <ul className="space-y-1">
-                                                        {activity.evaluation_criteria.map((criteria) => (
-                                                            <li key={criteria.id} className="text-sm text-gray-600 flex items-center">
-                                                                <span className="w-2 h-2 bg-[#7a9b3c] rounded-full mr-2"></span>
-                                                                {criteria.name} ({criteria.max_points} puntos)
-                                                            </li>
-                                                        ))}
-                                                    </ul>
+                                                <div>
+                                                    {group.isFullyEvaluated ? (
+                                                        <Badge className="bg-green-100 text-green-700">
+                                                            <CheckCircle className="w-3 h-3 mr-1" />
+                                                            Completado
+                                                        </Badge>
+                                                    ) : group.isLocked ? (
+                                                        <Badge variant="outline" className="text-gray-500 border-gray-300">
+                                                            <Lock className="w-3 h-3 mr-1" />
+                                                            Bloqueado
+                                                        </Badge>
+                                                    ) : (
+                                                        <Badge className="bg-amber-100 text-amber-700">
+                                                            Pendiente
+                                                        </Badge>
+                                                    )}
                                                 </div>
-                                                <Link href={`/profesor/grupo/${schedule.id}/actividad/${activity.id}/evaluar`}>
-                                                    <Button className="w-full bg-[#7a9b3c] hover:bg-[#6a8a2c]">
-                                                        Evaluar Estudiantes
-                                                    </Button>
-                                                </Link>
                                             </div>
-                                        ))}
+
+                                            {/* Locked module warning */}
+                                            {group.isLocked && (
+                                                <div className="mt-4 flex items-start gap-3 rounded-lg bg-amber-50 border border-amber-200 p-3">
+                                                    <AlertCircle className="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" />
+                                                    <p className="text-sm text-amber-700">
+                                                        Debes completar la evaluación de todos los estudiantes en los módulos anteriores antes de poder evaluar este módulo.
+                                                    </p>
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        {/* Activities list */}
+                                        {!group.isLocked && (
+                                            <div className="px-6 pb-6">
+                                                <div className="ml-14 space-y-3">
+                                                    {group.activities.map((activity) => (
+                                                        <div
+                                                            key={activity.id}
+                                                            className="rounded-lg border border-gray-200 bg-gray-50 p-4"
+                                                        >
+                                                            {/* Activity Header */}
+                                                            <div className="flex items-start justify-between mb-3">
+                                                                <div className="flex items-start gap-3">
+                                                                    <div className="flex h-8 w-8 items-center justify-center rounded-md bg-purple-100">
+                                                                        <ListChecks className="h-4 w-4 text-purple-600" />
+                                                                    </div>
+                                                                    <div>
+                                                                        <h5 className="font-medium text-gray-900">
+                                                                            {activity.name}
+                                                                        </h5>
+                                                                        {activity.description && (
+                                                                            <p className="mt-1 text-sm text-gray-600">
+                                                                                {activity.description}
+                                                                            </p>
+                                                                        )}
+                                                                        <div className="mt-1 flex items-center gap-3 text-xs text-gray-500">
+                                                                            <span>Peso: {activity.weight}%</span>
+                                                                            <span>•</span>
+                                                                            <span className={`rounded-full px-2 py-0.5 ${
+                                                                                activity.is_fully_evaluated
+                                                                                    ? 'bg-green-100 text-green-700'
+                                                                                    : activity.evaluated_count > 0
+                                                                                        ? 'bg-amber-100 text-amber-700'
+                                                                                        : 'bg-gray-200 text-gray-700'
+                                                                            }`}>
+                                                                                {activity.is_fully_evaluated
+                                                                                    ? 'Evaluado'
+                                                                                    : activity.evaluated_count > 0
+                                                                                        ? `${activity.evaluated_count}/${activity.total_students} evaluados`
+                                                                                        : 'Sin evaluar'}
+                                                                            </span>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+
+                                                            {/* Evaluation Criteria */}
+                                                            {activity.evaluation_criteria.length > 0 && (
+                                                                <div className="ml-11 space-y-2 mb-3">
+                                                                    <h6 className="text-xs font-semibold text-gray-600">
+                                                                        Criterios de Evaluación:
+                                                                    </h6>
+                                                                    {activity.evaluation_criteria.map((criteria) => (
+                                                                        <div
+                                                                            key={criteria.id}
+                                                                            className="flex items-center gap-2 rounded-md border border-gray-200 bg-white p-2"
+                                                                        >
+                                                                            <Award className="h-4 w-4 text-amber-600 flex-shrink-0" />
+                                                                            <span className="text-sm text-gray-900 flex-1">
+                                                                                {criteria.name}
+                                                                            </span>
+                                                                            <span className="text-sm font-medium text-gray-700">
+                                                                                {criteria.max_points} pts
+                                                                            </span>
+                                                                        </div>
+                                                                    ))}
+                                                                </div>
+                                                            )}
+
+                                                            {/* Evaluate button */}
+                                                            <div className="ml-11">
+                                                                <Link href={`/profesor/grupo/${schedule.id}/actividad/${activity.id}/evaluar`}>
+                                                                    <Button className="w-full bg-[#7a9b3c] hover:bg-[#6a8a2c]">
+                                                                        {activity.is_fully_evaluated ? 'Ver / Editar Evaluación' : 'Evaluar Estudiantes'}
+                                                                    </Button>
+                                                                </Link>
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
-                                )}
-                            </CardContent>
-                        </Card>
+                                ))}
+                            </div>
+                        )}
                     </TabsContent>
                 </Tabs>
             </div>
@@ -586,7 +779,14 @@ export default function GroupDetail({ schedule, students, activities, classDates
                 <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
                     <DialogHeader>
                         <DialogTitle>{showStudentDetail?.name}</DialogTitle>
-                        <DialogDescription>{showStudentDetail?.email}</DialogDescription>
+                        <DialogDescription>
+                            {showStudentDetail?.document_number && (
+                                <span className="font-medium text-gray-700 mr-3">
+                                    {showStudentDetail.document_type}: {showStudentDetail.document_number}
+                                </span>
+                            )}
+                            {showStudentDetail?.email}
+                        </DialogDescription>
                     </DialogHeader>
                     {showStudentDetail && (
                         <div className="space-y-6">

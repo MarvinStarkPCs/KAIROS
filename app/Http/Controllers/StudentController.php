@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Enrollment;
 use App\Models\ActivityEvaluation;
 use App\Models\Attendance;
+use App\Models\ScheduleEnrollment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
@@ -117,6 +118,30 @@ class StudentController extends Controller
             }
         }
 
+        // Obtener horarios del estudiante
+        $scheduleEnrollments = ScheduleEnrollment::with(['schedule.academicProgram', 'schedule.professor'])
+            ->where('student_id', $student->id)
+            ->where('status', 'enrolled')
+            ->get();
+
+        $studentSchedules = $scheduleEnrollments->map(function ($se) {
+            $schedule = $se->schedule;
+            return [
+                'id' => $schedule->id,
+                'name' => $schedule->name,
+                'days_of_week' => $schedule->days_of_week,
+                'start_time' => $schedule->start_time,
+                'end_time' => $schedule->end_time,
+                'classroom' => $schedule->classroom,
+                'professor_name' => $schedule->professor
+                    ? $schedule->professor->name . ' ' . ($schedule->professor->last_name ?? '')
+                    : null,
+                'program_id' => $schedule->academic_program_id,
+                'program_name' => $schedule->academicProgram->name ?? 'N/A',
+                'program_color' => $schedule->academicProgram->color ?? '#6b5544',
+            ];
+        });
+
         // Obtener asistencias del estudiante
         $attendanceData = $this->getStudentAttendance($student->id);
 
@@ -128,6 +153,7 @@ class StudentController extends Controller
                 'program_color' => $e->program->color ?? '#6b5544',
                 'status' => $e->status,
             ]),
+            'schedules' => $studentSchedules,
             'selectedProgramId' => $programId ? (int) $programId : null,
             'selectedProgram' => $selectedProgram ? [
                 'id' => $selectedProgram->id,

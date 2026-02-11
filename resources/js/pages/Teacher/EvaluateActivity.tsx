@@ -55,6 +55,8 @@ interface Student {
     id: number;
     name: string;
     email: string;
+    document_type: string | null;
+    document_number: string | null;
     existing_evaluations: ExistingEvaluation[];
     has_attendance: boolean;
     attendance_stats: AttendanceStats;
@@ -91,7 +93,7 @@ export default function EvaluateActivity({ schedule, activity, students }: Props
                     );
                     return {
                         evaluation_criteria_id: criteria.id,
-                        points_earned: existing?.points_earned || 0
+                        points_earned: Number(existing?.points_earned ?? 0)
                     };
                 }),
                 feedback: student.existing_evaluations[0]?.feedback || ''
@@ -102,13 +104,15 @@ export default function EvaluateActivity({ schedule, activity, students }: Props
 
     const handleCriteriaChange = (studentId: number, criteriaId: number, value: string) => {
         const points = parseFloat(value) || 0;
+        const maxPoints = activity.evaluation_criteria.find(c => c.id === criteriaId)?.max_points ?? 0;
+        const clampedPoints = Math.min(Math.max(points, 0), maxPoints);
         setEvaluations(prev => ({
             ...prev,
             [studentId]: {
                 ...prev[studentId],
                 criteria: prev[studentId].criteria.map(c =>
                     c.evaluation_criteria_id === criteriaId
-                        ? { ...c, points_earned: points }
+                        ? { ...c, points_earned: clampedPoints }
                         : c
                 )
             }
@@ -126,11 +130,50 @@ export default function EvaluateActivity({ schedule, activity, students }: Props
     };
 
     const calculateTotal = (studentId: number): number => {
-        return evaluations[studentId]?.criteria.reduce((sum, c) => sum + c.points_earned, 0) || 0;
+        const criteria = evaluations[studentId]?.criteria;
+        if (!criteria || criteria.length === 0) return 0;
+        return criteria.reduce((sum, c) => sum + Number(c.points_earned || 0), 0);
     };
 
     const calculateMaxTotal = (): number => {
-        return activity.evaluation_criteria.reduce((sum, c) => sum + c.max_points, 0);
+        if (!activity.evaluation_criteria || activity.evaluation_criteria.length === 0) return 0;
+        return activity.evaluation_criteria.reduce((sum, c) => sum + Number(c.max_points || 0), 0);
+    };
+
+    const getPercentage = (studentId: number): number => {
+        const max = calculateMaxTotal();
+        const total = calculateTotal(studentId);
+        return max > 0 ? Math.round((total / max) * 100) : 0;
+    };
+
+    const getScoreColor = (percentage: number): string => {
+        if (percentage >= 80) return 'text-green-600';
+        if (percentage >= 60) return 'text-blue-600';
+        if (percentage >= 40) return 'text-amber-600';
+        return 'text-red-600';
+    };
+
+    const getScoreRingColor = (percentage: number): string => {
+        if (percentage >= 80) return 'stroke-green-500';
+        if (percentage >= 60) return 'stroke-blue-500';
+        if (percentage >= 40) return 'stroke-amber-500';
+        return 'stroke-red-500';
+    };
+
+    const getScoreBgColor = (percentage: number): string => {
+        if (percentage >= 80) return 'bg-green-50 border-green-200';
+        if (percentage >= 60) return 'bg-blue-50 border-blue-200';
+        if (percentage >= 40) return 'bg-amber-50 border-amber-200';
+        return 'bg-red-50 border-red-200';
+    };
+
+    const getScoreLabel = (percentage: number): string => {
+        if (percentage >= 90) return 'Excelente';
+        if (percentage >= 80) return 'Muy bien';
+        if (percentage >= 70) return 'Bien';
+        if (percentage >= 60) return 'Aceptable';
+        if (percentage >= 40) return 'Insuficiente';
+        return 'Bajo';
     };
 
     const handleSubmit = () => {
@@ -243,8 +286,63 @@ export default function EvaluateActivity({ schedule, activity, students }: Props
                             </CardContent>
                         </Card>
                     ) : (
-                        students.map((student) => (
-                            <Card key={student.id} className={!student.has_attendance ? 'border-yellow-300 bg-yellow-50/50' : ''}>
+                        students.map((student) => {
+                            const percentage = getPercentage(student.id);
+                            const total = calculateTotal(student.id);
+                            const maxTotal = calculateMaxTotal();
+                            return (
+                            <div key={student.id}>
+                                {/* Score summary - sticky bar above the card */}
+                                {student.has_attendance && (
+                                    <div className={`sticky top-0 z-20 flex items-center justify-between rounded-t-lg border border-b-0 px-4 py-2 shadow-md ${getScoreBgColor(percentage)}`}>
+                                        <div className="flex items-center gap-3">
+                                            {/* Mini circular progress */}
+                                            <div className="relative h-11 w-11 flex-shrink-0">
+                                                <svg className="h-11 w-11 -rotate-90" viewBox="0 0 48 48">
+                                                    <circle cx="24" cy="24" r="20" fill="none" className="stroke-gray-200" strokeWidth="4" />
+                                                    <circle
+                                                        cx="24" cy="24" r="20" fill="none"
+                                                        className={`transition-all duration-500 ${getScoreRingColor(percentage)}`}
+                                                        strokeWidth="4"
+                                                        strokeLinecap="round"
+                                                        strokeDasharray={`${(percentage / 100) * 125.7} 125.7`}
+                                                    />
+                                                </svg>
+                                                <div className="absolute inset-0 flex items-center justify-center">
+                                                    <span className={`text-xs font-bold ${getScoreColor(percentage)}`}>
+                                                        {percentage}%
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <div className={`text-base font-bold ${getScoreColor(percentage)}`}>
+                                                    {total} / {maxTotal} pts
+                                                </div>
+                                                <div className={`text-xs font-medium ${getScoreColor(percentage)}`}>
+                                                    {getScoreLabel(percentage)}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-3">
+                                            <span className="text-sm font-medium text-gray-700 hidden sm:inline">{student.name}</span>
+                                            {/* Progress bar */}
+                                            <div className="hidden sm:block w-32">
+                                                <div className="h-3 w-full overflow-hidden rounded-full bg-white/60">
+                                                    <div
+                                                        className={`h-full transition-all duration-500 rounded-full ${
+                                                            percentage >= 80 ? 'bg-green-500' :
+                                                            percentage >= 60 ? 'bg-blue-500' :
+                                                            percentage >= 40 ? 'bg-amber-500' :
+                                                            'bg-red-500'
+                                                        }`}
+                                                        style={{ width: `${Math.min(percentage, 100)}%` }}
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+                                <Card className={`${!student.has_attendance ? 'border-yellow-300 bg-yellow-50/50' : 'rounded-t-none'}`}>
                                 <CardHeader>
                                     <div className="flex items-center justify-between">
                                         <div>
@@ -262,23 +360,20 @@ export default function EvaluateActivity({ schedule, activity, students }: Props
                                                     </Badge>
                                                 )}
                                             </div>
-                                            <p className="text-sm text-gray-600">{student.email}</p>
+                                            <div className="flex items-center gap-3 text-sm text-gray-600">
+                                                {student.document_number && (
+                                                    <span className="font-medium text-gray-700">
+                                                        {student.document_type}: {student.document_number}
+                                                    </span>
+                                                )}
+                                                <span>{student.email}</span>
+                                            </div>
                                             {student.has_attendance && (
                                                 <p className="text-xs text-gray-500 mt-1">
                                                     Asistencia: {student.attendance_stats.present}P / {student.attendance_stats.late}T / {student.attendance_stats.absent}A
                                                     ({student.attendance_stats.total} clases)
                                                 </p>
                                             )}
-                                        </div>
-                                        <div className="text-right">
-                                            <div className={`text-3xl font-bold ${!student.has_attendance ? 'text-gray-400' : 'text-gray-900'}`}>
-                                                {calculateTotal(student.id)}/{calculateMaxTotal()}
-                                            </div>
-                                            <div className="text-sm text-gray-600">
-                                                {calculateMaxTotal() > 0
-                                                    ? Math.round((calculateTotal(student.id) / calculateMaxTotal()) * 100)
-                                                    : 0}%
-                                            </div>
                                         </div>
                                     </div>
                                 </CardHeader>
@@ -299,34 +394,62 @@ export default function EvaluateActivity({ schedule, activity, students }: Props
                                             <div>
                                                 <h4 className="font-semibold text-gray-900 mb-3">Criterios de Evaluación</h4>
                                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                                    {activity.evaluation_criteria.map((criteria) => (
-                                                        <div key={criteria.id} className="space-y-2">
-                                                            <Label htmlFor={`student-${student.id}-criteria-${criteria.id}`}>
-                                                                {criteria.name}
-                                                                <span className="text-gray-500 ml-2 text-sm">
-                                                                    (Max: {criteria.max_points} pts)
-                                                                </span>
-                                                            </Label>
-                                                            <Input
-                                                                id={`student-${student.id}-criteria-${criteria.id}`}
-                                                                type="number"
-                                                                min="0"
-                                                                max={criteria.max_points}
-                                                                step="0.5"
-                                                                value={
-                                                                    evaluations[student.id]?.criteria.find(
-                                                                        c => c.evaluation_criteria_id === criteria.id
-                                                                    )?.points_earned || 0
-                                                                }
-                                                                onChange={(e) =>
-                                                                    handleCriteriaChange(student.id, criteria.id, e.target.value)
-                                                                }
-                                                            />
-                                                            {criteria.description && (
-                                                                <p className="text-xs text-gray-500">{criteria.description}</p>
-                                                            )}
-                                                        </div>
-                                                    ))}
+                                                    {activity.evaluation_criteria.map((criteria) => {
+                                                        const earned = Number(evaluations[student.id]?.criteria.find(
+                                                            c => c.evaluation_criteria_id === criteria.id
+                                                        )?.points_earned ?? 0);
+                                                        const maxPts = Number(criteria.max_points || 0);
+                                                        const pct = maxPts > 0 ? Math.round((earned / maxPts) * 100) : 0;
+                                                        return (
+                                                            <div key={criteria.id} className="rounded-lg border border-gray-200 bg-white p-3 space-y-2">
+                                                                <div className="flex items-center justify-between">
+                                                                    <Label htmlFor={`student-${student.id}-criteria-${criteria.id}`} className="text-sm font-medium">
+                                                                        {criteria.name}
+                                                                    </Label>
+                                                                    <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
+                                                                        pct >= 80 ? 'bg-green-100 text-green-700' :
+                                                                        pct >= 60 ? 'bg-blue-100 text-blue-700' :
+                                                                        pct >= 40 ? 'bg-amber-100 text-amber-700' :
+                                                                        'bg-red-100 text-red-700'
+                                                                    }`}>
+                                                                        {pct}%
+                                                                    </span>
+                                                                </div>
+                                                                <div className="flex items-center gap-3">
+                                                                    <Input
+                                                                        id={`student-${student.id}-criteria-${criteria.id}`}
+                                                                        type="number"
+                                                                        min="0"
+                                                                        max={criteria.max_points}
+                                                                        step="0.5"
+                                                                        value={earned}
+                                                                        onChange={(e) =>
+                                                                            handleCriteriaChange(student.id, criteria.id, e.target.value)
+                                                                        }
+                                                                        className="w-24 text-center"
+                                                                    />
+                                                                    <span className="text-sm text-gray-400">/</span>
+                                                                    <span className="text-sm font-medium text-gray-600">{criteria.max_points} pts</span>
+                                                                    <div className="flex-1">
+                                                                        <div className="h-2 w-full overflow-hidden rounded-full bg-gray-200">
+                                                                            <div
+                                                                                className={`h-full transition-all duration-300 rounded-full ${
+                                                                                    pct >= 80 ? 'bg-green-500' :
+                                                                                    pct >= 60 ? 'bg-blue-500' :
+                                                                                    pct >= 40 ? 'bg-amber-500' :
+                                                                                    'bg-red-500'
+                                                                                }`}
+                                                                                style={{ width: `${Math.min(pct, 100)}%` }}
+                                                                            />
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                                {criteria.description && (
+                                                                    <p className="text-xs text-gray-500">{criteria.description}</p>
+                                                                )}
+                                                            </div>
+                                                        );
+                                                    })}
                                                 </div>
                                             </div>
 
@@ -347,7 +470,9 @@ export default function EvaluateActivity({ schedule, activity, students }: Props
                                     )}
                                 </CardContent>
                             </Card>
-                        ))
+                            </div>
+                        );
+                        })
                     )}
                 </div>
 

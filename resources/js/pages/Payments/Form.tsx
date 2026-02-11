@@ -134,7 +134,8 @@ export default function PaymentForm({ payment, enrollments }: Props) {
     );
 
     const isEditing = !!payment?.id;
-    const totalAmount = payment?.original_amount ?? payment?.amount ?? 0;
+    // Usar 'amount' (con descuento aplicado) como total a pagar, no 'original_amount' (sin descuento)
+    const totalAmount = payment?.amount ?? 0;
     const paidAmount = payment?.paid_amount ?? 0;
     const pendingBalance = payment?.pending_balance ?? payment?.remaining_amount ?? totalAmount;
     const progressPercent = totalAmount > 0 ? Math.min((paidAmount / totalAmount) * 100, 100) : 0;

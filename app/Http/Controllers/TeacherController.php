@@ -36,6 +36,7 @@ class TeacherController extends Controller
         $groups = $schedules->map(function ($schedule) {
             return [
                 'id' => $schedule->id,
+                'name' => $schedule->name,
                 'program' => [
                     'id' => $schedule->academicProgram->id,
                     'name' => $schedule->academicProgram->name,
@@ -136,8 +137,10 @@ class TeacherController extends Controller
 
             return [
                 'id' => $enrollment->student->id,
-                'name' => $enrollment->student->name,
+                'name' => trim($enrollment->student->name . ' ' . ($enrollment->student->last_name ?? '')),
                 'email' => $enrollment->student->email,
+                'document_type' => $enrollment->student->document_type,
+                'document_number' => $enrollment->student->document_number,
                 'enrollment_date' => $enrollment->enrollment_date,
                 'attendance_stats' => [
                     'total' => $totalClasses,
@@ -157,14 +160,30 @@ class TeacherController extends Controller
             ];
         });
 
-        // Obtener actividades del programa
+        // Obtener actividades del programa ordenadas por módulo y luego por orden
         $activities = Activity::whereHas('studyPlan', function($query) use ($schedule) {
             $query->where('program_id', $schedule->academic_program_id);
         })
         ->with(['studyPlan', 'evaluationCriteria'])
         ->where('status', 'active')
-        ->orderBy('order')
+        ->join('study_plans', 'activities.study_plan_id', '=', 'study_plans.id')
+        ->orderBy('study_plans.level')
+        ->orderBy('study_plans.module_name')
+        ->orderBy('activities.order')
+        ->select('activities.*')
         ->get();
+
+        // Calcular estado de evaluación por actividad (cuántos estudiantes ya fueron evaluados)
+        $totalStudents = $schedule->enrollments->count();
+        $activities->each(function ($activity) use ($schedule, $totalStudents) {
+            $evaluatedStudents = ActivityEvaluation::where('activity_id', $activity->id)
+                ->where('schedule_id', $schedule->id)
+                ->distinct('student_id')
+                ->count('student_id');
+            $activity->evaluated_count = $evaluatedStudents;
+            $activity->total_students = $totalStudents;
+            $activity->is_fully_evaluated = $totalStudents > 0 && $evaluatedStudents >= $totalStudents;
+        });
 
         // Formatear fechas de clase con resumen de asistencia
         $classDatesList = collect($classDates)->map(function($date) use ($attendancesByDate, $schedule) {
@@ -343,6 +362,36 @@ class TeacherController extends Controller
 
         $activity->load(['studyPlan', 'evaluationCriteria']);
 
+        // Verificar que los módulos anteriores estén completamente evaluados
+        $currentLevel = $activity->studyPlan->level;
+        $totalStudents = ScheduleEnrollment::where('schedule_id', $schedule->id)
+            ->where('status', 'enrolled')
+            ->count();
+
+        if ($totalStudents > 0) {
+            // Obtener todos los módulos con nivel menor al actual
+            $previousModules = \App\Models\StudyPlan::where('program_id', $schedule->academic_program_id)
+                ->where('level', '<', $currentLevel)
+                ->with(['activities' => function($query) {
+                    $query->where('status', 'active');
+                }])
+                ->get();
+
+            foreach ($previousModules as $module) {
+                foreach ($module->activities as $prevActivity) {
+                    $evaluatedStudents = ActivityEvaluation::where('activity_id', $prevActivity->id)
+                        ->where('schedule_id', $schedule->id)
+                        ->distinct('student_id')
+                        ->count('student_id');
+
+                    if ($evaluatedStudents < $totalStudents) {
+                        flash_error('Debes completar la evaluación de todos los estudiantes en los módulos anteriores antes de evaluar este módulo.');
+                        return redirect()->route('profesor.grupo.detalle', $schedule);
+                    }
+                }
+            }
+        }
+
         // Obtener estudiantes del horario con su información de asistencia
         $students = ScheduleEnrollment::where('schedule_id', $schedule->id)
             ->where('status', 'enrolled')
@@ -371,8 +420,10 @@ class TeacherController extends Controller
 
                 return [
                     'id' => $enrollment->student->id,
-                    'name' => $enrollment->student->name,
+                    'name' => trim($enrollment->student->name . ' ' . ($enrollment->student->last_name ?? '')),
                     'email' => $enrollment->student->email,
+                    'document_type' => $enrollment->student->document_type,
+                    'document_number' => $enrollment->student->document_number,
                     'existing_evaluations' => $existingEvaluations,
                     'has_attendance' => $hasAttendance,
                     'attendance_stats' => [
@@ -447,6 +498,12 @@ class TeacherController extends Controller
                 }
 
                 foreach ($evaluationData['criteria'] as $criteriaData) {
+                    // Validar que los puntos no excedan el máximo del criterio
+                    $criteria = \App\Models\EvaluationCriteria::find($criteriaData['evaluation_criteria_id']);
+                    if ($criteria && $criteriaData['points_earned'] > $criteria->max_points) {
+                        throw new \Exception("Los puntos asignados ({$criteriaData['points_earned']}) exceden el máximo permitido ({$criteria->max_points}) para el criterio \"{$criteria->name}\".");
+                    }
+
                     ActivityEvaluation::updateOrCreate(
                         [
                             'student_id' => $evaluationData['student_id'],
@@ -456,7 +513,7 @@ class TeacherController extends Controller
                         ],
                         [
                             'teacher_id' => auth()->id(),
-                            'points_earned' => $criteriaData['points_earned'],
+                            'points_earned' => min($criteriaData['points_earned'], $criteria->max_points),
                             'feedback' => $evaluationData['feedback'] ?? null,
                             'evaluation_date' => $validated['evaluation_date'],
                         ]

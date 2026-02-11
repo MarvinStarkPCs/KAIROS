@@ -28,6 +28,9 @@ import {
     FileText,
     XCircle,
     ClipboardCheck,
+    Calendar,
+    MapPin,
+    User,
 } from 'lucide-react';
 
 interface Enrollment {
@@ -110,8 +113,22 @@ interface RecentAttendance {
     schedule_time: string | null;
 }
 
+interface StudentSchedule {
+    id: number;
+    name: string;
+    days_of_week: string;
+    start_time: string;
+    end_time: string;
+    classroom: string | null;
+    professor_name: string | null;
+    program_id: number;
+    program_name: string;
+    program_color: string;
+}
+
 interface Props {
     enrollments: Enrollment[];
+    schedules: StudentSchedule[];
     selectedProgramId: number | null;
     selectedProgram: SelectedProgram | null;
     modules: Module[];
@@ -122,6 +139,7 @@ interface Props {
 
 export default function Grades({
     enrollments,
+    schedules,
     selectedProgramId,
     selectedProgram,
     modules,
@@ -129,6 +147,11 @@ export default function Grades({
     attendanceStats,
     recentAttendances,
 }: Props) {
+    // Filtrar horarios del programa seleccionado
+    const programSchedules = selectedProgramId
+        ? schedules.filter(s => s.program_id === selectedProgramId)
+        : [];
+
     const handleProgramChange = (programId: string) => {
         router.get(`/estudiante/calificaciones/${programId}`);
     };
@@ -272,6 +295,61 @@ export default function Grades({
                                 </div>
                             </CardHeader>
                         </Card>
+
+                        {/* Mis Horarios */}
+                        {programSchedules.length > 0 && (
+                            <div className="space-y-3">
+                                <h2 className="text-base sm:text-lg font-semibold text-gray-900 flex items-center gap-2">
+                                    <Calendar className="h-5 w-5 text-primary" />
+                                    Mis Horarios
+                                </h2>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                    {programSchedules.map((schedule) => (
+                                        <Card key={schedule.id} className="border-l-4" style={{ borderLeftColor: schedule.program_color }}>
+                                            <CardContent className="p-4">
+                                                <div className="space-y-2">
+                                                    <div className="flex items-start justify-between gap-2">
+                                                        <div className="min-w-0 flex-1">
+                                                            <h3 className="font-semibold text-sm sm:text-base truncate">
+                                                                {schedule.name}
+                                                            </h3>
+                                                            <p className="text-xs sm:text-sm text-muted-foreground flex items-center gap-1 mt-0.5">
+                                                                <GraduationCap className="h-3 w-3 flex-shrink-0" />
+                                                                <span className="truncate">{schedule.program_name}</span>
+                                                            </p>
+                                                        </div>
+                                                        <Badge
+                                                            className="flex-shrink-0 text-[10px]"
+                                                            style={{ backgroundColor: schedule.program_color }}
+                                                        >
+                                                            {schedule.days_of_week}
+                                                        </Badge>
+                                                    </div>
+                                                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
+                                                        <span className="flex items-center gap-1">
+                                                            <Clock className="h-3 w-3" />
+                                                            {schedule.start_time} - {schedule.end_time}
+                                                        </span>
+                                                        {schedule.classroom && (
+                                                            <span className="flex items-center gap-1">
+                                                                <MapPin className="h-3 w-3" />
+                                                                {schedule.classroom}
+                                                            </span>
+                                                        )}
+                                                        {schedule.professor_name && (
+                                                            <span className="flex items-center gap-1">
+                                                                <User className="h-3 w-3" />
+                                                                {schedule.professor_name}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </CardContent>
+                                        </Card>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
 
                         {/* Stats Cards */}
                         {programStats && (
