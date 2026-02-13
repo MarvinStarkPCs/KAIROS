@@ -239,7 +239,7 @@ export default function Welcome() {
                                             Acceso
                                         </Link>
                                         <a
-                                            href="#clase-gratis"
+                                            href="#formulario-clase-gratis"
                                             className="rounded-lg bg-gradient-to-r from-amber-600 to-amber-700 px-6 py-2.5 text-sm font-semibold text-white shadow-md hover:shadow-lg transition-all hover:from-amber-700 hover:to-amber-800"
                                         >
                                             Clase Gratis
@@ -264,7 +264,7 @@ export default function Welcome() {
                         {/* Free Class Badge → lleva al formulario */}
                         <div className="flex justify-center mb-8">
                             <a
-                                href="#contacto"
+                                href="#formulario-clase-gratis"
                                 className="inline-flex items-center space-x-2 rounded-full bg-gradient-to-r from-amber-600 to-orange-600 px-6 py-3 text-white shadow-xl animate-bounce-slow hover:from-amber-700 hover:to-orange-700 hover:shadow-2xl transition-all cursor-pointer no-underline"
                             >
                                 <Gift className="h-5 w-5" />
@@ -290,7 +290,7 @@ export default function Welcome() {
 
                                 <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
                                     <a
-                                        href="#clase-gratis"
+                                        href="#formulario-clase-gratis"
                                         className="group flex items-center justify-center rounded-xl bg-gradient-to-r from-amber-600 to-amber-700 px-8 py-4 text-base font-bold text-white shadow-xl hover:shadow-2xl transition-all hover:from-amber-700 hover:to-amber-800 transform hover:-translate-y-1"
                                     >
                                         Reserva tu Clase Gratis
@@ -340,14 +340,14 @@ export default function Welcome() {
                                     </video>
                                 </div>
                                 {/* Floating card */}
-                                <div className="absolute -bottom-6 -right-6 rounded-2xl bg-white p-6 shadow-2xl max-w-xs">
-                                    <div className="flex items-center space-x-3">
-                                        <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-gradient-to-br from-amber-100 to-orange-100">
-                                            <Award className="h-8 w-8 text-amber-700" />
+                                <div className="absolute -bottom-4 -right-4 sm:-bottom-6 sm:-right-6 rounded-xl sm:rounded-2xl bg-white p-3 sm:p-6 shadow-2xl">
+                                    <div className="flex items-center space-x-2 sm:space-x-3">
+                                        <div className="flex h-9 w-9 sm:h-14 sm:w-14 items-center justify-center rounded-lg sm:rounded-xl bg-gradient-to-br from-amber-100 to-orange-100">
+                                            <Award className="h-5 w-5 sm:h-8 sm:w-8 text-amber-700" />
                                         </div>
                                         <div>
-                                            <div className="text-sm font-semibold text-gray-900">+10 años</div>
-                                            <div className="text-xs text-gray-600">Formando músicos profesionales</div>
+                                            <div className="text-xs sm:text-sm font-semibold text-gray-900">+10 años</div>
+                                            <div className="text-[10px] sm:text-xs text-gray-600">Formando músicos profesionales</div>
                                         </div>
                                     </div>
                                 </div>
@@ -487,7 +487,7 @@ export default function Welcome() {
 
                         <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
                             <a
-                                href="#contacto"
+                                href="#formulario-clase-gratis"
                                 className="group rounded-xl bg-white px-8 py-4 text-lg font-bold text-amber-700 shadow-xl hover:shadow-2xl transition-all transform hover:-translate-y-1"
                             >
                                 Reservar Clase Gratis Ahora
@@ -620,7 +620,7 @@ export default function Welcome() {
                                 </div>
                             </div>
 
-                            <div className="rounded-2xl bg-white p-8 shadow-xl">
+                            <div id="formulario-clase-gratis" className="rounded-2xl bg-white p-8 shadow-xl scroll-mt-6">
                                 <div className="mb-6 p-4 rounded-xl bg-gradient-to-r from-amber-100 to-orange-100 border-2 border-amber-300">
                                     <div className="flex items-center space-x-2 text-amber-900 mb-2">
                                         <Gift className="h-5 w-5" />

@@ -300,12 +300,12 @@ export default function Index({ programs, stats, filters }: Props) {
                         <h1 className="text-3xl font-bold text-gray-900">Programas Académicos</h1>
                         <p className="mt-2 text-gray-600">Gestiona los programas y cursos de la academia</p>
                     </div>
-                    <Link href={ProgramAcademyController.create().url}>
-                        <Button>
+                    <Button asChild>
+                        <Link href={ProgramAcademyController.create().url}>
                             <Plus className="mr-2 h-5 w-5" />
                             Nuevo Programa
-                        </Button>
-                    </Link>
+                        </Link>
+                    </Button>
                 </div>
 
                 {/* Stats */}
@@ -493,12 +493,12 @@ export default function Index({ programs, stats, filters }: Props) {
                                 Limpiar filtros
                             </Button>
                         ) : (
-                            <Link href={ProgramAcademyController.create().url}>
-                                <Button>
+                            <Button asChild>
+                                <Link href={ProgramAcademyController.create().url}>
                                     <Plus className="mr-2 h-5 w-5" />
                                     Crear Primer Programa
-                                </Button>
-                            </Link>
+                                </Link>
+                            </Button>
                         )}
                     </div>
                 )}

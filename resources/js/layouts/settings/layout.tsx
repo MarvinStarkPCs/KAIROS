@@ -8,6 +8,7 @@ import { edit } from '@/routes/profile';
 import { edit as editSmtp } from '@/routes/smtp';
 import { edit as editWompi } from '@/routes/wompi';
 import { show } from '@/routes/two-factor';
+import { show as showManual } from '@/routes/manual';
 import { type NavItem, type SharedData } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
 import { type PropsWithChildren, useMemo } from 'react';
@@ -48,6 +49,12 @@ const allSidebarNavItems: SettingsNavItem[] = [
     {
         title: 'Pasarela Wompi',
         href: editWompi(),
+        icon: null,
+        adminOnly: true,
+    },
+    {
+        title: 'Manual',
+        href: showManual(),
         icon: null,
         adminOnly: true,
     },

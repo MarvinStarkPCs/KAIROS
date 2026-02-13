@@ -168,13 +168,13 @@ Route::middleware(['auth'])->group(function () {
     });
 
     // Programas Académicos
-    Route::middleware(['permission:ver_programas'])->group(function () {
-        Route::get('/programas_academicos', [program_academy::class, 'index'])->name('programas_academicos.index');
-        Route::get('/programas_academicos/{program}', [program_academy::class, 'show'])->name('programas_academicos.show');
-    });
     Route::middleware(['permission:crear_programa'])->group(function () {
         Route::get('/programas_academicos/create', [program_academy::class, 'create'])->name('programas_academicos.create');
         Route::post('/programas_academicos', [program_academy::class, 'store'])->name('programas_academicos.store');
+    });
+    Route::middleware(['permission:ver_programas'])->group(function () {
+        Route::get('/programas_academicos', [program_academy::class, 'index'])->name('programas_academicos.index');
+        Route::get('/programas_academicos/{program}', [program_academy::class, 'show'])->name('programas_academicos.show');
     });
     Route::middleware(['permission:editar_programa'])->group(function () {
         Route::get('/programas_academicos/{program}/edit', [program_academy::class, 'edit'])->name('programas_academicos.edit');
