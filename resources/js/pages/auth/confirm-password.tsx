@@ -13,7 +13,7 @@ export default function ConfirmPassword() {
         <>
             <Head title="Confirmar Contraseña - Academia Linaje" />
 
-            <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-amber-100 flex items-center justify-center p-4">
+            <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-amber-100 dark:from-neutral-950 dark:via-neutral-900 dark:to-neutral-950 flex items-center justify-center p-4">
                 {/* Decorative elements */}
                 <div className="absolute inset-0 -z-10 overflow-hidden">
                     <div className="absolute top-20 left-10 h-96 w-96 rounded-full bg-amber-300/30 blur-3xl"></div>
@@ -22,25 +22,25 @@ export default function ConfirmPassword() {
 
                 <div className="w-full max-w-md">
                     {/* Card */}
-                    <div className="rounded-2xl bg-white p-8 shadow-2xl">
+                    <div className="rounded-2xl bg-card p-8 shadow-2xl">
                         {/* Icon and Title */}
                         <div className="text-center mb-6">
-                            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-amber-100">
-                                <Lock className="h-7 w-7 text-amber-800" />
+                            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-amber-100 dark:bg-amber-900/30">
+                                <Lock className="h-7 w-7 text-amber-800 dark:text-amber-200" />
                             </div>
-                            <h1 className="text-2xl font-bold text-gray-900 mb-2">
+                            <h1 className="text-2xl font-bold text-foreground mb-2">
                                 Confirmar Contraseña
                             </h1>
-                            <p className="text-sm text-gray-600">
+                            <p className="text-sm text-muted-foreground">
                                 Esta es un área segura de la aplicación. Por favor confirma tu contraseña antes de continuar.
                             </p>
                         </div>
 
                         {/* Alert Box */}
-                        <div className="mb-6 rounded-lg bg-amber-50 border border-amber-200 p-4">
+                        <div className="mb-6 rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 p-4">
                             <div className="flex items-start space-x-3">
-                                <AlertCircle className="h-5 w-5 text-amber-700 flex-shrink-0 mt-0.5" />
-                                <p className="text-sm text-amber-800">
+                                <AlertCircle className="h-5 w-5 text-amber-700 dark:text-amber-300 flex-shrink-0 mt-0.5" />
+                                <p className="text-sm text-amber-800 dark:text-amber-200">
                                     Por tu seguridad, necesitamos verificar tu identidad.
                                 </p>
                             </div>
@@ -51,12 +51,12 @@ export default function ConfirmPassword() {
                                 <div className="space-y-6">
                                     {/* Password Field */}
                                     <div>
-                                        <Label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+                                        <Label htmlFor="password" className="block text-sm font-medium text-muted-foreground mb-2">
                                             Contraseña
                                         </Label>
                                         <div className="relative">
                                             <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                                                <Lock className="h-5 w-5 text-gray-400" />
+                                                <Lock className="h-5 w-5 text-muted-foreground" />
                                             </div>
                                             <Input
                                                 id="password"
@@ -66,7 +66,7 @@ export default function ConfirmPassword() {
                                                 autoComplete="current-password"
                                                 autoFocus
                                                 className={`w-full rounded-lg border ${
-                                                    errors.password ? 'border-red-300' : 'border-gray-300'
+                                                    errors.password ? 'border-red-300 dark:border-red-700' : 'border-input'
                                                 } pl-10 pr-4 py-3 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-200 transition-all`}
                                             />
                                         </div>

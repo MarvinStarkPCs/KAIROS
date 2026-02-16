@@ -87,7 +87,7 @@ export default function PaymentSettings({
     };
 
     const getColorClasses = (color: string, isActive: boolean) => {
-        if (!isActive) return 'bg-gray-100 text-gray-400';
+        if (!isActive) return 'bg-muted text-muted-foreground';
         switch (color) {
             case 'amber':
                 return 'bg-amber-500 text-white';
@@ -103,11 +103,11 @@ export default function PaymentSettings({
     const getBorderClasses = (color: string) => {
         switch (color) {
             case 'amber':
-                return 'border-amber-200 bg-amber-50/50';
+                return 'border-amber-200 dark:border-amber-800 bg-amber-50/50';
             case 'blue':
-                return 'border-blue-200 bg-blue-50/50';
+                return 'border-blue-200 dark:border-blue-800 bg-blue-50/50';
             case 'green':
-                return 'border-green-200 bg-green-50/50';
+                return 'border-green-200 dark:border-green-800 bg-green-50/50';
             default:
                 return '';
         }
@@ -222,11 +222,11 @@ export default function PaymentSettings({
 
                             {/* Pago en Línea */}
                             <div className={`flex items-center justify-between rounded-lg border p-4 transition-colors ${
-                                data.enable_online_payment ? 'border-amber-300 bg-amber-50/50' : ''
+                                data.enable_online_payment ? 'border-amber-300 dark:border-amber-700 bg-amber-50/50' : ''
                             }`}>
                                 <div className="flex items-center gap-3">
                                     <div className={`p-2 rounded-full ${
-                                        data.enable_online_payment ? 'bg-amber-500 text-white' : 'bg-gray-100 text-gray-400'
+                                        data.enable_online_payment ? 'bg-amber-500 text-white' : 'bg-muted text-muted-foreground'
                                     }`}>
                                         <CreditCard className="h-4 w-4" />
                                     </div>
@@ -249,11 +249,11 @@ export default function PaymentSettings({
 
                             {/* Pago Manual */}
                             <div className={`flex items-center justify-between rounded-lg border p-4 transition-colors ${
-                                data.enable_manual_payment ? 'border-green-300 bg-green-50/50' : ''
+                                data.enable_manual_payment ? 'border-green-300 dark:border-green-700 bg-green-50/50' : ''
                             }`}>
                                 <div className="flex items-center gap-3">
                                     <div className={`p-2 rounded-full ${
-                                        data.enable_manual_payment ? 'bg-green-500 text-white' : 'bg-gray-100 text-gray-400'
+                                        data.enable_manual_payment ? 'bg-green-500 text-white' : 'bg-muted text-muted-foreground'
                                     }`}>
                                         <Banknote className="h-4 w-4" />
                                     </div>
@@ -276,7 +276,7 @@ export default function PaymentSettings({
 
                             {/* Advertencia si solo uno está activo */}
                             {(!data.enable_online_payment || !data.enable_manual_payment) && (
-                                <div className="flex items-center gap-2 rounded-lg bg-amber-50 border border-amber-200 p-3 text-sm text-amber-800">
+                                <div className="flex items-center gap-2 rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 p-3 text-sm text-amber-800 dark:text-amber-200">
                                     <AlertTriangle className="h-4 w-4 flex-shrink-0" />
                                     <span>
                                         Solo el método de <strong>{data.enable_online_payment ? 'pago en línea' : 'pago manual'}</strong> estará disponible para los estudiantes.
@@ -297,7 +297,7 @@ export default function PaymentSettings({
 
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 {/* Mínimo de estudiantes */}
-                                <div className="rounded-lg border p-4 border-purple-200 bg-purple-50/50">
+                                <div className="rounded-lg border p-4 border-purple-200 dark:border-purple-800 bg-purple-50/50">
                                     <div className="flex items-center gap-3 mb-3">
                                         <div className="p-2 rounded-full bg-purple-500 text-white">
                                             <Users className="h-4 w-4" />
@@ -326,7 +326,7 @@ export default function PaymentSettings({
                                 </div>
 
                                 {/* Porcentaje de descuento */}
-                                <div className="rounded-lg border p-4 border-purple-200 bg-purple-50/50">
+                                <div className="rounded-lg border p-4 border-purple-200 dark:border-purple-800 bg-purple-50/50">
                                     <div className="flex items-center gap-3 mb-3">
                                         <div className="p-2 rounded-full bg-purple-500 text-white">
                                             <Percent className="h-4 w-4" />
@@ -360,9 +360,9 @@ export default function PaymentSettings({
 
                             {/* Vista previa del descuento */}
                             {Number(data.discount_percentage) > 0 && (
-                                <div className="rounded-lg bg-purple-50 border border-purple-200 p-4 space-y-2">
-                                    <p className="text-sm font-medium text-purple-900">Vista Previa del Descuento</p>
-                                    <p className="text-sm text-purple-800">
+                                <div className="rounded-lg bg-purple-50 dark:bg-purple-950/30 border border-purple-200 dark:border-purple-800 p-4 space-y-2">
+                                    <p className="text-sm font-medium text-purple-900 dark:text-purple-100">Vista Previa del Descuento</p>
+                                    <p className="text-sm text-purple-800 dark:text-purple-200">
                                         Si un responsable matricula <strong>{data.discount_min_students} o más estudiantes</strong>,
                                         cada uno recibe un <strong>{Number(data.discount_percentage)}% de descuento</strong>.
                                     </p>
@@ -377,7 +377,7 @@ export default function PaymentSettings({
                                                     <p className="text-xs text-muted-foreground line-through">
                                                         ${original.toLocaleString('es-CO')}
                                                     </p>
-                                                    <p className="text-base font-bold text-purple-700">
+                                                    <p className="text-base font-bold text-purple-700 dark:text-purple-300">
                                                         ${Math.round(final_amount).toLocaleString('es-CO')}
                                                     </p>
                                                 </div>
@@ -388,7 +388,7 @@ export default function PaymentSettings({
                             )}
 
                             {Number(data.discount_percentage) === 0 && (
-                                <div className="flex items-center gap-2 rounded-lg bg-gray-50 border border-gray-200 p-3 text-sm text-gray-600">
+                                <div className="flex items-center gap-2 rounded-lg bg-muted border border-border p-3 text-sm text-muted-foreground">
                                     <AlertTriangle className="h-4 w-4 flex-shrink-0" />
                                     <span>
                                         El descuento está desactivado. Establece un porcentaje mayor a 0 para activarlo.

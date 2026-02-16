@@ -124,12 +124,12 @@ export default function UsersIndex({ users, filters }: IndexProps) {
 
     const getUserTypeColor = (type: string) => {
         const colors: Record<string, string> = {
-            'Administrador': 'bg-purple-100 text-purple-800',
-            'Profesor': 'bg-blue-100 text-blue-800',
-            'Estudiante': 'bg-green-100 text-green-800',
-            'Responsable': 'bg-orange-100 text-orange-800',
+            'Administrador': 'bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-200',
+            'Profesor': 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200',
+            'Estudiante': 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200',
+            'Responsable': 'bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-200',
         };
-        return colors[type] || 'bg-gray-100 text-gray-800';
+        return colors[type] || 'bg-muted text-foreground';
     };
 
     const hasActiveFilters = search || typeFilter;
@@ -138,11 +138,11 @@ export default function UsersIndex({ users, filters }: IndexProps) {
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Gestion de Usuarios" />
 
-            <div className="flex h-full flex-1 flex-col gap-6 overflow-x-auto rounded-xl p-6 bg-[#f9f6f2]">
+            <div className="flex h-full flex-1 flex-col gap-6 overflow-x-auto rounded-xl p-6 bg-background">
                 <div className="flex items-center justify-between">
                     <div>
-                        <h1 className="text-3xl font-bold tracking-tight text-gray-800">Usuarios del Sistema</h1>
-                        <p className="text-gray-600">
+                        <h1 className="text-3xl font-bold tracking-tight text-foreground">Usuarios del Sistema</h1>
+                        <p className="text-muted-foreground">
                             Gestiona los usuarios, sus roles y perfiles
                         </p>
                     </div>
@@ -160,7 +160,7 @@ export default function UsersIndex({ users, filters }: IndexProps) {
                         <div className="flex flex-col md:flex-row gap-4">
                             <div className="flex-1">
                                 <div className="relative">
-                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                                     <Input
                                         placeholder="Buscar por nombre, email o documento..."
                                         value={search}
@@ -229,7 +229,7 @@ export default function UsersIndex({ users, filters }: IndexProps) {
                                                     </div>
                                                     <div>
                                                         <p className="font-medium">{user.full_name}</p>
-                                                        <p className="text-sm text-gray-500">{user.email || 'Sin email'}</p>
+                                                        <p className="text-sm text-muted-foreground">{user.email || 'Sin email'}</p>
                                                     </div>
                                                 </div>
                                             </TableCell>
@@ -238,7 +238,7 @@ export default function UsersIndex({ users, filters }: IndexProps) {
                                                     {user.user_type}
                                                 </Badge>
                                                 {user.modality && (
-                                                    <p className="text-xs text-gray-500 mt-1">{user.modality}</p>
+                                                    <p className="text-xs text-muted-foreground mt-1">{user.modality}</p>
                                                 )}
                                             </TableCell>
                                             <TableCell>
@@ -248,11 +248,11 @@ export default function UsersIndex({ users, filters }: IndexProps) {
                                                         <p className="font-medium">{user.document_number}</p>
                                                     </div>
                                                 ) : (
-                                                    <span className="text-gray-400">-</span>
+                                                    <span className="text-muted-foreground">-</span>
                                                 )}
                                             </TableCell>
                                             <TableCell>
-                                                {user.mobile || <span className="text-gray-400">-</span>}
+                                                {user.mobile || <span className="text-muted-foreground">-</span>}
                                             </TableCell>
                                             <TableCell>
                                                 <div className="flex gap-1">
@@ -269,11 +269,11 @@ export default function UsersIndex({ users, filters }: IndexProps) {
                                                         </Badge>
                                                     )}
                                                     {!user.has_student_profile && !user.has_teacher_profile && (
-                                                        <span className="text-gray-400">-</span>
+                                                        <span className="text-muted-foreground">-</span>
                                                     )}
                                                 </div>
                                             </TableCell>
-                                            <TableCell className="text-gray-600">
+                                            <TableCell className="text-muted-foreground">
                                                 {formatDate(user.created_at)}
                                             </TableCell>
                                             <TableCell className="text-right">
@@ -302,7 +302,7 @@ export default function UsersIndex({ users, filters }: IndexProps) {
                                     ))
                                 ) : (
                                     <TableRow>
-                                        <TableCell colSpan={7} className="text-center py-6 text-gray-500">
+                                        <TableCell colSpan={7} className="text-center py-6 text-muted-foreground">
                                             No se encontraron usuarios.
                                         </TableCell>
                                     </TableRow>
@@ -313,7 +313,7 @@ export default function UsersIndex({ users, filters }: IndexProps) {
                         {/* Paginacion */}
                         {users.last_page > 1 && (
                             <div className="flex items-center justify-between mt-4 pt-4 border-t">
-                                <p className="text-sm text-gray-600">
+                                <p className="text-sm text-muted-foreground">
                                     Mostrando {users.from} a {users.to} de {users.total} usuarios
                                 </p>
                                 <div className="flex gap-2">

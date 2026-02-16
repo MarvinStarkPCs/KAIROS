@@ -161,10 +161,10 @@ export default function EvaluateActivity({ schedule, activity, students }: Props
     };
 
     const getScoreBgColor = (percentage: number): string => {
-        if (percentage >= 80) return 'bg-green-50 border-green-200';
-        if (percentage >= 60) return 'bg-blue-50 border-blue-200';
-        if (percentage >= 40) return 'bg-amber-50 border-amber-200';
-        return 'bg-red-50 border-red-200';
+        if (percentage >= 80) return 'bg-green-50 dark:bg-green-950/30 border-green-200 dark:border-green-800';
+        if (percentage >= 60) return 'bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800';
+        if (percentage >= 40) return 'bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800';
+        return 'bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-800';
     };
 
     const getScoreLabel = (percentage: number): string => {
@@ -212,10 +212,10 @@ export default function EvaluateActivity({ schedule, activity, students }: Props
                 <div className="mb-8">
                     <div className="flex items-center justify-between">
                         <div>
-                            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+                            <h1 className="text-3xl font-bold text-foreground mb-2">
                                 Evaluar Actividad
                             </h1>
-                            <p className="text-gray-600">{schedule.program.name}</p>
+                            <p className="text-muted-foreground">{schedule.program.name}</p>
                         </div>
                         <Link href={`/profesor/grupo/${schedule.id}`}>
                             <Button variant="outline">
@@ -232,7 +232,7 @@ export default function EvaluateActivity({ schedule, activity, students }: Props
                         <div className="flex items-start justify-between">
                             <div>
                                 <CardTitle className="text-2xl mb-2">{activity.name}</CardTitle>
-                                <p className="text-gray-600 mb-3">{activity.description}</p>
+                                <p className="text-muted-foreground mb-3">{activity.description}</p>
                                 <div className="flex items-center gap-2">
                                     <Badge variant="outline">{activity.study_plan.module_name}</Badge>
                                     <Badge variant="secondary">Peso: {activity.weight}%</Badge>
@@ -260,16 +260,16 @@ export default function EvaluateActivity({ schedule, activity, students }: Props
 
                 {/* Attendance Warning */}
                 {studentsWithoutAttendance > 0 && (
-                    <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+                    <div className="bg-yellow-50 dark:bg-yellow-950/30 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4 mb-6">
                         <div className="flex items-start gap-3">
                             <AlertTriangle className="w-5 h-5 text-yellow-600 mt-0.5" />
                             <div>
-                                <h4 className="font-medium text-yellow-800">Estudiantes sin asistencia registrada</h4>
-                                <p className="text-sm text-yellow-700 mt-1">
+                                <h4 className="font-medium text-yellow-800 dark:text-yellow-200">Estudiantes sin asistencia registrada</h4>
+                                <p className="text-sm text-yellow-700 dark:text-yellow-300 mt-1">
                                     {studentsWithoutAttendance} estudiante(s) no tienen asistencia registrada y no pueden ser evaluados.
                                     {studentsWithAttendance > 0 && ` Solo se evaluarán ${studentsWithAttendance} estudiante(s) con asistencia.`}
                                 </p>
-                                <p className="text-sm text-yellow-700 mt-1">
+                                <p className="text-sm text-yellow-700 dark:text-yellow-300 mt-1">
                                     Vaya a la pestaña "Marcar Asistencia" para registrar la asistencia antes de evaluar.
                                 </p>
                             </div>
@@ -281,7 +281,7 @@ export default function EvaluateActivity({ schedule, activity, students }: Props
                 <div className="space-y-6">
                     {students.length === 0 ? (
                         <Card>
-                            <CardContent className="py-12 text-center text-gray-500">
+                            <CardContent className="py-12 text-center text-muted-foreground">
                                 No hay estudiantes para evaluar
                             </CardContent>
                         </Card>
@@ -299,7 +299,7 @@ export default function EvaluateActivity({ schedule, activity, students }: Props
                                             {/* Mini circular progress */}
                                             <div className="relative h-11 w-11 flex-shrink-0">
                                                 <svg className="h-11 w-11 -rotate-90" viewBox="0 0 48 48">
-                                                    <circle cx="24" cy="24" r="20" fill="none" className="stroke-gray-200" strokeWidth="4" />
+                                                    <circle cx="24" cy="24" r="20" fill="none" className="stroke-muted" strokeWidth="4" />
                                                     <circle
                                                         cx="24" cy="24" r="20" fill="none"
                                                         className={`transition-all duration-500 ${getScoreRingColor(percentage)}`}
@@ -324,7 +324,7 @@ export default function EvaluateActivity({ schedule, activity, students }: Props
                                             </div>
                                         </div>
                                         <div className="flex items-center gap-3">
-                                            <span className="text-sm font-medium text-gray-700 hidden sm:inline">{student.name}</span>
+                                            <span className="text-sm font-medium text-muted-foreground hidden sm:inline">{student.name}</span>
                                             {/* Progress bar */}
                                             <div className="hidden sm:block w-32">
                                                 <div className="h-3 w-full overflow-hidden rounded-full bg-white/60">
@@ -342,7 +342,7 @@ export default function EvaluateActivity({ schedule, activity, students }: Props
                                         </div>
                                     </div>
                                 )}
-                                <Card className={`${!student.has_attendance ? 'border-yellow-300 bg-yellow-50/50' : 'rounded-t-none'}`}>
+                                <Card className={`${!student.has_attendance ? 'border-yellow-300 dark:border-yellow-700 bg-yellow-50/50' : 'rounded-t-none'}`}>
                                 <CardHeader>
                                     <div className="flex items-center justify-between">
                                         <div>
@@ -360,16 +360,16 @@ export default function EvaluateActivity({ schedule, activity, students }: Props
                                                     </Badge>
                                                 )}
                                             </div>
-                                            <div className="flex items-center gap-3 text-sm text-gray-600">
+                                            <div className="flex items-center gap-3 text-sm text-muted-foreground">
                                                 {student.document_number && (
-                                                    <span className="font-medium text-gray-700">
+                                                    <span className="font-medium text-muted-foreground">
                                                         {student.document_type}: {student.document_number}
                                                     </span>
                                                 )}
                                                 <span>{student.email}</span>
                                             </div>
                                             {student.has_attendance && (
-                                                <p className="text-xs text-gray-500 mt-1">
+                                                <p className="text-xs text-muted-foreground mt-1">
                                                     Asistencia: {student.attendance_stats.present}P / {student.attendance_stats.late}T / {student.attendance_stats.absent}A
                                                     ({student.attendance_stats.total} clases)
                                                 </p>
@@ -379,12 +379,12 @@ export default function EvaluateActivity({ schedule, activity, students }: Props
                                 </CardHeader>
                                 <CardContent>
                                     {!student.has_attendance ? (
-                                        <div className="bg-yellow-100 border border-yellow-300 rounded-lg p-4 text-center">
+                                        <div className="bg-yellow-100 dark:bg-yellow-900/30 border border-yellow-300 dark:border-yellow-700 rounded-lg p-4 text-center">
                                             <AlertTriangle className="w-8 h-8 text-yellow-600 mx-auto mb-2" />
-                                            <p className="text-yellow-800 font-medium">
+                                            <p className="text-yellow-800 dark:text-yellow-200 font-medium">
                                                 No se puede evaluar a este estudiante
                                             </p>
-                                            <p className="text-yellow-700 text-sm mt-1">
+                                            <p className="text-yellow-700 dark:text-yellow-300 text-sm mt-1">
                                                 Primero debe registrar al menos una asistencia para este estudiante.
                                             </p>
                                         </div>
@@ -392,7 +392,7 @@ export default function EvaluateActivity({ schedule, activity, students }: Props
                                         <div className="space-y-4">
                                             {/* Criteria Scores */}
                                             <div>
-                                                <h4 className="font-semibold text-gray-900 mb-3">Criterios de Evaluación</h4>
+                                                <h4 className="font-semibold text-foreground mb-3">Criterios de Evaluación</h4>
                                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                     {activity.evaluation_criteria.map((criteria) => {
                                                         const earned = Number(evaluations[student.id]?.criteria.find(
@@ -401,16 +401,16 @@ export default function EvaluateActivity({ schedule, activity, students }: Props
                                                         const maxPts = Number(criteria.max_points || 0);
                                                         const pct = maxPts > 0 ? Math.round((earned / maxPts) * 100) : 0;
                                                         return (
-                                                            <div key={criteria.id} className="rounded-lg border border-gray-200 bg-white p-3 space-y-2">
+                                                            <div key={criteria.id} className="rounded-lg border border-border bg-card p-3 space-y-2">
                                                                 <div className="flex items-center justify-between">
                                                                     <Label htmlFor={`student-${student.id}-criteria-${criteria.id}`} className="text-sm font-medium">
                                                                         {criteria.name}
                                                                     </Label>
                                                                     <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
-                                                                        pct >= 80 ? 'bg-green-100 text-green-700' :
-                                                                        pct >= 60 ? 'bg-blue-100 text-blue-700' :
-                                                                        pct >= 40 ? 'bg-amber-100 text-amber-700' :
-                                                                        'bg-red-100 text-red-700'
+                                                                        pct >= 80 ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300' :
+                                                                        pct >= 60 ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300' :
+                                                                        pct >= 40 ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300' :
+                                                                        'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300'
                                                                     }`}>
                                                                         {pct}%
                                                                     </span>
@@ -428,10 +428,10 @@ export default function EvaluateActivity({ schedule, activity, students }: Props
                                                                         }
                                                                         className="w-24 text-center"
                                                                     />
-                                                                    <span className="text-sm text-gray-400">/</span>
-                                                                    <span className="text-sm font-medium text-gray-600">{criteria.max_points} pts</span>
+                                                                    <span className="text-sm text-muted-foreground">/</span>
+                                                                    <span className="text-sm font-medium text-muted-foreground">{criteria.max_points} pts</span>
                                                                     <div className="flex-1">
-                                                                        <div className="h-2 w-full overflow-hidden rounded-full bg-gray-200">
+                                                                        <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
                                                                             <div
                                                                                 className={`h-full transition-all duration-300 rounded-full ${
                                                                                     pct >= 80 ? 'bg-green-500' :
@@ -445,7 +445,7 @@ export default function EvaluateActivity({ schedule, activity, students }: Props
                                                                     </div>
                                                                 </div>
                                                                 {criteria.description && (
-                                                                    <p className="text-xs text-gray-500">{criteria.description}</p>
+                                                                    <p className="text-xs text-muted-foreground">{criteria.description}</p>
                                                                 )}
                                                             </div>
                                                         );
@@ -481,7 +481,7 @@ export default function EvaluateActivity({ schedule, activity, students }: Props
                     <div className="mt-8 flex gap-4">
                         <Button
                             onClick={handleSubmit}
-                            className="flex-1 bg-[#7a9b3c] hover:bg-[#6a8a2c] text-lg py-6 disabled:bg-gray-400"
+                            className="flex-1 bg-[#7a9b3c] hover:bg-[#6a8a2c] text-lg py-6 disabled:opacity-50"
                             disabled={studentsWithAttendance === 0}
                         >
                             <Icon iconNode={Save} className="w-5 h-5 mr-2" />

@@ -115,8 +115,8 @@ export default function ActivityDialog({
                             <div className="space-y-2">
                                 {/* Current Module Status */}
                                 <div className={`rounded-lg border p-3 ${
-                                    isComplete ? 'border-green-200 bg-green-50' :
-                                    isOver ? 'border-red-200 bg-red-50' : 'border-amber-200 bg-amber-50'
+                                    isComplete ? 'border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-950/30' :
+                                    isOver ? 'border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-950/30' : 'border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/30'
                                 }`}>
                                     <div className="flex items-center justify-between">
                                         <div className="flex items-center gap-2">
@@ -128,8 +128,8 @@ export default function ActivityDialog({
                                                 <Info className="h-4 w-4 text-amber-600" />
                                             )}
                                             <span className={`text-sm font-medium ${
-                                                isComplete ? 'text-green-800' :
-                                                isOver ? 'text-red-800' : 'text-amber-800'
+                                                isComplete ? 'text-green-800 dark:text-green-200' :
+                                                isOver ? 'text-red-800 dark:text-red-200' : 'text-amber-800 dark:text-amber-200'
                                             }`}>
                                                 Estado del módulo
                                             </span>
@@ -137,27 +137,27 @@ export default function ActivityDialog({
                                     </div>
                                     <div className="mt-2 grid grid-cols-3 gap-2 text-center text-xs">
                                         <div className="rounded bg-white/60 p-2">
-                                            <div className="font-semibold text-gray-700">{normalizedTotalWeight.toFixed(1)}%</div>
-                                            <div className="text-gray-500">Asignado</div>
+                                            <div className="font-semibold text-muted-foreground">{normalizedTotalWeight.toFixed(1)}%</div>
+                                            <div className="text-muted-foreground">Asignado</div>
                                         </div>
                                         <div className="rounded bg-white/60 p-2">
-                                            <div className={`font-semibold ${remainingWeightAvailable > 0 ? 'text-amber-700' : 'text-green-700'}`}>
+                                            <div className={`font-semibold ${remainingWeightAvailable > 0 ? 'text-amber-700 dark:text-amber-300' : 'text-green-700 dark:text-green-300'}`}>
                                                 {remainingWeightAvailable.toFixed(1)}%
                                             </div>
-                                            <div className="text-gray-500">Disponible</div>
+                                            <div className="text-muted-foreground">Disponible</div>
                                         </div>
                                         <div className="rounded bg-white/60 p-2">
                                             <div className={`font-semibold ${
-                                                isComplete ? 'text-green-700' :
-                                                isOver ? 'text-red-700' : 'text-gray-700'
+                                                isComplete ? 'text-green-700 dark:text-green-300' :
+                                                isOver ? 'text-red-700 dark:text-red-300' : 'text-muted-foreground'
                                             }`}>
                                                 {projectedTotal.toFixed(1)}%
                                             </div>
-                                            <div className="text-gray-500">Proyectado</div>
+                                            <div className="text-muted-foreground">Proyectado</div>
                                         </div>
                                     </div>
                                     {/* Progress Bar */}
-                                    <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-gray-200">
+                                    <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-muted">
                                         <div className="flex h-full">
                                             <div
                                                 className="bg-blue-400 transition-all duration-300"
@@ -171,7 +171,7 @@ export default function ActivityDialog({
                                             />
                                         </div>
                                     </div>
-                                    <div className="mt-1 flex justify-between text-xs text-gray-500">
+                                    <div className="mt-1 flex justify-between text-xs text-muted-foreground">
                                         <span>Otras actividades: {normalizedTotalWeight.toFixed(1)}%</span>
                                         <span>Esta actividad: {activityWeight}%</span>
                                     </div>
@@ -179,18 +179,18 @@ export default function ActivityDialog({
 
                                 {/* Warning/Success Messages */}
                                 {isOver && (
-                                    <Alert className="border-red-300 bg-red-50">
+                                    <Alert className="border-red-300 dark:border-red-700 bg-red-50 dark:bg-red-950/30">
                                         <AlertTriangle className="h-4 w-4 text-red-600" />
-                                        <AlertDescription className="text-red-700 text-xs">
+                                        <AlertDescription className="text-red-700 dark:text-red-300 text-xs">
                                             La suma total ({projectedTotal.toFixed(1)}%) excede el 100%.
                                             Reduce el peso a máximo <strong>{remainingWeightAvailable.toFixed(1)}%</strong>.
                                         </AlertDescription>
                                     </Alert>
                                 )}
                                 {isComplete && (
-                                    <Alert className="border-green-300 bg-green-50">
+                                    <Alert className="border-green-300 dark:border-green-700 bg-green-50 dark:bg-green-950/30">
                                         <CheckCircle2 className="h-4 w-4 text-green-600" />
-                                        <AlertDescription className="text-green-700 text-xs">
+                                        <AlertDescription className="text-green-700 dark:text-green-300 text-xs">
                                             ¡Perfecto! La suma total es exactamente 100%.
                                         </AlertDescription>
                                     </Alert>
@@ -258,7 +258,7 @@ export default function ActivityDialog({
                                     )}
                                 </div>
                                 {errors.weight && <p className="text-sm text-red-600">{errors.weight}</p>}
-                                <p className="text-xs text-gray-500">
+                                <p className="text-xs text-muted-foreground">
                                     % de la nota final del módulo
                                     {remainingWeightAvailable > 0 && data.weight === 0 && (
                                         <span className="ml-1 text-amber-600">
@@ -275,7 +275,7 @@ export default function ActivityDialog({
                                 id="status"
                                 value={data.status}
                                 onChange={(e) => setData('status', e.target.value as 'active' | 'inactive')}
-                                className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm ring-offset-white file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-gray-500 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-gray-950 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                             >
                                 <option value="active">Activa</option>
                                 <option value="inactive">Inactiva</option>

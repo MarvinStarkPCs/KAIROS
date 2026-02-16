@@ -143,10 +143,10 @@ export function ScheduleCalendar({
     };
 
     return (
-        <div className="bg-white rounded-lg shadow p-4">
+        <div className="bg-card rounded-lg shadow p-4">
             {loading && (
                 <div className="absolute inset-0 bg-white/50 flex items-center justify-center z-10">
-                    <div className="text-gray-600">Cargando calendario...</div>
+                    <div className="text-muted-foreground">Cargando calendario...</div>
                 </div>
             )}
             <FullCalendar

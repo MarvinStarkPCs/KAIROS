@@ -56,7 +56,7 @@ export function Step1ResponsableForm({ data, errors, onChange }: Step1Responsabl
 
                 {/* Separador */}
                 <div className="border-t pt-6">
-                    <div className="flex items-center gap-2 text-amber-700 mb-4">
+                    <div className="flex items-center gap-2 text-amber-700 dark:text-amber-300 mb-4">
                         <Lock className="h-5 w-5" />
                         <h3 className="font-semibold">Credenciales de Acceso</h3>
                     </div>

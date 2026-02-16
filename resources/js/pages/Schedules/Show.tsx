@@ -79,9 +79,9 @@ export default function ScheduleShow({ schedule }: Props) {
 
     const getStatusBadge = (status: Schedule['status']) => {
         const styles = {
-            active: 'bg-green-100 text-green-800',
-            inactive: 'bg-gray-100 text-gray-800',
-            completed: 'bg-blue-100 text-blue-800',
+            active: 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200',
+            inactive: 'bg-muted text-foreground',
+            completed: 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200',
         };
 
         const labels = {
@@ -218,7 +218,7 @@ export default function ScheduleShow({ schedule }: Props) {
                                 {schedule.available_slots}
                             </p>
                         </div>
-                        <div className="w-full bg-gray-200 rounded-full h-2">
+                        <div className="w-full bg-muted rounded-full h-2">
                             <div
                                 className="bg-blue-600 h-2 rounded-full transition-all"
                                 style={{

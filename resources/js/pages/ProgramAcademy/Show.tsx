@@ -164,7 +164,7 @@ export default function Show({ program, studyPlans }: ShowProps) {
                 <div>
                     <Link
                         href={ProgramAcademyController.index().url}
-                        className="mb-3 inline-flex items-center text-sm text-gray-600 hover:text-gray-900"
+                        className="mb-3 inline-flex items-center text-sm text-muted-foreground hover:text-foreground"
                     >
                         <ArrowLeft className="mr-1 h-4 w-4" />
                         Volver a programas
@@ -172,18 +172,18 @@ export default function Show({ program, studyPlans }: ShowProps) {
 
                     <div className="flex items-start justify-between">
                         <div>
-                            <h1 className="text-3xl font-bold text-gray-900">{program.name}</h1>
+                            <h1 className="text-3xl font-bold text-foreground">{program.name}</h1>
                             {program.description && (
-                                <p className="mt-2 text-gray-600">{program.description}</p>
+                                <p className="mt-2 text-muted-foreground">{program.description}</p>
                             )}
-                            <div className="mt-3 flex items-center gap-4 text-sm text-gray-500">
+                            <div className="mt-3 flex items-center gap-4 text-sm text-muted-foreground">
                                 <span>{program.duration_months} meses</span>
                                 <span>•</span>
                                 <span
                                     className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${
                                         program.status === 'active'
-                                            ? 'bg-green-100 text-green-700'
-                                            : 'bg-gray-100 text-gray-700'
+                                            ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'
+                                            : 'bg-muted text-muted-foreground'
                                     }`}
                                 >
                                     {program.status === 'active' ? 'Activo' : 'Inactivo'}
@@ -200,7 +200,7 @@ export default function Show({ program, studyPlans }: ShowProps) {
                 {/* Study Plans Section */}
                 <div className="space-y-4">
                     <div className="flex items-center justify-between">
-                        <h2 className="text-2xl font-bold text-gray-900">Plan de Estudios</h2>
+                        <h2 className="text-2xl font-bold text-foreground">Plan de Estudios</h2>
                         <Button onClick={() => setStudyPlanDialog({ open: true })}>
                             <Plus className="mr-2 h-4 w-4" />
                             Agregar Módulo
@@ -208,13 +208,13 @@ export default function Show({ program, studyPlans }: ShowProps) {
                     </div>
 
                     {/* Info Alert about Points and Percentages */}
-                    <Alert className="border-blue-200 bg-blue-50">
+                    <Alert className="border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-950/30">
                         <Info className="h-4 w-4 text-blue-600" />
-                        <AlertTitle className="text-blue-800">Sistema de Evaluación: Puntos y Porcentajes</AlertTitle>
-                        <AlertDescription className="text-blue-700">
+                        <AlertTitle className="text-blue-800 dark:text-blue-200">Sistema de Evaluación: Puntos y Porcentajes</AlertTitle>
+                        <AlertDescription className="text-blue-700 dark:text-blue-300">
                             <div className="mt-2 grid gap-3 text-sm md:grid-cols-2">
                                 <div className="rounded-md bg-white/60 p-3">
-                                    <strong className="text-blue-900">Peso de Actividades (%):</strong>
+                                    <strong className="text-blue-900 dark:text-blue-100">Peso de Actividades (%):</strong>
                                     <ul className="mt-1 list-disc pl-4 text-xs">
                                         <li>Cada actividad tiene un peso porcentual dentro del módulo</li>
                                         <li>La suma de todos los pesos debe ser <strong>100%</strong></li>
@@ -222,7 +222,7 @@ export default function Show({ program, studyPlans }: ShowProps) {
                                     </ul>
                                 </div>
                                 <div className="rounded-md bg-white/60 p-3">
-                                    <strong className="text-blue-900">Puntos de Criterios:</strong>
+                                    <strong className="text-blue-900 dark:text-blue-100">Puntos de Criterios:</strong>
                                     <ul className="mt-1 list-disc pl-4 text-xs">
                                         <li>Cada criterio tiene una puntuación máxima (ej: 10 pts)</li>
                                         <li>El estudiante recibe puntos según su desempeño</li>
@@ -238,24 +238,24 @@ export default function Show({ program, studyPlans }: ShowProps) {
                             {studyPlans.map((studyPlan, index) => (
                                 <div
                                     key={studyPlan.id}
-                                    className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm"
+                                    className="rounded-xl border border-border bg-card p-6 shadow-sm"
                                 >
                                     {/* Study Plan Header */}
                                     <div className="mb-4 flex items-start justify-between">
                                         <div className="flex items-start gap-4">
-                                            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-100">
+                                            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900/30">
                                                 <Book className="h-5 w-5 text-blue-600" />
                                             </div>
                                             <div>
-                                                <h3 className="text-lg font-semibold text-gray-900">
+                                                <h3 className="text-lg font-semibold text-foreground">
                                                     Módulo {index + 1}: {studyPlan.module_name}
                                                 </h3>
                                                 {studyPlan.description && (
-                                                    <p className="mt-1 text-sm text-gray-600">
+                                                    <p className="mt-1 text-sm text-muted-foreground">
                                                         {studyPlan.description}
                                                     </p>
                                                 )}
-                                                <div className="mt-2 flex items-center gap-4 text-sm text-gray-500">
+                                                <div className="mt-2 flex items-center gap-4 text-sm text-muted-foreground">
                                                     <span>{studyPlan.hours} horas</span>
                                                     <span>•</span>
                                                     <span>Nivel {studyPlan.level}</span>
@@ -290,7 +290,7 @@ export default function Show({ program, studyPlans }: ShowProps) {
                                                 <Button
                                                     variant="outline"
                                                     size="sm"
-                                                    className="text-red-600 hover:bg-red-50 hover:text-red-700"
+                                                    className="text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-700 dark:hover:text-red-300"
                                                     onClick={() =>
                                                         setDeleteStudyPlan({ open: true, studyPlan })
                                                     }
@@ -309,9 +309,9 @@ export default function Show({ program, studyPlans }: ShowProps) {
                                                 const totalWeight = Number(calculateTotalWeight(studyPlan.activities)) || 0;
                                                 const weightStatus = getWeightStatus(totalWeight);
                                                 return (
-                                                    <div className="rounded-lg border border-gray-200 bg-gray-50 p-3">
+                                                    <div className="rounded-lg border border-border bg-muted p-3">
                                                         <div className="mb-2 flex items-center justify-between">
-                                                            <h4 className="text-sm font-semibold text-gray-700">Actividades:</h4>
+                                                            <h4 className="text-sm font-semibold text-muted-foreground">Actividades:</h4>
                                                             <div className="flex items-center gap-2">
                                                                 {weightStatus.status === 'complete' ? (
                                                                     <CheckCircle2 className="h-4 w-4 text-green-600" />
@@ -319,15 +319,15 @@ export default function Show({ program, studyPlans }: ShowProps) {
                                                                     <AlertTriangle className={`h-4 w-4 ${weightStatus.status === 'over' ? 'text-red-600' : 'text-amber-600'}`} />
                                                                 )}
                                                                 <span className={`text-sm font-medium ${
-                                                                    weightStatus.status === 'complete' ? 'text-green-700' :
-                                                                    weightStatus.status === 'over' ? 'text-red-700' : 'text-amber-700'
+                                                                    weightStatus.status === 'complete' ? 'text-green-700 dark:text-green-300' :
+                                                                    weightStatus.status === 'over' ? 'text-red-700 dark:text-red-300' : 'text-amber-700 dark:text-amber-300'
                                                                 }`}>
                                                                     {totalWeight.toFixed(1)}% de 100% — {weightStatus.message}
                                                                 </span>
                                                             </div>
                                                         </div>
                                                         {/* Progress Bar */}
-                                                        <div className="h-2 w-full overflow-hidden rounded-full bg-gray-200">
+                                                        <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
                                                             <div
                                                                 className={`h-full transition-all duration-300 ${
                                                                     weightStatus.status === 'complete' ? 'bg-green-500' :
@@ -337,7 +337,7 @@ export default function Show({ program, studyPlans }: ShowProps) {
                                                             />
                                                         </div>
                                                         {weightStatus.status !== 'complete' && (
-                                                            <p className="mt-1 text-xs text-gray-500">
+                                                            <p className="mt-1 text-xs text-muted-foreground">
                                                                 {weightStatus.status === 'over'
                                                                     ? 'La suma de pesos excede el 100%. Ajusta los pesos de las actividades.'
                                                                     : 'La suma de pesos debe ser exactamente 100% para que las calificaciones se calculen correctamente.'}
@@ -349,31 +349,31 @@ export default function Show({ program, studyPlans }: ShowProps) {
                                             {studyPlan.activities.map((activity) => (
                                                 <div
                                                     key={activity.id}
-                                                    className="rounded-lg border border-gray-200 bg-gray-50 p-4"
+                                                    className="rounded-lg border border-border bg-muted p-4"
                                                 >
                                                     {/* Activity Header */}
                                                     <div className="mb-3 flex items-start justify-between">
                                                         <div className="flex items-start gap-3">
-                                                            <div className="flex h-8 w-8 items-center justify-center rounded-md bg-purple-100">
+                                                            <div className="flex h-8 w-8 items-center justify-center rounded-md bg-purple-100 dark:bg-purple-900/30">
                                                                 <ListChecks className="h-4 w-4 text-purple-600" />
                                                             </div>
                                                             <div>
-                                                                <h5 className="font-medium text-gray-900">
+                                                                <h5 className="font-medium text-foreground">
                                                                     {activity.name}
                                                                 </h5>
                                                                 {activity.description && (
-                                                                    <p className="mt-1 text-sm text-gray-600">
+                                                                    <p className="mt-1 text-sm text-muted-foreground">
                                                                         {activity.description}
                                                                     </p>
                                                                 )}
-                                                                <div className="mt-1 flex items-center gap-3 text-xs text-gray-500">
+                                                                <div className="mt-1 flex items-center gap-3 text-xs text-muted-foreground">
                                                                     <span>Peso: {activity.weight}%</span>
                                                                     <span>•</span>
                                                                     <span
                                                                         className={`rounded-full px-2 py-0.5 ${
                                                                             activity.status === 'active'
-                                                                                ? 'bg-green-100 text-green-700'
-                                                                                : 'bg-gray-200 text-gray-700'
+                                                                                ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'
+                                                                                : 'bg-muted text-muted-foreground'
                                                                         }`}
                                                                     >
                                                                         {activity.status === 'active'
@@ -415,7 +415,7 @@ export default function Show({ program, studyPlans }: ShowProps) {
                                                                 <Button
                                                                     variant="ghost"
                                                                     size="sm"
-                                                                    className="text-red-600 hover:bg-red-50 hover:text-red-700"
+                                                                    className="text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-700 dark:hover:text-red-300"
                                                                     onClick={() =>
                                                                         setDeleteActivity({ open: true, activity })
                                                                     }
@@ -429,29 +429,29 @@ export default function Show({ program, studyPlans }: ShowProps) {
                                                     {/* Evaluation Criteria */}
                                                     {activity.evaluation_criteria.length > 0 && (
                                                         <div className="ml-11 space-y-2">
-                                                            <h6 className="text-xs font-semibold text-gray-600">
+                                                            <h6 className="text-xs font-semibold text-muted-foreground">
                                                                 Criterios de Evaluación:
                                                             </h6>
                                                             {activity.evaluation_criteria.map((criteria) => (
                                                                 <div
                                                                     key={criteria.id}
-                                                                    className="flex items-center justify-between rounded-md border border-gray-200 bg-white p-3"
+                                                                    className="flex items-center justify-between rounded-md border border-border bg-card p-3"
                                                                 >
                                                                     <div className="flex items-center gap-2">
                                                                         <Award className="h-4 w-4 text-amber-600" />
                                                                         <div>
-                                                                            <p className="text-sm font-medium text-gray-900">
+                                                                            <p className="text-sm font-medium text-foreground">
                                                                                 {criteria.name}
                                                                             </p>
                                                                             {criteria.description && (
-                                                                                <p className="text-xs text-gray-600">
+                                                                                <p className="text-xs text-muted-foreground">
                                                                                     {criteria.description}
                                                                                 </p>
                                                                             )}
                                                                         </div>
                                                                     </div>
                                                                     <div className="flex items-center gap-2">
-                                                                        <span className="text-sm font-medium text-gray-700">
+                                                                        <span className="text-sm font-medium text-muted-foreground">
                                                                             {criteria.max_points} pts
                                                                         </span>
                                                                         <Button
@@ -471,7 +471,7 @@ export default function Show({ program, studyPlans }: ShowProps) {
                                                                             <Button
                                                                                 variant="ghost"
                                                                                 size="sm"
-                                                                                className="text-red-600 hover:bg-red-50 hover:text-red-700"
+                                                                                className="text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-700 dark:hover:text-red-300"
                                                                                 onClick={() =>
                                                                                     setDeleteCriteria({ open: true, criteria })
                                                                                 }
@@ -488,8 +488,8 @@ export default function Show({ program, studyPlans }: ShowProps) {
                                             ))}
                                         </div>
                                     ) : (
-                                        <div className="ml-14 rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 p-6 text-center">
-                                            <p className="text-sm text-gray-600">
+                                        <div className="ml-14 rounded-lg border-2 border-dashed border-border bg-muted p-6 text-center">
+                                            <p className="text-sm text-muted-foreground">
                                                 No hay actividades en este módulo
                                             </p>
                                             <Button
@@ -514,14 +514,14 @@ export default function Show({ program, studyPlans }: ShowProps) {
                             ))}
                         </div>
                     ) : (
-                        <div className="rounded-xl border-2 border-dashed border-gray-300 bg-white p-12 text-center">
-                            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gray-100">
-                                <Book className="h-8 w-8 text-gray-400" />
+                        <div className="rounded-xl border-2 border-dashed border-border bg-card p-12 text-center">
+                            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-muted">
+                                <Book className="h-8 w-8 text-muted-foreground" />
                             </div>
-                            <h3 className="mb-2 text-xl font-semibold text-gray-900">
+                            <h3 className="mb-2 text-xl font-semibold text-foreground">
                                 No hay módulos en este programa
                             </h3>
-                            <p className="mb-6 text-gray-600">
+                            <p className="mb-6 text-muted-foreground">
                                 Comienza agregando el primer módulo al plan de estudios
                             </p>
                             <Button onClick={() => setStudyPlanDialog({ open: true })}>

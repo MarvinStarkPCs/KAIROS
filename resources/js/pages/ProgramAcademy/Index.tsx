@@ -297,8 +297,8 @@ export default function Index({ programs, stats, filters }: Props) {
                 {/* Header */}
                 <div className="flex items-center justify-between">
                     <div>
-                        <h1 className="text-3xl font-bold text-gray-900">Programas Académicos</h1>
-                        <p className="mt-2 text-gray-600">Gestiona los programas y cursos de la academia</p>
+                        <h1 className="text-3xl font-bold text-foreground">Programas Académicos</h1>
+                        <p className="mt-2 text-muted-foreground">Gestiona los programas y cursos de la academia</p>
                     </div>
                     <Button asChild>
                         <Link href={ProgramAcademyController.create().url}>
@@ -310,46 +310,46 @@ export default function Index({ programs, stats, filters }: Props) {
 
                 {/* Stats */}
                 <div className="grid gap-6 md:grid-cols-4">
-                    <div className="rounded-xl bg-white p-6 shadow-sm border border-gray-200">
+                    <div className="rounded-xl bg-card p-6 shadow-sm border border-border">
                         <div className="flex items-center justify-between">
                             <div>
-                                <p className="text-sm font-medium text-gray-600">Total Programas</p>
-                                <p className="text-3xl font-bold text-gray-900">{stats?.total_programs || 0}</p>
+                                <p className="text-sm font-medium text-muted-foreground">Total Programas</p>
+                                <p className="text-3xl font-bold text-foreground">{stats?.total_programs || 0}</p>
                             </div>
-                            <div className="rounded-full bg-blue-100 p-3">
+                            <div className="rounded-full bg-blue-100 dark:bg-blue-900/30 p-3">
                                 <GraduationCap className="h-6 w-6 text-blue-600" />
                             </div>
                         </div>
                     </div>
-                    <div className="rounded-xl bg-white p-6 shadow-sm border border-gray-200">
+                    <div className="rounded-xl bg-card p-6 shadow-sm border border-border">
                         <div className="flex items-center justify-between">
                             <div>
-                                <p className="text-sm font-medium text-gray-600">Programas Activos</p>
+                                <p className="text-sm font-medium text-muted-foreground">Programas Activos</p>
                                 <p className="text-3xl font-bold text-green-600">{stats?.active_programs || 0}</p>
                             </div>
-                            <div className="rounded-full bg-green-100 p-3">
+                            <div className="rounded-full bg-green-100 dark:bg-green-900/30 p-3">
                                 <CheckCircle className="h-6 w-6 text-green-600" />
                             </div>
                         </div>
                     </div>
-                    <div className="rounded-xl bg-white p-6 shadow-sm border border-gray-200">
+                    <div className="rounded-xl bg-card p-6 shadow-sm border border-border">
                         <div className="flex items-center justify-between">
                             <div>
-                                <p className="text-sm font-medium text-gray-600">Estudiantes</p>
+                                <p className="text-sm font-medium text-muted-foreground">Estudiantes</p>
                                 <p className="text-3xl font-bold text-blue-600">{stats?.total_students || 0}</p>
                             </div>
-                            <div className="rounded-full bg-blue-100 p-3">
+                            <div className="rounded-full bg-blue-100 dark:bg-blue-900/30 p-3">
                                 <Users className="h-6 w-6 text-blue-600" />
                             </div>
                         </div>
                     </div>
-                    <div className="rounded-xl bg-white p-6 shadow-sm border border-gray-200">
+                    <div className="rounded-xl bg-card p-6 shadow-sm border border-border">
                         <div className="flex items-center justify-between">
                             <div>
-                                <p className="text-sm font-medium text-gray-600">Profesores</p>
+                                <p className="text-sm font-medium text-muted-foreground">Profesores</p>
                                 <p className="text-3xl font-bold text-purple-600">{stats?.total_professors || 0}</p>
                             </div>
-                            <div className="rounded-full bg-purple-100 p-3">
+                            <div className="rounded-full bg-purple-100 dark:bg-purple-900/30 p-3">
                                 <Users className="h-6 w-6 text-purple-600" />
                             </div>
                         </div>
@@ -357,10 +357,10 @@ export default function Index({ programs, stats, filters }: Props) {
                 </div>
 
                 {/* Search and Filters */}
-                <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+                <div className="rounded-xl border border-border bg-card p-4 shadow-sm">
                     <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
                         <div className="relative flex-1">
-                            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                             <Input
                                 type="text"
                                 placeholder="Buscar programas..."
@@ -373,7 +373,7 @@ export default function Index({ programs, stats, filters }: Props) {
                         <select
                             value={statusFilter}
                             onChange={handleStatusChange}
-                            className="h-10 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="h-10 rounded-md border border-input bg-background text-foreground px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                         >
                             <option value="">Todos</option>
                             <option value="active">Activos</option>
@@ -391,7 +391,7 @@ export default function Index({ programs, stats, filters }: Props) {
                         )}
                     </div>
                     {pagination.total > 0 && (
-                        <p className="mt-3 text-sm text-gray-500">
+                        <p className="mt-3 text-sm text-muted-foreground">
                             Mostrando {pagination.from} - {pagination.to} de {pagination.total} programas
                         </p>
                     )}
@@ -406,7 +406,7 @@ export default function Index({ programs, stats, filters }: Props) {
                             return (
                                 <div
                                     key={program.id}
-                                    className="group rounded-xl border border-gray-200 bg-white p-6 transition-all hover:border-blue-300 hover:shadow-lg"
+                                    className="group rounded-xl border border-border bg-card p-6 transition-all hover:border-blue-300 dark:hover:border-blue-700 hover:shadow-lg"
                                 >
                                     <div className="mb-4 flex items-start justify-between">
                                         <div
@@ -421,32 +421,32 @@ export default function Index({ programs, stats, filters }: Props) {
                                         <span
                                             className={`rounded-full px-2.5 py-1 text-xs font-medium ${
                                                 program.status === 'active'
-                                                    ? 'bg-green-100 text-green-700'
-                                                    : 'bg-gray-100 text-gray-700'
+                                                    ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'
+                                                    : 'bg-muted text-muted-foreground'
                                             }`}
                                         >
                                             {program.status === 'active' ? 'Activo' : 'Inactivo'}
                                         </span>
                                     </div>
-                                    <h3 className="mb-2 text-xl font-bold text-gray-900">{program.name}</h3>
-                                    <p className="mb-4 line-clamp-2 text-sm text-gray-600">
+                                    <h3 className="mb-2 text-xl font-bold text-foreground">{program.name}</h3>
+                                    <p className="mb-4 line-clamp-2 text-sm text-muted-foreground">
                                         {program.description || 'Sin descripción'}
                                     </p>
                                     <div className="mb-4 space-y-2">
-                                        <div className="flex items-center text-sm text-gray-600">
+                                        <div className="flex items-center text-sm text-muted-foreground">
                                             <Clock className="mr-2 h-4 w-4" />
                                             <span>{program.duration_months || 0} meses</span>
                                         </div>
-                                        <div className="flex items-center text-sm text-gray-600">
+                                        <div className="flex items-center text-sm text-muted-foreground">
                                             <Users className="mr-2 h-4 w-4" />
                                             <span>{program.active_students_count ?? 0} estudiantes</span>
                                         </div>
-                                        <div className="flex items-center text-sm text-gray-600">
+                                        <div className="flex items-center text-sm text-muted-foreground">
                                             <Calendar className="mr-2 h-4 w-4" />
                                             <span>{program.active_schedules_count ?? 0} horarios activos</span>
                                         </div>
                                     </div>
-                                    <div className="flex flex-col gap-2 border-t border-gray-200 pt-4">
+                                    <div className="flex flex-col gap-2 border-t border-border pt-4">
                                         <Link href={ProgramAcademyController.show({ program: program.id }).url}>
                                             <Button size="sm" className="w-full">
                                                 Ver Plan de Estudios
@@ -465,7 +465,7 @@ export default function Index({ programs, stats, filters }: Props) {
                                             <Button
                                                 variant="outline"
                                                 size="sm"
-                                                className="text-red-600 hover:bg-red-50"
+                                                className="text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
                                                 onClick={() => setDeleteDialog({ open: true, programId: program.id })}
                                             >
                                                 <Trash2 className="h-4 w-4" />
@@ -477,14 +477,14 @@ export default function Index({ programs, stats, filters }: Props) {
                         })}
                     </div>
                 ) : (
-                    <div className="rounded-xl border-2 border-dashed border-gray-300 bg-white p-12 text-center">
-                        <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gray-100">
-                            {hasFilters ? <Search className="h-8 w-8 text-gray-400" /> : <GraduationCap className="h-8 w-8 text-gray-400" />}
+                    <div className="rounded-xl border-2 border-dashed border-input bg-background text-foreground p-12 text-center">
+                        <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-muted">
+                            {hasFilters ? <Search className="h-8 w-8 text-muted-foreground" /> : <GraduationCap className="h-8 w-8 text-muted-foreground" />}
                         </div>
-                        <h3 className="mb-2 text-xl font-semibold text-gray-900">
+                        <h3 className="mb-2 text-xl font-semibold text-foreground">
                             {hasFilters ? 'No se encontraron programas' : 'No hay programas académicos'}
                         </h3>
-                        <p className="mb-6 text-gray-600">
+                        <p className="mb-6 text-muted-foreground">
                             {hasFilters ? 'Intenta con otros términos de búsqueda' : 'Comienza agregando tu primer programa'}
                         </p>
                         {hasFilters ? (
@@ -515,7 +515,7 @@ export default function Index({ programs, stats, filters }: Props) {
                             <ChevronLeft className="mr-1 h-4 w-4" />
                             Anterior
                         </Button>
-                        <span className="px-4 text-sm text-gray-600">
+                        <span className="px-4 text-sm text-muted-foreground">
                             Página {pagination.currentPage} de {pagination.lastPage}
                         </span>
                         <Button

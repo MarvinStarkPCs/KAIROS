@@ -36,7 +36,7 @@ export function StepProgressBar({
         <div className="w-full">
             {/* Barra de progreso visual */}
             <div className="mb-8">
-                <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                <div className="h-2 bg-muted rounded-full overflow-hidden">
                     <div
                         className="h-full bg-gradient-to-r from-amber-500 to-orange-500 transition-all duration-500"
                         style={{ width: `${progress}%` }}
@@ -47,7 +47,7 @@ export function StepProgressBar({
             {/* Indicadores de pasos */}
             <div className="flex justify-between relative">
                 {/* Línea conectora */}
-                <div className="absolute top-5 left-0 right-0 h-0.5 bg-gray-200 -z-10" />
+                <div className="absolute top-5 left-0 right-0 h-0.5 bg-muted -z-10" />
                 <div
                     className="absolute top-5 left-0 h-0.5 bg-amber-500 -z-10 transition-all duration-500"
                     style={{ width: `${((currentStep - 1) / (totalSteps - 1)) * 100}%` }}
@@ -72,8 +72,8 @@ export function StepProgressBar({
                                 className={cn(
                                     "w-10 h-10 rounded-full flex items-center justify-center font-semibold transition-all",
                                     isCompleted && "bg-amber-500 text-white",
-                                    isCurrent && "bg-orange-500 text-white ring-4 ring-orange-100",
-                                    !isCompleted && !isCurrent && "bg-gray-200 text-gray-500",
+                                    isCurrent && "bg-orange-500 text-white ring-4 ring-orange-100 dark:ring-orange-800",
+                                    !isCompleted && !isCurrent && "bg-muted text-muted-foreground",
                                     isClickable && "group-hover:ring-2 group-hover:ring-amber-300"
                                 )}
                             >
@@ -89,15 +89,15 @@ export function StepProgressBar({
                                 <p
                                     className={cn(
                                         "text-sm font-medium transition-colors",
-                                        isCurrent && "text-orange-700",
-                                        isCompleted && "text-amber-700",
-                                        !isCompleted && !isCurrent && "text-gray-500"
+                                        isCurrent && "text-orange-700 dark:text-orange-300",
+                                        isCompleted && "text-amber-700 dark:text-amber-300",
+                                        !isCompleted && !isCurrent && "text-muted-foreground"
                                     )}
                                 >
                                     {step.title}
                                 </p>
                                 {step.description && (
-                                    <p className="text-xs text-gray-500 mt-1">
+                                    <p className="text-xs text-muted-foreground mt-1">
                                         {step.description}
                                     </p>
                                 )}

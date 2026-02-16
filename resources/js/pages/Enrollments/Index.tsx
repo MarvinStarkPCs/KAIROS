@@ -22,12 +22,14 @@ import {
 import { Plus, Search, Eye, Edit, Trash, Users, UserCheck, UserX, Clock } from 'lucide-react';
 import { useState } from 'react';
 
-type EnrollmentStatus = 'active' | 'waiting' | 'withdrawn';
+type EnrollmentStatus = 'active' | 'waiting' | 'withdrawn' | 'suspended';
 
 interface Student {
     id: number;
     name: string;
+    last_name: string | null;
     email: string;
+    document_number: string | null;
 }
 
 interface Program {
@@ -109,8 +111,9 @@ export default function Index({ enrollments, stats, programs, students, filters 
             active: <Badge className="bg-green-500">Activo</Badge>,
             waiting: <Badge className="bg-yellow-500">En espera</Badge>,
             withdrawn: <Badge className="bg-gray-500">Retirado</Badge>,
+            suspended: <Badge className="bg-red-500">Suspendido</Badge>,
         };
-        return badges[status];
+        return badges[status] || <Badge>{status}</Badge>;
     };
 
     return (
@@ -169,7 +172,7 @@ export default function Index({ enrollments, stats, programs, students, filters 
                     <Card>
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                             <CardTitle className="text-sm font-medium">Retirados</CardTitle>
-                            <UserX className="h-4 w-4 text-gray-500" />
+                            <UserX className="h-4 w-4 text-muted-foreground" />
                         </CardHeader>
                         <CardContent>
                             <div className="text-2xl font-bold">{stats.withdrawn}</div>
@@ -215,6 +218,7 @@ export default function Index({ enrollments, stats, programs, students, filters 
                                     <SelectItem value="all">Todos los estados</SelectItem>
                                     <SelectItem value="active">Activo</SelectItem>
                                     <SelectItem value="waiting">En espera</SelectItem>
+                                    <SelectItem value="suspended">Suspendido</SelectItem>
                                     <SelectItem value="withdrawn">Retirado</SelectItem>
                                 </SelectContent>
                             </Select>
@@ -263,10 +267,14 @@ export default function Index({ enrollments, stats, programs, students, filters 
                                             <TableCell className="font-medium">#{enrollment.id}</TableCell>
                                             <TableCell>
                                                 <div>
-                                                    <div className="font-medium">{enrollment.student.name}</div>
-                                                    <div className="text-sm text-muted-foreground">
-                                                        {enrollment.student.email}
+                                                    <div className="font-medium">
+                                                        {enrollment.student.name} {enrollment.student.last_name || ''}
                                                     </div>
+                                                    {enrollment.student.document_number && (
+                                                        <div className="text-sm text-muted-foreground">
+                                                            Doc: {enrollment.student.document_number}
+                                                        </div>
+                                                    )}
                                                 </div>
                                             </TableCell>
                                             <TableCell>{enrollment.program.name}</TableCell>

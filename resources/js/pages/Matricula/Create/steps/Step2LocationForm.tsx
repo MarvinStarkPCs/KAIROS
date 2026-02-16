@@ -36,7 +36,7 @@ export function Step2LocationForm({
             <CardContent className="space-y-6">
                 {/* Datos de Contacto - Usando componente reutilizable */}
                 <div>
-                    <div className="flex items-center gap-2 text-amber-700 mb-4">
+                    <div className="flex items-center gap-2 text-amber-700 dark:text-amber-300 mb-4">
                         <MapPin className="h-5 w-5" />
                         <h3 className="font-semibold">Información de Contacto</h3>
                     </div>
@@ -78,7 +78,7 @@ export function Step2LocationForm({
 
                 {/* Separador */}
                 <div className="border-t pt-6">
-                    <div className="flex items-center gap-2 text-amber-700 mb-4">
+                    <div className="flex items-center gap-2 text-amber-700 dark:text-amber-300 mb-4">
                         <Users className="h-5 w-5" />
                         <h3 className="font-semibold">Tipo de Matrícula</h3>
                     </div>
@@ -103,7 +103,7 @@ export function Step2LocationForm({
                                 </Label>
                             </div>
                         </RadioGroup>
-                        <p className="text-sm text-gray-600 mt-2">
+                        <p className="text-sm text-muted-foreground mt-2">
                             {isMinor
                                 ? 'Usted se registrará como padre/madre/tutor y podrá agregar uno o más estudiantes.'
                                 : 'Usted se registrará como estudiante.'}

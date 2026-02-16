@@ -56,15 +56,15 @@ export default function Show({ lead }: Props) {
     const getStatusBadgeClass = (color: string) => {
         switch (color) {
             case 'yellow':
-                return 'bg-yellow-100 text-yellow-800';
+                return 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200';
             case 'blue':
-                return 'bg-blue-100 text-blue-800';
+                return 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200';
             case 'green':
-                return 'bg-green-100 text-green-800';
+                return 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200';
             case 'red':
-                return 'bg-red-100 text-red-800';
+                return 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200';
             default:
-                return 'bg-gray-100 text-gray-800';
+                return 'bg-muted text-foreground';
         }
     };
 
@@ -88,13 +88,13 @@ export default function Show({ lead }: Props) {
                     <div>
                         <Link
                             href="/admin/demo-leads"
-                            className="mb-2 inline-flex items-center text-sm text-gray-600 hover:text-gray-900"
+                            className="mb-2 inline-flex items-center text-sm text-muted-foreground hover:text-foreground"
                         >
                             <ArrowLeft className="mr-1 h-4 w-4" />
                             Volver a leads
                         </Link>
-                        <h1 className="text-3xl font-bold text-gray-900">Detalle del Lead</h1>
-                        <p className="mt-2 text-gray-600">
+                        <h1 className="text-3xl font-bold text-foreground">Detalle del Lead</h1>
+                        <p className="mt-2 text-muted-foreground">
                             Información completa y gestión del lead
                         </p>
                     </div>
@@ -119,63 +119,63 @@ export default function Show({ lead }: Props) {
                             <CardContent className="space-y-4">
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div>
-                                        <Label className="text-sm font-medium text-gray-600">Nombre Completo</Label>
+                                        <Label className="text-sm font-medium text-muted-foreground">Nombre Completo</Label>
                                         <p className="text-base font-medium">{lead.name}</p>
                                     </div>
 
                                     {lead.is_for_child && lead.child_name && (
                                         <div>
-                                            <Label className="text-sm font-medium text-gray-600">Estudiante (Hijo/a)</Label>
+                                            <Label className="text-sm font-medium text-muted-foreground">Estudiante (Hijo/a)</Label>
                                             <p className="text-base font-medium">{lead.child_name}</p>
                                         </div>
                                     )}
 
                                     <div className="flex items-center gap-2">
-                                        <Mail className="h-4 w-4 text-gray-400" />
+                                        <Mail className="h-4 w-4 text-muted-foreground" />
                                         <div>
-                                            <Label className="text-sm font-medium text-gray-600">Email</Label>
+                                            <Label className="text-sm font-medium text-muted-foreground">Email</Label>
                                             <p className="text-base">{lead.email}</p>
                                         </div>
                                     </div>
 
                                     <div className="flex items-center gap-2">
-                                        <Phone className="h-4 w-4 text-gray-400" />
+                                        <Phone className="h-4 w-4 text-muted-foreground" />
                                         <div>
-                                            <Label className="text-sm font-medium text-gray-600">Teléfono</Label>
+                                            <Label className="text-sm font-medium text-muted-foreground">Teléfono</Label>
                                             <p className="text-base">{lead.phone}</p>
                                         </div>
                                     </div>
 
                                     <div>
-                                        <Label className="text-sm font-medium text-gray-600">Instrumento de Interés</Label>
+                                        <Label className="text-sm font-medium text-muted-foreground">Instrumento de Interés</Label>
                                         <p className="text-base font-medium text-amber-600">{lead.instrument}</p>
                                     </div>
 
                                     <div className="flex items-center gap-2">
-                                        <Clock className="h-4 w-4 text-gray-400" />
+                                        <Clock className="h-4 w-4 text-muted-foreground" />
                                         <div>
-                                            <Label className="text-sm font-medium text-gray-600">Horario Preferido</Label>
+                                            <Label className="text-sm font-medium text-muted-foreground">Horario Preferido</Label>
                                             <p className="text-base">
                                                 {lead.preferred_schedule || (
-                                                    <span className="text-gray-400">No especificado</span>
+                                                    <span className="text-muted-foreground">No especificado</span>
                                                 )}
                                             </p>
                                         </div>
                                     </div>
 
                                     <div className="flex items-center gap-2">
-                                        <Calendar className="h-4 w-4 text-gray-400" />
+                                        <Calendar className="h-4 w-4 text-muted-foreground" />
                                         <div>
-                                            <Label className="text-sm font-medium text-gray-600">Fecha de Solicitud</Label>
+                                            <Label className="text-sm font-medium text-muted-foreground">Fecha de Solicitud</Label>
                                             <p className="text-base">{formatDate(lead.created_at)}</p>
                                         </div>
                                     </div>
 
                                     {lead.updated_at !== lead.created_at && (
                                         <div className="flex items-center gap-2">
-                                            <Calendar className="h-4 w-4 text-gray-400" />
+                                            <Calendar className="h-4 w-4 text-muted-foreground" />
                                             <div>
-                                                <Label className="text-sm font-medium text-gray-600">Última Actualización</Label>
+                                                <Label className="text-sm font-medium text-muted-foreground">Última Actualización</Label>
                                                 <p className="text-base">{formatDate(lead.updated_at)}</p>
                                             </div>
                                         </div>
@@ -185,10 +185,10 @@ export default function Show({ lead }: Props) {
                                 {lead.message && (
                                     <div className="pt-4 border-t">
                                         <div className="flex items-start gap-2">
-                                            <MessageSquare className="h-4 w-4 text-gray-400 mt-1" />
+                                            <MessageSquare className="h-4 w-4 text-muted-foreground mt-1" />
                                             <div className="flex-1">
-                                                <Label className="text-sm font-medium text-gray-600">Mensaje del Cliente</Label>
-                                                <p className="text-base text-gray-700 mt-1 whitespace-pre-wrap">{lead.message}</p>
+                                                <Label className="text-sm font-medium text-muted-foreground">Mensaje del Cliente</Label>
+                                                <p className="text-base text-muted-foreground mt-1 whitespace-pre-wrap">{lead.message}</p>
                                             </div>
                                         </div>
                                     </div>
@@ -293,7 +293,7 @@ export default function Show({ lead }: Props) {
                                         <div className="w-2 h-2 rounded-full bg-yellow-500" />
                                         Pendiente
                                     </div>
-                                    <p className="text-gray-600 text-xs mt-1 ml-4">
+                                    <p className="text-muted-foreground text-xs mt-1 ml-4">
                                         Lead nuevo sin contactar
                                     </p>
                                 </div>
@@ -302,7 +302,7 @@ export default function Show({ lead }: Props) {
                                         <div className="w-2 h-2 rounded-full bg-blue-500" />
                                         Contactado
                                     </div>
-                                    <p className="text-gray-600 text-xs mt-1 ml-4">
+                                    <p className="text-muted-foreground text-xs mt-1 ml-4">
                                         Ya se contactó al lead
                                     </p>
                                 </div>
@@ -311,7 +311,7 @@ export default function Show({ lead }: Props) {
                                         <div className="w-2 h-2 rounded-full bg-green-500" />
                                         Convertido
                                     </div>
-                                    <p className="text-gray-600 text-xs mt-1 ml-4">
+                                    <p className="text-muted-foreground text-xs mt-1 ml-4">
                                         Lead se inscribió en el programa
                                     </p>
                                 </div>
@@ -320,7 +320,7 @@ export default function Show({ lead }: Props) {
                                         <div className="w-2 h-2 rounded-full bg-red-500" />
                                         Rechazado
                                     </div>
-                                    <p className="text-gray-600 text-xs mt-1 ml-4">
+                                    <p className="text-muted-foreground text-xs mt-1 ml-4">
                                         Lead no está interesado
                                     </p>
                                 </div>

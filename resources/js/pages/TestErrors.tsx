@@ -39,7 +39,7 @@ export default function TestErrors() {
             <Head title="Test de Errores de Inertia" />
             <Toaster />
 
-            <div className="min-h-screen bg-gray-100 py-12 px-4">
+            <div className="min-h-screen bg-muted py-12 px-4">
                 <div className="max-w-md mx-auto">
                     <Card>
                         <CardHeader>
@@ -47,11 +47,11 @@ export default function TestErrors() {
                         </CardHeader>
                         <CardContent>
                             {Object.keys(errors).length > 0 && (
-                                <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded">
-                                    <h3 className="font-semibold text-red-900 mb-2">
+                                <div className="mb-4 p-4 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded">
+                                    <h3 className="font-semibold text-red-900 dark:text-red-100 mb-2">
                                         Se encontraron {Object.keys(errors).length} errores:
                                     </h3>
-                                    <ul className="list-disc list-inside text-sm text-red-700">
+                                    <ul className="list-disc list-inside text-sm text-red-700 dark:text-red-300">
                                         {Object.entries(errors).map(([key, message]) => (
                                             <li key={key}>{message}</li>
                                         ))}
@@ -90,7 +90,7 @@ export default function TestErrors() {
                         </CardContent>
                     </Card>
 
-                    <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded text-sm">
+                    <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded text-sm">
                         <h4 className="font-semibold mb-2">Instrucciones:</h4>
                         <ol className="list-decimal list-inside space-y-1">
                             <li>Intenta enviar el formulario vacío</li>

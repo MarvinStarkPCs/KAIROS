@@ -163,7 +163,7 @@ export default function Create() {
             <Head title="Registro de Profesor" />
             <Toaster />
 
-            <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50">
+            <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 dark:from-neutral-950 dark:via-neutral-900 dark:to-neutral-950">
                 {/* Header */}
                 <div className="bg-gradient-to-r from-amber-600 to-orange-600 text-white py-8 px-4">
                     <div className="max-w-4xl mx-auto text-center">
@@ -190,7 +190,7 @@ export default function Create() {
                                                 ? "bg-amber-600 text-white shadow-lg scale-110"
                                                 : step > stepNumber
                                                     ? "bg-green-500 text-white"
-                                                    : "bg-gray-200 text-gray-500"
+                                                    : "bg-muted text-muted-foreground"
                                         )}
                                     >
                                         {step > stepNumber ? (
@@ -201,7 +201,7 @@ export default function Create() {
                                     </div>
                                     <span className={cn(
                                         "text-xs mt-2 font-medium text-center",
-                                        step === stepNumber ? "text-amber-600" : "text-gray-500"
+                                        step === stepNumber ? "text-amber-600" : "text-muted-foreground"
                                     )}>
                                         {getStepTitle(stepNumber)}
                                     </span>
@@ -209,7 +209,7 @@ export default function Create() {
                                 {stepNumber < TOTAL_STEPS && (
                                     <div className={cn(
                                         "flex-1 h-1 mx-2",
-                                        step > stepNumber ? "bg-green-500" : "bg-gray-200"
+                                        step > stepNumber ? "bg-green-500" : "bg-muted"
                                     )} />
                                 )}
                             </div>
@@ -430,7 +430,7 @@ export default function Create() {
                                                 rows={3}
                                                 className={errors.instruments_played ? 'border-red-500' : ''}
                                             />
-                                            <p className="text-sm text-gray-500 mt-1">
+                                            <p className="text-sm text-muted-foreground mt-1">
                                                 Indica los instrumentos y tu nivel de dominio en cada uno
                                             </p>
                                             <InputError message={errors.instruments_played} />
@@ -446,7 +446,7 @@ export default function Create() {
                                                 rows={3}
                                                 className={errors.music_schools ? 'border-red-500' : ''}
                                             />
-                                            <p className="text-sm text-gray-500 mt-1">
+                                            <p className="text-sm text-muted-foreground mt-1">
                                                 Indica donde has estudiado musica formalmente (opcional)
                                             </p>
                                             <InputError message={errors.music_schools} />
@@ -477,7 +477,7 @@ export default function Create() {
                                                 rows={4}
                                                 className={errors.bio ? 'border-red-500' : ''}
                                             />
-                                            <p className="text-sm text-gray-500 mt-1">
+                                            <p className="text-sm text-muted-foreground mt-1">
                                                 Esta informacion puede ser visible para los estudiantes (opcional)
                                             </p>
                                             <InputError message={errors.bio} />
@@ -488,9 +488,9 @@ export default function Create() {
                                 {/* Step 4: Credenciales */}
                                 {step === 4 && (
                                     <div className="space-y-6">
-                                        <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-6">
-                                            <h3 className="font-medium text-amber-800 mb-2">Crea tu contrasena</h3>
-                                            <p className="text-sm text-amber-700">
+                                        <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg p-4 mb-6">
+                                            <h3 className="font-medium text-amber-800 dark:text-amber-300 mb-2">Crea tu contrasena</h3>
+                                            <p className="text-sm text-amber-700 dark:text-amber-400">
                                                 Tu contrasena debe tener al menos 8 caracteres. Te recomendamos usar una combinacion de letras, numeros y caracteres especiales.
                                             </p>
                                         </div>
@@ -509,7 +509,7 @@ export default function Create() {
                                                 <button
                                                     type="button"
                                                     onClick={() => setShowPassword(!showPassword)}
-                                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-muted-foreground"
                                                 >
                                                     {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                                                 </button>
@@ -531,7 +531,7 @@ export default function Create() {
                                                 <button
                                                     type="button"
                                                     onClick={() => setShowPasswordConfirmation(!showPasswordConfirmation)}
-                                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-muted-foreground"
                                                 >
                                                     {showPasswordConfirmation ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                                                 </button>
@@ -543,18 +543,18 @@ export default function Create() {
                                         </div>
 
                                         {/* Resumen de datos */}
-                                        <div className="bg-gray-50 rounded-lg p-4 mt-6">
-                                            <h3 className="font-medium text-gray-800 mb-3">Resumen de tu registro</h3>
+                                        <div className="bg-muted rounded-lg p-4 mt-6">
+                                            <h3 className="font-medium text-foreground mb-3">Resumen de tu registro</h3>
                                             <div className="grid grid-cols-2 gap-2 text-sm">
-                                                <div className="text-gray-600">Nombre:</div>
+                                                <div className="text-muted-foreground">Nombre:</div>
                                                 <div className="font-medium">{data.name} {data.last_name}</div>
-                                                <div className="text-gray-600">Email:</div>
+                                                <div className="text-muted-foreground">Email:</div>
                                                 <div className="font-medium">{data.email}</div>
-                                                <div className="text-gray-600">Documento:</div>
+                                                <div className="text-muted-foreground">Documento:</div>
                                                 <div className="font-medium">{data.document_type} {data.document_number}</div>
-                                                <div className="text-gray-600">Ciudad:</div>
+                                                <div className="text-muted-foreground">Ciudad:</div>
                                                 <div className="font-medium">{data.city}, {data.department}</div>
-                                                <div className="text-gray-600">Instrumentos:</div>
+                                                <div className="text-muted-foreground">Instrumentos:</div>
                                                 <div className="font-medium">{data.instruments_played}</div>
                                             </div>
                                         </div>
@@ -609,10 +609,10 @@ export default function Create() {
                     </form>
 
                     {/* Info adicional */}
-                    <div className="mt-8 text-center text-sm text-gray-600">
+                    <div className="mt-8 text-center text-sm text-muted-foreground">
                         <p>
                             Ya tienes una cuenta?{' '}
-                            <a href="/login" className="text-amber-600 hover:text-amber-700 font-medium">
+                            <a href="/login" className="text-amber-600 hover:text-amber-700 dark:hover:text-amber-300 font-medium">
                                 Inicia sesion aqui
                             </a>
                         </p>

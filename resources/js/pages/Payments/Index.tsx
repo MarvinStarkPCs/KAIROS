@@ -18,7 +18,7 @@ import {
 
 interface Payment {
     id: number;
-    student: { id: number; name: string };
+    student: { id: number; name: string; last_name: string | null; document_number: string | null };
     program?: { id: number; name: string };
     concept: string;
     payment_type: 'single' | 'installment' | 'partial';
@@ -71,7 +71,12 @@ export default function PaymentsList({ payments, programs, filters }: Props) {
     });
 
     const handleFilter = () => {
-        router.get('/pagos/list', localFilters, { preserveState: true });
+        router.get('/pagos', localFilters, { preserveState: true });
+    };
+
+    const handleClearFilters = () => {
+        setLocalFilters({ status: '', search: '', program_id: '' });
+        router.get('/pagos');
     };
 
     const handleDelete = () => {
@@ -92,10 +97,10 @@ export default function PaymentsList({ payments, programs, filters }: Props) {
 
     const getStatusBadge = (status: string) => {
         const badges = {
-            completed: { bg: 'bg-green-100', text: 'text-green-700', label: 'Completado', icon: CheckCircle },
-            pending: { bg: 'bg-yellow-100', text: 'text-yellow-700', label: 'Pendiente', icon: Clock },
-            overdue: { bg: 'bg-red-100', text: 'text-red-700', label: 'Vencido', icon: XCircle },
-            cancelled: { bg: 'bg-gray-100', text: 'text-gray-700', label: 'Cancelado', icon: XCircle },
+            completed: { bg: 'bg-green-100 dark:bg-green-900/30', text: 'text-green-700 dark:text-green-400', label: 'Completado', icon: CheckCircle },
+            pending: { bg: 'bg-yellow-100 dark:bg-yellow-900/30', text: 'text-yellow-700 dark:text-yellow-400', label: 'Pendiente', icon: Clock },
+            overdue: { bg: 'bg-red-100 dark:bg-red-900/30', text: 'text-red-700 dark:text-red-400', label: 'Vencido', icon: XCircle },
+            cancelled: { bg: 'bg-muted', text: 'text-muted-foreground', label: 'Cancelado', icon: XCircle },
         };
         return badges[status as keyof typeof badges] || badges.pending;
     };
@@ -108,8 +113,8 @@ export default function PaymentsList({ payments, programs, filters }: Props) {
                 {/* Header */}
                 <div className="flex items-center justify-between">
                     <div>
-                        <h1 className="text-3xl font-bold text-gray-900">Pagos</h1>
-                        <p className="mt-2 text-gray-600">Gestiona mensualidades, cuotas y abonos</p>
+                        <h1 className="text-3xl font-bold text-foreground">Pagos</h1>
+                        <p className="mt-2 text-muted-foreground">Gestiona mensualidades, cuotas y abonos</p>
                     </div>
                     <div className="flex items-center gap-3">
                         <Link href="/pagos/settings">
@@ -128,10 +133,10 @@ export default function PaymentsList({ payments, programs, filters }: Props) {
                 </div>
 
                 {/* Filters */}
-                <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+                <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
                     <div className="mb-4 flex items-center gap-2">
-                        <Filter className="h-5 w-5 text-gray-600" />
-                        <h2 className="text-lg font-semibold text-gray-900">Filtros</h2>
+                        <Filter className="h-5 w-5 text-muted-foreground" />
+                        <h2 className="text-lg font-semibold text-foreground">Filtros</h2>
                     </div>
                     <div className="grid gap-4 md:grid-cols-4">
                         <div>
@@ -140,7 +145,7 @@ export default function PaymentsList({ payments, programs, filters }: Props) {
                                 id="status"
                                 value={localFilters.status}
                                 onChange={(e) => setLocalFilters({ ...localFilters, status: e.target.value })}
-                                className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
+                                className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground"
                             >
                                 <option value="">Todos</option>
                                 <option value="pending">Pendiente</option>
@@ -167,7 +172,7 @@ export default function PaymentsList({ payments, programs, filters }: Props) {
                                 id="program"
                                 value={localFilters.program_id}
                                 onChange={(e) => setLocalFilters({ ...localFilters, program_id: Number(e.target.value) || '' })}
-                                className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
+                                className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground"
                             >
                                 <option value="">Todos</option>
                                 {programs.map((program) => (
@@ -177,48 +182,51 @@ export default function PaymentsList({ payments, programs, filters }: Props) {
                                 ))}
                             </select>
                         </div>
-                        <div className="flex items-end">
-                            <Button onClick={handleFilter} className="w-full">
+                        <div className="flex items-end gap-2">
+                            <Button onClick={handleFilter} className="flex-1">
                                 <Search className="mr-2 h-4 w-4" />
                                 Filtrar
+                            </Button>
+                            <Button variant="outline" onClick={handleClearFilters}>
+                                Limpiar
                             </Button>
                         </div>
                     </div>
                 </div>
 
                 {/* Table */}
-                <div className="rounded-xl border border-gray-200 bg-white shadow-sm">
+                <div className="rounded-xl border border-border bg-card shadow-sm">
                     <div className="overflow-x-auto">
                         <table className="w-full">
-                            <thead className="border-b border-gray-200 bg-gray-50">
+                            <thead className="border-b border-border bg-muted">
                                 <tr>
-                                    <th className="px-6 py-3 text-left text-xs font-medium uppercase text-gray-700">
+                                    <th className="px-6 py-3 text-left text-xs font-medium uppercase text-muted-foreground">
                                         Estudiante
                                     </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium uppercase text-gray-700">
+                                    <th className="px-6 py-3 text-left text-xs font-medium uppercase text-muted-foreground">
                                         Concepto
                                     </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium uppercase text-gray-700">
+                                    <th className="px-6 py-3 text-left text-xs font-medium uppercase text-muted-foreground">
                                         Tipo/Progreso
                                     </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium uppercase text-gray-700">
+                                    <th className="px-6 py-3 text-left text-xs font-medium uppercase text-muted-foreground">
                                         Monto
                                     </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium uppercase text-gray-700">
+                                    <th className="px-6 py-3 text-left text-xs font-medium uppercase text-muted-foreground">
                                         Vencimiento
                                     </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium uppercase text-gray-700">
+                                    <th className="px-6 py-3 text-left text-xs font-medium uppercase text-muted-foreground">
                                         Estado
                                     </th>
-                                    <th className="px-6 py-3 text-right text-xs font-medium uppercase text-gray-700">
+                                    <th className="px-6 py-3 text-right text-xs font-medium uppercase text-muted-foreground">
                                         Acciones
                                     </th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-gray-200">
+                            <tbody className="divide-y divide-border">
                                 {payments.data.length === 0 ? (
                                     <tr>
-                                        <td colSpan={7} className="px-6 py-12 text-center text-gray-500">
+                                        <td colSpan={7} className="px-6 py-12 text-center text-muted-foreground">
                                             No se encontraron pagos
                                         </td>
                                     </tr>
@@ -231,58 +239,65 @@ export default function PaymentsList({ payments, programs, filters }: Props) {
                                             : 0;
 
                                         return (
-                                            <tr key={payment.id} className="hover:bg-gray-50">
+                                            <tr key={payment.id} className="hover:bg-muted/50">
                                                 <td className="px-6 py-4">
-                                                    <div className="font-medium text-gray-900">{payment.student.name}</div>
+                                                    <div className="font-medium text-foreground">
+                                                        {payment.student.name} {payment.student.last_name || ''}
+                                                    </div>
+                                                    {payment.student.document_number && (
+                                                        <div className="text-sm text-muted-foreground">
+                                                            Doc: {payment.student.document_number}
+                                                        </div>
+                                                    )}
                                                 </td>
                                                 <td className="px-6 py-4">
-                                                    <div className="text-sm text-gray-700">{payment.concept}</div>
+                                                    <div className="text-sm text-foreground">{payment.concept}</div>
                                                     {payment.program && (
-                                                        <div className="text-xs text-gray-500">{payment.program.name}</div>
+                                                        <div className="text-xs text-muted-foreground">{payment.program.name}</div>
                                                     )}
                                                 </td>
                                                 <td className="px-6 py-4">
                                                     {payment.payment_type === 'installment' && (
-                                                        <span className="inline-flex items-center gap-1 rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-700">
+                                                        <span className="inline-flex items-center gap-1 rounded-full bg-blue-100 dark:bg-blue-900/30 px-2 py-1 text-xs font-medium text-blue-700 dark:text-blue-400">
                                                             <ListIcon className="h-3 w-3" />
                                                             Cuota {payment.installment_number}/{payment.total_installments}
                                                         </span>
                                                     )}
                                                     {payment.payment_type === 'partial' && payment.has_transactions && (
                                                         <div className="space-y-1">
-                                                            <span className="inline-flex items-center gap-1 rounded-full bg-purple-100 px-2 py-1 text-xs font-medium text-purple-700">
+                                                            <span className="inline-flex items-center gap-1 rounded-full bg-purple-100 dark:bg-purple-900/30 px-2 py-1 text-xs font-medium text-purple-700 dark:text-purple-400">
                                                                 <CreditCard className="h-3 w-3" />
                                                                 Con abonos
                                                             </span>
                                                             <div className="w-32">
-                                                                <div className="h-2 rounded-full bg-gray-200">
+                                                                <div className="h-2 rounded-full bg-muted">
                                                                     <div
                                                                         className="h-2 rounded-full bg-purple-600"
                                                                         style={{ width: `${paymentProgress}%` }}
                                                                     />
                                                                 </div>
-                                                                <div className="mt-0.5 text-xs text-gray-600">
+                                                                <div className="mt-0.5 text-xs text-muted-foreground">
                                                                     {paymentProgress.toFixed(0)}% pagado
                                                                 </div>
                                                             </div>
                                                         </div>
                                                     )}
                                                     {payment.payment_type === 'single' && (
-                                                        <span className="text-xs text-gray-500">Pago único</span>
+                                                        <span className="text-xs text-muted-foreground">Pago único</span>
                                                     )}
                                                 </td>
                                                 <td className="px-6 py-4">
-                                                    <div className="flex items-center gap-1 font-semibold text-gray-900">
+                                                    <div className="flex items-center gap-1 font-semibold text-foreground">
                                                         <DollarSign className="h-4 w-4" />
                                                         {payment.amount.toLocaleString('es-CO')}
                                                     </div>
                                                     {payment.pending_balance > 0 && payment.status !== 'completed' && (
-                                                        <div className="text-xs text-orange-600">
+                                                        <div className="text-xs text-orange-600 dark:text-orange-400">
                                                             Pendiente: ${payment.pending_balance.toLocaleString('es-CO')}
                                                         </div>
                                                     )}
                                                 </td>
-                                                <td className="px-6 py-4 text-sm text-gray-700">
+                                                <td className="px-6 py-4 text-sm text-muted-foreground">
                                                     {new Date(payment.due_date).toLocaleDateString('es-CO')}
                                                 </td>
                                                 <td className="px-6 py-4">
@@ -299,7 +314,7 @@ export default function PaymentsList({ payments, programs, filters }: Props) {
                                                             <Button
                                                                 variant="outline"
                                                                 size="sm"
-                                                                className="text-blue-600 hover:bg-blue-50"
+                                                                className="text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20"
                                                                 onClick={() => handleCheckWompi(payment.id)}
                                                                 title="Verificar estado en Wompi"
                                                             >
@@ -319,7 +334,7 @@ export default function PaymentsList({ payments, programs, filters }: Props) {
                                                         <Button
                                                             variant="outline"
                                                             size="sm"
-                                                            className="text-red-600 hover:bg-red-50"
+                                                            className="text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
                                                             onClick={() => setDeleteDialog({ open: true, paymentId: payment.id })}
                                                         >
                                                             <Trash2 className="h-4 w-4" />

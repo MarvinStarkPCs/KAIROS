@@ -162,10 +162,10 @@ export default function Show({ conversation, messages: initialMessages }: Props)
                         <span className="sm:hidden">Volver</span>
                     </Button>
                     <div>
-                        <h1 className="text-xl font-bold text-gray-900 sm:text-3xl">
+                        <h1 className="text-xl font-bold text-foreground sm:text-3xl">
                             {conversation.other_user.name}
                         </h1>
-                        <p className="mt-1 text-sm text-gray-600 sm:mt-2 sm:text-base">{conversation.other_user.email}</p>
+                        <p className="mt-1 text-sm text-muted-foreground sm:mt-2 sm:text-base">{conversation.other_user.email}</p>
                     </div>
                 </div>
 

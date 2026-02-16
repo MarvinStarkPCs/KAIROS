@@ -157,7 +157,7 @@ export default function Grades({
     };
 
     const getScoreColor = (score: number | null) => {
-        if (score === null) return 'text-gray-400';
+        if (score === null) return 'text-muted-foreground';
         if (score >= 80) return 'text-green-600';
         if (score >= 60) return 'text-yellow-600';
         return 'text-red-600';
@@ -174,7 +174,7 @@ export default function Grades({
         if (percentage >= 80) return 'bg-green-500';
         if (percentage >= 60) return 'bg-yellow-500';
         if (percentage > 0) return 'bg-red-500';
-        return 'bg-gray-300';
+        return 'bg-muted';
     };
 
     const getAttendanceIcon = (status: string) => {
@@ -225,7 +225,7 @@ export default function Grades({
                 {/* Header */}
                 <div className="flex flex-col gap-3 sm:gap-4">
                     <div className="text-center sm:text-left">
-                        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Mis Calificaciones</h1>
+                        <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Mis Calificaciones</h1>
                         <p className="text-muted-foreground mt-1 text-sm sm:text-base">
                             Revisa tu progreso y calificaciones por programa
                         </p>
@@ -299,7 +299,7 @@ export default function Grades({
                         {/* Mis Horarios */}
                         {programSchedules.length > 0 && (
                             <div className="space-y-3">
-                                <h2 className="text-base sm:text-lg font-semibold text-gray-900 flex items-center gap-2">
+                                <h2 className="text-base sm:text-lg font-semibold text-foreground flex items-center gap-2">
                                     <Calendar className="h-5 w-5 text-primary" />
                                     Mis Horarios
                                 </h2>
@@ -496,8 +496,8 @@ export default function Grades({
                                                                     key={activity.id}
                                                                     className={`p-3 sm:p-4 rounded-lg border ${
                                                                         activity.is_evaluated
-                                                                            ? 'bg-white'
-                                                                            : 'bg-gray-50'
+                                                                            ? 'bg-card'
+                                                                            : 'bg-muted'
                                                                     }`}
                                                                 >
                                                                     <div className="flex items-start justify-between gap-2 mb-2">
@@ -505,7 +505,7 @@ export default function Grades({
                                                                             {activity.is_evaluated ? (
                                                                                 <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-green-500 mt-0.5 flex-shrink-0" />
                                                                             ) : (
-                                                                                <Clock className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400 mt-0.5 flex-shrink-0" />
+                                                                                <Clock className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground mt-0.5 flex-shrink-0" />
                                                                             )}
                                                                             <div className="min-w-0 flex-1">
                                                                                 <h4 className="font-medium text-sm sm:text-base">
@@ -576,14 +576,14 @@ export default function Grades({
 
                                                                     {/* Feedback */}
                                                                     {activity.feedback && (
-                                                                        <div className="mt-3 p-2 sm:p-3 bg-blue-50 rounded-lg">
+                                                                        <div className="mt-3 p-2 sm:p-3 bg-blue-50 dark:bg-blue-950/30 rounded-lg">
                                                                             <div className="flex items-start gap-2">
                                                                                 <FileText className="h-3 w-3 sm:h-4 sm:w-4 text-blue-600 mt-0.5 flex-shrink-0" />
                                                                                 <div className="min-w-0 flex-1">
-                                                                                    <p className="text-[10px] sm:text-xs font-medium text-blue-900 mb-1">
+                                                                                    <p className="text-[10px] sm:text-xs font-medium text-blue-900 dark:text-blue-100 mb-1">
                                                                                         Comentario del profesor:
                                                                                     </p>
-                                                                                    <p className="text-xs sm:text-sm text-blue-800">
+                                                                                    <p className="text-xs sm:text-sm text-blue-800 dark:text-blue-200">
                                                                                         {activity.feedback}
                                                                                     </p>
                                                                                 </div>
@@ -631,21 +631,21 @@ export default function Grades({
                     <CardContent className="p-4 sm:p-6 pt-0">
                         {/* Attendance Summary */}
                         <div className="grid grid-cols-4 gap-2 sm:gap-4 mb-6">
-                            <div className="text-center p-2 sm:p-3 bg-green-50 rounded-lg">
+                            <div className="text-center p-2 sm:p-3 bg-green-50 dark:bg-green-950/30 rounded-lg">
                                 <div className="text-lg sm:text-xl font-bold text-green-600">{attendanceStats.present}</div>
-                                <div className="text-[10px] sm:text-xs text-green-700">Presente</div>
+                                <div className="text-[10px] sm:text-xs text-green-700 dark:text-green-300">Presente</div>
                             </div>
-                            <div className="text-center p-2 sm:p-3 bg-yellow-50 rounded-lg">
+                            <div className="text-center p-2 sm:p-3 bg-yellow-50 dark:bg-yellow-950/30 rounded-lg">
                                 <div className="text-lg sm:text-xl font-bold text-yellow-600">{attendanceStats.late}</div>
-                                <div className="text-[10px] sm:text-xs text-yellow-700">Tarde</div>
+                                <div className="text-[10px] sm:text-xs text-yellow-700 dark:text-yellow-300">Tarde</div>
                             </div>
-                            <div className="text-center p-2 sm:p-3 bg-red-50 rounded-lg">
+                            <div className="text-center p-2 sm:p-3 bg-red-50 dark:bg-red-950/30 rounded-lg">
                                 <div className="text-lg sm:text-xl font-bold text-red-600">{attendanceStats.absent}</div>
-                                <div className="text-[10px] sm:text-xs text-red-700">Ausente</div>
+                                <div className="text-[10px] sm:text-xs text-red-700 dark:text-red-300">Ausente</div>
                             </div>
-                            <div className="text-center p-2 sm:p-3 bg-blue-50 rounded-lg">
+                            <div className="text-center p-2 sm:p-3 bg-blue-50 dark:bg-blue-950/30 rounded-lg">
                                 <div className="text-lg sm:text-xl font-bold text-blue-600">{attendanceStats.excused}</div>
-                                <div className="text-[10px] sm:text-xs text-blue-700">Excusado</div>
+                                <div className="text-[10px] sm:text-xs text-blue-700 dark:text-blue-300">Excusado</div>
                             </div>
                         </div>
 
@@ -661,7 +661,7 @@ export default function Grades({
                                 {recentAttendances.map((attendance) => (
                                     <div
                                         key={attendance.id}
-                                        className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50"
+                                        className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted"
                                     >
                                         <div className="flex items-center gap-3 min-w-0 flex-1">
                                             {getAttendanceIcon(attendance.status)}

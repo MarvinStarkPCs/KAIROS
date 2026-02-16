@@ -61,7 +61,7 @@ export default function TwoFactorChallenge() {
             <div className="space-y-6">
                 {/* Icon Badge */}
                 <div className="flex justify-center">
-                    <div className="inline-flex items-center justify-center rounded-full bg-gradient-to-br from-amber-100 to-orange-100 p-4">
+                    <div className="inline-flex items-center justify-center rounded-full bg-gradient-to-br from-amber-100 dark:from-amber-900/30 to-orange-100 dark:to-orange-900/30 p-4">
                         <div className="flex h-12 w-12 items-center justify-center rounded-full bg-amber-800 text-white shadow-lg">
                             <Icon className="h-6 w-6" />
                         </div>
@@ -70,10 +70,10 @@ export default function TwoFactorChallenge() {
 
                 {/* Title and Description */}
                 <div className="text-center space-y-2">
-                    <h2 className="text-2xl font-bold text-gray-900">
+                    <h2 className="text-2xl font-bold text-foreground">
                         {authConfigContent.title}
                     </h2>
-                    <p className="text-sm text-gray-600 max-w-md mx-auto">
+                    <p className="text-sm text-muted-foreground max-w-md mx-auto">
                         {authConfigContent.description}
                     </p>
                 </div>
@@ -94,7 +94,7 @@ export default function TwoFactorChallenge() {
                                         placeholder="Ingresa el código de recuperación"
                                         autoFocus={showRecoveryInput}
                                         required
-                                        className="w-full rounded-lg border-2 border-gray-200 px-4 py-3 text-center font-mono text-lg tracking-wider focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-200 transition-all"
+                                        className="w-full rounded-lg border-2 border-border px-4 py-3 text-center font-mono text-lg tracking-wider focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-200 transition-all"
                                     />
                                     <InputError
                                         message={errors.recovery_code}
@@ -102,7 +102,7 @@ export default function TwoFactorChallenge() {
                                 </div>
                             ) : (
                                 <div className="flex flex-col items-center justify-center space-y-4">
-                                    <div className="flex w-full items-center justify-center rounded-xl bg-gradient-to-br from-amber-50 to-orange-50 p-6">
+                                    <div className="flex w-full items-center justify-center rounded-xl bg-gradient-to-br from-amber-50 dark:from-amber-950/30 to-orange-50 dark:to-orange-950/30 p-6">
                                         <InputOTP
                                             name="code"
                                             maxLength={OTP_MAX_LENGTH}
@@ -118,7 +118,7 @@ export default function TwoFactorChallenge() {
                                                         <InputOTPSlot
                                                             key={index}
                                                             index={index}
-                                                            className="h-14 w-12 rounded-lg border-2 border-gray-300 text-xl font-bold transition-all hover:border-amber-400 focus:border-amber-500 focus:ring-2 focus:ring-amber-200 data-[active=true]:border-amber-500 data-[active=true]:ring-2 data-[active=true]:ring-amber-200"
+                                                            className="h-14 w-12 rounded-lg border-2 border-input text-xl font-bold transition-all hover:border-amber-400 focus:border-amber-500 focus:ring-2 focus:ring-amber-200 data-[active=true]:border-amber-500 data-[active=true]:ring-2 data-[active=true]:ring-amber-200"
                                                         />
                                                     ),
                                                 )}
@@ -137,12 +137,12 @@ export default function TwoFactorChallenge() {
                                 {processing ? 'Verificando...' : 'Continuar'}
                             </Button>
 
-                            <div className="pt-4 border-t border-gray-200">
-                                <div className="text-center text-sm text-gray-600">
+                            <div className="pt-4 border-t border-border">
+                                <div className="text-center text-sm text-muted-foreground">
                                     <span>o puedes </span>
                                     <button
                                         type="button"
-                                        className="font-semibold text-amber-800 hover:text-amber-900 underline decoration-amber-300 underline-offset-4 transition-all duration-300 hover:decoration-amber-500"
+                                        className="font-semibold text-amber-800 dark:text-amber-200 hover:text-amber-900 dark:text-amber-100 underline decoration-amber-300 underline-offset-4 transition-all duration-300 hover:decoration-amber-500"
                                         onClick={() =>
                                             toggleRecoveryMode(clearErrors)
                                         }

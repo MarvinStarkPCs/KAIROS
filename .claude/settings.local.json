@@ -39,7 +39,13 @@
       "Bash(identify:*)",
       "Bash(ls:*)",
       "Bash(tasklist:*)",
-      "Bash(powershell -Command:*)"
+      "Bash(powershell -Command:*)",
+      "Bash(powershell -File -:*)",
+      "Bash(powershell -ExecutionPolicy Bypass -File:*)",
+      "Bash(del \"C:\\\\laragon\\\\www\\\\KAIROS\\\\fix-dark-mode.ps1\")",
+      "Bash(del \"C:\\\\laragon\\\\www\\\\KAIROS\\\\fix-dark-mode2.ps1\")",
+      "Bash(powershell -File:*)",
+      "Bash(npx vite build)"
     ],
     "deny": [],
     "ask": []

@@ -108,11 +108,11 @@ export default function ScheduleCreate({ programs, professors }: Props) {
             <form onSubmit={handleSubmit} className="max-w-3xl space-y-6">
                 {/* Mostrar errores generales */}
                 {Object.keys(errors).length > 0 && (
-                    <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                        <h3 className="text-red-800 font-semibold mb-2">Errores de validación:</h3>
+                    <div className="bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-lg p-4">
+                        <h3 className="text-red-800 dark:text-red-200 font-semibold mb-2">Errores de validación:</h3>
                         <ul className="list-disc list-inside space-y-1">
                             {Object.entries(errors).map(([key, message]) => (
-                                <li key={key} className="text-red-700 text-sm">
+                                <li key={key} className="text-red-700 dark:text-red-300 text-sm">
                                     {message}
                                 </li>
                             ))}

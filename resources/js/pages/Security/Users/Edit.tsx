@@ -151,7 +151,7 @@ export default function UsersEdit({ user, roles, hasStudentRole, hasTeacherRole 
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={`Editar Usuario: ${user.name}`} />
 
-            <div className="flex h-full flex-1 flex-col gap-6 overflow-x-auto rounded-xl p-6 bg-[#f9f6f2]">
+            <div className="flex h-full flex-1 flex-col gap-6 overflow-x-auto rounded-xl p-6 bg-background">
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4">
                         <Link href={route('usuarios.index')}>

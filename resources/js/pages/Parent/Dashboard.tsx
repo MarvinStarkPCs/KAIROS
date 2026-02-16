@@ -65,7 +65,7 @@ interface Props {
 
 export default function Dashboard({ children }: Props) {
     const getScoreColor = (score: number | null) => {
-        if (score === null) return 'text-gray-400';
+        if (score === null) return 'text-muted-foreground';
         if (score >= 80) return 'text-green-600';
         if (score >= 60) return 'text-yellow-600';
         return 'text-red-600';
@@ -101,7 +101,7 @@ export default function Dashboard({ children }: Props) {
             <div className="space-y-4 sm:space-y-6 px-2 sm:px-0">
                 {/* Header */}
                 <div className="text-center sm:text-left">
-                    <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center gap-2 justify-center sm:justify-start">
+                    <h1 className="text-2xl sm:text-3xl font-bold text-foreground flex items-center gap-2 justify-center sm:justify-start">
                         <Users className="h-7 w-7 sm:h-8 sm:w-8" />
                         Mis Hijos
                     </h1>
@@ -128,10 +128,10 @@ export default function Dashboard({ children }: Props) {
                         {children.map((child) => (
                             <Card key={child.id} className="overflow-hidden">
                                 {/* Child Header */}
-                                <CardHeader className="bg-gradient-to-r from-amber-50 to-orange-50 p-4 sm:p-6">
+                                <CardHeader className="bg-gradient-to-r from-amber-50 dark:from-amber-950/30 to-orange-50 dark:to-orange-950/30 p-4 sm:p-6">
                                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                                         <div className="flex items-center gap-3">
-                                            <div className="flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-amber-100 text-amber-700">
+                                            <div className="flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300">
                                                 <User className="h-5 w-5 sm:h-6 sm:w-6" />
                                             </div>
                                             <div>
@@ -170,7 +170,7 @@ export default function Dashboard({ children }: Props) {
                                             {child.enrollments.map((enrollment) => (
                                                 <div
                                                     key={enrollment.id}
-                                                    className="border rounded-lg p-3 sm:p-4 hover:bg-gray-50 transition-colors"
+                                                    className="border rounded-lg p-3 sm:p-4 hover:bg-muted transition-colors"
                                                 >
                                                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                                                         {/* Program Info */}
@@ -271,7 +271,7 @@ export default function Dashboard({ children }: Props) {
                                                 Asistencia General
                                             </h4>
                                             <div className="grid grid-cols-5 gap-2">
-                                                <div className="text-center p-2 bg-gray-50 rounded-lg">
+                                                <div className="text-center p-2 bg-muted rounded-lg">
                                                     <div className={`text-lg font-bold ${
                                                         child.attendance.percentage >= 80 ? 'text-green-600' :
                                                         child.attendance.percentage >= 60 ? 'text-yellow-600' : 'text-red-600'
@@ -280,33 +280,33 @@ export default function Dashboard({ children }: Props) {
                                                     </div>
                                                     <div className="text-[10px] text-muted-foreground">Total</div>
                                                 </div>
-                                                <div className="text-center p-2 bg-green-50 rounded-lg">
+                                                <div className="text-center p-2 bg-green-50 dark:bg-green-950/30 rounded-lg">
                                                     <div className="text-lg font-bold text-green-600 flex items-center justify-center gap-0.5">
                                                         <CheckCircle className="h-3 w-3" />
                                                         {child.attendance.present}
                                                     </div>
-                                                    <div className="text-[10px] text-green-700">Presente</div>
+                                                    <div className="text-[10px] text-green-700 dark:text-green-300">Presente</div>
                                                 </div>
-                                                <div className="text-center p-2 bg-yellow-50 rounded-lg">
+                                                <div className="text-center p-2 bg-yellow-50 dark:bg-yellow-950/30 rounded-lg">
                                                     <div className="text-lg font-bold text-yellow-600 flex items-center justify-center gap-0.5">
                                                         <AlertCircle className="h-3 w-3" />
                                                         {child.attendance.late}
                                                     </div>
-                                                    <div className="text-[10px] text-yellow-700">Tarde</div>
+                                                    <div className="text-[10px] text-yellow-700 dark:text-yellow-300">Tarde</div>
                                                 </div>
-                                                <div className="text-center p-2 bg-red-50 rounded-lg">
+                                                <div className="text-center p-2 bg-red-50 dark:bg-red-950/30 rounded-lg">
                                                     <div className="text-lg font-bold text-red-600 flex items-center justify-center gap-0.5">
                                                         <XCircle className="h-3 w-3" />
                                                         {child.attendance.absent}
                                                     </div>
-                                                    <div className="text-[10px] text-red-700">Ausente</div>
+                                                    <div className="text-[10px] text-red-700 dark:text-red-300">Ausente</div>
                                                 </div>
-                                                <div className="text-center p-2 bg-blue-50 rounded-lg">
+                                                <div className="text-center p-2 bg-blue-50 dark:bg-blue-950/30 rounded-lg">
                                                     <div className="text-lg font-bold text-blue-600 flex items-center justify-center gap-0.5">
                                                         <Clock className="h-3 w-3" />
                                                         {child.attendance.excused}
                                                     </div>
-                                                    <div className="text-[10px] text-blue-700">Excusado</div>
+                                                    <div className="text-[10px] text-blue-700 dark:text-blue-300">Excusado</div>
                                                 </div>
                                             </div>
                                         </div>

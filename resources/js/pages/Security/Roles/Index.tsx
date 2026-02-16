@@ -59,11 +59,11 @@ export default function RolesIndex({ roles }: IndexProps) {
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Roles y Permisos" />
 
-            <div className="flex h-full flex-1 flex-col gap-6 overflow-x-auto rounded-xl p-6 bg-[#f9f6f2]">
+            <div className="flex h-full flex-1 flex-col gap-6 overflow-x-auto rounded-xl p-6 bg-background">
                 <div className="flex items-center justify-between">
                     <div>
-                        <h1 className="text-3xl font-bold tracking-tight text-gray-800">Roles y Permisos</h1>
-                        <p className="text-gray-600">
+                        <h1 className="text-3xl font-bold tracking-tight text-foreground">Roles y Permisos</h1>
+                        <p className="text-muted-foreground">
                             Gestiona los roles y sus permisos asociados
                         </p>
                     </div>
@@ -150,7 +150,7 @@ export default function RolesIndex({ roles }: IndexProps) {
                                     ))
                                 ) : (
                                     <TableRow>
-                                        <TableCell colSpan={4} className="text-center py-6 text-gray-500">
+                                        <TableCell colSpan={4} className="text-center py-6 text-muted-foreground">
                                             No hay roles registrados.
                                         </TableCell>
                                     </TableRow>

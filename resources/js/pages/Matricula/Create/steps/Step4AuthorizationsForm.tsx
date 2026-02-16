@@ -38,12 +38,12 @@ export function Step4AuthorizationsForm({
                 {/* Autorización Parental - Solo si es menor */}
                 {isMinor && (
                     <div className="space-y-3">
-                        <div className="flex items-center gap-2 text-amber-700">
+                        <div className="flex items-center gap-2 text-amber-700 dark:text-amber-300">
                             <FileText className="h-5 w-5" />
                             <h3 className="font-semibold">Autorización Parental</h3>
                         </div>
 
-                        <div className="bg-amber-50 p-4 rounded-lg border border-amber-200">
+                        <div className="bg-amber-50 dark:bg-amber-950/30 p-4 rounded-lg border border-amber-200 dark:border-amber-800">
                             <div className="flex items-start gap-3">
                                 <Checkbox
                                     id="parental_authorization"
@@ -74,12 +74,12 @@ export function Step4AuthorizationsForm({
 
                 {/* Compromiso de Pago - Siempre */}
                 <div className="space-y-3">
-                    <div className="flex items-center gap-2 text-amber-700">
+                    <div className="flex items-center gap-2 text-amber-700 dark:text-amber-300">
                         <FileText className="h-5 w-5" />
                         <h3 className="font-semibold">Compromiso de Pago</h3>
                     </div>
 
-                    <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                    <div className="bg-blue-50 dark:bg-blue-950/30 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
                         <div className="flex items-start gap-3">
                             <Checkbox
                                 id="payment_commitment"
@@ -108,9 +108,9 @@ export function Step4AuthorizationsForm({
                 </div>
 
                 {/* Mensaje informativo */}
-                <div className="flex items-start gap-3 bg-gray-50 p-4 rounded-lg border border-gray-200">
-                    <AlertCircle className="h-5 w-5 text-gray-600 flex-shrink-0 mt-0.5" />
-                    <p className="text-sm text-gray-700">
+                <div className="flex items-start gap-3 bg-muted p-4 rounded-lg border border-border">
+                    <AlertCircle className="h-5 w-5 text-muted-foreground flex-shrink-0 mt-0.5" />
+                    <p className="text-sm text-muted-foreground">
                         Al completar este formulario, sus datos serán utilizados únicamente para fines
                         administrativos y académicos. La información personal será tratada de acuerdo con
                         nuestras políticas de privacidad.

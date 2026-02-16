@@ -23,7 +23,7 @@ export default function Login({ status }: { status?: string }) {
         <>
             <Head title="Iniciar Sesión - Academia Linaje" />
 
-            <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-amber-100 flex items-center justify-center p-4">
+            <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-amber-100 dark:from-neutral-950 dark:via-neutral-900 dark:to-neutral-950 flex items-center justify-center p-4">
                 {/* Decorative elements */}
                 <div className="absolute inset-0 -z-10 overflow-hidden">
                     <div className="absolute top-20 left-10 h-96 w-96 rounded-full bg-amber-300/30 blur-3xl"></div>
@@ -32,18 +32,23 @@ export default function Login({ status }: { status?: string }) {
 
                 <div className="w-full max-w-md">
                     {/* Login Card */}
-                    <div className="rounded-2xl bg-white p-8 shadow-2xl">
+                    <div className="rounded-2xl bg-card p-8 shadow-2xl">
                         {/* Logo */}
                         <div className="mb-6 flex justify-center">
                             <img
-                                src="/logo_academia.png"
+                                src="/logo_academia_black.png"
                                 alt="Academia Linaje"
-                                className="h-32 w-32 object-contain"
+                                className="h-32 w-32 object-contain dark:hidden"
+                            />
+                            <img
+                                src="/logo_academia_white.png"
+                                alt="Academia Linaje"
+                                className="h-32 w-32 object-contain hidden dark:block"
                             />
                         </div>
 
                         {status && (
-                            <div className="mb-4 rounded-lg bg-green-50 border border-green-200 p-4 text-sm text-green-800">
+                            <div className="mb-4 rounded-lg bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 p-4 text-sm text-green-800 dark:text-green-200">
                                 {status}
                             </div>
                         )}
@@ -51,12 +56,12 @@ export default function Login({ status }: { status?: string }) {
                         <form onSubmit={submit} className="space-y-6">
                             {/* Email Field */}
                             <div>
-                                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+                                <label htmlFor="email" className="block text-sm font-medium text-muted-foreground mb-2">
                                     Correo Electrónico
                                 </label>
                                 <div className="relative">
                                     <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                                        <Mail className="h-5 w-5 text-gray-400" />
+                                        <Mail className="h-5 w-5 text-muted-foreground" />
                                     </div>
                                     <input
                                         id="email"
@@ -64,7 +69,7 @@ export default function Login({ status }: { status?: string }) {
                                         name="email"
                                         value={data.email}
                                         className={`w-full rounded-lg border ${
-                                            errors.email ? 'border-red-300' : 'border-gray-300'
+                                            errors.email ? 'border-red-300 dark:border-red-700' : 'border-input'
                                         } pl-10 pr-4 py-3 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-200 transition-all`}
                                         autoComplete="username"
                                         placeholder="tu@email.com"
@@ -78,12 +83,12 @@ export default function Login({ status }: { status?: string }) {
 
                             {/* Password Field */}
                             <div>
-                                <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+                                <label htmlFor="password" className="block text-sm font-medium text-muted-foreground mb-2">
                                     Contraseña
                                 </label>
                                 <div className="relative">
                                     <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                                        <Lock className="h-5 w-5 text-gray-400" />
+                                        <Lock className="h-5 w-5 text-muted-foreground" />
                                     </div>
                                     <input
                                         id="password"
@@ -91,7 +96,7 @@ export default function Login({ status }: { status?: string }) {
                                         name="password"
                                         value={data.password}
                                         className={`w-full rounded-lg border ${
-                                            errors.password ? 'border-red-300' : 'border-gray-300'
+                                            errors.password ? 'border-red-300 dark:border-red-700' : 'border-input'
                                         } pl-10 pr-12 py-3 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-200 transition-all`}
                                         autoComplete="current-password"
                                         placeholder="••••••••"
@@ -100,7 +105,7 @@ export default function Login({ status }: { status?: string }) {
                                     <button
                                         type="button"
                                         onClick={() => setShowPassword(!showPassword)}
-                                        className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600"
+                                        className="absolute inset-y-0 right-0 flex items-center pr-3 text-muted-foreground hover:text-muted-foreground"
                                     >
                                         {showPassword ? (
                                             <EyeOff className="h-5 w-5" />
@@ -122,15 +127,15 @@ export default function Login({ status }: { status?: string }) {
                                         name="remember"
                                         checked={data.remember}
                                         onChange={(e) => setData('remember', e.target.checked)}
-                                        className="h-4 w-4 rounded border-gray-300 text-amber-800 focus:ring-amber-500"
+                                        className="h-4 w-4 rounded border-input text-amber-800 dark:text-amber-200 focus:ring-amber-500"
                                     />
-                                    <span className="ml-2 text-sm text-gray-600">
+                                    <span className="ml-2 text-sm text-muted-foreground">
                                         Recordarme
                                     </span>
                                 </label>
                                 <Link
                                     href="/forgot-password"
-                                    className="text-sm text-amber-800 hover:text-amber-900 hover:underline"
+                                    className="text-sm text-amber-800 dark:text-amber-200 hover:text-amber-900 dark:text-amber-100 hover:underline"
                                 >
                                     ¿Olvidaste tu contraseña?
                                 </Link>
@@ -151,7 +156,7 @@ export default function Login({ status }: { status?: string }) {
                     <div className="mt-6 text-center">
                         <Link
                             href="/"
-                            className="text-sm text-gray-600 hover:text-gray-900"
+                            className="text-sm text-muted-foreground hover:text-foreground"
                         >
                             ← Volver al inicio
                         </Link>

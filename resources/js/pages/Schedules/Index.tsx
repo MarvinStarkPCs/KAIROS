@@ -204,8 +204,8 @@ export default function SchedulesIndex({ schedules, stats, allProfessors, allStu
                 {/* Header Section */}
                 <div className="flex items-center justify-between">
                     <div>
-                        <h1 className="text-3xl font-bold text-gray-900">Horarios</h1>
-                        <p className="mt-2 text-gray-600">Gestiona los horarios y clases académicas</p>
+                        <h1 className="text-3xl font-bold text-foreground">Horarios</h1>
+                        <p className="mt-2 text-muted-foreground">Gestiona los horarios y clases académicas</p>
                     </div>
                     <Link href="/horarios/create">
                         <Button className="flex items-center space-x-2">
@@ -217,49 +217,49 @@ export default function SchedulesIndex({ schedules, stats, allProfessors, allStu
 
                 {/* Stats Cards */}
                 <div className="grid gap-6 md:grid-cols-4">
-                    <div className="rounded-xl bg-white p-6 shadow-sm border border-gray-200">
+                    <div className="rounded-xl bg-card p-6 shadow-sm border border-border">
                         <div className="flex items-center justify-between">
                             <div>
-                                <p className="text-sm font-medium text-gray-600">Total Horarios</p>
-                                <p className="text-3xl font-bold text-gray-900">{stats.total_schedules}</p>
+                                <p className="text-sm font-medium text-muted-foreground">Total Horarios</p>
+                                <p className="text-3xl font-bold text-foreground">{stats.total_schedules}</p>
                             </div>
-                            <div className="rounded-full bg-blue-100 p-3">
+                            <div className="rounded-full bg-blue-100 dark:bg-blue-900/30 p-3">
                                 <Calendar className="h-6 w-6 text-blue-600" />
                             </div>
                         </div>
                     </div>
 
-                    <div className="rounded-xl bg-white p-6 shadow-sm border border-gray-200">
+                    <div className="rounded-xl bg-card p-6 shadow-sm border border-border">
                         <div className="flex items-center justify-between">
                             <div>
-                                <p className="text-sm font-medium text-gray-600">Horarios Activos</p>
+                                <p className="text-sm font-medium text-muted-foreground">Horarios Activos</p>
                                 <p className="text-3xl font-bold text-green-600">{stats.active_schedules}</p>
                             </div>
-                            <div className="rounded-full bg-green-100 p-3">
+                            <div className="rounded-full bg-green-100 dark:bg-green-900/30 p-3">
                                 <CheckCircle className="h-6 w-6 text-green-600" />
                             </div>
                         </div>
                     </div>
 
-                    <div className="rounded-xl bg-white p-6 shadow-sm border border-gray-200">
+                    <div className="rounded-xl bg-card p-6 shadow-sm border border-border">
                         <div className="flex items-center justify-between">
                             <div>
-                                <p className="text-sm font-medium text-gray-600">Estudiantes Inscritos</p>
+                                <p className="text-sm font-medium text-muted-foreground">Estudiantes Inscritos</p>
                                 <p className="text-3xl font-bold text-blue-600">{stats.total_students_enrolled}</p>
                             </div>
-                            <div className="rounded-full bg-blue-100 p-3">
+                            <div className="rounded-full bg-blue-100 dark:bg-blue-900/30 p-3">
                                 <Users className="h-6 w-6 text-blue-600" />
                             </div>
                         </div>
                     </div>
 
-                    <div className="rounded-xl bg-white p-6 shadow-sm border border-gray-200">
+                    <div className="rounded-xl bg-card p-6 shadow-sm border border-border">
                         <div className="flex items-center justify-between">
                             <div>
-                                <p className="text-sm font-medium text-gray-600">Cupos Disponibles</p>
+                                <p className="text-sm font-medium text-muted-foreground">Cupos Disponibles</p>
                                 <p className="text-3xl font-bold text-purple-600">{stats.total_available_slots}</p>
                             </div>
-                            <div className="rounded-full bg-purple-100 p-3">
+                            <div className="rounded-full bg-purple-100 dark:bg-purple-900/30 p-3">
                                 <Users className="h-6 w-6 text-purple-600" />
                             </div>
                         </div>
@@ -296,7 +296,7 @@ export default function SchedulesIndex({ schedules, stats, allProfessors, allStu
 
                 {/* Filters Panel */}
                 {showFilters && (
-                    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+                    <div className="bg-card rounded-xl shadow-sm border border-border p-4">
                         <div className="grid gap-4 md:grid-cols-3">
                             <div className="space-y-2">
                                 <Label htmlFor="filter-program">Programa</Label>
@@ -383,7 +383,7 @@ export default function SchedulesIndex({ schedules, stats, allProfessors, allStu
 
                 {/* Grid View (Original) */}
                 {schedules.length > 0 && viewMode === 'grid' && (
-                    <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                    <div className="bg-card rounded-xl shadow-sm border border-border overflow-hidden">
                         {/* Header del calendario */}
                         <div className="bg-gray-900 text-white p-4 flex items-center justify-between">
                             <h2 className="text-lg font-semibold">Vista Semanal - {currentWeek}</h2>
@@ -401,13 +401,13 @@ export default function SchedulesIndex({ schedules, stats, allProfessors, allStu
                         <div className="overflow-x-auto">
                             <table className="w-full min-w-[1000px]">
                                 <thead>
-                                    <tr className="bg-gray-50 border-b border-gray-200">
-                                        <th className="p-4 text-left text-sm font-semibold text-gray-600 w-24 sticky left-0 bg-gray-50 z-10">
+                                    <tr className="bg-muted border-b border-border">
+                                        <th className="p-4 text-left text-sm font-semibold text-muted-foreground w-24 sticky left-0 bg-muted z-10">
                                             Hora
                                         </th>
                                         {diasSemana.map((dia) => (
-                                            <th key={dia.key} className="p-4 text-center border-l border-gray-200">
-                                                <div className="font-semibold text-gray-800">{dia.nombre}</div>
+                                            <th key={dia.key} className="p-4 text-center border-l border-border">
+                                                <div className="font-semibold text-foreground">{dia.nombre}</div>
                                             </th>
                                         ))}
                                     </tr>
@@ -415,8 +415,8 @@ export default function SchedulesIndex({ schedules, stats, allProfessors, allStu
                                 <tbody>
                                     {horasOrdenadas.length > 0 ? (
                                         horasOrdenadas.map((hora) => (
-                                            <tr key={hora} className="border-b border-gray-100 hover:bg-gray-50">
-                                                <td className="p-4 font-medium text-gray-700 align-top sticky left-0 bg-white z-10">
+                                            <tr key={hora} className="border-b border-border hover:bg-muted">
+                                                <td className="p-4 font-medium text-muted-foreground align-top sticky left-0 bg-card z-10">
                                                     {hora}
                                                 </td>
                                                 {diasSemana.map((dia) => {
@@ -427,7 +427,7 @@ export default function SchedulesIndex({ schedules, stats, allProfessors, allStu
                                                     return (
                                                         <td
                                                             key={dia.key}
-                                                            className="p-2 align-top border-l border-gray-200"
+                                                            className="p-2 align-top border-l border-border"
                                                         >
                                                             {horarioDelDia?.map((horario) => {
                                                                 const backgroundColor = getOcupacionColor(
@@ -482,7 +482,7 @@ export default function SchedulesIndex({ schedules, stats, allProfessors, allStu
                                         ))
                                     ) : (
                                         <tr>
-                                            <td colSpan={7} className="p-8 text-center text-gray-500">
+                                            <td colSpan={7} className="p-8 text-center text-muted-foreground">
                                                 No hay horarios programados
                                             </td>
                                         </tr>
@@ -495,12 +495,12 @@ export default function SchedulesIndex({ schedules, stats, allProfessors, allStu
 
                 {/* Empty State */}
                 {schedules.length === 0 && (
-                    <div className="rounded-xl border-2 border-dashed border-gray-300 bg-white p-12 text-center">
-                        <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gray-100">
-                            <Calendar className="h-8 w-8 text-gray-400" />
+                    <div className="rounded-xl border-2 border-dashed border-input bg-card p-12 text-center">
+                        <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-muted">
+                            <Calendar className="h-8 w-8 text-muted-foreground" />
                         </div>
-                        <h3 className="mb-2 text-xl font-semibold text-gray-900">No hay horarios</h3>
-                        <p className="mb-6 text-gray-600">Comienza agregando tu primer horario de clases</p>
+                        <h3 className="mb-2 text-xl font-semibold text-foreground">No hay horarios</h3>
+                        <p className="mb-6 text-muted-foreground">Comienza agregando tu primer horario de clases</p>
                         <Link href="/horarios/create">
                             <Button>
                                 <Plus className="mr-2 h-5 w-5" />
@@ -525,10 +525,10 @@ export default function SchedulesIndex({ schedules, stats, allProfessors, allStu
                     {selectedSchedule && (
                         <div className="mt-6 space-y-6">
                             {/* Información del Horario */}
-                            <div className="rounded-lg bg-gray-50 p-4 space-y-2">
+                            <div className="rounded-lg bg-muted p-4 space-y-2">
                                 <h3 className="font-bold text-lg">{selectedSchedule.name}</h3>
-                                <p className="text-sm text-gray-600">{selectedSchedule.academic_program.name}</p>
-                                <div className="flex items-center gap-4 text-sm text-gray-600">
+                                <p className="text-sm text-muted-foreground">{selectedSchedule.academic_program.name}</p>
+                                <div className="flex items-center gap-4 text-sm text-muted-foreground">
                                     <span>
                                         🕐 {selectedSchedule.start_time} - {selectedSchedule.end_time}
                                     </span>
@@ -554,7 +554,7 @@ export default function SchedulesIndex({ schedules, stats, allProfessors, allStu
                                         </SelectTrigger>
                                         <SelectContent>
                                             {allStudents.length === 0 ? (
-                                                <div className="p-2 text-sm text-gray-500">
+                                                <div className="p-2 text-sm text-muted-foreground">
                                                     No hay estudiantes disponibles
                                                 </div>
                                             ) : (

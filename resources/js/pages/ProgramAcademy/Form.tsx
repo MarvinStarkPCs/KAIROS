@@ -245,15 +245,15 @@ export default function Form({ program }: FormProps) {
                     <div>
                         <Link
                             href={ProgramAcademyController.index().url}
-                            className="mb-2 inline-flex items-center text-sm text-gray-600 hover:text-gray-900"
+                            className="mb-2 inline-flex items-center text-sm text-muted-foreground hover:text-foreground"
                         >
                             <ArrowLeft className="mr-1 h-4 w-4" />
                             Volver a programas
                         </Link>
-                        <h1 className="text-3xl font-bold text-gray-900">
+                        <h1 className="text-3xl font-bold text-foreground">
                             {isEditing ? 'Editar Programa Académico' : 'Nuevo Programa Académico'}
                         </h1>
-                        <p className="mt-2 text-gray-600">
+                        <p className="mt-2 text-muted-foreground">
                             {isEditing
                                 ? 'Actualiza la información del programa'
                                 : 'Completa los datos del nuevo programa'}
@@ -262,7 +262,7 @@ export default function Form({ program }: FormProps) {
                 </div>
 
                 {/* Form */}
-                <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+                <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
                     <form onSubmit={handleSubmit} className="space-y-6">
                         {/* Name */}
                         <div>
@@ -313,7 +313,7 @@ export default function Form({ program }: FormProps) {
                             {errors.duration_months && (
                                 <p className="mt-1 text-sm text-red-600">{errors.duration_months}</p>
                             )}
-                            <p className="mt-1 text-sm text-gray-500">
+                            <p className="mt-1 text-sm text-muted-foreground">
                                 Duración total del programa en meses
                             </p>
                         </div>
@@ -327,7 +327,7 @@ export default function Form({ program }: FormProps) {
                                 id="status"
                                 value={data.status}
                                 onChange={(e) => setData('status', e.target.value as 'active' | 'inactive')}
-                                className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                             >
                                 <option value="active">Activo</option>
                                 <option value="inactive">Inactivo</option>
@@ -336,7 +336,7 @@ export default function Form({ program }: FormProps) {
                         </div>
 
                         {/* Programa Demo */}
-                        <div className="flex items-center space-x-3 rounded-lg border border-gray-200 bg-gray-50 p-4">
+                        <div className="flex items-center space-x-3 rounded-lg border border-border bg-muted p-4">
                             <Checkbox
                                 id="is_demo"
                                 checked={data.is_demo}
@@ -346,7 +346,7 @@ export default function Form({ program }: FormProps) {
                                 <Label htmlFor="is_demo" className="cursor-pointer font-medium">
                                     Programa Demo
                                 </Label>
-                                <p className="text-sm text-gray-600">
+                                <p className="text-sm text-muted-foreground">
                                     Marcar este programa para mostrarlo en el formulario público de matrícula
                                 </p>
                             </div>
@@ -357,7 +357,7 @@ export default function Form({ program }: FormProps) {
                             <Label>
                                 Icono del Programa <span className="text-red-500">*</span>
                             </Label>
-                            <p className="mb-3 text-sm text-gray-500">
+                            <p className="mb-3 text-sm text-muted-foreground">
                                 Selecciona un icono para identificar visualmente el programa
                             </p>
 
@@ -381,14 +381,14 @@ export default function Form({ program }: FormProps) {
                                                 <div className="flex items-center gap-2">
                                                     <SelectedIconComponent className="h-4 w-4" />
                                                     <span>{selectedIcon.label}</span>
-                                                    <span className="text-xs text-gray-400">({selectedIcon.category})</span>
+                                                    <span className="text-xs text-muted-foreground">({selectedIcon.category})</span>
                                                 </div>
                                             </SelectValue>
                                         </SelectTrigger>
                                         <SelectContent className="max-h-80">
                                             {Object.entries(groupedIcons).map(([category, icons]) => (
                                                 <div key={category}>
-                                                    <div className="px-2 py-1.5 text-xs font-semibold text-gray-500 bg-gray-50">
+                                                    <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground bg-muted">
                                                         {category}
                                                     </div>
                                                     {icons.map((item) => {
@@ -406,7 +406,7 @@ export default function Form({ program }: FormProps) {
                                             ))}
                                         </SelectContent>
                                     </Select>
-                                    <p className="mt-1 text-xs text-gray-500">
+                                    <p className="mt-1 text-xs text-muted-foreground">
                                         {selectedIcon.category} - {selectedIcon.label}
                                     </p>
                                 </div>
@@ -438,20 +438,20 @@ export default function Form({ program }: FormProps) {
                                     />
                                 </div>
                                 <div
-                                    className="flex h-12 w-24 items-center justify-center rounded-md border-2 border-gray-300 shadow-sm"
+                                    className="flex h-12 w-24 items-center justify-center rounded-md border-2 border-input shadow-sm"
                                     style={{ backgroundColor: data.color }}
                                 >
                                     <SelectedIconComponent className="h-6 w-6 text-white" />
                                 </div>
                             </div>
                             {errors.color && <p className="mt-1 text-sm text-red-600">{errors.color}</p>}
-                            <p className="mt-1 text-sm text-gray-500">
+                            <p className="mt-1 text-sm text-muted-foreground">
                                 Este color se usará para identificar el programa en el calendario de horarios
                             </p>
                         </div>
 
                         {/* Actions */}
-                        <div className="flex items-center justify-end gap-3 border-t border-gray-200 pt-6">
+                        <div className="flex items-center justify-end gap-3 border-t border-border pt-6">
                             <Link href={ProgramAcademyController.index().url}>
                                 <Button type="button" variant="outline">
                                     Cancelar

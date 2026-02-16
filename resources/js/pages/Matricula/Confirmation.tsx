@@ -39,38 +39,38 @@ export default function Confirmation({ payment, status, transactionId, message }
             <Head title={isApproved ? 'Pago Exitoso' : 'Estado del Pago'} />
             <Toaster />
 
-            <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white py-12 px-4 sm:px-6 lg:px-8">
+            <div className="min-h-screen bg-gradient-to-b from-muted to-background dark:from-neutral-950 dark:to-neutral-900 py-12 px-4 sm:px-6 lg:px-8">
                 <div className="max-w-3xl mx-auto">
                     {/* Status Icon */}
                     <div className="text-center mb-8">
                         {isApproved && (
-                            <div className="inline-flex items-center justify-center w-20 h-20 bg-green-100 rounded-full mb-4">
+                            <div className="inline-flex items-center justify-center w-20 h-20 bg-green-100 dark:bg-green-900/30 rounded-full mb-4">
                                 <CheckCircle2 className="h-12 w-12 text-green-600" />
                             </div>
                         )}
                         {isPending && (
-                            <div className="inline-flex items-center justify-center w-20 h-20 bg-yellow-100 rounded-full mb-4">
+                            <div className="inline-flex items-center justify-center w-20 h-20 bg-yellow-100 dark:bg-yellow-900/30 rounded-full mb-4">
                                 <Clock className="h-12 w-12 text-yellow-600" />
                             </div>
                         )}
                         {isDeclined && (
-                            <div className="inline-flex items-center justify-center w-20 h-20 bg-red-100 rounded-full mb-4">
+                            <div className="inline-flex items-center justify-center w-20 h-20 bg-red-100 dark:bg-red-900/30 rounded-full mb-4">
                                 <XCircle className="h-12 w-12 text-red-600" />
                             </div>
                         )}
                         {isManual && (
-                            <div className="inline-flex items-center justify-center w-20 h-20 bg-amber-100 rounded-full mb-4">
+                            <div className="inline-flex items-center justify-center w-20 h-20 bg-amber-100 dark:bg-amber-900/30 rounded-full mb-4">
                                 <Banknote className="h-12 w-12 text-amber-600" />
                             </div>
                         )}
 
-                        <h1 className="text-3xl font-bold text-gray-900 mb-2">
+                        <h1 className="text-3xl font-bold text-foreground mb-2">
                             {isApproved && '¡Pago Exitoso!'}
                             {isPending && 'Pago Pendiente'}
                             {isDeclined && 'Pago No Procesado'}
                             {isManual && '¡Matrícula Registrada!'}
                         </h1>
-                        <p className="text-gray-600">
+                        <p className="text-muted-foreground">
                             {isApproved && 'Tu matrícula ha sido completada exitosamente'}
                             {isPending && 'Tu pago está siendo procesado'}
                             {isDeclined && 'No pudimos procesar tu pago'}
@@ -90,37 +90,37 @@ export default function Confirmation({ payment, status, transactionId, message }
                         <CardContent className="space-y-4">
                             {transactionId && (
                             <div className="flex justify-between py-2 border-b">
-                                <span className="text-gray-600">ID de Transacción:</span>
+                                <span className="text-muted-foreground">ID de Transacción:</span>
                                 <span className="font-mono text-sm">{transactionId}</span>
                             </div>
                             )}
                             <div className="flex justify-between py-2 border-b">
-                                <span className="text-gray-600">Estudiante:</span>
+                                <span className="text-muted-foreground">Estudiante:</span>
                                 <span className="font-medium">
                                     {payment.student.name} {payment.student.last_name}
                                 </span>
                             </div>
                             <div className="flex justify-between py-2 border-b">
-                                <span className="text-gray-600">Programa:</span>
+                                <span className="text-muted-foreground">Programa:</span>
                                 <span className="font-medium">{payment.program.name}</span>
                             </div>
                             <div className="flex justify-between py-2 border-b">
-                                <span className="text-gray-600">Concepto:</span>
+                                <span className="text-muted-foreground">Concepto:</span>
                                 <span className="font-medium">{payment.concept}</span>
                             </div>
-                            <div className="flex justify-between py-3 bg-gray-50 px-4 rounded-lg">
+                            <div className="flex justify-between py-3 bg-muted px-4 rounded-lg">
                                 <span className="text-lg font-semibold">Monto:</span>
                                 <span className="text-2xl font-bold text-primary">
                                     ${payment.amount.toLocaleString('es-CO')} COP
                                 </span>
                             </div>
                             <div className="flex justify-between py-2">
-                                <span className="text-gray-600">Estado:</span>
+                                <span className="text-muted-foreground">Estado:</span>
                                 <span className={`font-semibold px-3 py-1 rounded-full text-sm ${
-                                    isApproved ? 'bg-green-100 text-green-800' :
-                                    isPending ? 'bg-yellow-100 text-yellow-800' :
-                                    isManual ? 'bg-amber-100 text-amber-800' :
-                                    'bg-red-100 text-red-800'
+                                    isApproved ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200' :
+                                    isPending ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200' :
+                                    isManual ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-200' :
+                                    'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200'
                                 }`}>
                                     {isApproved && 'Aprobado'}
                                     {isPending && 'Pendiente'}
@@ -134,20 +134,20 @@ export default function Confirmation({ payment, status, transactionId, message }
 
                     {/* Success Message */}
                     {isApproved && payment && (
-                        <Card className="mb-6 border-green-200 bg-green-50">
+                        <Card className="mb-6 border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-950/30">
                             <CardContent className="pt-6">
                                 <div className="flex items-start gap-3">
                                     <Mail className="h-5 w-5 text-green-600 mt-0.5" />
                                     <div>
-                                        <h3 className="font-semibold text-green-900 mb-1">
+                                        <h3 className="font-semibold text-green-900 dark:text-green-100 mb-1">
                                             Confirmación Enviada
                                         </h3>
-                                        <p className="text-sm text-green-800">
+                                        <p className="text-sm text-green-800 dark:text-green-200">
                                             Hemos enviado un correo de confirmación a{' '}
                                             <strong>{payment.student.email}</strong> con todos los detalles
                                             de tu matrícula y próximos pagos.
                                         </p>
-                                        <p className="text-sm text-green-800 mt-2">
+                                        <p className="text-sm text-green-800 dark:text-green-200 mt-2">
                                             Si pagaste con tarjeta, se han configurado los cobros mensuales
                                             automáticos. Recibirás una notificación antes de cada cobro.
                                         </p>
@@ -159,15 +159,15 @@ export default function Confirmation({ payment, status, transactionId, message }
 
                     {/* Pending Message */}
                     {isPending && payment && (
-                        <Card className="mb-6 border-yellow-200 bg-yellow-50">
+                        <Card className="mb-6 border-yellow-200 dark:border-yellow-800 bg-yellow-50 dark:bg-yellow-950/30">
                             <CardContent className="pt-6">
                                 <div className="flex items-start gap-3">
                                     <Clock className="h-5 w-5 text-yellow-600 mt-0.5" />
                                     <div>
-                                        <h3 className="font-semibold text-yellow-900 mb-1">
+                                        <h3 className="font-semibold text-yellow-900 dark:text-yellow-100 mb-1">
                                             Pago en Proceso
                                         </h3>
-                                        <p className="text-sm text-yellow-800">
+                                        <p className="text-sm text-yellow-800 dark:text-yellow-200">
                                             Tu pago está siendo verificado. Esto puede tomar algunos minutos.
                                             Te notificaremos a <strong>{payment.student.email}</strong> cuando
                                             se confirme.
@@ -180,23 +180,23 @@ export default function Confirmation({ payment, status, transactionId, message }
 
                     {/* Error Message */}
                     {isDeclined && (
-                        <Card className="mb-6 border-red-200 bg-red-50">
+                        <Card className="mb-6 border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-950/30">
                             <CardContent className="pt-6">
                                 <div className="flex items-start gap-3">
                                     <XCircle className="h-5 w-5 text-red-600 mt-0.5" />
                                     <div>
-                                        <h3 className="font-semibold text-red-900 mb-1">
+                                        <h3 className="font-semibold text-red-900 dark:text-red-100 mb-1">
                                             No se pudo procesar el pago
                                         </h3>
-                                        <p className="text-sm text-red-800 mb-2">
+                                        <p className="text-sm text-red-800 dark:text-red-200 mb-2">
                                             Por favor verifica:
                                         </p>
-                                        <ul className="text-sm text-red-800 list-disc list-inside space-y-1">
+                                        <ul className="text-sm text-red-800 dark:text-red-200 list-disc list-inside space-y-1">
                                             <li>Que los datos de la tarjeta sean correctos</li>
                                             <li>Que tengas fondos suficientes</li>
                                             <li>Que tu tarjeta permita compras en línea</li>
                                         </ul>
-                                        <p className="text-sm text-red-800 mt-3">
+                                        <p className="text-sm text-red-800 dark:text-red-200 mt-3">
                                             Puedes intentar nuevamente o contactarnos para ayuda.
                                         </p>
                                     </div>
@@ -207,21 +207,21 @@ export default function Confirmation({ payment, status, transactionId, message }
 
                     {/* Manual Payment Message */}
                     {isManual && (
-                        <Card className="mb-6 border-amber-200 bg-amber-50">
+                        <Card className="mb-6 border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/30">
                             <CardContent className="pt-6">
                                 <div className="flex items-start gap-3">
                                     <Banknote className="h-5 w-5 text-amber-600 mt-0.5" />
                                     <div>
-                                        <h3 className="font-semibold text-amber-900 mb-1">
+                                        <h3 className="font-semibold text-amber-900 dark:text-amber-100 mb-1">
                                             Matrícula Registrada - Pago Pendiente
                                         </h3>
-                                        <p className="text-sm text-amber-800 mb-2">
+                                        <p className="text-sm text-amber-800 dark:text-amber-200 mb-2">
                                             {message || 'Tu matrícula ha sido registrada exitosamente.'}
                                         </p>
-                                        <p className="text-sm text-amber-800 font-medium">
+                                        <p className="text-sm text-amber-800 dark:text-amber-200 font-medium">
                                             Acércate a nuestras instalaciones para realizar el pago por transferencia bancaria o en efectivo.
                                         </p>
-                                        <p className="text-sm text-amber-800 mt-2">
+                                        <p className="text-sm text-amber-800 dark:text-amber-200 mt-2">
                                             Te hemos enviado un correo con los detalles de tu matrícula.
                                         </p>
                                     </div>
@@ -248,7 +248,7 @@ export default function Confirmation({ payment, status, transactionId, message }
                     </div>
 
                     {/* Support */}
-                    <div className="mt-8 text-center text-sm text-gray-500">
+                    <div className="mt-8 text-center text-sm text-muted-foreground">
                         <p>
                             ¿Necesitas ayuda?{' '}
                             <a href="mailto:soporte@academialinaje.com" className="text-primary hover:underline">

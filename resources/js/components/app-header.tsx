@@ -277,7 +277,7 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
 
     return (
         <>
-            <div className="border-b border-gray-200 bg-white">
+            <div className="border-b border-border bg-card">
                 <div className="mx-auto flex h-14 sm:h-16 lg:h-18 items-center justify-between px-3 sm:px-4 lg:px-6">
                     {/* Logo y título */}
                     <div className="flex items-center space-x-2 sm:space-x-3">
@@ -287,16 +287,21 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
                             className="flex items-center"
                         >
                             <img
-                                src="/logo_academia.png"
+                                src="/logo_academia_black.png"
                                 alt="Academia Linaje"
-                                className="h-10 sm:h-12 lg:h-14 w-auto"
+                                className="h-10 sm:h-12 lg:h-14 w-auto dark:hidden"
+                            />
+                            <img
+                                src="/logo_academia_white.png"
+                                alt="Academia Linaje"
+                                className="h-10 sm:h-12 lg:h-14 w-auto hidden dark:block"
                             />
                         </Link>
 
                         {/* Toggle Button - Al lado del logo (solo desktop) */}
                         <button
                             onClick={() => setIsMenuOpen(!isMenuOpen)}
-                            className="hidden lg:flex items-center justify-center h-9 w-9 rounded-md hover:bg-gray-100 text-gray-600 hover:text-gray-900 transition-colors ml-2"
+                            className="hidden lg:flex items-center justify-center h-9 w-9 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors ml-2"
                             title={isMenuOpen ? "Ocultar menú" : "Mostrar menú"}
                         >
                             {isMenuOpen ? (
@@ -317,20 +322,20 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
                                     onChange={(e) => handleSearchChange(e.target.value)}
                                     onFocus={() => searchQuery.length >= 2 && setShowResults(true)}
                                     placeholder="Buscar estudiantes, profesores..."
-                                    className="w-full rounded-lg border border-gray-300 bg-gray-50 px-4 py-2 pl-10 pr-9 text-sm focus:border-[#7a9b3c] focus:outline-none focus:ring-1 focus:ring-[#7a9b3c]"
+                                    className="w-full rounded-lg border border-input bg-muted px-4 py-2 pl-10 pr-9 text-sm focus:border-[#7a9b3c] focus:outline-none focus:ring-1 focus:ring-[#7a9b3c]"
                                 />
                                 {isSearching ? (
-                                    <Loader2 className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400 animate-spin" />
+                                    <Loader2 className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground animate-spin" />
                                 ) : (
                                     <Icon
                                         iconNode={Search}
-                                        className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400"
+                                        className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
                                     />
                                 )}
                                 {searchQuery && (
                                     <button
                                         onClick={clearSearch}
-                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-muted-foreground"
                                     >
                                         <X className="h-4 w-4" />
                                     </button>
@@ -338,9 +343,9 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
 
                                 {/* Dropdown de resultados */}
                                 {showResults && searchQuery.length >= 2 && (
-                                    <div className="absolute top-full left-0 right-0 mt-1 rounded-lg border border-gray-200 bg-white shadow-lg z-50 max-h-80 overflow-y-auto">
+                                    <div className="absolute top-full left-0 right-0 mt-1 rounded-lg border border-border bg-card shadow-lg z-50 max-h-80 overflow-y-auto">
                                         {isSearching && searchResults.length === 0 ? (
-                                            <div className="flex items-center justify-center py-6 text-sm text-gray-500">
+                                            <div className="flex items-center justify-center py-6 text-sm text-muted-foreground">
                                                 <Loader2 className="h-4 w-4 animate-spin mr-2" />
                                                 Buscando...
                                             </div>
@@ -349,7 +354,7 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
                                                 <button
                                                     key={user.id}
                                                     onClick={() => handleSelectUser(user.id)}
-                                                    className="flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0"
+                                                    className="flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-muted transition-colors border-b border-border last:border-b-0"
                                                 >
                                                     <Avatar className="h-8 w-8 shrink-0 overflow-hidden rounded-full">
                                                         <AvatarImage
@@ -361,20 +366,20 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
                                                         </AvatarFallback>
                                                     </Avatar>
                                                     <div className="min-w-0 flex-1">
-                                                        <div className="truncate text-sm font-medium text-gray-900">
+                                                        <div className="truncate text-sm font-medium text-foreground">
                                                             {user.name}
                                                         </div>
-                                                        <div className="truncate text-xs text-gray-500">
+                                                        <div className="truncate text-xs text-muted-foreground">
                                                             {user.email}
                                                         </div>
                                                     </div>
-                                                    <span className="shrink-0 rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600">
+                                                    <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
                                                         {user.role}
                                                     </span>
                                                 </button>
                                             ))
                                         ) : (
-                                            <div className="py-6 text-center text-sm text-gray-500">
+                                            <div className="py-6 text-center text-sm text-muted-foreground">
                                                 No se encontraron usuarios
                                             </div>
                                         )}
@@ -393,7 +398,7 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
                                 size="icon"
                                 className="relative h-10 w-10"
                             >
-                                <Mail className="h-5 w-5 text-gray-600" />
+                                <Mail className="h-5 w-5 text-muted-foreground" />
                                 {unreadMessagesCount > 0 && (
                                     <span className="absolute right-1 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-semibold text-white">
                                         {unreadMessagesCount}
@@ -419,14 +424,14 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
                                         </AvatarFallback>
                                     </Avatar>
                                     <div className="hidden flex-col items-start lg:flex">
-                                        <span className="text-sm font-medium text-gray-800">
+                                        <span className="text-sm font-medium text-foreground">
                                             {auth.user.name}
                                         </span>
-                                        <span className="text-xs text-gray-500">
+                                        <span className="text-xs text-muted-foreground">
                                             {auth.roles && auth.roles.length > 0 ? auth.roles[0] : 'Usuario'}
                                         </span>
                                     </div>
-                                    <ChevronDown className="hidden h-4 w-4 text-gray-600 lg:block" />
+                                    <ChevronDown className="hidden h-4 w-4 text-muted-foreground lg:block" />
                                 </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent className="w-56" align="end">
@@ -448,16 +453,21 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
                                 </SheetTrigger>
                                 <SheetContent
                                     side="left"
-                                    className="flex h-full w-[280px] sm:w-72 flex-col bg-white p-0"
+                                    className="flex h-full w-[280px] sm:w-72 flex-col bg-card p-0"
                                 >
                                     <SheetTitle className="sr-only">
                                         Menú de Navegación
                                     </SheetTitle>
                                     <SheetHeader className="flex items-start justify-start text-left p-4 border-b">
                                         <img
-                                            src="/logo_academia.png"
+                                            src="/logo_academia_black.png"
                                             alt="Academia Linaje"
-                                            className="h-10 w-auto"
+                                            className="h-10 w-auto dark:hidden"
+                                        />
+                                        <img
+                                            src="/logo_academia_white.png"
+                                            alt="Academia Linaje"
+                                            className="h-10 w-auto hidden dark:block"
                                         />
                                     </SheetHeader>
                                     <div className="flex-1 overflow-y-auto py-4 px-3">
@@ -469,10 +479,10 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
                                                             <Link
                                                                 href={item.href}
                                                                 className={cn(
-                                                                    "flex items-center space-x-3 rounded-lg px-4 py-3.5 text-base font-medium transition-colors active:bg-gray-200",
+                                                                    "flex items-center space-x-3 rounded-lg px-4 py-3.5 text-base font-medium transition-colors active:bg-muted",
                                                                     page.url === item.href
                                                                         ? "bg-[#7a9b3c]/10 text-[#7a9b3c]"
-                                                                        : "text-gray-700 hover:bg-gray-100"
+                                                                        : "text-muted-foreground hover:bg-muted"
                                                                 )}
                                                             >
                                                                 {item.icon && (
@@ -489,10 +499,10 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
                                                                         key={subitem.title}
                                                                         href={subitem.href}
                                                                         className={cn(
-                                                                            "flex items-center space-x-3 rounded-lg px-4 py-3 text-base transition-colors active:bg-gray-200",
+                                                                            "flex items-center space-x-3 rounded-lg px-4 py-3 text-base transition-colors active:bg-muted",
                                                                             page.url === subitem.href
                                                                                 ? "bg-[#7a9b3c]/10 text-[#7a9b3c]"
-                                                                                : "text-gray-600 hover:bg-gray-100"
+                                                                                : "text-muted-foreground hover:bg-muted"
                                                                         )}
                                                                     >
                                                                         {subitem.icon && (
@@ -510,10 +520,10 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
                                                         <Link
                                                             href={item.href}
                                                             className={cn(
-                                                                "flex items-center space-x-3 rounded-lg px-4 py-3.5 text-base font-medium transition-colors active:bg-gray-200",
+                                                                "flex items-center space-x-3 rounded-lg px-4 py-3.5 text-base font-medium transition-colors active:bg-muted",
                                                                 page.url === item.href
                                                                     ? "bg-[#7a9b3c]/10 text-[#7a9b3c]"
-                                                                    : "text-gray-700 hover:bg-gray-100"
+                                                                    : "text-muted-foreground hover:bg-muted"
                                                             )}
                                                         >
                                                             {item.icon && (
@@ -537,7 +547,7 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
 
                 {/* Menú de navegación secundario */}
                 {isMenuOpen && (
-                    <div className="hidden border-t border-gray-200 bg-white lg:block">
+                    <div className="hidden border-t border-border bg-card lg:block">
                         <div className="mx-auto flex justify-center items-center px-6">
                             <NavigationMenu className="flex h-12 items-center">
                                 <NavigationMenuList className="flex h-full items-stretch space-x-1">
@@ -551,10 +561,10 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
                                                     <DropdownMenuTrigger asChild>
                                                         <button
                                                             className={cn(
-                                                                "flex items-center space-x-2 px-4 h-full text-sm font-medium transition-colors border-b-2 border-transparent hover:text-gray-900",
+                                                                "flex items-center space-x-2 px-4 h-full text-sm font-medium transition-colors border-b-2 border-transparent hover:text-foreground",
                                                                 page.url.startsWith(item.href)
                                                                     ? activeItemStyles
-                                                                    : "text-gray-600"
+                                                                    : "text-muted-foreground"
                                                             )}
                                                         >
                                                             {item.icon && (
@@ -573,10 +583,10 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
                                                                 key={subitem.title}
                                                                 href={subitem.href}
                                                                 className={cn(
-                                                                    "flex items-center space-x-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors hover:bg-gray-100 cursor-pointer",
+                                                                    "flex items-center space-x-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors hover:bg-muted cursor-pointer",
                                                                     page.url === subitem.href
                                                                         ? "bg-[#7a9b3c]/10 text-[#7a9b3c]"
-                                                                        : "text-gray-700"
+                                                                        : "text-muted-foreground"
                                                                 )}
                                                             >
                                                                 {subitem.icon && (
@@ -597,7 +607,7 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
                                                         "flex items-center space-x-2 px-4 h-full text-sm font-medium transition-colors border-b-2 border-transparent",
                                                         page.url === item.href
                                                             ? activeItemStyles
-                                                            : "text-gray-600 hover:text-gray-900"
+                                                            : "text-muted-foreground hover:text-foreground"
                                                     )}
                                                 >
                                                     {item.icon && (
@@ -620,8 +630,8 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
 
             {/* Breadcrumbs */}
             {breadcrumbs.length > 1 && (
-                <div className="flex w-full border-b border-gray-200 bg-gray-50">
-                    <div className="mx-auto flex h-10 w-full items-center justify-start px-6 text-gray-500">
+                <div className="flex w-full border-b border-border bg-muted">
+                    <div className="mx-auto flex h-10 w-full items-center justify-start px-6 text-muted-foreground">
                         <Breadcrumbs breadcrumbs={breadcrumbs} />
                     </div>
                 </div>

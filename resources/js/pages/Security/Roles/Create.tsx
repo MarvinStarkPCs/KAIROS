@@ -114,9 +114,9 @@ export default function RolesCreate({ permissions }: CreateProps) {
                             {Object.entries(groupedPermissions).map(([module, perms]) => (
                                 <div
                                     key={module}
-                                    className="border p-4 rounded-lg bg-gray-50"
+                                    className="border p-4 rounded-lg bg-muted"
                                 >
-                                    <h3 className="font-semibold text-gray-900 mb-3 capitalize">
+                                    <h3 className="font-semibold text-foreground mb-3 capitalize">
                                         {module}
                                     </h3>
                                     <div className="grid grid-cols-2 gap-3">

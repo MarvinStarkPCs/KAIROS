@@ -62,12 +62,12 @@ export default function RolesEdit({ role, permissions }: EditProps) {
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={`Editar Rol: ${role.name}`} />
 
-            <div className="flex h-full flex-1 flex-col gap-6 overflow-x-auto rounded-xl p-6 bg-[#f9f6f2]">
+            <div className="flex h-full flex-1 flex-col gap-6 overflow-x-auto rounded-xl p-6 bg-background">
                 {/* Título y volver */}
                 <div className="flex items-center justify-between">
                     <div>
-                        <h1 className="text-3xl font-bold tracking-tight text-gray-800">Editar Rol</h1>
-                        <p className="text-gray-600">
+                        <h1 className="text-3xl font-bold tracking-tight text-foreground">Editar Rol</h1>
+                        <p className="text-muted-foreground">
                             Actualiza el nombre y los permisos del rol <strong>{role.name}</strong>
                         </p>
                     </div>
@@ -117,7 +117,7 @@ export default function RolesEdit({ role, permissions }: EditProps) {
                         <CardContent className="space-y-6">
                             {Object.entries(groupedPermissions).map(([module, perms]) => (
                                 <div key={module}>
-                                    <h3 className="font-semibold text-gray-900 mb-3 capitalize">
+                                    <h3 className="font-semibold text-foreground mb-3 capitalize">
                                         {module}
                                     </h3>
                                     <div className="grid grid-cols-2 md:grid-cols-3 gap-3">

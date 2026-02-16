@@ -1,11 +1,16 @@
 export default function AppLogo() {
     return (
         <>
-            <div className="flex aspect-square size-10 items-center justify-center rounded-lg overflow-hidden bg-white p-1">
+            <div className="flex aspect-square size-10 items-center justify-center rounded-lg overflow-hidden bg-card p-1">
                 <img
-                    src="/logo_academia.png"
+                    src="/logo_academia_black.png"
                     alt="Academia Linaje"
-                    className="size-full object-contain"
+                    className="size-full object-contain dark:hidden"
+                />
+                <img
+                    src="/logo_academia_white.png"
+                    alt="Academia Linaje"
+                    className="size-full object-contain hidden dark:block"
                 />
             </div>
             <div className="ml-2 grid flex-1 text-left text-sm leading-tight">

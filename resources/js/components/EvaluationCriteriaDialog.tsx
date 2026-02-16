@@ -99,10 +99,10 @@ export default function EvaluationCriteriaDialog({
                         </DialogDescription>
                     </DialogHeader>
 
-                    <Alert className="border-amber-200 bg-amber-50">
+                    <Alert className="border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/30">
                         <Info className="h-4 w-4 text-amber-600" />
-                        <AlertTitle className="text-amber-800">Sistema de Puntos</AlertTitle>
-                        <AlertDescription className="text-amber-700">
+                        <AlertTitle className="text-amber-800 dark:text-amber-200">Sistema de Puntos</AlertTitle>
+                        <AlertDescription className="text-amber-700 dark:text-amber-300">
                             <ul className="mt-1 list-disc space-y-1 pl-4 text-xs">
                                 <li><strong>Puntuación Máxima:</strong> Es el número máximo de puntos que un estudiante puede obtener en este criterio.</li>
                                 <li><strong>Cálculo de nota:</strong> La nota del criterio se calcula como: (puntos obtenidos / puntuación máxima) × 100.</li>
@@ -155,7 +155,7 @@ export default function EvaluationCriteriaDialog({
                             {errors.max_points && (
                                 <p className="text-sm text-red-600">{errors.max_points}</p>
                             )}
-                            <p className="text-xs text-gray-500">Puntos máximos a obtener</p>
+                            <p className="text-xs text-muted-foreground">Puntos máximos a obtener</p>
                         </div>
                     </div>
 

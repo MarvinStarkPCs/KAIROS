@@ -40,23 +40,23 @@ function AccordionCard({ section, defaultOpen = false }: { section: GuideSection
     const Icon = section.icon;
 
     return (
-        <div className="overflow-hidden rounded-xl border border-gray-200 dark:border-gray-700 transition-all">
+        <div className="overflow-hidden rounded-xl border border-border dark:border-gray-700 transition-all">
             {/* Header clickeable */}
             <button
                 onClick={() => setOpen(!open)}
-                className={`flex w-full items-center gap-3 px-5 py-4 text-left transition-colors hover:bg-gray-50 dark:hover:bg-gray-800/50 ${open ? 'bg-gray-50/50 dark:bg-gray-800/30' : ''}`}
+                className={`flex w-full items-center gap-3 px-5 py-4 text-left transition-colors hover:bg-muted dark:hover:bg-gray-800/50 ${open ? 'bg-muted/50 dark:bg-gray-800/30' : ''}`}
             >
                 <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${section.color}`}>
                     <Icon className="h-5 w-5 text-white" />
                 </div>
                 <div className="flex-1 min-w-0">
-                    <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">{section.title}</h3>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{section.intro}</p>
+                    <h3 className="text-sm font-semibold text-foreground dark:text-gray-100">{section.title}</h3>
+                    <p className="text-xs text-muted-foreground dark:text-muted-foreground truncate">{section.intro}</p>
                 </div>
                 {open ? (
-                    <ChevronDown className="h-4 w-4 shrink-0 text-gray-400" />
+                    <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" />
                 ) : (
-                    <ChevronRight className="h-4 w-4 shrink-0 text-gray-400" />
+                    <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
                 )}
             </button>
 
@@ -65,10 +65,10 @@ function AccordionCard({ section, defaultOpen = false }: { section: GuideSection
                 <div className="border-t border-gray-100 dark:border-gray-700 px-5 py-4 space-y-4">
                     {/* Qué puedes hacer */}
                     <div>
-                        <p className="text-xs font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500 mb-2">Qué puedes hacer</p>
+                        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground dark:text-muted-foreground mb-2">Qué puedes hacer</p>
                         <ul className="space-y-1.5">
                             {section.features.map((feature, i) => (
-                                <li key={i} className="flex items-start gap-2 text-sm text-gray-700 dark:text-gray-300">
+                                <li key={i} className="flex items-start gap-2 text-sm text-muted-foreground dark:text-gray-300">
                                     <ArrowRight className="h-3.5 w-3.5 mt-0.5 shrink-0 text-amber-500" />
                                     <span>{feature}</span>
                                 </li>
@@ -79,7 +79,7 @@ function AccordionCard({ section, defaultOpen = false }: { section: GuideSection
                     {/* Pasos rápidos */}
                     {section.steps && section.steps.length > 0 && (
                         <div>
-                            <p className="text-xs font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500 mb-2">Cómo hacerlo</p>
+                            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground dark:text-muted-foreground mb-2">Cómo hacerlo</p>
                             <ol className="space-y-2">
                                 {section.steps.map((step, i) => (
                                     <li key={i} className="flex items-start gap-3">
@@ -87,9 +87,9 @@ function AccordionCard({ section, defaultOpen = false }: { section: GuideSection
                                             {i + 1}
                                         </span>
                                         <div>
-                                            <p className="text-sm text-gray-700 dark:text-gray-300">{step.text}</p>
+                                            <p className="text-sm text-muted-foreground dark:text-gray-300">{step.text}</p>
                                             {step.tip && (
-                                                <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5 italic">{step.tip}</p>
+                                                <p className="text-xs text-muted-foreground dark:text-muted-foreground mt-0.5 italic">{step.tip}</p>
                                             )}
                                         </div>
                                     </li>
@@ -107,7 +107,7 @@ function AccordionCard({ section, defaultOpen = false }: { section: GuideSection
                             </div>
                             <ul className="space-y-1">
                                 {section.tips.map((tip, i) => (
-                                    <li key={i} className="text-xs text-gray-600 dark:text-gray-400">• {tip}</li>
+                                    <li key={i} className="text-xs text-muted-foreground dark:text-muted-foreground">• {tip}</li>
                                 ))}
                             </ul>
                         </div>
@@ -426,7 +426,7 @@ const configSections: GuideSection[] = [
         title: 'Configuración de Cuenta',
         icon: Settings,
         color: 'bg-gray-600',
-        bgColor: 'bg-gray-50 dark:bg-gray-800/30',
+        bgColor: 'bg-muted dark:bg-gray-800/30',
         intro: 'Personaliza tu perfil y opciones de seguridad.',
         features: [
             'Editar tu nombre, foto y datos de contacto',
@@ -456,9 +456,9 @@ function RoleBlock({ title, emoji, description, sections, defaultOpenFirst = fal
         <div className="space-y-3">
             <div className="flex items-center gap-2">
                 <span className="text-lg">{emoji}</span>
-                <h2 className="text-base font-bold text-gray-900 dark:text-gray-100">{title}</h2>
+                <h2 className="text-base font-bold text-foreground dark:text-gray-100">{title}</h2>
             </div>
-            <p className="text-sm text-gray-500 dark:text-gray-400">{description}</p>
+            <p className="text-sm text-muted-foreground dark:text-muted-foreground">{description}</p>
             <div className="space-y-3">
                 {sections.map((section, i) => (
                     <AccordionCard key={section.id} section={section} defaultOpen={defaultOpenFirst && i === 0} />
@@ -490,7 +490,7 @@ export default function Manual() {
                             <Monitor className="h-6 w-6 shrink-0 text-amber-600 mt-0.5" />
                             <div>
                                 <p className="font-semibold text-amber-900 dark:text-amber-200 text-sm">Bienvenido a KAIROS</p>
-                                <p className="text-sm text-amber-800/80 dark:text-amber-300/80 mt-1">
+                                <p className="text-sm text-amber-800 dark:text-amber-200/80 dark:text-amber-300/80 mt-1">
                                     KAIROS es el sistema de gestión académica de la Academia Linaje. Aquí podrás administrar
                                     programas, estudiantes, horarios, pagos y mucho más. Haz clic en cada sección para ver
                                     la guía detallada.
@@ -500,31 +500,31 @@ export default function Manual() {
                     </div>
 
                     {/* Inicio rápido */}
-                    <div className="rounded-xl border border-gray-200 dark:border-gray-700 p-5 space-y-3">
-                        <h2 className="text-sm font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+                    <div className="rounded-xl border border-border dark:border-gray-700 p-5 space-y-3">
+                        <h2 className="text-sm font-bold text-foreground dark:text-gray-100 flex items-center gap-2">
                             <Lightbulb className="h-4 w-4 text-amber-500" />
                             Inicio Rápido
                         </h2>
                         <div className="grid gap-2 text-sm">
                             <div className="flex items-start gap-2">
                                 <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-amber-600 text-[10px] font-bold text-white mt-0.5">1</span>
-                                <span className="text-gray-700 dark:text-gray-300"><strong>Crea los programas</strong> que ofrece la academia (Piano, Guitarra, Canto...)</span>
+                                <span className="text-muted-foreground dark:text-gray-300"><strong>Crea los programas</strong> que ofrece la academia (Piano, Guitarra, Canto...)</span>
                             </div>
                             <div className="flex items-start gap-2">
                                 <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-amber-600 text-[10px] font-bold text-white mt-0.5">2</span>
-                                <span className="text-gray-700 dark:text-gray-300"><strong>Registra los horarios</strong> y asigna un profesor a cada uno</span>
+                                <span className="text-muted-foreground dark:text-gray-300"><strong>Registra los horarios</strong> y asigna un profesor a cada uno</span>
                             </div>
                             <div className="flex items-start gap-2">
                                 <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-amber-600 text-[10px] font-bold text-white mt-0.5">3</span>
-                                <span className="text-gray-700 dark:text-gray-300"><strong>Inscribe estudiantes</strong> manualmente o comparte el link de matrícula pública</span>
+                                <span className="text-muted-foreground dark:text-gray-300"><strong>Inscribe estudiantes</strong> manualmente o comparte el link de matrícula pública</span>
                             </div>
                             <div className="flex items-start gap-2">
                                 <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-amber-600 text-[10px] font-bold text-white mt-0.5">4</span>
-                                <span className="text-gray-700 dark:text-gray-300"><strong>Asigna estudiantes</strong> a los horarios correspondientes</span>
+                                <span className="text-muted-foreground dark:text-gray-300"><strong>Asigna estudiantes</strong> a los horarios correspondientes</span>
                             </div>
                             <div className="flex items-start gap-2">
                                 <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-amber-600 text-[10px] font-bold text-white mt-0.5">5</span>
-                                <span className="text-gray-700 dark:text-gray-300"><strong>Listo!</strong> Los profesores ya pueden tomar asistencia y evaluar</span>
+                                <span className="text-muted-foreground dark:text-gray-300"><strong>Listo!</strong> Los profesores ya pueden tomar asistencia y evaluar</span>
                             </div>
                         </div>
                     </div>
@@ -569,7 +569,7 @@ export default function Manual() {
                     />
 
                     {/* Footer */}
-                    <div className="rounded-lg border border-gray-200 bg-gray-50 p-4 text-center text-xs text-gray-400 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-500">
+                    <div className="rounded-lg border border-border bg-muted p-4 text-center text-xs text-muted-foreground dark:border-gray-700 dark:bg-gray-800 dark:text-muted-foreground">
                         Academia Linaje — Plataforma KAIROS · Manual v1.0 · 2026
                     </div>
                 </div>

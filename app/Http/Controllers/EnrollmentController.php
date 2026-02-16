@@ -31,6 +31,8 @@ class EnrollmentController extends Controller
             $search = $request->search;
             $query->whereHas('student', function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('last_name', 'like', "%{$search}%")
+                  ->orWhere('document_number', 'like', "%{$search}%")
                   ->orWhere('email', 'like', "%{$search}%");
             });
         }
@@ -42,6 +44,7 @@ class EnrollmentController extends Controller
             'total_enrollments' => Enrollment::count(),
             'active_enrollments' => Enrollment::where('status', 'active')->count(),
             'waiting_list' => Enrollment::where('status', 'waiting')->count(),
+            'suspended' => Enrollment::where('status', 'suspended')->count(),
             'withdrawn' => Enrollment::where('status', 'withdrawn')->count(),
         ];
 

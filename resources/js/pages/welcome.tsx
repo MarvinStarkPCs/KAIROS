@@ -206,16 +206,25 @@ export default function Welcome() {
                 />
             </Head>
 
-            <div className="min-h-screen bg-white">
+            <div className="min-h-screen bg-card">
                 {/* Header */}
-                <header role="banner" className="bg-white sticky top-0 z-50 shadow-md border-b-2 border-amber-600/40">
+                <header role="banner" className="bg-card sticky top-0 z-50 shadow-md border-b-2 border-amber-600/40">
                     <nav aria-label="Navegación principal" className="mx-auto max-w-7xl px-4 sm:px-6 py-3">
                         <div className="flex items-center justify-between">
                             <a href="/" className="flex items-center" aria-label="Academia Linaje - Inicio">
                                 <img
-                                    src="/logo_academia.png"
+                                    src="/logo_academia_black.png"
                                     alt="Academia Linaje - Escuela de Música en Las Llanadas"
-                                    className="h-12 w-auto"
+                                    className="h-12 w-auto dark:hidden"
+                                    width="150"
+                                    height="48"
+                                    fetchPriority="high"
+                                    decoding="async"
+                                />
+                                <img
+                                    src="/logo_academia_white.png"
+                                    alt="Academia Linaje - Escuela de Música en Las Llanadas"
+                                    className="h-12 w-auto hidden dark:block"
                                     width="150"
                                     height="48"
                                     fetchPriority="high"
@@ -234,7 +243,7 @@ export default function Welcome() {
                                     <>
                                         <Link
                                             href={login()}
-                                            className="hidden sm:block text-sm font-medium text-amber-800 hover:text-amber-950 transition-colors"
+                                            className="hidden sm:block text-sm font-medium text-amber-800 dark:text-amber-200 hover:text-amber-950 transition-colors"
                                         >
                                             Acceso
                                         </Link>
@@ -253,7 +262,7 @@ export default function Welcome() {
 
                 <main>
                 {/* Hero Section with Free Class Highlight */}
-                <section aria-label="Bienvenida - Academia de Música" className="relative overflow-hidden bg-gradient-to-br from-amber-50 via-orange-50 to-amber-50 py-16 sm:py-24 lg:py-32">
+                <section aria-label="Bienvenida - Academia de Música" className="relative overflow-hidden bg-gradient-to-br from-amber-50 dark:from-amber-900/40 via-orange-50 dark:via-orange-900/40 to-amber-50 dark:to-amber-900/40 py-16 sm:py-24 lg:py-32">
                     {/* Background decorative elements */}
                     <div className="absolute inset-0 -z-10 opacity-10">
                         <div className="absolute top-20 left-0 h-96 w-96 rounded-full bg-amber-500 blur-3xl animate-pulse"></div>
@@ -275,16 +284,16 @@ export default function Welcome() {
 
                         <div className="grid gap-12 lg:grid-cols-2 lg:gap-20 items-center">
                             <div className="space-y-8 text-center lg:text-left">
-                                <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold leading-tight text-gray-900">
+                                <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold leading-tight text-foreground">
                                     Despierta el
                                     <span className="block text-transparent bg-clip-text bg-gradient-to-r from-amber-600 to-orange-600">
                                         Músico que hay en ti
                                     </span>
                                 </h1>
 
-                                <p className="text-lg sm:text-xl text-gray-700 leading-relaxed max-w-xl mx-auto lg:mx-0">
+                                <p className="text-lg sm:text-xl text-muted-foreground leading-relaxed max-w-xl mx-auto lg:mx-0">
                                     Aprende piano, guitarra, canto y más con profesores certificados.
-                                    <span className="font-bold text-amber-800"> Tu primera clase es completamente gratis</span> para que
+                                    <span className="font-bold text-amber-800 dark:text-amber-200"> Tu primera clase es completamente gratis</span> para que
                                     conozcas nuestra metodología.
                                 </p>
 
@@ -298,25 +307,25 @@ export default function Welcome() {
                                     </a>
                                     <a
                                         href="#programas"
-                                        className="flex items-center justify-center rounded-xl border-2 border-amber-700 bg-white px-8 py-4 text-base font-semibold text-amber-900 hover:bg-amber-50 transition-all transform hover:-translate-y-1"
+                                        className="flex items-center justify-center rounded-xl border-2 border-amber-700 bg-card px-8 py-4 text-base font-semibold text-amber-900 dark:text-amber-100 hover:bg-amber-50 dark:hover:bg-amber-800/40 transition-all transform hover:-translate-y-1"
                                     >
                                         Ver Programas
                                     </a>
                                 </div>
 
                                 {/* Stats */}
-                                <div className="grid grid-cols-3 gap-6 pt-8 border-t border-amber-200">
+                                <div className="grid grid-cols-3 gap-6 pt-8 border-t border-amber-200 dark:border-amber-700">
                                     <div>
-                                        <div className="text-3xl sm:text-4xl font-bold text-amber-800">500+</div>
-                                        <div className="text-sm text-gray-600">Estudiantes Activos</div>
+                                        <div className="text-3xl sm:text-4xl font-bold text-amber-800 dark:text-amber-200">500+</div>
+                                        <div className="text-sm text-muted-foreground">Estudiantes Activos</div>
                                     </div>
                                     <div>
-                                        <div className="text-3xl sm:text-4xl font-bold text-amber-800">15+</div>
-                                        <div className="text-sm text-gray-600">Profesores</div>
+                                        <div className="text-3xl sm:text-4xl font-bold text-amber-800 dark:text-amber-200">15+</div>
+                                        <div className="text-sm text-muted-foreground">Profesores</div>
                                     </div>
                                     <div>
-                                        <div className="text-3xl sm:text-4xl font-bold text-amber-800">98%</div>
-                                        <div className="text-sm text-gray-600">Satisfacción</div>
+                                        <div className="text-3xl sm:text-4xl font-bold text-amber-800 dark:text-amber-200">98%</div>
+                                        <div className="text-sm text-muted-foreground">Satisfacción</div>
                                     </div>
                                 </div>
                             </div>
@@ -340,14 +349,14 @@ export default function Welcome() {
                                     </video>
                                 </div>
                                 {/* Floating card */}
-                                <div className="absolute -bottom-4 -right-4 sm:-bottom-6 sm:-right-6 rounded-xl sm:rounded-2xl bg-white p-3 sm:p-6 shadow-2xl">
+                                <div className="absolute -bottom-4 -right-4 sm:-bottom-6 sm:-right-6 rounded-xl sm:rounded-2xl bg-card p-3 sm:p-6 shadow-2xl">
                                     <div className="flex items-center space-x-2 sm:space-x-3">
-                                        <div className="flex h-9 w-9 sm:h-14 sm:w-14 items-center justify-center rounded-lg sm:rounded-xl bg-gradient-to-br from-amber-100 to-orange-100">
-                                            <Award className="h-5 w-5 sm:h-8 sm:w-8 text-amber-700" />
+                                        <div className="flex h-9 w-9 sm:h-14 sm:w-14 items-center justify-center rounded-lg sm:rounded-xl bg-gradient-to-br from-amber-100 dark:from-amber-800/50 to-orange-100 dark:to-orange-800/50">
+                                            <Award className="h-5 w-5 sm:h-8 sm:w-8 text-amber-700 dark:text-amber-300" />
                                         </div>
                                         <div>
-                                            <div className="text-xs sm:text-sm font-semibold text-gray-900">+10 años</div>
-                                            <div className="text-[10px] sm:text-xs text-gray-600">Formando músicos profesionales</div>
+                                            <div className="text-xs sm:text-sm font-semibold text-foreground">+10 años</div>
+                                            <div className="text-[10px] sm:text-xs text-muted-foreground">Formando músicos profesionales</div>
                                         </div>
                                     </div>
                                 </div>
@@ -357,13 +366,13 @@ export default function Welcome() {
                 </section>
 
                 {/* Benefits Section */}
-                <section aria-label="Beneficios de Academia Linaje" className="py-20 bg-white">
+                <section aria-label="Beneficios de Academia Linaje" className="py-20 bg-card">
                     <div className="mx-auto max-w-7xl px-4 sm:px-6">
                         <div className="text-center mb-16">
-                            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
+                            <h2 className="text-3xl sm:text-4xl font-bold text-foreground mb-4">
                                 ¿Por qué elegir Academia Linaje?
                             </h2>
-                            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+                            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
                                 Más que una academia, somos tu comunidad musical
                             </p>
                         </div>
@@ -372,10 +381,10 @@ export default function Welcome() {
                             {benefits.map((benefit, index) => (
                                 <div
                                     key={index}
-                                    className="flex items-start space-x-4 p-6 rounded-xl bg-gradient-to-br from-amber-50 to-orange-50 hover:shadow-lg transition-all"
+                                    className="flex items-start space-x-4 p-6 rounded-xl bg-gradient-to-br from-amber-50 dark:from-amber-900/40 to-orange-50 dark:to-orange-900/40 hover:shadow-lg transition-all"
                                 >
-                                    <CheckCircle className="h-6 w-6 text-amber-700 flex-shrink-0 mt-1" />
-                                    <span className="text-gray-800 font-medium">{benefit}</span>
+                                    <CheckCircle className="h-6 w-6 text-amber-700 dark:text-amber-300 flex-shrink-0 mt-1" />
+                                    <span className="text-foreground font-medium">{benefit}</span>
                                 </div>
                             ))}
                         </div>
@@ -383,13 +392,13 @@ export default function Welcome() {
                 </section>
 
                 {/* Programs Section */}
-                <section id="programas" aria-label="Programas musicales disponibles" className="py-20 bg-gradient-to-br from-gray-50 to-amber-50">
+                <section id="programas" aria-label="Programas musicales disponibles" className="py-20 bg-gradient-to-br from-amber-50/50 to-orange-50/50 dark:from-amber-950/50 dark:to-orange-950/40">
                     <div className="mx-auto max-w-7xl px-4 sm:px-6">
                         <div className="text-center mb-16">
-                            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
+                            <h2 className="text-3xl sm:text-4xl font-bold text-foreground mb-4">
                                 Nuestros Programas
                             </h2>
-                            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+                            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
                                 Encuentra el programa perfecto para ti
                             </p>
                         </div>
@@ -404,7 +413,7 @@ export default function Welcome() {
                                             <a
                                                 key={program.id}
                                                 href="/matricula"
-                                                className="group rounded-2xl border-2 border-gray-200 bg-white p-8 transition-all hover:shadow-2xl transform hover:-translate-y-2 block no-underline"
+                                                className="group rounded-2xl border-2 border-border bg-card p-8 transition-all hover:shadow-2xl transform hover:-translate-y-2 block no-underline"
                                                 style={{ '--program-color': programColor } as React.CSSProperties}
                                             >
                                                 <div
@@ -418,9 +427,9 @@ export default function Welcome() {
                                                         style={{ color: programColor }}
                                                     />
                                                 </div>
-                                                <h3 className="mb-2 text-xl font-bold text-gray-900 group-hover:text-amber-800 transition-colors">{program.name}</h3>
+                                                <h3 className="mb-2 text-xl font-bold text-foreground group-hover:text-amber-800 dark:hover:text-amber-200 transition-colors">{program.name}</h3>
                                                 {program.description && (
-                                                    <p className="text-sm text-gray-600 mb-4 line-clamp-2">{program.description}</p>
+                                                    <p className="text-sm text-muted-foreground mb-4 line-clamp-2">{program.description}</p>
                                                 )}
                                                 <div className="flex items-center font-semibold text-sm transition-transform group-hover:translate-x-1" style={{ color: programColor }}>
                                                     Matricúlate <ArrowRight className="h-4 w-4 ml-1" />
@@ -436,7 +445,7 @@ export default function Welcome() {
                                         <button
                                             onClick={() => setProgramPage((p) => Math.max(0, p - 1))}
                                             disabled={programPage === 0}
-                                            className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-amber-300 bg-white text-amber-700 hover:bg-amber-50 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                                            className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-amber-300 dark:border-amber-700 bg-card text-amber-700 dark:text-amber-300 hover:bg-amber-50 dark:hover:bg-amber-800/40 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
                                         >
                                             <ChevronLeft className="h-5 w-5" />
                                         </button>
@@ -456,7 +465,7 @@ export default function Welcome() {
                                         <button
                                             onClick={() => setProgramPage((p) => Math.min(totalProgramPages - 1, p + 1))}
                                             disabled={programPage === totalProgramPages - 1}
-                                            className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-amber-300 bg-white text-amber-700 hover:bg-amber-50 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                                            className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-amber-300 dark:border-amber-700 bg-card text-amber-700 dark:text-amber-300 hover:bg-amber-50 dark:hover:bg-amber-800/40 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
                                         >
                                             <ChevronRight className="h-5 w-5" />
                                         </button>
@@ -464,7 +473,7 @@ export default function Welcome() {
                                 )}
                             </>
                         ) : (
-                            <p className="text-center text-gray-500">Próximamente más programas disponibles.</p>
+                            <p className="text-center text-muted-foreground">Próximamente más programas disponibles.</p>
                         )}
                     </div>
                 </section>
@@ -488,7 +497,7 @@ export default function Welcome() {
                         <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
                             <a
                                 href="#formulario-clase-gratis"
-                                className="group rounded-xl bg-white px-8 py-4 text-lg font-bold text-amber-700 shadow-xl hover:shadow-2xl transition-all transform hover:-translate-y-1"
+                                className="group rounded-xl bg-card px-8 py-4 text-lg font-bold text-amber-700 dark:text-amber-300 shadow-xl hover:shadow-2xl transition-all transform hover:-translate-y-1"
                             >
                                 Reservar Clase Gratis Ahora
                                 <ArrowRight className="inline-block ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
@@ -513,62 +522,62 @@ export default function Welcome() {
                 </section>
 
                 {/* Testimonials */}
-                <section aria-label="Testimonios de estudiantes" className="py-20 bg-white">
+                <section aria-label="Testimonios de estudiantes" className="py-20 bg-card">
                     <div className="mx-auto max-w-7xl px-4 sm:px-6">
                         <div className="text-center mb-16">
-                            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
+                            <h2 className="text-3xl sm:text-4xl font-bold text-foreground mb-4">
                                 Historias de Éxito
                             </h2>
-                            <p className="text-lg text-gray-600">
+                            <p className="text-lg text-muted-foreground">
                                 Lo que dicen nuestros estudiantes
                             </p>
                         </div>
 
                         <div className="grid gap-8 md:grid-cols-3">
-                            <div className="rounded-2xl bg-gradient-to-br from-amber-50 to-orange-50 p-8 shadow-lg hover:shadow-xl transition-all">
+                            <div className="rounded-2xl bg-gradient-to-br from-amber-50 dark:from-amber-900/40 to-orange-50 dark:to-orange-900/40 p-8 shadow-lg hover:shadow-xl transition-all">
                                 <div className="flex items-center space-x-1 mb-4">
                                     {[...Array(5)].map((_, i) => (
                                         <Star key={i} className="h-5 w-5 fill-amber-500 text-amber-500" />
                                     ))}
                                 </div>
-                                <p className="text-gray-700 mb-6 italic">"La clase gratis me convenció al instante. Los profesores son increíbles y las instalaciones de primera."</p>
+                                <p className="text-muted-foreground mb-6 italic">"La clase gratis me convenció al instante. Los profesores son increíbles y las instalaciones de primera."</p>
                                 <div className="flex items-center space-x-3">
                                     <div className="h-12 w-12 rounded-full bg-gradient-to-br from-amber-400 to-orange-400"></div>
                                     <div>
-                                        <div className="font-bold text-gray-900">María González</div>
-                                        <div className="text-sm text-gray-600">Estudiante de Piano</div>
+                                        <div className="font-bold text-foreground">María González</div>
+                                        <div className="text-sm text-muted-foreground">Estudiante de Piano</div>
                                     </div>
                                 </div>
                             </div>
 
-                            <div className="rounded-2xl bg-gradient-to-br from-amber-50 to-orange-50 p-8 shadow-lg hover:shadow-xl transition-all">
+                            <div className="rounded-2xl bg-gradient-to-br from-amber-50 dark:from-amber-900/40 to-orange-50 dark:to-orange-900/40 p-8 shadow-lg hover:shadow-xl transition-all">
                                 <div className="flex items-center space-x-1 mb-4">
                                     {[...Array(5)].map((_, i) => (
                                         <Star key={i} className="h-5 w-5 fill-amber-500 text-amber-500" />
                                     ))}
                                 </div>
-                                <p className="text-gray-700 mb-6 italic">"Después de la primera clase gratis supe que este era el lugar perfecto para aprender. ¡Ya llevo 2 años!"</p>
+                                <p className="text-muted-foreground mb-6 italic">"Después de la primera clase gratis supe que este era el lugar perfecto para aprender. ¡Ya llevo 2 años!"</p>
                                 <div className="flex items-center space-x-3">
                                     <div className="h-12 w-12 rounded-full bg-gradient-to-br from-amber-400 to-orange-400"></div>
                                     <div>
-                                        <div className="font-bold text-gray-900">Carlos Rodríguez</div>
-                                        <div className="text-sm text-gray-600">Estudiante de Guitarra</div>
+                                        <div className="font-bold text-foreground">Carlos Rodríguez</div>
+                                        <div className="text-sm text-muted-foreground">Estudiante de Guitarra</div>
                                     </div>
                                 </div>
                             </div>
 
-                            <div className="rounded-2xl bg-gradient-to-br from-amber-50 to-orange-50 p-8 shadow-lg hover:shadow-xl transition-all">
+                            <div className="rounded-2xl bg-gradient-to-br from-amber-50 dark:from-amber-900/40 to-orange-50 dark:to-orange-900/40 p-8 shadow-lg hover:shadow-xl transition-all">
                                 <div className="flex items-center space-x-1 mb-4">
                                     {[...Array(5)].map((_, i) => (
                                         <Star key={i} className="h-5 w-5 fill-amber-500 text-amber-500" />
                                     ))}
                                 </div>
-                                <p className="text-gray-700 mb-6 italic">"La atención personalizada desde la primera clase gratuita hace toda la diferencia. Excelente metodología."</p>
+                                <p className="text-muted-foreground mb-6 italic">"La atención personalizada desde la primera clase gratuita hace toda la diferencia. Excelente metodología."</p>
                                 <div className="flex items-center space-x-3">
                                     <div className="h-12 w-12 rounded-full bg-gradient-to-br from-amber-400 to-orange-400"></div>
                                     <div>
-                                        <div className="font-bold text-gray-900">Ana Martínez</div>
-                                        <div className="text-sm text-gray-600">Estudiante de Canto</div>
+                                        <div className="font-bold text-foreground">Ana Martínez</div>
+                                        <div className="text-sm text-muted-foreground">Estudiante de Canto</div>
                                     </div>
                                 </div>
                             </div>
@@ -577,56 +586,56 @@ export default function Welcome() {
                 </section>
 
                 {/* Contact Section */}
-                <section id="contacto" aria-label="Formulario de contacto y reserva de clase gratis" className="py-20 bg-gradient-to-br from-gray-50 to-amber-50">
+                <section id="contacto" aria-label="Formulario de contacto y reserva de clase gratis" className="py-20 bg-gradient-to-br from-amber-50/50 to-orange-50/50 dark:from-amber-950/50 dark:to-orange-950/40">
                     <div className="mx-auto max-w-7xl px-4 sm:px-6">
                         <div className="grid gap-12 lg:grid-cols-2 items-start">
                             <div>
-                                <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-6">
+                                <h2 className="text-3xl sm:text-4xl font-bold text-foreground mb-6">
                                     Reserva Tu Clase Gratis
                                 </h2>
-                                <p className="text-lg text-gray-600 mb-8">
+                                <p className="text-lg text-muted-foreground mb-8">
                                     Completa el formulario y nos pondremos en contacto contigo para agendar tu primera clase gratuita
                                 </p>
                                 <div className="space-y-6">
-                                    <div className="flex items-start space-x-4 p-4 rounded-xl bg-white shadow-sm">
-                                        <MapPin className="h-6 w-6 text-amber-700 flex-shrink-0 mt-1" />
+                                    <div className="flex items-start space-x-4 p-4 rounded-xl bg-card shadow-sm">
+                                        <MapPin className="h-6 w-6 text-amber-700 dark:text-amber-300 flex-shrink-0 mt-1" />
                                         <div>
-                                            <div className="font-semibold text-gray-900">Nuestra Ubicación</div>
-                                            <div className="text-gray-600">Calle 11 #25A - 15, Barrio Las Llanadas</div>
+                                            <div className="font-semibold text-foreground">Nuestra Ubicación</div>
+                                            <div className="text-muted-foreground">Calle 11 #25A - 15, Barrio Las Llanadas</div>
                                         </div>
                                     </div>
-                                    <div className="flex items-start space-x-4 p-4 rounded-xl bg-white shadow-sm">
-                                        <Phone className="h-6 w-6 text-amber-700 flex-shrink-0 mt-1" />
+                                    <div className="flex items-start space-x-4 p-4 rounded-xl bg-card shadow-sm">
+                                        <Phone className="h-6 w-6 text-amber-700 dark:text-amber-300 flex-shrink-0 mt-1" />
                                         <div>
-                                            <div className="font-semibold text-gray-900">WhatsApp</div>
-                                            <a href="https://wa.me/573004218146" target="_blank" rel="noopener noreferrer" className="text-amber-700 hover:underline">300 421 8146</a>
+                                            <div className="font-semibold text-foreground">WhatsApp</div>
+                                            <a href="https://wa.me/573004218146" target="_blank" rel="noopener noreferrer" className="text-amber-700 dark:text-amber-300 hover:underline">300 421 8146</a>
                                         </div>
                                     </div>
-                                    <div className="flex items-start space-x-4 p-4 rounded-xl bg-white shadow-sm">
-                                        <Mail className="h-6 w-6 text-amber-700 flex-shrink-0 mt-1" />
+                                    <div className="flex items-start space-x-4 p-4 rounded-xl bg-card shadow-sm">
+                                        <Mail className="h-6 w-6 text-amber-700 dark:text-amber-300 flex-shrink-0 mt-1" />
                                         <div>
-                                            <div className="font-semibold text-gray-900">Correo</div>
-                                            <a href="mailto:Linajeacademia@gmail.com" className="text-amber-700 hover:underline">Linajeacademia@gmail.com</a>
+                                            <div className="font-semibold text-foreground">Correo</div>
+                                            <a href="mailto:Linajeacademia@gmail.com" className="text-amber-700 dark:text-amber-300 hover:underline">Linajeacademia@gmail.com</a>
                                         </div>
                                     </div>
-                                    <div className="flex items-start space-x-4 p-4 rounded-xl bg-white shadow-sm">
-                                        <Clock className="h-6 w-6 text-amber-700 flex-shrink-0 mt-1" />
+                                    <div className="flex items-start space-x-4 p-4 rounded-xl bg-card shadow-sm">
+                                        <Clock className="h-6 w-6 text-amber-700 dark:text-amber-300 flex-shrink-0 mt-1" />
                                         <div>
-                                            <div className="font-semibold text-gray-900">Horario de Atención</div>
-                                            <div className="text-gray-600">Lunes a Sábado</div>
-                                            <div className="text-gray-600 text-sm">8:30 AM - 12:00 PM / 2:00 PM - 6:00 PM</div>
+                                            <div className="font-semibold text-foreground">Horario de Atención</div>
+                                            <div className="text-muted-foreground">Lunes a Sábado</div>
+                                            <div className="text-muted-foreground text-sm">8:30 AM - 12:00 PM / 2:00 PM - 6:00 PM</div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
 
-                            <div id="formulario-clase-gratis" className="rounded-2xl bg-white p-8 shadow-xl scroll-mt-6">
-                                <div className="mb-6 p-4 rounded-xl bg-gradient-to-r from-amber-100 to-orange-100 border-2 border-amber-300">
-                                    <div className="flex items-center space-x-2 text-amber-900 mb-2">
+                            <div id="formulario-clase-gratis" className="rounded-2xl bg-card p-8 shadow-xl scroll-mt-6">
+                                <div className="mb-6 p-4 rounded-xl bg-gradient-to-r from-amber-100 dark:from-amber-800/50 to-orange-100 dark:to-orange-800/50 border-2 border-amber-300 dark:border-amber-700">
+                                    <div className="flex items-center space-x-2 text-amber-900 dark:text-amber-100 mb-2">
                                         <Gift className="h-5 w-5" />
                                         <span className="font-bold">¡Clase Gratuita Incluida!</span>
                                     </div>
-                                    <p className="text-sm text-amber-800">
+                                    <p className="text-sm text-amber-800 dark:text-amber-200">
                                         Reserva ahora y recibe tu primera clase sin ningún costo
                                     </p>
                                 </div>
@@ -634,7 +643,7 @@ export default function Welcome() {
                                 <form onSubmit={submit} className="space-y-4">
                                     {/* ¿Para quién es la clase? */}
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-3">
+                                        <label className="block text-sm font-medium text-muted-foreground mb-3">
                                             ¿Para quién es la clase demo? *
                                         </label>
                                         <div className="grid grid-cols-2 gap-3">
@@ -642,8 +651,8 @@ export default function Welcome() {
                                                 onClick={() => setData('is_for_child', false)}
                                                 className={`relative cursor-pointer rounded-xl border-2 p-4 transition-all hover:shadow-md ${
                                                     !data.is_for_child
-                                                        ? 'border-amber-500 bg-amber-50 shadow-md'
-                                                        : 'border-gray-200 bg-white hover:border-amber-300'
+                                                        ? 'border-amber-500 bg-amber-50 dark:bg-amber-900/40 shadow-md'
+                                                        : 'border-border bg-card hover:border-amber-300 dark:hover:border-amber-700'
                                                 }`}
                                             >
                                                 {!data.is_for_child && (
@@ -652,17 +661,17 @@ export default function Welcome() {
                                                     </div>
                                                 )}
                                                 <div className="text-center">
-                                                    <Users className="h-8 w-8 mx-auto mb-2 text-amber-700" />
-                                                    <p className="font-semibold text-gray-900">Para mí</p>
-                                                    <p className="text-xs text-gray-600 mt-1">Quiero aprender</p>
+                                                    <Users className="h-8 w-8 mx-auto mb-2 text-amber-700 dark:text-amber-300" />
+                                                    <p className="font-semibold text-foreground">Para mí</p>
+                                                    <p className="text-xs text-muted-foreground mt-1">Quiero aprender</p>
                                                 </div>
                                             </div>
                                             <div
                                                 onClick={() => setData('is_for_child', true)}
                                                 className={`relative cursor-pointer rounded-xl border-2 p-4 transition-all hover:shadow-md ${
                                                     data.is_for_child
-                                                        ? 'border-amber-500 bg-amber-50 shadow-md'
-                                                        : 'border-gray-200 bg-white hover:border-amber-300'
+                                                        ? 'border-amber-500 bg-amber-50 dark:bg-amber-900/40 shadow-md'
+                                                        : 'border-border bg-card hover:border-amber-300 dark:hover:border-amber-700'
                                                 }`}
                                             >
                                                 {data.is_for_child && (
@@ -671,9 +680,9 @@ export default function Welcome() {
                                                     </div>
                                                 )}
                                                 <div className="text-center">
-                                                    <Users className="h-8 w-8 mx-auto mb-2 text-amber-700" />
-                                                    <p className="font-semibold text-gray-900">Para mi hijo/a</p>
-                                                    <p className="text-xs text-gray-600 mt-1">Para un menor</p>
+                                                    <Users className="h-8 w-8 mx-auto mb-2 text-amber-700 dark:text-amber-300" />
+                                                    <p className="font-semibold text-foreground">Para mi hijo/a</p>
+                                                    <p className="text-xs text-muted-foreground mt-1">Para un menor</p>
                                                 </div>
                                             </div>
                                         </div>
@@ -682,8 +691,8 @@ export default function Welcome() {
 
                                     {/* Nombre del niño/a si es para su hijo */}
                                     {data.is_for_child && (
-                                        <div className="rounded-lg bg-blue-50 border border-blue-200 p-4">
-                                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        <div className="rounded-lg bg-blue-50 dark:bg-blue-900/40 border border-blue-200 dark:border-blue-700 p-4">
+                                            <label className="block text-sm font-medium text-muted-foreground mb-2">
                                                 Nombre del niño/a *
                                             </label>
                                             <input
@@ -692,14 +701,14 @@ export default function Welcome() {
                                                 onChange={(e) => setData('child_name', e.target.value)}
                                                 placeholder="Nombre completo del niño/a"
                                                 required={data.is_for_child}
-                                                className="w-full rounded-lg border-2 border-gray-200 px-4 py-3 focus:border-amber-500 focus:outline-none focus:ring-4 focus:ring-amber-100 transition-all"
+                                                className="w-full rounded-lg border-2 border-border px-4 py-3 focus:border-amber-500 focus:outline-none focus:ring-4 focus:ring-amber-100 dark:focus:ring-amber-800/50 transition-all"
                                             />
                                             {errors.child_name && <p className="mt-1 text-sm text-red-600">{errors.child_name}</p>}
                                         </div>
                                     )}
 
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        <label className="block text-sm font-medium text-muted-foreground mb-2">
                                             {data.is_for_child ? 'Tu nombre (padre/madre/tutor) *' : 'Nombre completo *'}
                                         </label>
                                         <input
@@ -708,12 +717,12 @@ export default function Welcome() {
                                             onChange={(e) => setData('name', e.target.value)}
                                             placeholder={data.is_for_child ? 'Tu nombre' : 'Tu nombre completo'}
                                             required
-                                            className="w-full rounded-lg border-2 border-gray-200 px-4 py-3 focus:border-amber-500 focus:outline-none focus:ring-4 focus:ring-amber-100 transition-all"
+                                            className="w-full rounded-lg border-2 border-border px-4 py-3 focus:border-amber-500 focus:outline-none focus:ring-4 focus:ring-amber-100 dark:focus:ring-amber-800/50 transition-all"
                                         />
                                         {errors.name && <p className="mt-1 text-sm text-red-600">{errors.name}</p>}
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        <label className="block text-sm font-medium text-muted-foreground mb-2">
                                             Email *
                                         </label>
                                         <input
@@ -722,12 +731,12 @@ export default function Welcome() {
                                             onChange={(e) => setData('email', e.target.value)}
                                             placeholder="tu@email.com"
                                             required
-                                            className="w-full rounded-lg border-2 border-gray-200 px-4 py-3 focus:border-amber-500 focus:outline-none focus:ring-4 focus:ring-amber-100 transition-all"
+                                            className="w-full rounded-lg border-2 border-border px-4 py-3 focus:border-amber-500 focus:outline-none focus:ring-4 focus:ring-amber-100 dark:focus:ring-amber-800/50 transition-all"
                                         />
                                         {errors.email && <p className="mt-1 text-sm text-red-600">{errors.email}</p>}
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        <label className="block text-sm font-medium text-muted-foreground mb-2">
                                             Teléfono *
                                         </label>
                                         <input
@@ -736,12 +745,12 @@ export default function Welcome() {
                                             onChange={(e) => setData('phone', e.target.value)}
                                             placeholder="+57 123 456 7890"
                                             required
-                                            className="w-full rounded-lg border-2 border-gray-200 px-4 py-3 focus:border-amber-500 focus:outline-none focus:ring-4 focus:ring-amber-100 transition-all"
+                                            className="w-full rounded-lg border-2 border-border px-4 py-3 focus:border-amber-500 focus:outline-none focus:ring-4 focus:ring-amber-100 dark:focus:ring-amber-800/50 transition-all"
                                         />
                                         {errors.phone && <p className="mt-1 text-sm text-red-600">{errors.phone}</p>}
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-3">
+                                        <label className="block text-sm font-medium text-muted-foreground mb-3">
                                             ¿Qué clase demo te interesa? *
                                         </label>
                                         {demoPrograms.length > 0 ? (
@@ -758,8 +767,8 @@ export default function Welcome() {
                                                         }}
                                                         className={`relative cursor-pointer rounded-xl border-2 p-4 transition-all hover:shadow-md ${
                                                             data.instrument === program.name
-                                                                ? 'border-amber-500 bg-amber-50 shadow-md'
-                                                                : 'border-gray-200 bg-white hover:border-amber-300'
+                                                                ? 'border-amber-500 bg-amber-50 dark:bg-amber-900/40 shadow-md'
+                                                                : 'border-border bg-card hover:border-amber-300 dark:hover:border-amber-700'
                                                         }`}
                                                     >
                                                         {data.instrument === program.name && (
@@ -768,13 +777,13 @@ export default function Welcome() {
                                                             </div>
                                                         )}
                                                         <div className="flex items-start space-x-3">
-                                                            <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-amber-100 to-orange-100">
-                                                                <Music className="h-5 w-5 text-amber-700" />
+                                                            <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-amber-100 dark:from-amber-800/50 to-orange-100 dark:to-orange-800/50">
+                                                                <Music className="h-5 w-5 text-amber-700 dark:text-amber-300" />
                                                             </div>
                                                             <div className="flex-1 min-w-0">
-                                                                <h4 className="font-semibold text-gray-900 truncate">{program.name}</h4>
+                                                                <h4 className="font-semibold text-foreground truncate">{program.name}</h4>
                                                                 {program.description && (
-                                                                    <p className="text-xs text-gray-600 mt-1 line-clamp-2">
+                                                                    <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
                                                                         {program.description}
                                                                     </p>
                                                                 )}
@@ -784,8 +793,8 @@ export default function Welcome() {
                                                 ))}
                                             </div>
                                         ) : (
-                                            <div className="rounded-lg border-2 border-amber-200 bg-amber-50 p-4 text-center">
-                                                <p className="text-sm text-amber-800">
+                                            <div className="rounded-lg border-2 border-amber-200 dark:border-amber-700 bg-amber-50 dark:bg-amber-900/40 p-4 text-center">
+                                                <p className="text-sm text-amber-800 dark:text-amber-200">
                                                     No hay clases demo disponibles en este momento
                                                 </p>
                                             </div>
@@ -804,12 +813,12 @@ export default function Welcome() {
                                             const availableSchedules = selectedProgram?.schedules?.filter(s => s.has_capacity) || [];
 
                                             return availableSchedules.length > 0 && (
-                                                <div className="mt-4 rounded-lg border-2 border-blue-200 bg-blue-50 p-4">
-                                                    <h5 className="font-semibold text-blue-900 mb-2 flex items-center">
+                                                <div className="mt-4 rounded-lg border-2 border-blue-200 dark:border-blue-700 bg-blue-50 dark:bg-blue-900/40 p-4">
+                                                    <h5 className="font-semibold text-blue-900 dark:text-blue-100 mb-2 flex items-center">
                                                         <Clock className="h-4 w-4 mr-2" />
                                                         Horarios Disponibles (Opcional)
                                                     </h5>
-                                                    <p className="text-xs text-blue-700 mb-3">
+                                                    <p className="text-xs text-blue-700 dark:text-blue-300 mb-3">
                                                         Selecciona un horario de tu preferencia o déjanos tu disponibilidad en el mensaje
                                                     </p>
                                                     <div className="space-y-2">
@@ -819,24 +828,24 @@ export default function Welcome() {
                                                                 onClick={() => setData('preferred_schedule', `${schedule.days_of_week} ${schedule.start_time}-${schedule.end_time}`)}
                                                                 className={`cursor-pointer rounded-lg border-2 p-3 transition-all hover:shadow-sm ${
                                                                     data.preferred_schedule === `${schedule.days_of_week} ${schedule.start_time}-${schedule.end_time}`
-                                                                        ? 'border-blue-500 bg-white shadow-sm'
-                                                                        : 'border-blue-200 bg-white/50 hover:border-blue-300'
+                                                                        ? 'border-blue-500 bg-card shadow-sm'
+                                                                        : 'border-blue-200 dark:border-blue-700 bg-white/50 hover:border-blue-300 dark:hover:border-blue-700'
                                                                 }`}
                                                             >
                                                                 <div className="flex items-center justify-between">
                                                                     <div className="flex-1">
-                                                                        <p className="text-sm font-semibold text-gray-900">
+                                                                        <p className="text-sm font-semibold text-foreground">
                                                                             {schedule.days_of_week}
                                                                         </p>
-                                                                        <p className="text-xs text-gray-600">
+                                                                        <p className="text-xs text-muted-foreground">
                                                                             {schedule.start_time} - {schedule.end_time}
                                                                         </p>
-                                                                        <p className="text-xs text-gray-500 mt-1">
+                                                                        <p className="text-xs text-muted-foreground mt-1">
                                                                             Prof. {schedule.professor?.name ?? 'Sin asignar'}
                                                                         </p>
                                                                     </div>
                                                                     <div className="flex items-center gap-2">
-                                                                        <span className="text-xs font-medium text-green-700 bg-green-100 px-2 py-1 rounded">
+                                                                        <span className="text-xs font-medium text-green-700 dark:text-green-300 bg-green-100 dark:bg-green-900/30 px-2 py-1 rounded">
                                                                             {schedule.available_slots} {schedule.available_slots === 1 ? 'cupo' : 'cupos'}
                                                                         </span>
                                                                         {data.preferred_schedule === `${schedule.days_of_week} ${schedule.start_time}-${schedule.end_time}` && (
@@ -852,12 +861,12 @@ export default function Welcome() {
                                         })()}
 
                                         {/* Info adicional sobre la clase demo */}
-                                        <div className="mt-4 rounded-lg bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 p-4">
-                                            <h5 className="font-semibold text-blue-900 mb-2 flex items-center">
+                                        <div className="mt-4 rounded-lg bg-gradient-to-r from-blue-50 dark:from-blue-900/40 to-indigo-50 dark:to-indigo-900/40 border border-blue-200 dark:border-blue-700 p-4">
+                                            <h5 className="font-semibold text-blue-900 dark:text-blue-100 mb-2 flex items-center">
                                                 <CheckCircle className="h-4 w-4 mr-2" />
                                                 ¿Qué incluye tu clase demo gratuita?
                                             </h5>
-                                            <ul className="space-y-1 text-xs text-blue-800">
+                                            <ul className="space-y-1 text-xs text-blue-800 dark:text-blue-200">
                                                 <li className="flex items-start">
                                                     <span className="mr-2">•</span>
                                                     <span>Sesión individual de 45-60 minutos con un profesor certificado</span>
@@ -878,7 +887,7 @@ export default function Welcome() {
                                         </div>
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        <label className="block text-sm font-medium text-muted-foreground mb-2">
                                             Cuéntanos más sobre ti (opcional)
                                         </label>
                                         <textarea
@@ -886,21 +895,21 @@ export default function Welcome() {
                                             onChange={(e) => setData('message', e.target.value)}
                                             placeholder="Ejemplo: Nunca he tocado un instrumento pero siempre quise aprender... / Toqué piano hace años y quiero retomar... / Tengo un nivel intermedio y busco perfeccionar mi técnica..."
                                             rows={4}
-                                            className="w-full rounded-lg border-2 border-gray-200 px-4 py-3 focus:border-amber-500 focus:outline-none focus:ring-4 focus:ring-amber-100 transition-all"
+                                            className="w-full rounded-lg border-2 border-border px-4 py-3 focus:border-amber-500 focus:outline-none focus:ring-4 focus:ring-amber-100 dark:focus:ring-amber-800/50 transition-all"
                                         ></textarea>
                                         {errors.message && <p className="mt-1 text-sm text-red-600">{errors.message}</p>}
-                                        <p className="mt-1 text-xs text-gray-500">
+                                        <p className="mt-1 text-xs text-muted-foreground">
                                             Comparte tu nivel actual, objetivos o cualquier pregunta que tengas
                                         </p>
                                     </div>
 
                                     {/* Qué pasa después */}
-                                    <div className="rounded-lg bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 p-4">
-                                        <h5 className="font-semibold text-green-900 mb-2 flex items-center">
+                                    <div className="rounded-lg bg-gradient-to-r from-green-50 dark:from-green-900/40 to-emerald-50 dark:to-emerald-900/40 border border-green-200 dark:border-green-800 p-4">
+                                        <h5 className="font-semibold text-green-900 dark:text-green-100 mb-2 flex items-center">
                                             <Clock className="h-4 w-4 mr-2" />
                                             ¿Qué pasa después de enviar?
                                         </h5>
-                                        <ol className="space-y-2 text-xs text-green-800">
+                                        <ol className="space-y-2 text-xs text-green-800 dark:text-green-200">
                                             <li className="flex items-start">
                                                 <span className="font-bold mr-2 text-green-600">1.</span>
                                                 <span>Nuestro equipo revisará tu solicitud en las próximas 24 horas</span>
@@ -943,11 +952,11 @@ export default function Welcome() {
                                         </span>
                                     </button>
                                     {!data.instrument && (
-                                        <p className="text-xs text-center text-amber-700 mt-2">
+                                        <p className="text-xs text-center text-amber-700 dark:text-amber-300 mt-2">
                                             Por favor selecciona una clase demo para continuar
                                         </p>
                                     )}
-                                    <p className="text-xs text-center text-gray-500">
+                                    <p className="text-xs text-center text-muted-foreground">
                                         Al enviar, aceptas nuestros términos y condiciones
                                     </p>
                                 </form>
@@ -959,12 +968,12 @@ export default function Welcome() {
                 </main>
 
                 {/* Footer */}
-                <footer role="contentinfo" className="border-t border-gray-200 bg-gradient-to-br from-gray-900 to-gray-800 text-white py-12">
+                <footer role="contentinfo" className="border-t border-amber-900/50 bg-gradient-to-br from-amber-950 via-orange-950 to-amber-950 text-white py-12">
                     <div className="mx-auto max-w-7xl px-4 sm:px-6">
                         <div className="text-center">
                             <div className="flex items-center justify-center mb-6">
                                 <img
-                                    src="/logo_academia.png"
+                                    src="/logo_academia_white.png"
                                     alt="Academia Linaje - Escuela de Música"
                                     className="h-14 w-auto"
                                     width="175"
@@ -973,12 +982,12 @@ export default function Welcome() {
                                     decoding="async"
                                 />
                             </div>
-                            <p className="text-gray-300 mb-6 text-lg">
+                            <p className="text-amber-200/80 mb-6 text-lg">
                                 Formando músicos con excelencia y pasión desde hace más de 10 años
                             </p>
 
                             {/* Datos de contacto en footer para SEO */}
-                            <div className="flex flex-wrap justify-center gap-6 text-sm text-gray-400 mb-6">
+                            <div className="flex flex-wrap justify-center gap-6 text-sm text-amber-200/70 mb-6">
                                 <a href="https://wa.me/573004218146" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 hover:text-amber-400 transition-colors">
                                     <Phone className="h-4 w-4" />
                                     300 421 8146
@@ -997,7 +1006,7 @@ export default function Welcome() {
                                 <Gift className="h-4 w-4" />
                                 <span>Tu primera clase es GRATIS</span>
                             </div>
-                            <div className="text-sm text-gray-400 border-t border-gray-700 pt-8">
+                            <div className="text-sm text-amber-300/60 border-t border-amber-800/40 pt-8">
                                 © 2026 Academia Linaje. Todos los derechos reservados.
                             </div>
                         </div>

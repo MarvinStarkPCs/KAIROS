@@ -56,7 +56,7 @@ export function ProgramSelector({
 
             {/* Descripción del programa */}
             {selectedProgram && (
-                <div className="text-sm text-gray-600 bg-amber-50 p-3 rounded-md">
+                <div className="text-sm text-muted-foreground bg-amber-50 dark:bg-amber-950/30 p-3 rounded-md">
                     <p>{selectedProgram.description}</p>
                 </div>
             )}
@@ -84,23 +84,23 @@ export function ProgramSelector({
                                 >
                                     <div className="flex items-center justify-between gap-4 w-full">
                                         <div className="flex items-center gap-2">
-                                            <Clock className="h-4 w-4 text-gray-500" />
+                                            <Clock className="h-4 w-4 text-muted-foreground" />
                                             <span className="font-medium">{schedule.days_of_week}</span>
-                                            <span className="text-gray-600">
+                                            <span className="text-muted-foreground">
                                                 {formatTimeRange(schedule.start_time, schedule.end_time)}
                                             </span>
                                         </div>
                                         <div className="flex items-center gap-2">
-                                            <Users className="h-4 w-4 text-gray-500" />
-                                            <span className="text-sm text-gray-600">
+                                            <Users className="h-4 w-4 text-muted-foreground" />
+                                            <span className="text-sm text-muted-foreground">
                                                 {schedule.enrolled_count}/{schedule.max_students}
                                             </span>
                                             {schedule.has_capacity ? (
-                                                <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                                                <Badge variant="outline" className="bg-green-50 dark:bg-green-950/30 text-green-700 dark:text-green-300 border-green-200 dark:border-green-800">
                                                     Disponible
                                                 </Badge>
                                             ) : (
-                                                <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">
+                                                <Badge variant="outline" className="bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-300 border-red-200 dark:border-red-800">
                                                     Lleno
                                                 </Badge>
                                             )}
@@ -114,7 +114,7 @@ export function ProgramSelector({
 
                     {/* Info del profesor */}
                     {selectedScheduleId && (
-                        <p className="text-sm text-gray-600 mt-2">
+                        <p className="text-sm text-muted-foreground mt-2">
                             Profesor: {availableSchedules.find(s => s.id.toString() === selectedScheduleId)?.professor.name}
                         </p>
                     )}
@@ -123,7 +123,7 @@ export function ProgramSelector({
 
             {/* Mensaje si no hay horarios */}
             {selectedProgramId && availableSchedules.length === 0 && (
-                <div className="text-sm text-amber-600 bg-amber-50 p-3 rounded-md">
+                <div className="text-sm text-amber-600 bg-amber-50 dark:bg-amber-950/30 p-3 rounded-md">
                     No hay horarios disponibles para este programa actualmente.
                 </div>
             )}

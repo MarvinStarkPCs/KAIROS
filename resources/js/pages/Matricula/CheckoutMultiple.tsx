@@ -133,22 +133,22 @@ export default function CheckoutMultiple({ payments, totalAmount, wompiPublicKey
             <Head title="Pagar Matrículas" />
             <Toaster />
 
-            <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-amber-100 py-12 px-4 sm:px-6 lg:px-8">
+            <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-amber-100 dark:from-neutral-950 dark:via-neutral-900 dark:to-neutral-950 py-12 px-4 sm:px-6 lg:px-8">
                 <div className="max-w-5xl mx-auto">
                     {/* Header con progreso */}
                     <div className="text-center mb-8">
-                        <h1 className="text-4xl font-bold text-gray-900 mb-2">¡Matrículas Creadas Exitosamente!</h1>
-                        <p className="text-gray-600">
+                        <h1 className="text-4xl font-bold text-foreground mb-2">¡Matrículas Creadas Exitosamente!</h1>
+                        <p className="text-muted-foreground">
                             Procede con el pago de cada matrícula para completar el proceso
                         </p>
 
                         {/* Barra de progreso */}
                         <div className="mt-6 max-w-md mx-auto">
-                            <div className="flex justify-between text-sm font-medium text-gray-700 mb-2">
+                            <div className="flex justify-between text-sm font-medium text-muted-foreground mb-2">
                                 <span>Pago {currentPaymentIndex + 1} de {payments.length}</span>
                                 <span>{Math.round(progress)}%</span>
                             </div>
-                            <div className="h-3 bg-gray-200 rounded-full overflow-hidden">
+                            <div className="h-3 bg-muted rounded-full overflow-hidden">
                                 <div
                                     className="h-full bg-gradient-to-r from-amber-500 to-orange-500 transition-all duration-500"
                                     style={{ width: `${progress}%` }}
@@ -177,9 +177,9 @@ export default function CheckoutMultiple({ payments, totalAmount, wompiPublicKey
                                                 key={payment.id}
                                                 className={cn(
                                                     'p-4 rounded-lg border-2 transition-all',
-                                                    isCurrent && 'border-amber-500 bg-amber-50 shadow-md',
-                                                    isCompleted && 'border-green-500 bg-green-50',
-                                                    !isCurrent && !isCompleted && 'border-gray-200 bg-white'
+                                                    isCurrent && 'border-amber-500 bg-amber-50 dark:bg-amber-950/30 shadow-md',
+                                                    isCompleted && 'border-green-500 bg-green-50 dark:bg-green-950/30',
+                                                    !isCurrent && !isCompleted && 'border-border bg-card'
                                                 )}
                                             >
                                                 <div className="flex items-start justify-between gap-2">
@@ -195,8 +195,8 @@ export default function CheckoutMultiple({ payments, totalAmount, wompiPublicKey
                                                                 {payment.student.name} {payment.student.last_name}
                                                             </p>
                                                         </div>
-                                                        <p className="text-xs text-gray-600 truncate">{payment.program.name}</p>
-                                                        <p className="text-sm font-bold text-gray-900 mt-1">
+                                                        <p className="text-xs text-muted-foreground truncate">{payment.program.name}</p>
+                                                        <p className="text-sm font-bold text-foreground mt-1">
                                                             ${payment.amount.toLocaleString('es-CO')}
                                                         </p>
                                                     </div>
@@ -208,7 +208,7 @@ export default function CheckoutMultiple({ payments, totalAmount, wompiPublicKey
                                     {/* Total */}
                                     <div className="pt-4 border-t-2 mt-4">
                                         <div className="flex justify-between items-center">
-                                            <span className="font-semibold text-gray-700">Total:</span>
+                                            <span className="font-semibold text-muted-foreground">Total:</span>
                                             <span className="text-2xl font-bold text-amber-600">
                                                 ${totalAmount.toLocaleString('es-CO')} COP
                                             </span>
@@ -222,7 +222,7 @@ export default function CheckoutMultiple({ payments, totalAmount, wompiPublicKey
                         <div className="lg:col-span-2 space-y-6">
                             {/* Resumen del pago actual */}
                             <Card>
-                                <CardHeader className="bg-gradient-to-r from-amber-50 to-orange-50">
+                                <CardHeader className="bg-gradient-to-r from-amber-50 dark:from-amber-950/30 to-orange-50 dark:to-orange-950/30">
                                     <CardTitle className="flex items-center gap-2">
                                         <CreditCard className="h-5 w-5" />
                                         Pagar Matrícula {currentPaymentIndex + 1}
@@ -233,14 +233,14 @@ export default function CheckoutMultiple({ payments, totalAmount, wompiPublicKey
                                 </CardHeader>
                                 <CardContent className="space-y-4 mt-6">
                                     <div className="grid grid-cols-2 gap-4">
-                                        <div className="p-4 bg-gray-50 rounded-lg">
-                                            <p className="text-sm text-gray-600 mb-1">Estudiante</p>
+                                        <div className="p-4 bg-muted rounded-lg">
+                                            <p className="text-sm text-muted-foreground mb-1">Estudiante</p>
                                             <p className="font-semibold">
                                                 {currentPayment.student.name} {currentPayment.student.last_name}
                                             </p>
                                         </div>
-                                        <div className="p-4 bg-gray-50 rounded-lg">
-                                            <p className="text-sm text-gray-600 mb-1">Programa</p>
+                                        <div className="p-4 bg-muted rounded-lg">
+                                            <p className="text-sm text-muted-foreground mb-1">Programa</p>
                                             <p className="font-semibold">{currentPayment.program.name}</p>
                                         </div>
                                     </div>
@@ -262,8 +262,8 @@ export default function CheckoutMultiple({ payments, totalAmount, wompiPublicKey
                                     <CardDescription>Paga de forma segura con tarjeta de crédito o débito</CardDescription>
                                 </CardHeader>
                                 <CardContent>
-                                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-                                        <p className="text-sm text-blue-800">
+                                    <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-6">
+                                        <p className="text-sm text-blue-800 dark:text-blue-200">
                                             <strong>💳 Cobro Automático Mensual:</strong> Al registrar tu tarjeta, se configurarán
                                             pagos automáticos mensuales para todas las matrículas.
                                         </p>
@@ -271,12 +271,12 @@ export default function CheckoutMultiple({ payments, totalAmount, wompiPublicKey
 
                                     <div id="wompi-widget" className="flex justify-center py-8">
                                         {isProcessing ? (
-                                            <div className="flex items-center gap-2 text-gray-500">
+                                            <div className="flex items-center gap-2 text-muted-foreground">
                                                 <Loader2 className="h-5 w-5 animate-spin" />
                                                 <span>Cargando pasarela de pago...</span>
                                             </div>
                                         ) : (
-                                            <div className="flex items-center gap-2 text-gray-500">
+                                            <div className="flex items-center gap-2 text-muted-foreground">
                                                 <Loader2 className="h-5 w-5 animate-spin" />
                                                 <span>Abriendo pasarela de pago...</span>
                                             </div>
@@ -286,7 +286,7 @@ export default function CheckoutMultiple({ payments, totalAmount, wompiPublicKey
                                     {/* Botones de acción */}
                                     {currentPaymentIndex < payments.length - 1 && (
                                         <div className="mt-6 pt-6 border-t space-y-3">
-                                            <p className="text-sm text-gray-600 text-center">
+                                            <p className="text-sm text-muted-foreground text-center">
                                                 ¿Prefieres pagar este después?
                                             </p>
                                             <Button
@@ -301,7 +301,7 @@ export default function CheckoutMultiple({ payments, totalAmount, wompiPublicKey
                                     )}
 
                                     <div className="mt-8 pt-6 border-t">
-                                        <div className="flex items-center justify-center gap-2 text-sm text-gray-500">
+                                        <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
                                             <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
                                                 <path
                                                     fillRule="evenodd"
@@ -316,13 +316,13 @@ export default function CheckoutMultiple({ payments, totalAmount, wompiPublicKey
                             </Card>
 
                             {/* Información adicional */}
-                            <Card className="bg-gradient-to-br from-green-50 to-emerald-50 border-green-200">
+                            <Card className="bg-gradient-to-br from-green-50 dark:from-green-950/30 to-emerald-50 dark:to-emerald-950/30 border-green-200 dark:border-green-800">
                                 <CardContent className="pt-6">
                                     <div className="flex items-start gap-3">
                                         <CheckCircle className="h-6 w-6 text-green-600 flex-shrink-0 mt-1" />
                                         <div>
-                                            <h4 className="font-semibold text-green-900 mb-2">¿Qué pasa después del pago?</h4>
-                                            <ul className="text-sm text-green-800 space-y-1">
+                                            <h4 className="font-semibold text-green-900 dark:text-green-100 mb-2">¿Qué pasa después del pago?</h4>
+                                            <ul className="text-sm text-green-800 dark:text-green-200 space-y-1">
                                                 <li>✓ Recibirás confirmación por email</li>
                                                 <li>✓ Se activarán las matrículas pagadas</li>
                                                 <li>✓ Podrás acceder al panel de estudiante</li>
@@ -335,7 +335,7 @@ export default function CheckoutMultiple({ payments, totalAmount, wompiPublicKey
                         </div>
                     </div>
 
-                    <div className="mt-8 text-center text-sm text-gray-500">
+                    <div className="mt-8 text-center text-sm text-muted-foreground">
                         <p>
                             ¿Tienes problemas con el pago?{' '}
                             <a href="mailto:soporte@academialinaje.com" className="text-amber-600 hover:underline font-medium">

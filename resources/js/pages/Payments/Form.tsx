@@ -149,14 +149,14 @@ export default function PaymentForm({ payment, enrollments }: Props) {
                 {/* Header */}
                 <div className="flex items-center justify-between">
                     <div>
-                        <Link href="/pagos" className="mb-2 flex items-center text-sm text-gray-600 hover:text-gray-900">
+                        <Link href="/pagos" className="mb-2 flex items-center text-sm text-muted-foreground hover:text-foreground">
                             <ArrowLeft className="mr-1 h-4 w-4" />
                             Volver a pagos
                         </Link>
-                        <h1 className="text-3xl font-bold text-gray-900">
+                        <h1 className="text-3xl font-bold text-foreground">
                             {payment ? 'Editar Pago' : 'Registrar Pago'}
                         </h1>
-                        <p className="mt-2 text-gray-600">
+                        <p className="mt-2 text-muted-foreground">
                             Selecciona un estudiante inscrito para registrar el pago
                         </p>
                     </div>
@@ -164,8 +164,8 @@ export default function PaymentForm({ payment, enrollments }: Props) {
 
                 {/* Abono Section - Only when editing a pending payment */}
                 {canAddAbono && (
-                    <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-                        <h2 className="flex items-center gap-2 text-lg font-semibold text-gray-900">
+                    <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
+                        <h2 className="flex items-center gap-2 text-lg font-semibold text-foreground">
                             <DollarSign className="h-5 w-5 text-green-600" />
                             Sistema de Abonos
                         </h2>
@@ -173,10 +173,10 @@ export default function PaymentForm({ payment, enrollments }: Props) {
                         {/* Progress Bar */}
                         <div className="mt-4">
                             <div className="flex items-center justify-between text-sm">
-                                <span className="text-gray-600">Progreso de pago</span>
-                                <span className="font-medium text-gray-900">{progressPercent.toFixed(0)}%</span>
+                                <span className="text-muted-foreground">Progreso de pago</span>
+                                <span className="font-medium text-foreground">{progressPercent.toFixed(0)}%</span>
                             </div>
-                            <div className="mt-2 h-3 w-full overflow-hidden rounded-full bg-gray-200">
+                            <div className="mt-2 h-3 w-full overflow-hidden rounded-full bg-muted">
                                 <div
                                     className="h-full rounded-full bg-green-500 transition-all"
                                     style={{ width: `${progressPercent}%` }}
@@ -184,15 +184,15 @@ export default function PaymentForm({ payment, enrollments }: Props) {
                             </div>
                             <div className="mt-2 grid grid-cols-3 gap-4 text-center text-sm">
                                 <div>
-                                    <div className="text-gray-500">Total</div>
-                                    <div className="font-semibold text-gray-900">${totalAmount.toLocaleString('es-CO')}</div>
+                                    <div className="text-muted-foreground">Total</div>
+                                    <div className="font-semibold text-foreground">${totalAmount.toLocaleString('es-CO')}</div>
                                 </div>
                                 <div>
-                                    <div className="text-gray-500">Pagado</div>
+                                    <div className="text-muted-foreground">Pagado</div>
                                     <div className="font-semibold text-green-600">${paidAmount.toLocaleString('es-CO')}</div>
                                 </div>
                                 <div>
-                                    <div className="text-gray-500">Pendiente</div>
+                                    <div className="text-muted-foreground">Pendiente</div>
                                     <div className="font-semibold text-orange-600">${pendingBalance.toLocaleString('es-CO')}</div>
                                 </div>
                             </div>
@@ -200,38 +200,38 @@ export default function PaymentForm({ payment, enrollments }: Props) {
 
                         {/* Transaction History */}
                         <div className="mt-6">
-                            <h3 className="flex items-center gap-2 text-sm font-semibold text-gray-700">
+                            <h3 className="flex items-center gap-2 text-sm font-semibold text-muted-foreground">
                                 <Receipt className="h-4 w-4" />
                                 Historial de Abonos
                             </h3>
                             {payment.transactions && payment.transactions.length > 0 ? (
-                                <div className="mt-3 overflow-hidden rounded-lg border border-gray-200">
+                                <div className="mt-3 overflow-hidden rounded-lg border border-border">
                                     <table className="w-full text-sm">
-                                        <thead className="bg-gray-50">
+                                        <thead className="bg-muted">
                                             <tr>
-                                                <th className="px-4 py-2 text-left font-medium text-gray-600">Fecha</th>
-                                                <th className="px-4 py-2 text-left font-medium text-gray-600">Monto</th>
-                                                <th className="px-4 py-2 text-left font-medium text-gray-600">Método</th>
-                                                <th className="px-4 py-2 text-left font-medium text-gray-600">Referencia</th>
-                                                <th className="px-4 py-2 text-left font-medium text-gray-600">Notas</th>
+                                                <th className="px-4 py-2 text-left font-medium text-muted-foreground">Fecha</th>
+                                                <th className="px-4 py-2 text-left font-medium text-muted-foreground">Monto</th>
+                                                <th className="px-4 py-2 text-left font-medium text-muted-foreground">Método</th>
+                                                <th className="px-4 py-2 text-left font-medium text-muted-foreground">Referencia</th>
+                                                <th className="px-4 py-2 text-left font-medium text-muted-foreground">Notas</th>
                                             </tr>
                                         </thead>
-                                        <tbody className="divide-y divide-gray-200">
+                                        <tbody className="divide-y divide-border">
                                             {payment.transactions.map((tx) => (
                                                 <tr key={tx.id}>
-                                                    <td className="px-4 py-2 text-gray-700">
+                                                    <td className="px-4 py-2 text-muted-foreground">
                                                         {new Date(tx.created_at).toLocaleDateString('es-CO')}
                                                     </td>
-                                                    <td className="px-4 py-2 font-medium text-green-700">
+                                                    <td className="px-4 py-2 font-medium text-green-700 dark:text-green-300">
                                                         ${Number(tx.amount).toLocaleString('es-CO')}
                                                     </td>
-                                                    <td className="px-4 py-2 text-gray-700">
+                                                    <td className="px-4 py-2 text-muted-foreground">
                                                         {PAYMENT_METHODS[tx.payment_method] ?? tx.payment_method}
                                                     </td>
-                                                    <td className="px-4 py-2 text-gray-500">
+                                                    <td className="px-4 py-2 text-muted-foreground">
                                                         {tx.reference_number || '—'}
                                                     </td>
-                                                    <td className="px-4 py-2 text-gray-500">
+                                                    <td className="px-4 py-2 text-muted-foreground">
                                                         {tx.notes || '—'}
                                                     </td>
                                                 </tr>
@@ -240,7 +240,7 @@ export default function PaymentForm({ payment, enrollments }: Props) {
                                     </table>
                                 </div>
                             ) : (
-                                <p className="mt-3 text-sm text-gray-500">No hay abonos registrados aún.</p>
+                                <p className="mt-3 text-sm text-muted-foreground">No hay abonos registrados aún.</p>
                             )}
                         </div>
 
@@ -255,8 +255,8 @@ export default function PaymentForm({ payment, enrollments }: Props) {
                                 Agregar Abono
                             </Button>
                         ) : (
-                            <form onSubmit={handleAbonoSubmit} className="mt-4 rounded-lg border border-green-200 bg-green-50 p-4">
-                                <h4 className="mb-3 font-medium text-green-900">Nuevo Abono</h4>
+                            <form onSubmit={handleAbonoSubmit} className="mt-4 rounded-lg border border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-950/30 p-4">
+                                <h4 className="mb-3 font-medium text-green-900 dark:text-green-100">Nuevo Abono</h4>
                                 <div className="grid gap-4 md:grid-cols-2">
                                     <div>
                                         <Label htmlFor="abono_amount">Monto *</Label>
@@ -278,7 +278,7 @@ export default function PaymentForm({ payment, enrollments }: Props) {
                                             id="abono_method"
                                             value={abonoData.payment_method}
                                             onChange={(e) => setAbonoData({ ...abonoData, payment_method: e.target.value })}
-                                            className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
+                                            className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground"
                                             required
                                         >
                                             <option value="cash">Efectivo</option>
@@ -322,26 +322,26 @@ export default function PaymentForm({ payment, enrollments }: Props) {
 
                 {/* Completed payment summary */}
                 {isEditing && payment?.status === 'completed' && payment.transactions && payment.transactions.length > 0 && (
-                    <div className="rounded-xl border border-green-200 bg-green-50 p-6 shadow-sm">
-                        <h2 className="flex items-center gap-2 text-lg font-semibold text-green-800">
+                    <div className="rounded-xl border border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-950/30 p-6 shadow-sm">
+                        <h2 className="flex items-center gap-2 text-lg font-semibold text-green-800 dark:text-green-200">
                             <Check className="h-5 w-5" />
                             Pago Completado
                         </h2>
-                        <p className="mt-1 text-sm text-green-700">
+                        <p className="mt-1 text-sm text-green-700 dark:text-green-300">
                             Total pagado: ${paidAmount.toLocaleString('es-CO')} en {payment.transactions.length} abono(s)
                         </p>
                     </div>
                 )}
 
                 {/* Form */}
-                <form onSubmit={handleSubmit} className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+                <form onSubmit={handleSubmit} className="rounded-xl border border-border bg-card p-6 shadow-sm">
                     <div className="grid gap-6 md:grid-cols-2">
                         {/* Buscador de Estudiante */}
                         <div className="md:col-span-2">
                             <Label htmlFor="student-search">Buscar Estudiante Inscrito *</Label>
                             <div className="relative mt-1">
                                 <div className="relative">
-                                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                                     <Input
                                         id="student-search"
                                         type="text"
@@ -354,23 +354,23 @@ export default function PaymentForm({ payment, enrollments }: Props) {
 
                                 {/* Dropdown de resultados */}
                                 {searchTerm && (
-                                    <div className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md border border-gray-200 bg-white shadow-lg">
+                                    <div className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md border border-border bg-card shadow-lg">
                                         {filteredEnrollments.length > 0 ? (
                                             filteredEnrollments.map((enrollment) => (
                                                 <button
                                                     key={enrollment.id}
                                                     type="button"
                                                     onClick={() => handleEnrollmentSelect(enrollment)}
-                                                    className="flex w-full items-start gap-3 px-4 py-3 text-left hover:bg-gray-50"
+                                                    className="flex w-full items-start gap-3 px-4 py-3 text-left hover:bg-muted"
                                                 >
                                                     <div className="flex-1">
-                                                        <div className="font-medium text-gray-900">
+                                                        <div className="font-medium text-foreground">
                                                             {enrollment.student_name}
                                                         </div>
-                                                        <div className="text-sm text-gray-500">
+                                                        <div className="text-sm text-muted-foreground">
                                                             {enrollment.student_email}
                                                         </div>
-                                                        <div className="mt-1 inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-700">
+                                                        <div className="mt-1 inline-flex items-center rounded-full bg-blue-100 dark:bg-blue-900/30 px-2 py-0.5 text-xs font-medium text-blue-700 dark:text-blue-400">
                                                             {enrollment.program_name}
                                                         </div>
                                                     </div>
@@ -380,7 +380,7 @@ export default function PaymentForm({ payment, enrollments }: Props) {
                                                 </button>
                                             ))
                                         ) : (
-                                            <div className="px-4 py-3 text-sm text-gray-500">
+                                            <div className="px-4 py-3 text-sm text-muted-foreground">
                                                 No se encontraron estudiantes inscritos
                                             </div>
                                         )}
@@ -389,16 +389,16 @@ export default function PaymentForm({ payment, enrollments }: Props) {
 
                                 {/* Estudiante seleccionado */}
                                 {selectedEnrollment && !searchTerm && (
-                                    <div className="mt-2 rounded-lg border border-green-200 bg-green-50 p-3">
+                                    <div className="mt-2 rounded-lg border border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-950/30 p-3">
                                         <div className="flex items-start justify-between">
                                             <div>
                                                 <div className="flex items-center gap-2">
                                                     <Check className="h-4 w-4 text-green-600" />
-                                                    <span className="font-medium text-green-900">
+                                                    <span className="font-medium text-green-900 dark:text-green-100">
                                                         {selectedEnrollment.student_name}
                                                     </span>
                                                 </div>
-                                                <div className="ml-6 mt-1 text-sm text-green-700">
+                                                <div className="ml-6 mt-1 text-sm text-green-700 dark:text-green-300">
                                                     Programa: {selectedEnrollment.program_name}
                                                 </div>
                                             </div>
@@ -413,7 +413,7 @@ export default function PaymentForm({ payment, enrollments }: Props) {
                                                         enrollment_id: '',
                                                     });
                                                 }}
-                                                className="text-sm text-green-700 hover:text-green-900"
+                                                className="text-sm text-green-700 dark:text-green-300 hover:text-green-900 dark:text-green-100"
                                             >
                                                 Cambiar
                                             </button>
@@ -445,7 +445,7 @@ export default function PaymentForm({ payment, enrollments }: Props) {
                                 id="payment_type"
                                 value={data.payment_type}
                                 onChange={(e) => setData('payment_type', e.target.value as 'single' | 'partial')}
-                                className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
+                                className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground"
                             >
                                 <option value="single">Pago Único</option>
                                 <option value="partial">Permite Abonos Parciales</option>
@@ -488,7 +488,7 @@ export default function PaymentForm({ payment, enrollments }: Props) {
                                 id="status"
                                 value={data.status}
                                 onChange={(e) => setData('status', e.target.value as Payment['status'])}
-                                className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
+                                className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground"
                             >
                                 <option value="pending">Pendiente</option>
                                 <option value="completed">Completado</option>
@@ -507,7 +507,7 @@ export default function PaymentForm({ payment, enrollments }: Props) {
                                         id="payment_method"
                                         value={data.payment_method}
                                         onChange={(e) => setData('payment_method', e.target.value)}
-                                        className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
+                                        className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground"
                                     >
                                         <option value="">Seleccionar</option>
                                         <option value="cash">Efectivo</option>

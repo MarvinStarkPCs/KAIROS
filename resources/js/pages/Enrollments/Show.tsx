@@ -252,7 +252,7 @@ export default function Show({ enrollment, studentSchedules, payments }: Props) 
                                     {payments.map((payment) => (
                                         <TableRow key={payment.id}>
                                             <TableCell className="font-medium">{payment.concept}</TableCell>
-                                            <TableCell>${payment.amount.toFixed(2)}</TableCell>
+                                            <TableCell>${Number(payment.amount).toLocaleString('es-CO')}</TableCell>
                                             <TableCell>
                                                 {payment.due_date
                                                     ? new Date(payment.due_date).toLocaleDateString('es-ES')

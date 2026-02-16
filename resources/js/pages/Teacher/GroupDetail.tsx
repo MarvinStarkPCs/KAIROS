@@ -247,7 +247,7 @@ export default function GroupDetail({ schedule, students, activities, classDates
             case 'absent':
                 return <XCircle className="w-4 h-4 text-red-500" />;
             default:
-                return <Clock className="w-4 h-4 text-gray-400" />;
+                return <Clock className="w-4 h-4 text-muted-foreground" />;
         }
     };
 
@@ -285,10 +285,10 @@ export default function GroupDetail({ schedule, students, activities, classDates
                 <div className="mb-8">
                     <div className="flex items-center justify-between">
                         <div>
-                            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+                            <h1 className="text-3xl font-bold text-foreground mb-2">
                                 {schedule.program.name}
                             </h1>
-                            <div className="flex flex-wrap items-center gap-4 text-gray-600">
+                            <div className="flex flex-wrap items-center gap-4 text-muted-foreground">
                                 <Badge
                                     style={{ backgroundColor: schedule.program.color }}
                                     className="text-white"
@@ -342,7 +342,7 @@ export default function GroupDetail({ schedule, students, activities, classDates
                                 </CardHeader>
                                 <CardContent className="max-h-[500px] overflow-y-auto">
                                     {pastDates.length === 0 && futureDates.length === 0 ? (
-                                        <div className="text-center py-8 text-gray-500">
+                                        <div className="text-center py-8 text-muted-foreground">
                                             No hay fechas de clase configuradas
                                         </div>
                                     ) : (
@@ -354,7 +354,7 @@ export default function GroupDetail({ schedule, students, activities, classDates
                                                     className={`p-3 rounded-lg border cursor-pointer transition-colors ${
                                                         selectedDate === classDate.date
                                                             ? 'border-[#7a9b3c] bg-[#7a9b3c]/10'
-                                                            : 'hover:bg-gray-50'
+                                                            : 'hover:bg-muted'
                                                     } ${classDate.is_today ? 'border-blue-500 border-2' : ''}`}
                                                 >
                                                     <div className="flex items-center justify-between">
@@ -365,7 +365,7 @@ export default function GroupDetail({ schedule, students, activities, classDates
                                                                     <Badge className="bg-blue-500 text-xs">Hoy</Badge>
                                                                 )}
                                                             </div>
-                                                            <div className="text-sm text-gray-500">
+                                                            <div className="text-sm text-muted-foreground">
                                                                 {formatDate(classDate.date)}
                                                             </div>
                                                         </div>
@@ -381,7 +381,7 @@ export default function GroupDetail({ schedule, students, activities, classDates
                                                                     Sin marcar
                                                                 </Badge>
                                                             )}
-                                                            <div className="text-xs text-gray-400">
+                                                            <div className="text-xs text-muted-foreground">
                                                                 {classDate.marked_count}/{classDate.total_students}
                                                             </div>
                                                         </div>
@@ -390,18 +390,18 @@ export default function GroupDetail({ schedule, students, activities, classDates
                                             ))}
                                             {futureDates.length > 0 && (
                                                 <>
-                                                    <div className="text-xs text-gray-400 uppercase mt-4 mb-2">
+                                                    <div className="text-xs text-muted-foreground uppercase mt-4 mb-2">
                                                         Próximas clases
                                                     </div>
                                                     {futureDates.map((classDate) => (
                                                         <div
                                                             key={classDate.date}
-                                                            className="p-3 rounded-lg border bg-gray-50 opacity-60"
+                                                            className="p-3 rounded-lg border bg-muted opacity-60"
                                                         >
                                                             <div className="flex items-center justify-between">
                                                                 <div>
                                                                     <div className="font-medium">{classDate.day_name}</div>
-                                                                    <div className="text-sm text-gray-500">
+                                                                    <div className="text-sm text-muted-foreground">
                                                                         {formatDate(classDate.date)}
                                                                     </div>
                                                                 </div>
@@ -436,12 +436,12 @@ export default function GroupDetail({ schedule, students, activities, classDates
                                 </CardHeader>
                                 <CardContent>
                                     {!selectedDate ? (
-                                        <div className="text-center py-12 text-gray-500">
+                                        <div className="text-center py-12 text-muted-foreground">
                                             <Calendar className="w-12 h-12 mx-auto mb-4 opacity-50" />
                                             <p>Selecciona una fecha de clase para marcar asistencia</p>
                                         </div>
                                     ) : students.length === 0 ? (
-                                        <div className="text-center py-12 text-gray-500">
+                                        <div className="text-center py-12 text-muted-foreground">
                                             No hay estudiantes inscritos
                                         </div>
                                     ) : (
@@ -465,13 +465,13 @@ export default function GroupDetail({ schedule, students, activities, classDates
                                                                         onClick={() => setShowStudentDetail(student)}
                                                                         className="p-1"
                                                                     >
-                                                                        <Eye className="w-4 h-4 text-gray-400" />
+                                                                        <Eye className="w-4 h-4 text-muted-foreground" />
                                                                     </Button>
                                                                     <div>
-                                                                        <h4 className="font-medium text-gray-900">{student.name}</h4>
+                                                                        <h4 className="font-medium text-foreground">{student.name}</h4>
                                                                         <div className="flex items-center gap-2">
                                                                             {student.document_number && (
-                                                                                <span className="text-xs font-medium text-gray-700">
+                                                                                <span className="text-xs font-medium text-muted-foreground">
                                                                                     {student.document_type}: {student.document_number}
                                                                                 </span>
                                                                             )}
@@ -519,7 +519,7 @@ export default function GroupDetail({ schedule, students, activities, classDates
                                                                         }
                                                                         value={currentNotes}
                                                                         onChange={(e) => handleNotesChange(student.id, e.target.value)}
-                                                                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7a9b3c] focus:border-transparent"
+                                                                        className="w-full px-3 py-2 text-sm border border-input rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7a9b3c] focus:border-transparent"
                                                                     />
                                                                 </div>
                                                             )}
@@ -549,7 +549,7 @@ export default function GroupDetail({ schedule, students, activities, classDates
                             </CardHeader>
                             <CardContent>
                                 {students.length === 0 ? (
-                                    <div className="text-center py-12 text-gray-500">
+                                    <div className="text-center py-12 text-muted-foreground">
                                         No hay estudiantes inscritos en este grupo
                                     </div>
                                 ) : (
@@ -557,15 +557,15 @@ export default function GroupDetail({ schedule, students, activities, classDates
                                         {students.map((student) => (
                                             <div
                                                 key={student.id}
-                                                className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 cursor-pointer"
+                                                className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted cursor-pointer"
                                                 onClick={() => setShowStudentDetail(student)}
                                             >
                                                 <div className="flex items-center gap-4">
                                                     <div>
-                                                        <h4 className="font-semibold text-gray-900">{student.name}</h4>
-                                                        <div className="flex items-center gap-3 text-sm text-gray-600">
+                                                        <h4 className="font-semibold text-foreground">{student.name}</h4>
+                                                        <div className="flex items-center gap-3 text-sm text-muted-foreground">
                                                             {student.document_number && (
-                                                                <span className="font-medium text-gray-700">
+                                                                <span className="font-medium text-muted-foreground">
                                                                     {student.document_type}: {student.document_number}
                                                                 </span>
                                                             )}
@@ -575,22 +575,22 @@ export default function GroupDetail({ schedule, students, activities, classDates
                                                 </div>
                                                 <div className="flex items-center gap-6">
                                                     <div className="text-center">
-                                                        <div className="text-2xl font-bold text-green-700">
+                                                        <div className="text-2xl font-bold text-green-700 dark:text-green-300">
                                                             {student.progress_stats.progress_percentage}%
                                                         </div>
-                                                        <div className="text-xs text-gray-500">
+                                                        <div className="text-xs text-muted-foreground">
                                                             Avance
                                                         </div>
                                                     </div>
                                                     <div className="text-center">
-                                                        <div className="text-2xl font-bold text-blue-700">
+                                                        <div className="text-2xl font-bold text-blue-700 dark:text-blue-300">
                                                             {student.progress_stats.average_grade}%
                                                         </div>
-                                                        <div className="text-xs text-gray-500">
+                                                        <div className="text-xs text-muted-foreground">
                                                             Promedio
                                                         </div>
                                                     </div>
-                                                    <ChevronRight className="w-5 h-5 text-gray-400" />
+                                                    <ChevronRight className="w-5 h-5 text-muted-foreground" />
                                                 </div>
                                             </div>
                                         ))}
@@ -603,14 +603,14 @@ export default function GroupDetail({ schedule, students, activities, classDates
                     {/* Tab: Activities grouped by Module */}
                     <TabsContent value="activities">
                         {activities.length === 0 ? (
-                            <div className="rounded-xl border-2 border-dashed border-gray-300 bg-white p-12 text-center">
-                                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gray-100">
-                                    <Book className="h-8 w-8 text-gray-400" />
+                            <div className="rounded-xl border-2 border-dashed border-input bg-card p-12 text-center">
+                                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-muted">
+                                    <Book className="h-8 w-8 text-muted-foreground" />
                                 </div>
-                                <h3 className="mb-2 text-xl font-semibold text-gray-900">
+                                <h3 className="mb-2 text-xl font-semibold text-foreground">
                                     No hay actividades configuradas
                                 </h3>
-                                <p className="text-gray-600">
+                                <p className="text-muted-foreground">
                                     Este programa aún no tiene actividades para evaluar.
                                 </p>
                             </div>
@@ -619,10 +619,10 @@ export default function GroupDetail({ schedule, students, activities, classDates
                                 {activitiesByModule.map((group, groupIndex) => (
                                     <div
                                         key={group.moduleName}
-                                        className={`rounded-xl border bg-white shadow-sm ${
+                                        className={`rounded-xl border bg-card shadow-sm ${
                                             group.isLocked
-                                                ? 'border-gray-300 opacity-75'
-                                                : 'border-gray-200'
+                                                ? 'border-input opacity-75'
+                                                : 'border-border'
                                         }`}
                                     >
                                         {/* Module Header - similar a ProgramAcademy/Show */}
@@ -630,23 +630,23 @@ export default function GroupDetail({ schedule, students, activities, classDates
                                             <div className="flex items-start justify-between">
                                                 <div className="flex items-start gap-4">
                                                     <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${
-                                                        group.isLocked ? 'bg-gray-200' : 'bg-blue-100'
+                                                        group.isLocked ? 'bg-muted' : 'bg-blue-100 dark:bg-blue-900/30'
                                                     }`}>
                                                         {group.isLocked
-                                                            ? <Lock className="h-5 w-5 text-gray-500" />
+                                                            ? <Lock className="h-5 w-5 text-muted-foreground" />
                                                             : <Book className="h-5 w-5 text-blue-600" />
                                                         }
                                                     </div>
                                                     <div>
-                                                        <h3 className="text-lg font-semibold text-gray-900">
+                                                        <h3 className="text-lg font-semibold text-foreground">
                                                             Módulo {groupIndex + 1}: {group.moduleName}
                                                         </h3>
                                                         {group.description && (
-                                                            <p className="mt-1 text-sm text-gray-600">
+                                                            <p className="mt-1 text-sm text-muted-foreground">
                                                                 {group.description}
                                                             </p>
                                                         )}
-                                                        <div className="mt-2 flex items-center gap-4 text-sm text-gray-500">
+                                                        <div className="mt-2 flex items-center gap-4 text-sm text-muted-foreground">
                                                             {group.hours > 0 && <span>{group.hours} horas</span>}
                                                             {group.hours > 0 && <span>•</span>}
                                                             <span>Nivel {group.level}</span>
@@ -657,17 +657,17 @@ export default function GroupDetail({ schedule, students, activities, classDates
                                                 </div>
                                                 <div>
                                                     {group.isFullyEvaluated ? (
-                                                        <Badge className="bg-green-100 text-green-700">
+                                                        <Badge className="bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300">
                                                             <CheckCircle className="w-3 h-3 mr-1" />
                                                             Completado
                                                         </Badge>
                                                     ) : group.isLocked ? (
-                                                        <Badge variant="outline" className="text-gray-500 border-gray-300">
+                                                        <Badge variant="outline" className="text-muted-foreground border-input">
                                                             <Lock className="w-3 h-3 mr-1" />
                                                             Bloqueado
                                                         </Badge>
                                                     ) : (
-                                                        <Badge className="bg-amber-100 text-amber-700">
+                                                        <Badge className="bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300">
                                                             Pendiente
                                                         </Badge>
                                                     )}
@@ -676,9 +676,9 @@ export default function GroupDetail({ schedule, students, activities, classDates
 
                                             {/* Locked module warning */}
                                             {group.isLocked && (
-                                                <div className="mt-4 flex items-start gap-3 rounded-lg bg-amber-50 border border-amber-200 p-3">
+                                                <div className="mt-4 flex items-start gap-3 rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 p-3">
                                                     <AlertCircle className="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" />
-                                                    <p className="text-sm text-amber-700">
+                                                    <p className="text-sm text-amber-700 dark:text-amber-300">
                                                         Debes completar la evaluación de todos los estudiantes en los módulos anteriores antes de poder evaluar este módulo.
                                                     </p>
                                                 </div>
@@ -692,32 +692,32 @@ export default function GroupDetail({ schedule, students, activities, classDates
                                                     {group.activities.map((activity) => (
                                                         <div
                                                             key={activity.id}
-                                                            className="rounded-lg border border-gray-200 bg-gray-50 p-4"
+                                                            className="rounded-lg border border-border bg-muted p-4"
                                                         >
                                                             {/* Activity Header */}
                                                             <div className="flex items-start justify-between mb-3">
                                                                 <div className="flex items-start gap-3">
-                                                                    <div className="flex h-8 w-8 items-center justify-center rounded-md bg-purple-100">
+                                                                    <div className="flex h-8 w-8 items-center justify-center rounded-md bg-purple-100 dark:bg-purple-900/30">
                                                                         <ListChecks className="h-4 w-4 text-purple-600" />
                                                                     </div>
                                                                     <div>
-                                                                        <h5 className="font-medium text-gray-900">
+                                                                        <h5 className="font-medium text-foreground">
                                                                             {activity.name}
                                                                         </h5>
                                                                         {activity.description && (
-                                                                            <p className="mt-1 text-sm text-gray-600">
+                                                                            <p className="mt-1 text-sm text-muted-foreground">
                                                                                 {activity.description}
                                                                             </p>
                                                                         )}
-                                                                        <div className="mt-1 flex items-center gap-3 text-xs text-gray-500">
+                                                                        <div className="mt-1 flex items-center gap-3 text-xs text-muted-foreground">
                                                                             <span>Peso: {activity.weight}%</span>
                                                                             <span>•</span>
                                                                             <span className={`rounded-full px-2 py-0.5 ${
                                                                                 activity.is_fully_evaluated
-                                                                                    ? 'bg-green-100 text-green-700'
+                                                                                    ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300'
                                                                                     : activity.evaluated_count > 0
-                                                                                        ? 'bg-amber-100 text-amber-700'
-                                                                                        : 'bg-gray-200 text-gray-700'
+                                                                                        ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300'
+                                                                                        : 'bg-muted text-muted-foreground'
                                                                             }`}>
                                                                                 {activity.is_fully_evaluated
                                                                                     ? 'Evaluado'
@@ -733,19 +733,19 @@ export default function GroupDetail({ schedule, students, activities, classDates
                                                             {/* Evaluation Criteria */}
                                                             {activity.evaluation_criteria.length > 0 && (
                                                                 <div className="ml-11 space-y-2 mb-3">
-                                                                    <h6 className="text-xs font-semibold text-gray-600">
+                                                                    <h6 className="text-xs font-semibold text-muted-foreground">
                                                                         Criterios de Evaluación:
                                                                     </h6>
                                                                     {activity.evaluation_criteria.map((criteria) => (
                                                                         <div
                                                                             key={criteria.id}
-                                                                            className="flex items-center gap-2 rounded-md border border-gray-200 bg-white p-2"
+                                                                            className="flex items-center gap-2 rounded-md border border-border bg-card p-2"
                                                                         >
                                                                             <Award className="h-4 w-4 text-amber-600 flex-shrink-0" />
-                                                                            <span className="text-sm text-gray-900 flex-1">
+                                                                            <span className="text-sm text-foreground flex-1">
                                                                                 {criteria.name}
                                                                             </span>
-                                                                            <span className="text-sm font-medium text-gray-700">
+                                                                            <span className="text-sm font-medium text-muted-foreground">
                                                                                 {criteria.max_points} pts
                                                                             </span>
                                                                         </div>
@@ -781,7 +781,7 @@ export default function GroupDetail({ schedule, students, activities, classDates
                         <DialogTitle>{showStudentDetail?.name}</DialogTitle>
                         <DialogDescription>
                             {showStudentDetail?.document_number && (
-                                <span className="font-medium text-gray-700 mr-3">
+                                <span className="font-medium text-muted-foreground mr-3">
                                     {showStudentDetail.document_type}: {showStudentDetail.document_number}
                                 </span>
                             )}
@@ -794,17 +794,17 @@ export default function GroupDetail({ schedule, students, activities, classDates
                             <div>
                                 <h4 className="font-semibold mb-3">Resumen de Asistencia</h4>
                                 <div className="grid grid-cols-3 gap-2">
-                                    <div className="text-center p-3 bg-green-50 rounded-lg">
+                                    <div className="text-center p-3 bg-green-50 dark:bg-green-950/30 rounded-lg">
                                         <div className="text-2xl font-bold text-green-600">{showStudentDetail.attendance_stats.present}</div>
-                                        <div className="text-xs text-green-700">Presente</div>
+                                        <div className="text-xs text-green-700 dark:text-green-300">Presente</div>
                                     </div>
-                                    <div className="text-center p-3 bg-yellow-50 rounded-lg">
+                                    <div className="text-center p-3 bg-yellow-50 dark:bg-yellow-950/30 rounded-lg">
                                         <div className="text-2xl font-bold text-yellow-600">{showStudentDetail.attendance_stats.late}</div>
-                                        <div className="text-xs text-yellow-700">Tarde</div>
+                                        <div className="text-xs text-yellow-700 dark:text-yellow-300">Tarde</div>
                                     </div>
-                                    <div className="text-center p-3 bg-red-50 rounded-lg">
+                                    <div className="text-center p-3 bg-red-50 dark:bg-red-950/30 rounded-lg">
                                         <div className="text-2xl font-bold text-red-600">{showStudentDetail.attendance_stats.absent}</div>
-                                        <div className="text-xs text-red-700">Ausente</div>
+                                        <div className="text-xs text-red-700 dark:text-red-300">Ausente</div>
                                     </div>
                                 </div>
                             </div>
@@ -825,13 +825,13 @@ export default function GroupDetail({ schedule, students, activities, classDates
                                                         {getStatusIcon(attendance?.status || '')}
                                                         <div>
                                                             <div className="font-medium">{classDate.day_name}</div>
-                                                            <div className="text-sm text-gray-500">{formatDate(classDate.date)}</div>
+                                                            <div className="text-sm text-muted-foreground">{formatDate(classDate.date)}</div>
                                                         </div>
                                                     </div>
                                                     {getStatusBadge(attendance?.status || '')}
                                                 </div>
                                                 {attendance?.notes && (
-                                                    <div className="mt-2 ml-7 text-sm text-gray-600 bg-gray-50 rounded p-2">
+                                                    <div className="mt-2 ml-7 text-sm text-muted-foreground bg-muted rounded p-2">
                                                         <span className="font-medium">Nota: </span>
                                                         {attendance.notes}
                                                     </div>
@@ -846,18 +846,18 @@ export default function GroupDetail({ schedule, students, activities, classDates
                             <div>
                                 <h4 className="font-semibold mb-3">Avance Académico</h4>
                                 <div className="grid grid-cols-2 gap-4">
-                                    <div className="p-4 bg-blue-50 rounded-lg">
+                                    <div className="p-4 bg-blue-50 dark:bg-blue-950/30 rounded-lg">
                                         <div className="text-sm text-blue-600">Progreso</div>
-                                        <div className="text-3xl font-bold text-blue-700">
+                                        <div className="text-3xl font-bold text-blue-700 dark:text-blue-300">
                                             {showStudentDetail.progress_stats.progress_percentage}%
                                         </div>
                                         <div className="text-xs text-blue-600">
                                             {showStudentDetail.progress_stats.evaluated_activities} de {showStudentDetail.progress_stats.total_activities} actividades
                                         </div>
                                     </div>
-                                    <div className="p-4 bg-green-50 rounded-lg">
+                                    <div className="p-4 bg-green-50 dark:bg-green-950/30 rounded-lg">
                                         <div className="text-sm text-green-600">Promedio</div>
-                                        <div className="text-3xl font-bold text-green-700">
+                                        <div className="text-3xl font-bold text-green-700 dark:text-green-300">
                                             {showStudentDetail.progress_stats.average_grade}%
                                         </div>
                                         <div className="text-xs text-green-600">

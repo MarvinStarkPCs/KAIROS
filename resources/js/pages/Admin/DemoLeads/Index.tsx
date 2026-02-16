@@ -119,8 +119,8 @@ export default function Index({ leads, stats, filters }: Props) {
             <div className="space-y-6">
                 {/* Header */}
                 <div>
-                    <h1 className="text-3xl font-bold text-gray-900">Gestión de Leads</h1>
-                    <p className="mt-2 text-gray-600">
+                    <h1 className="text-3xl font-bold text-foreground">Gestión de Leads</h1>
+                    <p className="mt-2 text-muted-foreground">
                         Administra las solicitudes de clases demo
                     </p>
                 </div>
@@ -131,10 +131,10 @@ export default function Index({ leads, stats, filters }: Props) {
                         <CardContent className="pt-6">
                             <div className="flex items-center justify-between">
                                 <div>
-                                    <p className="text-sm font-medium text-gray-600">Total</p>
+                                    <p className="text-sm font-medium text-muted-foreground">Total</p>
                                     <p className="text-2xl font-bold">{stats.total}</p>
                                 </div>
-                                <Users className="h-8 w-8 text-gray-400" />
+                                <Users className="h-8 w-8 text-muted-foreground" />
                             </div>
                         </CardContent>
                     </Card>
@@ -253,7 +253,7 @@ export default function Index({ leads, stats, filters }: Props) {
                             <TableBody>
                                 {leads.data.length === 0 ? (
                                     <TableRow>
-                                        <TableCell colSpan={7} className="text-center text-gray-500 py-8">
+                                        <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
                                             No se encontraron leads
                                         </TableCell>
                                     </TableRow>
@@ -264,14 +264,14 @@ export default function Index({ leads, stats, filters }: Props) {
                                                 <div>
                                                     <p className="font-medium">{lead.name}</p>
                                                     {lead.is_for_child && lead.child_name && (
-                                                        <p className="text-sm text-gray-500">Para: {lead.child_name}</p>
+                                                        <p className="text-sm text-muted-foreground">Para: {lead.child_name}</p>
                                                     )}
                                                 </div>
                                             </TableCell>
                                             <TableCell>
                                                 <div className="text-sm">
                                                     <p>{lead.email}</p>
-                                                    <p className="text-gray-500">{lead.phone}</p>
+                                                    <p className="text-muted-foreground">{lead.phone}</p>
                                                 </div>
                                             </TableCell>
                                             <TableCell>{lead.instrument}</TableCell>
@@ -279,7 +279,7 @@ export default function Index({ leads, stats, filters }: Props) {
                                                 {lead.preferred_schedule ? (
                                                     <span className="text-sm">{lead.preferred_schedule}</span>
                                                 ) : (
-                                                    <span className="text-sm text-gray-400">No especificado</span>
+                                                    <span className="text-sm text-muted-foreground">No especificado</span>
                                                 )}
                                             </TableCell>
                                             <TableCell>
@@ -287,7 +287,7 @@ export default function Index({ leads, stats, filters }: Props) {
                                                     {lead.status_label}
                                                 </Badge>
                                             </TableCell>
-                                            <TableCell className="text-sm text-gray-500">
+                                            <TableCell className="text-sm text-muted-foreground">
                                                 {formatDate(lead.created_at)}
                                             </TableCell>
                                             <TableCell className="text-right">
@@ -330,7 +330,7 @@ export default function Index({ leads, stats, filters }: Props) {
                         {/* Pagination */}
                         {leads.last_page > 1 && (
                             <div className="mt-4 flex items-center justify-between">
-                                <p className="text-sm text-gray-600">
+                                <p className="text-sm text-muted-foreground">
                                     Mostrando {leads.data.length} de {leads.total} resultados
                                 </p>
                                 <div className="flex gap-2">

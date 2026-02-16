@@ -150,13 +150,13 @@ export default function GestionPagos({
     const getEstadoBadge = (estado: string) => {
         switch (estado) {
             case 'completado':
-                return { bg: 'bg-green-100', text: 'text-green-700', label: 'Completado' };
+                return { bg: 'bg-green-100 dark:bg-green-900/30', text: 'text-green-700 dark:text-green-300', label: 'Completado' };
             case 'pendiente':
-                return { bg: 'bg-yellow-100', text: 'text-yellow-700', label: 'Pendiente' };
+                return { bg: 'bg-yellow-100 dark:bg-yellow-900/30', text: 'text-yellow-700 dark:text-yellow-300', label: 'Pendiente' };
             case 'rechazado':
-                return { bg: 'bg-red-100', text: 'text-red-700', label: 'Rechazado' };
+                return { bg: 'bg-red-100 dark:bg-red-900/30', text: 'text-red-700 dark:text-red-300', label: 'Rechazado' };
             default:
-                return { bg: 'bg-gray-100', text: 'text-gray-700', label: 'Desconocido' };
+                return { bg: 'bg-muted', text: 'text-muted-foreground', label: 'Desconocido' };
         }
     };
 
@@ -176,12 +176,12 @@ export default function GestionPagos({
             <Head title="Gestión de Pagos - Academia Linaje" />
             <AppHeader breadcrumbs={breadcrumbs} />
 
-            <div className="min-h-screen bg-gray-50 px-6 py-8">
+            <div className="min-h-screen bg-muted px-6 py-8">
                 {/* Header */}
                 <div className="mb-6 flex items-center justify-between flex-wrap gap-4">
                     <div>
-                        <h1 className="text-3xl font-bold text-gray-800 mb-2">Gestión de Pagos</h1>
-                        <p className="text-gray-600">Control de mensualidades, matrículas y facturación</p>
+                        <h1 className="text-3xl font-bold text-foreground mb-2">Gestión de Pagos</h1>
+                        <p className="text-muted-foreground">Control de mensualidades, matrículas y facturación</p>
                     </div>
                     <div className="flex gap-3">
                         <Button className="flex items-center gap-2 bg-[#7a9b3c] hover:bg-[#6a8a2c]">
@@ -198,61 +198,61 @@ export default function GestionPagos({
                 {/* Stats Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
                     {/* Ingresos del Mes */}
-                    <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+                    <div className="bg-card rounded-lg p-6 shadow-sm border border-border">
                         <div className="flex items-center justify-between mb-3">
-                            <span className="text-sm font-medium text-gray-600">Ingresos del Mes</span>
-                            <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
+                            <span className="text-sm font-medium text-muted-foreground">Ingresos del Mes</span>
+                            <div className="w-10 h-10 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
                                 <Icon iconNode={DollarSign} className="w-5 h-5 text-green-600" />
                             </div>
                         </div>
-                        <div className="text-3xl font-bold text-gray-900 mb-2">
+                        <div className="text-3xl font-bold text-foreground mb-2">
                             ${ingresosMes.total.toLocaleString()}
                         </div>
                         <div className="text-xs text-green-600 font-medium mb-3">
                             {ingresosMes.cambio}
                         </div>
-                        <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden mb-2">
+                        <div className="w-full bg-muted rounded-full h-2 overflow-hidden mb-2">
                             <div 
                                 className="bg-green-500 h-full rounded-full transition-all duration-500"
                                 style={{ width: `${ingresosMes.porcentaje}%` }}
                             ></div>
                         </div>
-                        <div className="text-xs text-gray-500">
+                        <div className="text-xs text-muted-foreground">
                             70% del objetivo mensual
                         </div>
                     </div>
 
                     {/* Pagos Pendientes */}
-                    <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+                    <div className="bg-card rounded-lg p-6 shadow-sm border border-border">
                         <div className="flex items-center justify-between mb-3">
-                            <span className="text-sm font-medium text-gray-600">Pagos Pendientes</span>
-                            <div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center">
+                            <span className="text-sm font-medium text-muted-foreground">Pagos Pendientes</span>
+                            <div className="w-10 h-10 rounded-full bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center">
                                 <Icon iconNode={AlertCircle} className="w-5 h-5 text-orange-600" />
                             </div>
                         </div>
-                        <div className="text-3xl font-bold text-gray-900 mb-2">
+                        <div className="text-3xl font-bold text-foreground mb-2">
                             ${pagosPendientes.total.toLocaleString()}
                         </div>
-                        <div className="text-xs text-gray-600 mb-1">
+                        <div className="text-xs text-muted-foreground mb-1">
                             {pagosPendientes.estudiantes} estudiantes
                         </div>
                         <div className="space-y-1 mt-3">
                             <div className="flex items-center justify-between text-xs">
-                                <span className="text-gray-600">Vencidos</span>
+                                <span className="text-muted-foreground">Vencidos</span>
                                 <span className="text-red-600 font-semibold">${pagosPendientes.vencidos.toLocaleString()}</span>
                             </div>
                             <div className="flex items-center justify-between text-xs">
-                                <span className="text-gray-600">Por vencer (7 días)</span>
+                                <span className="text-muted-foreground">Por vencer (7 días)</span>
                                 <span className="text-orange-600 font-semibold">${pagosPendientes.porVencer.toLocaleString()}</span>
                             </div>
                         </div>
                     </div>
 
                     {/* Métodos de Pago */}
-                    <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+                    <div className="bg-card rounded-lg p-6 shadow-sm border border-border">
                         <div className="flex items-center justify-between mb-4">
-                            <span className="text-sm font-medium text-gray-600">Métodos de Pago</span>
-                            <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
+                            <span className="text-sm font-medium text-muted-foreground">Métodos de Pago</span>
+                            <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
                                 <Icon iconNode={CreditCard} className="w-5 h-5 text-blue-600" />
                             </div>
                         </div>
@@ -265,9 +265,9 @@ export default function GestionPagos({
                                             metodo.icon === 'transfer' ? 'bg-green-500' :
                                             'bg-gray-500'
                                         }`}></div>
-                                        <span className="text-sm text-gray-700">{metodo.nombre}</span>
+                                        <span className="text-sm text-muted-foreground">{metodo.nombre}</span>
                                     </div>
-                                    <span className="text-sm font-semibold text-gray-900">{metodo.porcentaje}%</span>
+                                    <span className="text-sm font-semibold text-foreground">{metodo.porcentaje}%</span>
                                 </div>
                             ))}
                         </div>
@@ -275,10 +275,10 @@ export default function GestionPagos({
                 </div>
 
                 {/* Pasarelas de Pago Integradas */}
-                <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+                <div className="bg-card rounded-lg shadow-sm p-6 mb-6">
                     <div className="flex items-center gap-2 mb-4">
                         <Icon iconNode={Link2} className="w-5 h-5 text-[#7a9b3c]" />
-                        <h3 className="text-lg font-semibold text-gray-800">Pasarelas de Pago Integradas</h3>
+                        <h3 className="text-lg font-semibold text-foreground">Pasarelas de Pago Integradas</h3>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                         {pasarelas.map((pasarela, idx) => (
@@ -308,7 +308,7 @@ export default function GestionPagos({
                 </div>
 
                 {/* Transacciones Recientes */}
-                <div className="bg-white rounded-lg shadow-sm overflow-hidden">
+                <div className="bg-card rounded-lg shadow-sm overflow-hidden">
                     {/* Header */}
                     <div className="bg-[#6b5544] text-white p-4 flex items-center justify-between flex-wrap gap-3">
                         <div className="flex items-center gap-2">
@@ -338,40 +338,40 @@ export default function GestionPagos({
                     {/* Table */}
                     <div className="overflow-x-auto">
                         <table className="w-full">
-                            <thead className="bg-gray-50 border-b border-gray-200">
+                            <thead className="bg-muted border-b border-border">
                                 <tr>
-                                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                    <th className="px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                                         Fecha
                                     </th>
-                                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                    <th className="px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                                         Estudiante
                                     </th>
-                                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                    <th className="px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                                         Concepto
                                     </th>
-                                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                    <th className="px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                                         Método
                                     </th>
-                                    <th className="px-6 py-3 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                    <th className="px-6 py-3 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                                         Monto
                                     </th>
-                                    <th className="px-6 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                    <th className="px-6 py-3 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                                         Estado
                                     </th>
-                                    <th className="px-6 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                    <th className="px-6 py-3 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                                         Acciones
                                     </th>
                                 </tr>
                             </thead>
-                            <tbody className="bg-white divide-y divide-gray-200">
+                            <tbody className="bg-card divide-y divide-border">
                                 {transaccionesEjemplo.map((transaccion) => {
                                     const estadoBadge = getEstadoBadge(transaccion.estado);
                                     
                                     return (
-                                        <tr key={transaccion.id} className="hover:bg-gray-50">
+                                        <tr key={transaccion.id} className="hover:bg-muted">
                                             <td className="px-6 py-4 whitespace-nowrap">
-                                                <div className="text-sm font-medium text-gray-900">{transaccion.fecha}</div>
-                                                <div className="text-xs text-gray-500">{transaccion.hora}</div>
+                                                <div className="text-sm font-medium text-foreground">{transaccion.fecha}</div>
+                                                <div className="text-xs text-muted-foreground">{transaccion.hora}</div>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <div className="flex items-center">
@@ -382,26 +382,26 @@ export default function GestionPagos({
                                                         </AvatarFallback>
                                                     </Avatar>
                                                     <div>
-                                                        <div className="text-sm font-medium text-gray-900">
+                                                        <div className="text-sm font-medium text-foreground">
                                                             {transaccion.estudiante.nombre}
                                                         </div>
-                                                        <div className="text-xs text-gray-500">
+                                                        <div className="text-xs text-muted-foreground">
                                                             {transaccion.estudiante.tipo}
                                                         </div>
                                                     </div>
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap">
-                                                <span className="text-sm text-gray-900">{transaccion.concepto}</span>
+                                                <span className="text-sm text-foreground">{transaccion.concepto}</span>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <div className="flex items-center gap-2">
                                                     <span className="text-lg">{getMetodoIcon(transaccion.metodo)}</span>
-                                                    <span className="text-sm text-gray-900">{transaccion.metodoBadge}</span>
+                                                    <span className="text-sm text-foreground">{transaccion.metodoBadge}</span>
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-right">
-                                                <span className="text-sm font-semibold text-gray-900">
+                                                <span className="text-sm font-semibold text-foreground">
                                                     ${transaccion.monto.toFixed(2)}
                                                 </span>
                                             </td>

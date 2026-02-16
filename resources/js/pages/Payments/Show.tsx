@@ -50,10 +50,10 @@ const PAYMENT_METHODS: Record<string, string> = {
 };
 
 const STATUS_MAP: Record<string, { bg: string; text: string; label: string; icon: typeof CheckCircle }> = {
-    completed: { bg: 'bg-green-100', text: 'text-green-700', label: 'Completado', icon: CheckCircle },
-    pending: { bg: 'bg-yellow-100', text: 'text-yellow-700', label: 'Pendiente', icon: Clock },
-    overdue: { bg: 'bg-red-100', text: 'text-red-700', label: 'Vencido', icon: XCircle },
-    cancelled: { bg: 'bg-gray-100', text: 'text-gray-700', label: 'Cancelado', icon: XCircle },
+    completed: { bg: 'bg-green-100 dark:bg-green-900/30', text: 'text-green-700 dark:text-green-400', label: 'Completado', icon: CheckCircle },
+    pending: { bg: 'bg-yellow-100 dark:bg-yellow-900/30', text: 'text-yellow-700 dark:text-yellow-400', label: 'Pendiente', icon: Clock },
+    overdue: { bg: 'bg-red-100 dark:bg-red-900/30', text: 'text-red-700 dark:text-red-400', label: 'Vencido', icon: XCircle },
+    cancelled: { bg: 'bg-muted', text: 'text-muted-foreground', label: 'Cancelado', icon: XCircle },
 };
 
 const PAYMENT_TYPE_MAP: Record<string, string> = {
@@ -78,11 +78,11 @@ export default function PaymentShow({ payment }: Props) {
                 {/* Header */}
                 <div className="flex items-center justify-between">
                     <div>
-                        <Link href="/pagos" className="mb-2 flex items-center text-sm text-gray-600 hover:text-gray-900">
+                        <Link href="/pagos" className="mb-2 flex items-center text-sm text-muted-foreground hover:text-foreground">
                             <ArrowLeft className="mr-1 h-4 w-4" />
                             Volver a pagos
                         </Link>
-                        <h1 className="text-3xl font-bold text-gray-900">Detalle de Pago #{payment.id}</h1>
+                        <h1 className="text-3xl font-bold text-foreground">Detalle de Pago #{payment.id}</h1>
                     </div>
                     <Link href={`/pagos/${payment.id}/edit`}>
                         <Button>
@@ -93,9 +93,9 @@ export default function PaymentShow({ payment }: Props) {
                 </div>
 
                 {/* Progress Bar */}
-                <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+                <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
                     <div className="flex items-center justify-between">
-                        <h2 className="flex items-center gap-2 text-lg font-semibold text-gray-900">
+                        <h2 className="flex items-center gap-2 text-lg font-semibold text-foreground">
                             <DollarSign className="h-5 w-5 text-green-600" />
                             Resumen Financiero
                         </h2>
@@ -107,26 +107,26 @@ export default function PaymentShow({ payment }: Props) {
 
                     <div className="mt-4">
                         <div className="flex items-center justify-between text-sm">
-                            <span className="text-gray-600">Progreso de pago</span>
-                            <span className="font-medium text-gray-900">{progressPercent.toFixed(0)}%</span>
+                            <span className="text-muted-foreground">Progreso de pago</span>
+                            <span className="font-medium text-foreground">{progressPercent.toFixed(0)}%</span>
                         </div>
-                        <div className="mt-2 h-3 w-full overflow-hidden rounded-full bg-gray-200">
+                        <div className="mt-2 h-3 w-full overflow-hidden rounded-full bg-muted">
                             <div
                                 className={`h-full rounded-full transition-all ${payment.status === 'completed' ? 'bg-green-500' : 'bg-blue-500'}`}
                                 style={{ width: `${progressPercent}%` }}
                             />
                         </div>
                         <div className="mt-3 grid grid-cols-3 gap-4 text-center">
-                            <div className="rounded-lg bg-gray-50 p-3">
-                                <div className="text-sm text-gray-500">Total</div>
-                                <div className="text-lg font-bold text-gray-900">${totalAmount.toLocaleString('es-CO')}</div>
+                            <div className="rounded-lg bg-muted p-3">
+                                <div className="text-sm text-muted-foreground">Total</div>
+                                <div className="text-lg font-bold text-foreground">${totalAmount.toLocaleString('es-CO')}</div>
                             </div>
-                            <div className="rounded-lg bg-green-50 p-3">
-                                <div className="text-sm text-gray-500">Pagado</div>
+                            <div className="rounded-lg bg-green-50 dark:bg-green-900/20 p-3">
+                                <div className="text-sm text-muted-foreground">Pagado</div>
                                 <div className="text-lg font-bold text-green-600">${paidAmount.toLocaleString('es-CO')}</div>
                             </div>
-                            <div className="rounded-lg bg-orange-50 p-3">
-                                <div className="text-sm text-gray-500">Pendiente</div>
+                            <div className="rounded-lg bg-orange-50 dark:bg-orange-900/20 p-3">
+                                <div className="text-sm text-muted-foreground">Pendiente</div>
                                 <div className="text-lg font-bold text-orange-600">${pendingBalance.toLocaleString('es-CO')}</div>
                             </div>
                         </div>
@@ -136,122 +136,122 @@ export default function PaymentShow({ payment }: Props) {
                 {/* Info Grid */}
                 <div className="grid gap-6 md:grid-cols-2">
                     {/* Estudiante */}
-                    <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-                        <h3 className="flex items-center gap-2 text-sm font-semibold uppercase text-gray-500">
+                    <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
+                        <h3 className="flex items-center gap-2 text-sm font-semibold uppercase text-muted-foreground">
                             <User className="h-4 w-4" />
                             Estudiante
                         </h3>
                         <div className="mt-4 space-y-3">
                             <div>
-                                <div className="text-sm text-gray-500">Nombre</div>
-                                <div className="font-medium text-gray-900">
+                                <div className="text-sm text-muted-foreground">Nombre</div>
+                                <div className="font-medium text-foreground">
                                     {payment.student.name} {payment.student.last_name ?? ''}
                                 </div>
                             </div>
                             {payment.student.document_number && (
                                 <div>
-                                    <div className="text-sm text-gray-500">Documento</div>
-                                    <div className="font-medium text-gray-900">{payment.student.document_number}</div>
+                                    <div className="text-sm text-muted-foreground">Documento</div>
+                                    <div className="font-medium text-foreground">{payment.student.document_number}</div>
                                 </div>
                             )}
                             {payment.student.email && (
                                 <div>
-                                    <div className="text-sm text-gray-500">Email</div>
-                                    <div className="font-medium text-gray-900">{payment.student.email}</div>
+                                    <div className="text-sm text-muted-foreground">Email</div>
+                                    <div className="font-medium text-foreground">{payment.student.email}</div>
                                 </div>
                             )}
                         </div>
                     </div>
 
                     {/* Detalles del Pago */}
-                    <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-                        <h3 className="flex items-center gap-2 text-sm font-semibold uppercase text-gray-500">
+                    <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
+                        <h3 className="flex items-center gap-2 text-sm font-semibold uppercase text-muted-foreground">
                             <FileText className="h-4 w-4" />
                             Detalles del Pago
                         </h3>
                         <div className="mt-4 space-y-3">
                             <div>
-                                <div className="text-sm text-gray-500">Concepto</div>
-                                <div className="font-medium text-gray-900">{payment.concept}</div>
+                                <div className="text-sm text-muted-foreground">Concepto</div>
+                                <div className="font-medium text-foreground">{payment.concept}</div>
                             </div>
                             <div>
-                                <div className="text-sm text-gray-500">Tipo</div>
-                                <div className="font-medium text-gray-900">{PAYMENT_TYPE_MAP[payment.payment_type] ?? payment.payment_type}</div>
+                                <div className="text-sm text-muted-foreground">Tipo</div>
+                                <div className="font-medium text-foreground">{PAYMENT_TYPE_MAP[payment.payment_type] ?? payment.payment_type}</div>
                             </div>
                             {payment.payment_method && (
                                 <div>
-                                    <div className="text-sm text-gray-500">Método de Pago</div>
-                                    <div className="font-medium text-gray-900">{PAYMENT_METHODS[payment.payment_method] ?? payment.payment_method}</div>
+                                    <div className="text-sm text-muted-foreground">Método de Pago</div>
+                                    <div className="font-medium text-foreground">{PAYMENT_METHODS[payment.payment_method] ?? payment.payment_method}</div>
                                 </div>
                             )}
                             {payment.reference_number && (
                                 <div>
-                                    <div className="text-sm text-gray-500">Referencia</div>
-                                    <div className="font-medium text-gray-900">{payment.reference_number}</div>
+                                    <div className="text-sm text-muted-foreground">Referencia</div>
+                                    <div className="font-medium text-foreground">{payment.reference_number}</div>
                                 </div>
                             )}
                         </div>
                     </div>
 
                     {/* Programa y Matrícula */}
-                    <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-                        <h3 className="flex items-center gap-2 text-sm font-semibold uppercase text-gray-500">
+                    <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
+                        <h3 className="flex items-center gap-2 text-sm font-semibold uppercase text-muted-foreground">
                             <BookOpen className="h-4 w-4" />
                             Programa y Matrícula
                         </h3>
                         <div className="mt-4 space-y-3">
                             {payment.program && (
                                 <div>
-                                    <div className="text-sm text-gray-500">Programa</div>
-                                    <div className="font-medium text-gray-900">{payment.program.name}</div>
+                                    <div className="text-sm text-muted-foreground">Programa</div>
+                                    <div className="font-medium text-foreground">{payment.program.name}</div>
                                 </div>
                             )}
                             {payment.enrollment && (
                                 <div>
-                                    <div className="text-sm text-gray-500">Estado Matrícula</div>
-                                    <div className="font-medium text-gray-900 capitalize">{payment.enrollment.status}</div>
+                                    <div className="text-sm text-muted-foreground">Estado Matrícula</div>
+                                    <div className="font-medium text-foreground capitalize">{payment.enrollment.status}</div>
                                 </div>
                             )}
                             {payment.wompi_reference && (
                                 <div>
-                                    <div className="text-sm text-gray-500">Referencia Wompi</div>
-                                    <div className="font-mono text-sm text-gray-900">{payment.wompi_reference}</div>
+                                    <div className="text-sm text-muted-foreground">Referencia Wompi</div>
+                                    <div className="font-mono text-sm text-foreground">{payment.wompi_reference}</div>
                                 </div>
                             )}
                             {payment.wompi_transaction_id && (
                                 <div>
-                                    <div className="text-sm text-gray-500">Transacción Wompi</div>
-                                    <div className="font-mono text-sm text-gray-900">{payment.wompi_transaction_id}</div>
+                                    <div className="text-sm text-muted-foreground">Transacción Wompi</div>
+                                    <div className="font-mono text-sm text-foreground">{payment.wompi_transaction_id}</div>
                                 </div>
                             )}
                         </div>
                     </div>
 
                     {/* Fechas */}
-                    <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-                        <h3 className="flex items-center gap-2 text-sm font-semibold uppercase text-gray-500">
+                    <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
+                        <h3 className="flex items-center gap-2 text-sm font-semibold uppercase text-muted-foreground">
                             <Calendar className="h-4 w-4" />
                             Fechas
                         </h3>
                         <div className="mt-4 space-y-3">
                             <div>
-                                <div className="text-sm text-gray-500">Fecha de Vencimiento</div>
-                                <div className="font-medium text-gray-900">{new Date(payment.due_date).toLocaleDateString('es-CO')}</div>
+                                <div className="text-sm text-muted-foreground">Fecha de Vencimiento</div>
+                                <div className="font-medium text-foreground">{new Date(payment.due_date).toLocaleDateString('es-CO')}</div>
                             </div>
                             {payment.payment_date && (
                                 <div>
-                                    <div className="text-sm text-gray-500">Fecha de Pago</div>
-                                    <div className="font-medium text-gray-900">{new Date(payment.payment_date).toLocaleDateString('es-CO')}</div>
+                                    <div className="text-sm text-muted-foreground">Fecha de Pago</div>
+                                    <div className="font-medium text-foreground">{new Date(payment.payment_date).toLocaleDateString('es-CO')}</div>
                                 </div>
                             )}
                             <div>
-                                <div className="text-sm text-gray-500">Fecha de Registro</div>
-                                <div className="font-medium text-gray-900">{new Date(payment.created_at).toLocaleDateString('es-CO')}</div>
+                                <div className="text-sm text-muted-foreground">Fecha de Registro</div>
+                                <div className="font-medium text-foreground">{new Date(payment.created_at).toLocaleDateString('es-CO')}</div>
                             </div>
                             {payment.recorded_by && (
                                 <div>
-                                    <div className="text-sm text-gray-500">Registrado por</div>
-                                    <div className="font-medium text-gray-900">{payment.recorded_by.name}</div>
+                                    <div className="text-sm text-muted-foreground">Registrado por</div>
+                                    <div className="font-medium text-foreground">{payment.recorded_by.name}</div>
                                 </div>
                             )}
                         </div>
@@ -260,52 +260,52 @@ export default function PaymentShow({ payment }: Props) {
 
                 {/* Notas */}
                 {payment.notes && (
-                    <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-                        <h3 className="text-sm font-semibold uppercase text-gray-500">Notas</h3>
-                        <p className="mt-2 text-gray-700">{payment.notes}</p>
+                    <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
+                        <h3 className="text-sm font-semibold uppercase text-muted-foreground">Notas</h3>
+                        <p className="mt-2 text-muted-foreground">{payment.notes}</p>
                     </div>
                 )}
 
                 {/* Historial de Abonos */}
                 {payment.transactions && payment.transactions.length > 0 && (
-                    <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-                        <h2 className="flex items-center gap-2 text-lg font-semibold text-gray-900">
+                    <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
+                        <h2 className="flex items-center gap-2 text-lg font-semibold text-foreground">
                             <Receipt className="h-5 w-5 text-purple-600" />
                             Historial de Abonos ({payment.transactions.length})
                         </h2>
-                        <div className="mt-4 overflow-hidden rounded-lg border border-gray-200">
+                        <div className="mt-4 overflow-hidden rounded-lg border border-border">
                             <table className="w-full text-sm">
-                                <thead className="bg-gray-50">
+                                <thead className="bg-muted">
                                     <tr>
-                                        <th className="px-4 py-3 text-left font-medium text-gray-600">#</th>
-                                        <th className="px-4 py-3 text-left font-medium text-gray-600">Fecha</th>
-                                        <th className="px-4 py-3 text-left font-medium text-gray-600">Monto</th>
-                                        <th className="px-4 py-3 text-left font-medium text-gray-600">Método</th>
-                                        <th className="px-4 py-3 text-left font-medium text-gray-600">Referencia</th>
-                                        <th className="px-4 py-3 text-left font-medium text-gray-600">Registrado por</th>
-                                        <th className="px-4 py-3 text-left font-medium text-gray-600">Notas</th>
+                                        <th className="px-4 py-3 text-left font-medium text-muted-foreground">#</th>
+                                        <th className="px-4 py-3 text-left font-medium text-muted-foreground">Fecha</th>
+                                        <th className="px-4 py-3 text-left font-medium text-muted-foreground">Monto</th>
+                                        <th className="px-4 py-3 text-left font-medium text-muted-foreground">Método</th>
+                                        <th className="px-4 py-3 text-left font-medium text-muted-foreground">Referencia</th>
+                                        <th className="px-4 py-3 text-left font-medium text-muted-foreground">Registrado por</th>
+                                        <th className="px-4 py-3 text-left font-medium text-muted-foreground">Notas</th>
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-gray-200">
+                                <tbody className="divide-y divide-border">
                                     {payment.transactions.map((tx, index) => (
-                                        <tr key={tx.id} className="hover:bg-gray-50">
-                                            <td className="px-4 py-3 text-gray-500">{index + 1}</td>
-                                            <td className="px-4 py-3 text-gray-700">
+                                        <tr key={tx.id} className="hover:bg-muted">
+                                            <td className="px-4 py-3 text-muted-foreground">{index + 1}</td>
+                                            <td className="px-4 py-3 text-muted-foreground">
                                                 {new Date(tx.created_at).toLocaleDateString('es-CO')}
                                             </td>
-                                            <td className="px-4 py-3 font-semibold text-green-700">
+                                            <td className="px-4 py-3 font-semibold text-green-700 dark:text-green-300">
                                                 ${Number(tx.amount).toLocaleString('es-CO')}
                                             </td>
-                                            <td className="px-4 py-3 text-gray-700">
+                                            <td className="px-4 py-3 text-muted-foreground">
                                                 {PAYMENT_METHODS[tx.payment_method] ?? tx.payment_method}
                                             </td>
-                                            <td className="px-4 py-3 text-gray-500">
+                                            <td className="px-4 py-3 text-muted-foreground">
                                                 {tx.reference_number || '—'}
                                             </td>
-                                            <td className="px-4 py-3 text-gray-500">
+                                            <td className="px-4 py-3 text-muted-foreground">
                                                 {tx.recorded_by?.name || '—'}
                                             </td>
-                                            <td className="px-4 py-3 text-gray-500">
+                                            <td className="px-4 py-3 text-muted-foreground">
                                                 {tx.notes || '—'}
                                             </td>
                                         </tr>

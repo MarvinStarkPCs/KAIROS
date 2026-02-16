@@ -141,11 +141,11 @@ function getSubjectLabel(type: string): string {
 
 function getDescriptionBadge(description: string) {
     const map: Record<string, { label: string; className: string }> = {
-        created: { label: 'Creado', className: 'bg-green-100 text-green-800' },
-        updated: { label: 'Actualizado', className: 'bg-blue-100 text-blue-800' },
-        deleted: { label: 'Eliminado', className: 'bg-red-100 text-red-800' },
+        created: { label: 'Creado', className: 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200' },
+        updated: { label: 'Actualizado', className: 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200' },
+        deleted: { label: 'Eliminado', className: 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200' },
     };
-    return map[description] || { label: description, className: 'bg-gray-100 text-gray-800' };
+    return map[description] || { label: description, className: 'bg-muted text-foreground' };
 }
 
 function formatDate(date: string) {
@@ -253,10 +253,10 @@ export default function AuditIndex({ activities, links, meta, filters }: IndexPr
                 {/* Header */}
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                     <div>
-                        <h1 className="text-2xl font-bold text-gray-900">
+                        <h1 className="text-2xl font-bold text-foreground">
                             Registro de Auditoría
                         </h1>
-                        <p className="mt-1 text-sm text-gray-500">
+                        <p className="mt-1 text-sm text-muted-foreground">
                             Historial de cambios realizados en el sistema
                         </p>
                     </div>
@@ -282,7 +282,7 @@ export default function AuditIndex({ activities, links, meta, filters }: IndexPr
                     <CardContent>
                         <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
                             <div className="flex-1">
-                                <label className="mb-1 block text-xs font-medium text-gray-600">
+                                <label className="mb-1 block text-xs font-medium text-muted-foreground">
                                     Buscar acción
                                 </label>
                                 <div className="relative">
@@ -293,11 +293,11 @@ export default function AuditIndex({ activities, links, meta, filters }: IndexPr
                                         className="pl-9"
                                         onKeyDown={(e) => e.key === 'Enter' && handleFilter()}
                                     />
-                                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                                 </div>
                             </div>
                             <div>
-                                <label className="mb-1 block text-xs font-medium text-gray-600">
+                                <label className="mb-1 block text-xs font-medium text-muted-foreground">
                                     Desde
                                 </label>
                                 <Input
@@ -308,7 +308,7 @@ export default function AuditIndex({ activities, links, meta, filters }: IndexPr
                                 />
                             </div>
                             <div>
-                                <label className="mb-1 block text-xs font-medium text-gray-600">
+                                <label className="mb-1 block text-xs font-medium text-muted-foreground">
                                     Hasta
                                 </label>
                                 <Input
@@ -357,30 +357,30 @@ export default function AuditIndex({ activities, links, meta, filters }: IndexPr
                                     activityData.map((activity) => {
                                         const badge = getDescriptionBadge(activity.description);
                                         return (
-                                            <TableRow key={activity.id} className="hover:bg-gray-50">
-                                                <TableCell className="text-xs text-gray-600">
+                                            <TableRow key={activity.id} className="hover:bg-muted">
+                                                <TableCell className="text-xs text-muted-foreground">
                                                     <div className="flex items-center gap-1.5">
-                                                        <Clock className="h-3.5 w-3.5 text-gray-400" />
+                                                        <Clock className="h-3.5 w-3.5 text-muted-foreground" />
                                                         {formatDate(activity.created_at)}
                                                     </div>
                                                 </TableCell>
                                                 <TableCell>
                                                     {activity.causer ? (
                                                         <div className="flex items-center gap-2">
-                                                            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-gray-100">
-                                                                <User className="h-3.5 w-3.5 text-gray-600" />
+                                                            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-muted">
+                                                                <User className="h-3.5 w-3.5 text-muted-foreground" />
                                                             </div>
                                                             <div>
-                                                                <div className="text-sm font-medium text-gray-900">
+                                                                <div className="text-sm font-medium text-foreground">
                                                                     {activity.causer.name}
                                                                 </div>
-                                                                <div className="text-xs text-gray-500">
+                                                                <div className="text-xs text-muted-foreground">
                                                                     {activity.causer.email}
                                                                 </div>
                                                             </div>
                                                         </div>
                                                     ) : (
-                                                        <span className="text-xs text-gray-400 italic">
+                                                        <span className="text-xs text-muted-foreground italic">
                                                             Sistema
                                                         </span>
                                                     )}
@@ -400,15 +400,15 @@ export default function AuditIndex({ activities, links, meta, filters }: IndexPr
                                                             {getSubjectLabel(activity.subject.type)}
                                                         </Badge>
                                                     ) : (
-                                                        <span className="text-xs text-gray-400">—</span>
+                                                        <span className="text-xs text-muted-foreground">—</span>
                                                     )}
                                                 </TableCell>
                                                 <TableCell>
-                                                    <span className="text-sm text-gray-700">
+                                                    <span className="text-sm text-muted-foreground">
                                                         {activity.subject?.name || '—'}
                                                     </span>
                                                     {activity.subject?.id && (
-                                                        <span className="ml-1 text-xs text-gray-400">
+                                                        <span className="ml-1 text-xs text-muted-foreground">
                                                             #{activity.subject.id}
                                                         </span>
                                                     )}
@@ -422,7 +422,7 @@ export default function AuditIndex({ activities, links, meta, filters }: IndexPr
                                                             setSelectedActivity(activity)
                                                         }
                                                     >
-                                                        <Eye className="h-4 w-4 text-gray-500" />
+                                                        <Eye className="h-4 w-4 text-muted-foreground" />
                                                     </Button>
                                                 </TableCell>
                                             </TableRow>
@@ -434,7 +434,7 @@ export default function AuditIndex({ activities, links, meta, filters }: IndexPr
                                             colSpan={6}
                                             className="py-12 text-center"
                                         >
-                                            <div className="flex flex-col items-center gap-2 text-gray-400">
+                                            <div className="flex flex-col items-center gap-2 text-muted-foreground">
                                                 <Activity className="h-10 w-10" />
                                                 <p className="text-sm font-medium">
                                                     No se encontraron registros
@@ -453,7 +453,7 @@ export default function AuditIndex({ activities, links, meta, filters }: IndexPr
                     {/* Paginación */}
                     {paginationMeta.last_page > 1 && (
                         <div className="flex items-center justify-between border-t px-4 py-3">
-                            <p className="text-sm text-gray-600">
+                            <p className="text-sm text-muted-foreground">
                                 Mostrando{' '}
                                 <span className="font-medium">
                                     {paginationMeta.from}
@@ -481,7 +481,7 @@ export default function AuditIndex({ activities, links, meta, filters }: IndexPr
                                     <ChevronLeft className="h-4 w-4" />
                                     Anterior
                                 </Button>
-                                <span className="text-sm text-gray-600">
+                                <span className="text-sm text-muted-foreground">
                                     Página {paginationMeta.current_page} de{' '}
                                     {paginationMeta.last_page}
                                 </span>
@@ -519,17 +519,17 @@ export default function AuditIndex({ activities, links, meta, filters }: IndexPr
                     {selectedActivity && (
                         <div className="space-y-4">
                             {/* Info general */}
-                            <div className="grid grid-cols-2 gap-4 rounded-lg bg-gray-50 p-4">
+                            <div className="grid grid-cols-2 gap-4 rounded-lg bg-muted p-4">
                                 <div>
-                                    <p className="text-xs font-medium text-gray-500">
+                                    <p className="text-xs font-medium text-muted-foreground">
                                         Fecha
                                     </p>
-                                    <p className="text-sm text-gray-900">
+                                    <p className="text-sm text-foreground">
                                         {formatDate(selectedActivity.created_at)}
                                     </p>
                                 </div>
                                 <div>
-                                    <p className="text-xs font-medium text-gray-500">
+                                    <p className="text-xs font-medium text-muted-foreground">
                                         Acción
                                     </p>
                                     <Badge
@@ -548,29 +548,29 @@ export default function AuditIndex({ activities, links, meta, filters }: IndexPr
                                     </Badge>
                                 </div>
                                 <div>
-                                    <p className="text-xs font-medium text-gray-500">
+                                    <p className="text-xs font-medium text-muted-foreground">
                                         Usuario
                                     </p>
-                                    <p className="text-sm text-gray-900">
+                                    <p className="text-sm text-foreground">
                                         {selectedActivity.causer?.name || 'Sistema'}
                                     </p>
                                     {selectedActivity.causer?.email && (
-                                        <p className="text-xs text-gray-500">
+                                        <p className="text-xs text-muted-foreground">
                                             {selectedActivity.causer.email}
                                         </p>
                                     )}
                                 </div>
                                 <div>
-                                    <p className="text-xs font-medium text-gray-500">
+                                    <p className="text-xs font-medium text-muted-foreground">
                                         Entidad
                                     </p>
-                                    <p className="text-sm text-gray-900">
+                                    <p className="text-sm text-foreground">
                                         {selectedActivity.subject
                                             ? `${getSubjectLabel(selectedActivity.subject.type)} #${selectedActivity.subject.id}`
                                             : '—'}
                                     </p>
                                     {selectedActivity.subject?.name && (
-                                        <p className="text-xs text-gray-500">
+                                        <p className="text-xs text-muted-foreground">
                                             {selectedActivity.subject.name}
                                         </p>
                                     )}
@@ -580,7 +580,7 @@ export default function AuditIndex({ activities, links, meta, filters }: IndexPr
                             {/* Cambios - Atributos nuevos */}
                             {selectedActivity.properties?.attributes && (
                                 <div>
-                                    <h4 className="mb-2 flex items-center gap-1.5 text-sm font-semibold text-gray-900">
+                                    <h4 className="mb-2 flex items-center gap-1.5 text-sm font-semibold text-foreground">
                                         <span className="h-2 w-2 rounded-full bg-green-500" />
                                         {selectedActivity.properties?.old
                                             ? 'Valores Nuevos'
@@ -589,28 +589,28 @@ export default function AuditIndex({ activities, links, meta, filters }: IndexPr
                                     <div className="overflow-hidden rounded-lg border">
                                         <table className="w-full text-sm">
                                             <thead>
-                                                <tr className="bg-green-50">
-                                                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-600">
+                                                <tr className="bg-green-50 dark:bg-green-950/30">
+                                                    <th className="px-3 py-2 text-left text-xs font-medium text-muted-foreground">
                                                         Campo
                                                     </th>
-                                                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-600">
+                                                    <th className="px-3 py-2 text-left text-xs font-medium text-muted-foreground">
                                                         Valor
                                                     </th>
                                                 </tr>
                                             </thead>
-                                            <tbody className="divide-y divide-gray-100">
+                                            <tbody className="divide-y divide-border">
                                                 {Object.entries(
                                                     selectedActivity.properties
                                                         .attributes,
                                                 ).map(([key, value]) => (
                                                     <tr
                                                         key={key}
-                                                        className="hover:bg-gray-50"
+                                                        className="hover:bg-muted"
                                                     >
-                                                        <td className="px-3 py-2 font-medium text-gray-700">
+                                                        <td className="px-3 py-2 font-medium text-muted-foreground">
                                                             {formatFieldName(key)}
                                                         </td>
-                                                        <td className="px-3 py-2 text-gray-600">
+                                                        <td className="px-3 py-2 text-muted-foreground">
                                                             {formatValue(value)}
                                                         </td>
                                                     </tr>
@@ -624,34 +624,34 @@ export default function AuditIndex({ activities, links, meta, filters }: IndexPr
                             {/* Cambios - Atributos anteriores */}
                             {selectedActivity.properties?.old && (
                                 <div>
-                                    <h4 className="mb-2 flex items-center gap-1.5 text-sm font-semibold text-gray-900">
+                                    <h4 className="mb-2 flex items-center gap-1.5 text-sm font-semibold text-foreground">
                                         <span className="h-2 w-2 rounded-full bg-orange-500" />
                                         Valores Anteriores
                                     </h4>
                                     <div className="overflow-hidden rounded-lg border">
                                         <table className="w-full text-sm">
                                             <thead>
-                                                <tr className="bg-orange-50">
-                                                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-600">
+                                                <tr className="bg-orange-50 dark:bg-orange-950/30">
+                                                    <th className="px-3 py-2 text-left text-xs font-medium text-muted-foreground">
                                                         Campo
                                                     </th>
-                                                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-600">
+                                                    <th className="px-3 py-2 text-left text-xs font-medium text-muted-foreground">
                                                         Valor
                                                     </th>
                                                 </tr>
                                             </thead>
-                                            <tbody className="divide-y divide-gray-100">
+                                            <tbody className="divide-y divide-border">
                                                 {Object.entries(
                                                     selectedActivity.properties.old,
                                                 ).map(([key, value]) => (
                                                     <tr
                                                         key={key}
-                                                        className="hover:bg-gray-50"
+                                                        className="hover:bg-muted"
                                                     >
-                                                        <td className="px-3 py-2 font-medium text-gray-700">
+                                                        <td className="px-3 py-2 font-medium text-muted-foreground">
                                                             {formatFieldName(key)}
                                                         </td>
-                                                        <td className="px-3 py-2 text-gray-600">
+                                                        <td className="px-3 py-2 text-muted-foreground">
                                                             {formatValue(value)}
                                                         </td>
                                                     </tr>
@@ -665,7 +665,7 @@ export default function AuditIndex({ activities, links, meta, filters }: IndexPr
                             {/* Sin propiedades */}
                             {!selectedActivity.properties?.attributes &&
                                 !selectedActivity.properties?.old && (
-                                    <div className="rounded-lg border border-dashed py-8 text-center text-sm text-gray-400">
+                                    <div className="rounded-lg border border-dashed py-8 text-center text-sm text-muted-foreground">
                                         No hay detalles de cambios registrados
                                     </div>
                                 )}

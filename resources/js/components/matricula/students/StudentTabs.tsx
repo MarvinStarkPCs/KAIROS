@@ -53,7 +53,7 @@ export function StudentTabs({
                                     "px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2",
                                     isActive
                                         ? "bg-amber-500 text-white"
-                                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                                        : "bg-muted text-muted-foreground hover:bg-muted"
                                 )}
                             >
                                 <span className="truncate max-w-[120px]">{name}</span>
@@ -88,7 +88,7 @@ export function StudentTabs({
                         type="button"
                         variant="outline"
                         onClick={onAddStudent}
-                        className="border-dashed border-2 hover:border-amber-500 hover:bg-amber-50"
+                        className="border-dashed border-2 hover:border-amber-500 hover:bg-amber-50 dark:hover:bg-amber-950/30"
                     >
                         <UserPlus className="h-4 w-4 mr-2" />
                         Agregar Estudiante
@@ -97,7 +97,7 @@ export function StudentTabs({
             </div>
 
             {/* Contador y límite */}
-            <div className="flex items-center justify-between text-sm text-gray-600">
+            <div className="flex items-center justify-between text-sm text-muted-foreground">
                 <p>
                     Estudiante {currentIndex + 1} de {students.length}
                 </p>
@@ -110,13 +110,13 @@ export function StudentTabs({
             <div className="flex items-center gap-2 text-sm">
                 <div className="flex items-center gap-1">
                     <Check className="h-4 w-4 text-green-500" />
-                    <span className="text-gray-600">
+                    <span className="text-muted-foreground">
                         {students.filter(validateStudent).length} completos
                     </span>
                 </div>
                 <div className="flex items-center gap-1">
                     <AlertCircle className="h-4 w-4 text-amber-500" />
-                    <span className="text-gray-600">
+                    <span className="text-muted-foreground">
                         {students.filter(s => !validateStudent(s)).length} incompletos
                     </span>
                 </div>

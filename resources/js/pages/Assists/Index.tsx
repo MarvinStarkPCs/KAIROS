@@ -202,28 +202,28 @@ export default function ControlAsistencia({
     const getEstadoBadge = (estado: string) => {
         switch (estado) {
             case 'presente':
-                return { bg: 'bg-green-100', text: 'text-green-700', icon: Check, label: 'Presente' };
+                return { bg: 'bg-green-100 dark:bg-green-900/30', text: 'text-green-700 dark:text-green-300', icon: Check, label: 'Presente' };
             case 'ausente':
-                return { bg: 'bg-red-100', text: 'text-red-700', icon: X, label: 'Ausente' };
+                return { bg: 'bg-red-100 dark:bg-red-900/30', text: 'text-red-700 dark:text-red-300', icon: X, label: 'Ausente' };
             case 'tardanza':
-                return { bg: 'bg-yellow-100', text: 'text-yellow-700', icon: Clock, label: 'Tarde' };
+                return { bg: 'bg-yellow-100 dark:bg-yellow-900/30', text: 'text-yellow-700 dark:text-yellow-300', icon: Clock, label: 'Tarde' };
             case 'justificado':
-                return { bg: 'bg-blue-100', text: 'text-blue-700', icon: FileText, label: 'Justificado' };
+                return { bg: 'bg-blue-100 dark:bg-blue-900/30', text: 'text-blue-700 dark:text-blue-300', icon: FileText, label: 'Justificado' };
             default:
-                return { bg: 'bg-gray-100', text: 'text-gray-700', icon: Clock, label: 'Pendiente' };
+                return { bg: 'bg-muted', text: 'text-muted-foreground', icon: Clock, label: 'Pendiente' };
         }
     };
 
     const getAlertaTipo = (tipo: string) => {
         switch (tipo) {
             case 'critico':
-                return { bg: 'bg-red-50', border: 'border-red-200', text: 'text-red-700', badge: 'bg-red-100 text-red-800' };
+                return { bg: 'bg-red-50 dark:bg-red-950/30', border: 'border-red-200 dark:border-red-800', text: 'text-red-700 dark:text-red-300', badge: 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200' };
             case 'atencion':
-                return { bg: 'bg-yellow-50', border: 'border-yellow-200', text: 'text-yellow-700', badge: 'bg-yellow-100 text-yellow-800' };
+                return { bg: 'bg-yellow-50 dark:bg-yellow-950/30', border: 'border-yellow-200 dark:border-yellow-800', text: 'text-yellow-700 dark:text-yellow-300', badge: 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200' };
             case 'seguimiento':
-                return { bg: 'bg-blue-50', border: 'border-blue-200', text: 'text-blue-700', badge: 'bg-blue-100 text-blue-800' };
+                return { bg: 'bg-blue-50 dark:bg-blue-950/30', border: 'border-blue-200 dark:border-blue-800', text: 'text-blue-700 dark:text-blue-300', badge: 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200' };
             default:
-                return { bg: 'bg-gray-50', border: 'border-gray-200', text: 'text-gray-700', badge: 'bg-gray-100 text-gray-800' };
+                return { bg: 'bg-muted', border: 'border-border', text: 'text-muted-foreground', badge: 'bg-muted text-foreground' };
         }
     };
 
@@ -245,20 +245,20 @@ export default function ControlAsistencia({
             {/* Stats Cards */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
                 {/* Asistencia Hoy */}
-                <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+                <div className="bg-card rounded-lg p-6 shadow-sm border border-border">
                     <div className="flex items-center justify-between mb-3">
-                        <span className="text-sm font-medium text-gray-600">Asistencia Hoy</span>
-                        <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
+                        <span className="text-sm font-medium text-muted-foreground">Asistencia Hoy</span>
+                        <div className="w-10 h-10 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
                             <Check className="w-5 h-5 text-green-600" />
                         </div>
                     </div>
-                    <div className="text-3xl font-bold text-gray-900 mb-2">
+                    <div className="text-3xl font-bold text-foreground mb-2">
                         {asistenciaHoy.presentes}/{asistenciaHoy.total}
                     </div>
                     <div className="text-xs text-green-600 font-medium mb-2">
                         {asistenciaHoy.porcentaje} de asistencia
                     </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+                    <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
                         <div
                             className="bg-green-500 h-full rounded-full transition-all duration-500"
                             style={{ width: asistenciaHoy.porcentaje }}
@@ -267,51 +267,51 @@ export default function ControlAsistencia({
                 </div>
 
                 {/* Ausencias */}
-                <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+                <div className="bg-card rounded-lg p-6 shadow-sm border border-border">
                     <div className="flex items-center justify-between mb-3">
-                        <span className="text-sm font-medium text-gray-600">Ausencias</span>
-                        <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
+                        <span className="text-sm font-medium text-muted-foreground">Ausencias</span>
+                        <div className="w-10 h-10 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
                             <X className="w-5 h-5 text-red-600" />
                         </div>
                     </div>
-                    <div className="text-3xl font-bold text-gray-900 mb-2">{ausencias}</div>
-                    <div className="text-xs text-gray-500">Sin justificar</div>
-                    <div className="text-xs text-gray-400 mt-1">Hoy</div>
+                    <div className="text-3xl font-bold text-foreground mb-2">{ausencias}</div>
+                    <div className="text-xs text-muted-foreground">Sin justificar</div>
+                    <div className="text-xs text-muted-foreground mt-1">Hoy</div>
                 </div>
 
                 {/* Tardanzas */}
-                <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+                <div className="bg-card rounded-lg p-6 shadow-sm border border-border">
                     <div className="flex items-center justify-between mb-3">
-                        <span className="text-sm font-medium text-gray-600">Tardanzas</span>
-                        <div className="w-10 h-10 rounded-full bg-yellow-100 flex items-center justify-center">
+                        <span className="text-sm font-medium text-muted-foreground">Tardanzas</span>
+                        <div className="w-10 h-10 rounded-full bg-yellow-100 dark:bg-yellow-900/30 flex items-center justify-center">
                             <Clock className="w-5 h-5 text-yellow-600" />
                         </div>
                     </div>
-                    <div className="text-3xl font-bold text-gray-900 mb-2">{tardanzas}</div>
-                    <div className="text-xs text-gray-500">Hoy</div>
-                    <div className="text-xs text-gray-400 mt-1">Estudiantes</div>
+                    <div className="text-3xl font-bold text-foreground mb-2">{tardanzas}</div>
+                    <div className="text-xs text-muted-foreground">Hoy</div>
+                    <div className="text-xs text-muted-foreground mt-1">Estudiantes</div>
                 </div>
 
                 {/* Promedio Mensual */}
-                <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+                <div className="bg-card rounded-lg p-6 shadow-sm border border-border">
                     <div className="flex items-center justify-between mb-3">
-                        <span className="text-sm font-medium text-gray-600">Promedio Mensual</span>
-                        <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
+                        <span className="text-sm font-medium text-muted-foreground">Promedio Mensual</span>
+                        <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
                             <TrendingUp className="w-5 h-5 text-blue-600" />
                         </div>
                     </div>
-                    <div className="text-3xl font-bold text-gray-900 mb-2">{promedioMensual}</div>
+                    <div className="text-3xl font-bold text-foreground mb-2">{promedioMensual}</div>
                     <div className="text-xs text-green-600 font-medium">Este mes</div>
                 </div>
             </div>
 
             {/* Filtros y búsqueda */}
-            <div className="bg-white rounded-lg shadow-sm mb-6 p-4">
+            <div className="bg-card rounded-lg shadow-sm mb-6 p-4">
                 <div className="flex flex-col lg:flex-row gap-4">
                     {/* Búsqueda */}
                     <div className="flex-1">
                         <div className="relative">
-                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
                             <Input
                                 type="text"
                                 placeholder="Buscar por nombre o email del estudiante..."
@@ -352,7 +352,7 @@ export default function ControlAsistencia({
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mt-4 pt-4 border-t">
                         {/* Estado */}
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Estado</label>
+                            <label className="block text-sm font-medium text-muted-foreground mb-1">Estado</label>
                             <Select
                                 value={status}
                                 onValueChange={(value) => {
@@ -374,7 +374,7 @@ export default function ControlAsistencia({
 
                         {/* Programa */}
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Programa</label>
+                            <label className="block text-sm font-medium text-muted-foreground mb-1">Programa</label>
                             <Select
                                 value={programId}
                                 onValueChange={(value) => {
@@ -398,7 +398,7 @@ export default function ControlAsistencia({
 
                         {/* Profesor */}
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Profesor</label>
+                            <label className="block text-sm font-medium text-muted-foreground mb-1">Profesor</label>
                             <Select
                                 value={professorId}
                                 onValueChange={(value) => {
@@ -422,7 +422,7 @@ export default function ControlAsistencia({
 
                         {/* Fecha desde */}
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Desde</label>
+                            <label className="block text-sm font-medium text-muted-foreground mb-1">Desde</label>
                             <Input
                                 type="date"
                                 value={dateFrom}
@@ -435,7 +435,7 @@ export default function ControlAsistencia({
 
                         {/* Fecha hasta */}
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Hasta</label>
+                            <label className="block text-sm font-medium text-muted-foreground mb-1">Hasta</label>
                             <Input
                                 type="date"
                                 value={dateTo}
@@ -450,7 +450,7 @@ export default function ControlAsistencia({
             </div>
 
             {/* Tabla de Asistencia */}
-            <div className="bg-white rounded-lg shadow-sm mb-6 overflow-hidden">
+            <div className="bg-card rounded-lg shadow-sm mb-6 overflow-hidden">
                 {/* Header */}
                 <div className="bg-gray-800 text-white p-4 flex items-center justify-between">
                     <h2 className="text-lg font-semibold">Historial de Asistencias</h2>
@@ -462,35 +462,35 @@ export default function ControlAsistencia({
                 {/* Table */}
                 <div className="overflow-x-auto">
                     <table className="w-full">
-                        <thead className="bg-gray-50 border-b border-gray-200">
+                        <thead className="bg-muted border-b border-border">
                             <tr>
-                                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                <th className="px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                                     Fecha
                                 </th>
-                                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                <th className="px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                                     Estudiante
                                 </th>
-                                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                <th className="px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                                     Programa
                                 </th>
-                                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                <th className="px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                                     Profesor
                                 </th>
-                                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                <th className="px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                                     Estado
                                 </th>
-                                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                <th className="px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                                     Justificación
                                 </th>
-                                <th className="px-6 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                <th className="px-6 py-3 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                                     Acciones
                                 </th>
                             </tr>
                         </thead>
-                        <tbody className="bg-white divide-y divide-gray-200">
+                        <tbody className="bg-card divide-y divide-border">
                             {asistencias?.data?.length === 0 ? (
                                 <tr>
-                                    <td colSpan={7} className="px-6 py-12 text-center text-gray-500">
+                                    <td colSpan={7} className="px-6 py-12 text-center text-muted-foreground">
                                         No se encontraron registros de asistencia
                                     </td>
                                 </tr>
@@ -500,15 +500,15 @@ export default function ControlAsistencia({
                                     const EstadoIcon = estadoBadge.icon;
 
                                     return (
-                                        <tr key={asistencia.id} className="hover:bg-gray-50">
+                                        <tr key={asistencia.id} className="hover:bg-muted">
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <div className="flex items-center">
-                                                    <Calendar className="w-4 h-4 text-gray-400 mr-2" />
+                                                    <Calendar className="w-4 h-4 text-muted-foreground mr-2" />
                                                     <div>
-                                                        <div className="text-sm font-medium text-gray-900">
+                                                        <div className="text-sm font-medium text-foreground">
                                                             {asistencia.fecha_formato}
                                                         </div>
-                                                        <div className="text-xs text-gray-500">
+                                                        <div className="text-xs text-muted-foreground">
                                                             {asistencia.hora}
                                                         </div>
                                                     </div>
@@ -523,10 +523,10 @@ export default function ControlAsistencia({
                                                         </AvatarFallback>
                                                     </Avatar>
                                                     <div>
-                                                        <div className="text-sm font-medium text-gray-900">
+                                                        <div className="text-sm font-medium text-foreground">
                                                             {asistencia.estudiante.nombre}
                                                         </div>
-                                                        <div className="text-xs text-gray-500">
+                                                        <div className="text-xs text-muted-foreground">
                                                             {asistencia.estudiante.email}
                                                         </div>
                                                     </div>
@@ -538,7 +538,7 @@ export default function ControlAsistencia({
                                                         className="inline-block w-2 h-2 rounded-full mr-2"
                                                         style={{ backgroundColor: asistencia.programa.color }}
                                                     ></span>
-                                                    <span className="text-sm text-gray-900">
+                                                    <span className="text-sm text-foreground">
                                                         {asistencia.programa.nombre}
                                                     </span>
                                                 </div>
@@ -551,7 +551,7 @@ export default function ControlAsistencia({
                                                             {getInitials(asistencia.profesor.nombre)}
                                                         </AvatarFallback>
                                                     </Avatar>
-                                                    <span className="text-sm text-gray-900">
+                                                    <span className="text-sm text-foreground">
                                                         {asistencia.profesor.nombre}
                                                     </span>
                                                 </div>
@@ -565,12 +565,12 @@ export default function ControlAsistencia({
                                             <td className="px-6 py-4">
                                                 {asistencia.notas ? (
                                                     <div className="max-w-xs">
-                                                        <p className="text-sm text-gray-700 truncate" title={asistencia.notas}>
+                                                        <p className="text-sm text-muted-foreground truncate" title={asistencia.notas}>
                                                             {asistencia.notas}
                                                         </p>
                                                     </div>
                                                 ) : (
-                                                    <span className="text-sm text-gray-400">-</span>
+                                                    <span className="text-sm text-muted-foreground">-</span>
                                                 )}
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-center">
@@ -592,8 +592,8 @@ export default function ControlAsistencia({
 
                 {/* Pagination */}
                 {asistencias?.last_page > 1 && (
-                    <div className="px-6 py-4 border-t border-gray-200 flex items-center justify-between">
-                        <div className="text-sm text-gray-700">
+                    <div className="px-6 py-4 border-t border-border flex items-center justify-between">
+                        <div className="text-sm text-muted-foreground">
                             Mostrando {asistencias.from} a {asistencias.to} de {asistencias.total} registros
                         </div>
                         <div className="flex items-center gap-2">
@@ -605,7 +605,7 @@ export default function ControlAsistencia({
                             >
                                 <ChevronLeft className="w-4 h-4" />
                             </Button>
-                            <span className="text-sm text-gray-700">
+                            <span className="text-sm text-muted-foreground">
                                 Página {asistencias.current_page} de {asistencias.last_page}
                             </span>
                             <Button
@@ -623,10 +623,10 @@ export default function ControlAsistencia({
 
             {/* Sección de Alertas */}
             {alertas.length > 0 && (
-                <div className="bg-white rounded-lg shadow-sm p-6">
+                <div className="bg-card rounded-lg shadow-sm p-6">
                     <div className="flex items-center gap-2 mb-4">
                         <AlertTriangle className="w-5 h-5 text-orange-600" />
-                        <h3 className="text-lg font-semibold text-gray-800">Estudiantes con Alertas</h3>
+                        <h3 className="text-lg font-semibold text-foreground">Estudiantes con Alertas</h3>
                     </div>
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                         {alertas.map((alerta) => {
@@ -647,14 +647,14 @@ export default function ControlAsistencia({
                                         <div className="flex-1">
                                             <div className="flex items-start justify-between">
                                                 <div>
-                                                    <h4 className="font-semibold text-gray-900">{alerta.estudiante.nombre}</h4>
-                                                    <p className="text-xs text-gray-600">{alerta.estudiante.clase}</p>
+                                                    <h4 className="font-semibold text-foreground">{alerta.estudiante.nombre}</h4>
+                                                    <p className="text-xs text-muted-foreground">{alerta.estudiante.clase}</p>
                                                 </div>
                                                 <span className={`px-2 py-1 rounded text-xs font-medium ${alertaTipo.badge}`}>
                                                     {alerta.tipo === 'critico' ? 'Crítico' : alerta.tipo === 'atencion' ? 'Atención' : 'Seguimiento'}
                                                 </span>
                                             </div>
-                                            <p className="text-sm text-gray-700 mt-2">{alerta.mensaje}</p>
+                                            <p className="text-sm text-muted-foreground mt-2">{alerta.mensaje}</p>
                                         </div>
                                     </div>
                                 </div>
@@ -676,41 +676,41 @@ export default function ControlAsistencia({
                     {selectedAttendance && (
                         <div className="space-y-4">
                             {/* Estudiante */}
-                            <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                            <div className="flex items-center gap-3 p-3 bg-muted rounded-lg">
                                 <Avatar className="h-12 w-12">
                                     <AvatarFallback className="bg-[#7a9b3c] text-white">
                                         {getInitials(selectedAttendance.estudiante.nombre)}
                                     </AvatarFallback>
                                 </Avatar>
                                 <div>
-                                    <h4 className="font-semibold text-gray-900">{selectedAttendance.estudiante.nombre}</h4>
-                                    <p className="text-sm text-gray-500">{selectedAttendance.estudiante.email}</p>
+                                    <h4 className="font-semibold text-foreground">{selectedAttendance.estudiante.nombre}</h4>
+                                    <p className="text-sm text-muted-foreground">{selectedAttendance.estudiante.email}</p>
                                 </div>
                             </div>
 
                             {/* Detalles */}
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="text-xs text-gray-500 uppercase">Fecha</label>
+                                    <label className="text-xs text-muted-foreground uppercase">Fecha</label>
                                     <p className="font-medium">{selectedAttendance.fecha_formato}</p>
                                 </div>
                                 <div>
-                                    <label className="text-xs text-gray-500 uppercase">Hora de clase</label>
+                                    <label className="text-xs text-muted-foreground uppercase">Hora de clase</label>
                                     <p className="font-medium">{selectedAttendance.hora}</p>
                                 </div>
                                 <div>
-                                    <label className="text-xs text-gray-500 uppercase">Programa</label>
+                                    <label className="text-xs text-muted-foreground uppercase">Programa</label>
                                     <p className="font-medium">{selectedAttendance.programa.nombre}</p>
                                 </div>
                                 <div>
-                                    <label className="text-xs text-gray-500 uppercase">Profesor</label>
+                                    <label className="text-xs text-muted-foreground uppercase">Profesor</label>
                                     <p className="font-medium">{selectedAttendance.profesor.nombre}</p>
                                 </div>
                             </div>
 
                             {/* Estado */}
                             <div>
-                                <label className="text-xs text-gray-500 uppercase">Estado</label>
+                                <label className="text-xs text-muted-foreground uppercase">Estado</label>
                                 <div className="mt-1">
                                     {(() => {
                                         const estadoBadge = getEstadoBadge(selectedAttendance.estado);
@@ -727,18 +727,18 @@ export default function ControlAsistencia({
 
                             {/* Justificación/Notas */}
                             <div>
-                                <label className="text-xs text-gray-500 uppercase">Justificación / Notas</label>
+                                <label className="text-xs text-muted-foreground uppercase">Justificación / Notas</label>
                                 {selectedAttendance.notas ? (
-                                    <div className="mt-1 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                                        <p className="text-sm text-gray-800">{selectedAttendance.notas}</p>
+                                    <div className="mt-1 p-3 bg-yellow-50 dark:bg-yellow-950/30 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+                                        <p className="text-sm text-foreground">{selectedAttendance.notas}</p>
                                     </div>
                                 ) : (
-                                    <p className="mt-1 text-gray-400 italic">Sin justificación registrada</p>
+                                    <p className="mt-1 text-muted-foreground italic">Sin justificación registrada</p>
                                 )}
                             </div>
 
                             {/* Info adicional */}
-                            <div className="pt-3 border-t text-xs text-gray-500">
+                            <div className="pt-3 border-t text-xs text-muted-foreground">
                                 <p>Registrado por: {selectedAttendance.registrado_por}</p>
                                 <p>Fecha de registro: {selectedAttendance.created_at}</p>
                             </div>

@@ -135,14 +135,14 @@ Route::middleware(['auth'])->group(function () {
     });
 
     // Usuarios (requiere permisos específicos)
+    Route::middleware(['permission:crear_usuario'])->group(function () {
+        Route::get('/usuarios/create', [UserController::class, 'create'])->name('usuarios.create');
+        Route::post('/usuarios', [UserController::class, 'store'])->name('usuarios.store');
+    });
     Route::middleware(['permission:ver_usuarios'])->group(function () {
         Route::get('/usuarios/search', [UserController::class, 'search'])->name('usuarios.search');
         Route::get('/usuarios', [UserController::class, 'index'])->name('usuarios.index');
         Route::get('/usuarios/{user}', [UserController::class, 'show'])->name('usuarios.show');
-    });
-    Route::middleware(['permission:crear_usuario'])->group(function () {
-        Route::get('/usuarios/create', [UserController::class, 'create'])->name('usuarios.create');
-        Route::post('/usuarios', [UserController::class, 'store'])->name('usuarios.store');
     });
     Route::middleware(['permission:editar_usuario'])->group(function () {
         Route::get('/usuarios/{user}/edit', [UserController::class, 'edit'])->name('usuarios.edit');
@@ -214,15 +214,15 @@ Route::middleware(['auth'])->group(function () {
     });
 
     // Inscripciones
-    Route::middleware(['permission:ver_inscripciones'])->group(function () {
-        Route::get('/matriculas', [EnrollmentController::class, 'index'])->name('inscripciones.index');
-        Route::get('/matriculas/{enrollment}', [EnrollmentController::class, 'show'])->name('inscripciones.show');
-        Route::get('/programs/{program}/available-students', [EnrollmentController::class, 'availableStudents'])->name('programs.available-students');
-    });
     Route::middleware(['permission:crear_inscripcion'])->group(function () {
         Route::get('/matriculas/create', [EnrollmentController::class, 'create'])->name('inscripciones.create');
         Route::post('/matriculas', [EnrollmentController::class, 'store'])->name('inscripciones.store');
         Route::post('/matriculas/quick-enroll', [EnrollmentController::class, 'quickEnroll'])->name('inscripciones.quick-enroll');
+    });
+    Route::middleware(['permission:ver_inscripciones'])->group(function () {
+        Route::get('/matriculas', [EnrollmentController::class, 'index'])->name('inscripciones.index');
+        Route::get('/matriculas/{enrollment}', [EnrollmentController::class, 'show'])->name('inscripciones.show');
+        Route::get('/programs/{program}/available-students', [EnrollmentController::class, 'availableStudents'])->name('programs.available-students');
     });
     Route::middleware(['permission:editar_inscripcion'])->group(function () {
         Route::get('/matriculas/{enrollment}/edit', [EnrollmentController::class, 'edit'])->name('inscripciones.edit');
@@ -276,6 +276,11 @@ Route::middleware(['auth'])->group(function () {
     });
 
     // Pagos
+    Route::middleware(['permission:crear_pago'])->group(function () {
+        Route::get('/pagos/create', [PaymentController::class, 'create'])->name('pagos.create');
+        Route::post('/pagos', [PaymentController::class, 'store'])->name('pagos.store');
+        Route::post('/pagos/create-installments', [PaymentController::class, 'createInstallments'])->name('pagos.create-installments');
+    });
     Route::middleware(['permission:ver_pagos'])->group(function () {
         Route::get('/pagos', [PaymentController::class, 'index'])->name('pagos.index');
         Route::get('/pagos/settings', [PaymentController::class, 'settings'])->name('pagos.settings');
@@ -284,11 +289,6 @@ Route::middleware(['auth'])->group(function () {
     });
     Route::middleware(['permission:editar_pago'])->group(function () {
         Route::patch('/pagos/settings', [PaymentController::class, 'updateSettings'])->name('pagos.settings.update');
-    });
-    Route::middleware(['permission:crear_pago'])->group(function () {
-        Route::get('/pagos/create', [PaymentController::class, 'create'])->name('pagos.create');
-        Route::post('/pagos', [PaymentController::class, 'store'])->name('pagos.store');
-        Route::post('/pagos/create-installments', [PaymentController::class, 'createInstallments'])->name('pagos.create-installments');
     });
     Route::middleware(['permission:editar_pago'])->group(function () {
         Route::get('/pagos/{payment}/edit', [PaymentController::class, 'edit'])->name('pagos.edit');

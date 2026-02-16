@@ -32,22 +32,22 @@ function Accordion({ section, defaultOpen = false }: { section: GuideSection; de
         <div className={`overflow-hidden rounded-2xl border ${section.borderColor} transition-all shadow-sm`}>
             <button
                 onClick={() => setOpen(!open)}
-                className={`flex w-full items-center gap-4 px-6 py-5 text-left transition-colors ${open ? section.bgColor : 'bg-white hover:bg-gray-50'}`}
+                className={`flex w-full items-center gap-4 px-6 py-5 text-left transition-colors ${open ? section.bgColor : 'bg-card hover:bg-muted'}`}
             >
                 <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl ${section.color} shadow-md`}>
                     <Icon className="h-6 w-6 text-white" />
                 </div>
                 <div className="flex-1">
-                    <h3 className="text-lg font-bold text-gray-900">{section.title}</h3>
+                    <h3 className="text-lg font-bold text-foreground">{section.title}</h3>
                 </div>
                 {open ? (
-                    <ChevronDown className="h-5 w-5 shrink-0 text-gray-400" />
+                    <ChevronDown className="h-5 w-5 shrink-0 text-muted-foreground" />
                 ) : (
-                    <ChevronRight className="h-5 w-5 shrink-0 text-gray-400" />
+                    <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground" />
                 )}
             </button>
             {open && (
-                <div className="border-t border-gray-100 bg-white px-6 py-6">
+                <div className="border-t border-border bg-card px-6 py-6">
                     {section.content}
                 </div>
             )}
@@ -65,9 +65,9 @@ function StepList({ steps, color }: { steps: Step[]; color: string }) {
                         {i + 1}
                     </span>
                     <div className="pt-1">
-                        <p className="text-base text-gray-800 font-medium">{step.text}</p>
+                        <p className="text-base text-foreground font-medium">{step.text}</p>
                         {step.detail && (
-                            <p className="text-sm text-gray-500 mt-1">{step.detail}</p>
+                            <p className="text-sm text-muted-foreground mt-1">{step.detail}</p>
                         )}
                     </div>
                 </li>
@@ -79,14 +79,14 @@ function StepList({ steps, color }: { steps: Step[]; color: string }) {
 /* ───────── Tip Box ───────── */
 function TipBox({ tips }: { tips: string[] }) {
     return (
-        <div className="mt-5 rounded-xl bg-amber-50 border border-amber-200 p-4">
+        <div className="mt-5 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 p-4">
             <div className="flex items-center gap-2 mb-2">
                 <Lightbulb className="h-4 w-4 text-amber-600" />
-                <p className="text-sm font-bold text-amber-800">Consejos</p>
+                <p className="text-sm font-bold text-amber-800 dark:text-amber-200">Consejos</p>
             </div>
             <ul className="space-y-1.5">
                 {tips.map((tip, i) => (
-                    <li key={i} className="flex items-start gap-2 text-sm text-amber-900/80">
+                    <li key={i} className="flex items-start gap-2 text-sm text-amber-900 dark:text-amber-100/80">
                         <span className="text-amber-500 mt-0.5">•</span>
                         <span>{tip}</span>
                     </li>
@@ -100,7 +100,7 @@ function TipBox({ tips }: { tips: string[] }) {
 function LoginGuide() {
     return (
         <div className="space-y-5">
-            <p className="text-gray-600">Para acceder a la plataforma necesitas un usuario y contraseña que te proporcionará la academia.</p>
+            <p className="text-muted-foreground">Para acceder a la plataforma necesitas un usuario y contraseña que te proporcionará la academia.</p>
             <StepList
                 color="bg-blue-500"
                 steps={[
@@ -124,10 +124,10 @@ function LoginGuide() {
 function StudentGuide() {
     return (
         <div className="space-y-6">
-            <p className="text-gray-600">Al iniciar sesión como estudiante, verás directamente tus calificaciones. Así es como funciona:</p>
+            <p className="text-muted-foreground">Al iniciar sesión como estudiante, verás directamente tus calificaciones. Así es como funciona:</p>
 
             <div className="space-y-4">
-                <h4 className="font-bold text-gray-800 flex items-center gap-2">
+                <h4 className="font-bold text-foreground flex items-center gap-2">
                     <Eye className="h-4 w-4 text-pink-500" />
                     ¿Qué veo al entrar?
                 </h4>
@@ -138,7 +138,7 @@ function StudentGuide() {
                         'Tu porcentaje de avance general',
                         'Tus horarios de clase',
                     ].map((item, i) => (
-                        <li key={i} className="flex items-start gap-2 text-gray-700">
+                        <li key={i} className="flex items-start gap-2 text-muted-foreground">
                             <CheckCircle className="h-4 w-4 mt-0.5 shrink-0 text-green-500" />
                             <span>{item}</span>
                         </li>
@@ -147,7 +147,7 @@ function StudentGuide() {
             </div>
 
             <div className="space-y-4">
-                <h4 className="font-bold text-gray-800 flex items-center gap-2">
+                <h4 className="font-bold text-foreground flex items-center gap-2">
                     <Star className="h-4 w-4 text-amber-500" />
                     ¿Cómo ver mis calificaciones?
                 </h4>
@@ -173,10 +173,10 @@ function StudentGuide() {
 function ParentGuide() {
     return (
         <div className="space-y-6">
-            <p className="text-gray-600">Como padre o acudiente, puedes ver el progreso académico de tus hijos en la plataforma.</p>
+            <p className="text-muted-foreground">Como padre o acudiente, puedes ver el progreso académico de tus hijos en la plataforma.</p>
 
             <div className="space-y-4">
-                <h4 className="font-bold text-gray-800 flex items-center gap-2">
+                <h4 className="font-bold text-foreground flex items-center gap-2">
                     <Eye className="h-4 w-4 text-rose-500" />
                     ¿Qué veo al entrar?
                 </h4>
@@ -187,7 +187,7 @@ function ParentGuide() {
                         'Las calificaciones y progreso de cada uno',
                         'Puedes hacer clic en cada hijo para ver su detalle completo',
                     ].map((item, i) => (
-                        <li key={i} className="flex items-start gap-2 text-gray-700">
+                        <li key={i} className="flex items-start gap-2 text-muted-foreground">
                             <CheckCircle className="h-4 w-4 mt-0.5 shrink-0 text-green-500" />
                             <span>{item}</span>
                         </li>
@@ -196,7 +196,7 @@ function ParentGuide() {
             </div>
 
             <div className="space-y-4">
-                <h4 className="font-bold text-gray-800 flex items-center gap-2">
+                <h4 className="font-bold text-foreground flex items-center gap-2">
                     <Star className="h-4 w-4 text-amber-500" />
                     ¿Cómo ver las calificaciones de mi hijo?
                 </h4>
@@ -225,37 +225,37 @@ function ParentGuide() {
 function GradesGuide() {
     return (
         <div className="space-y-6">
-            <p className="text-gray-600">El sistema de calificaciones de la academia funciona así:</p>
+            <p className="text-muted-foreground">El sistema de calificaciones de la academia funciona así:</p>
 
             {/* Estructura */}
             <div className="space-y-3">
-                <h4 className="font-bold text-gray-800 flex items-center gap-2">
+                <h4 className="font-bold text-foreground flex items-center gap-2">
                     <BookOpen className="h-4 w-4 text-amber-600" />
                     Estructura de evaluación
                 </h4>
-                <div className="rounded-xl border border-gray-200 overflow-hidden">
-                    <div className="bg-gray-50 px-5 py-3 border-b border-gray-200">
+                <div className="rounded-xl border border-border overflow-hidden">
+                    <div className="bg-muted px-5 py-3 border-b border-border">
                         <div className="flex items-center gap-3">
                             <div className="h-3 w-3 rounded-full bg-amber-500"></div>
-                            <span className="font-semibold text-gray-800 text-sm">Programa (ej: Piano)</span>
+                            <span className="font-semibold text-foreground text-sm">Programa (ej: Piano)</span>
                         </div>
                     </div>
-                    <div className="px-5 py-3 border-b border-gray-100">
+                    <div className="px-5 py-3 border-b border-border">
                         <div className="flex items-center gap-3 ml-6">
                             <div className="h-2.5 w-2.5 rounded-full bg-blue-400"></div>
-                            <span className="text-gray-700 text-sm">Módulo (ej: Nivel Básico)</span>
+                            <span className="text-muted-foreground text-sm">Módulo (ej: Nivel Básico)</span>
                         </div>
                     </div>
-                    <div className="px-5 py-3 border-b border-gray-100">
+                    <div className="px-5 py-3 border-b border-border">
                         <div className="flex items-center gap-3 ml-12">
                             <div className="h-2 w-2 rounded-full bg-green-400"></div>
-                            <span className="text-gray-700 text-sm">Actividad (ej: Práctica de Escalas)</span>
+                            <span className="text-muted-foreground text-sm">Actividad (ej: Práctica de Escalas)</span>
                         </div>
                     </div>
                     <div className="px-5 py-3">
                         <div className="flex items-center gap-3 ml-[72px]">
                             <div className="h-1.5 w-1.5 rounded-full bg-purple-400"></div>
-                            <span className="text-gray-600 text-sm">Criterios (ej: Técnica 40%, Ritmo 30%, Expresión 30%)</span>
+                            <span className="text-muted-foreground text-sm">Criterios (ej: Técnica 40%, Ritmo 30%, Expresión 30%)</span>
                         </div>
                     </div>
                 </div>
@@ -263,11 +263,11 @@ function GradesGuide() {
 
             {/* Cómo se calcula */}
             <div className="space-y-3">
-                <h4 className="font-bold text-gray-800 flex items-center gap-2">
+                <h4 className="font-bold text-foreground flex items-center gap-2">
                     <BarChart className="h-4 w-4 text-indigo-500" />
                     ¿Cómo se calcula la nota?
                 </h4>
-                <div className="space-y-3 text-gray-700">
+                <div className="space-y-3 text-muted-foreground">
                     <div className="flex items-start gap-3">
                         <ArrowRight className="h-4 w-4 mt-1 shrink-0 text-amber-500" />
                         <p>Cada <strong>actividad</strong> tiene varios <strong>criterios de evaluación</strong> con un porcentaje asignado.</p>
@@ -289,45 +289,45 @@ function GradesGuide() {
 
             {/* Ejemplo visual */}
             <div className="space-y-3">
-                <h4 className="font-bold text-gray-800 flex items-center gap-2">
+                <h4 className="font-bold text-foreground flex items-center gap-2">
                     <Star className="h-4 w-4 text-amber-500" />
                     Ejemplo
                 </h4>
-                <div className="rounded-xl border border-gray-200 overflow-hidden text-sm">
-                    <div className="bg-amber-50 px-4 py-2.5 font-semibold text-amber-900 border-b border-amber-200">
+                <div className="rounded-xl border border-border overflow-hidden text-sm">
+                    <div className="bg-amber-50 dark:bg-amber-950/30 px-4 py-2.5 font-semibold text-amber-900 dark:text-amber-100 border-b border-amber-200 dark:border-amber-800">
                         Actividad: Práctica de Escalas
                     </div>
                     <table className="w-full">
                         <thead>
-                            <tr className="bg-gray-50 border-b border-gray-200">
-                                <th className="px-4 py-2 text-left text-gray-600 font-semibold">Criterio</th>
-                                <th className="px-4 py-2 text-center text-gray-600 font-semibold">Peso</th>
-                                <th className="px-4 py-2 text-center text-gray-600 font-semibold">Nota</th>
+                            <tr className="bg-muted border-b border-border">
+                                <th className="px-4 py-2 text-left text-muted-foreground font-semibold">Criterio</th>
+                                <th className="px-4 py-2 text-center text-muted-foreground font-semibold">Peso</th>
+                                <th className="px-4 py-2 text-center text-muted-foreground font-semibold">Nota</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <tr className="border-b border-gray-100">
-                                <td className="px-4 py-2 text-gray-700">Técnica</td>
-                                <td className="px-4 py-2 text-center text-gray-500">40%</td>
+                            <tr className="border-b border-border">
+                                <td className="px-4 py-2 text-muted-foreground">Técnica</td>
+                                <td className="px-4 py-2 text-center text-muted-foreground">40%</td>
                                 <td className="px-4 py-2 text-center font-semibold text-green-600">4.5</td>
                             </tr>
-                            <tr className="border-b border-gray-100">
-                                <td className="px-4 py-2 text-gray-700">Ritmo</td>
-                                <td className="px-4 py-2 text-center text-gray-500">30%</td>
+                            <tr className="border-b border-border">
+                                <td className="px-4 py-2 text-muted-foreground">Ritmo</td>
+                                <td className="px-4 py-2 text-center text-muted-foreground">30%</td>
                                 <td className="px-4 py-2 text-center font-semibold text-green-600">4.0</td>
                             </tr>
-                            <tr className="border-b border-gray-100">
-                                <td className="px-4 py-2 text-gray-700">Expresión Musical</td>
-                                <td className="px-4 py-2 text-center text-gray-500">30%</td>
+                            <tr className="border-b border-border">
+                                <td className="px-4 py-2 text-muted-foreground">Expresión Musical</td>
+                                <td className="px-4 py-2 text-center text-muted-foreground">30%</td>
                                 <td className="px-4 py-2 text-center font-semibold text-amber-600">3.5</td>
                             </tr>
                         </tbody>
                     </table>
-                    <div className="bg-gray-50 px-4 py-3 flex justify-between items-center border-t border-gray-200">
-                        <span className="font-semibold text-gray-700">Nota Final</span>
-                        <span className="font-bold text-lg text-amber-700">4.05</span>
+                    <div className="bg-muted px-4 py-3 flex justify-between items-center border-t border-border">
+                        <span className="font-semibold text-muted-foreground">Nota Final</span>
+                        <span className="font-bold text-lg text-amber-700 dark:text-amber-300">4.05</span>
                     </div>
-                    <div className="px-4 py-2 text-xs text-gray-400 border-t border-gray-100">
+                    <div className="px-4 py-2 text-xs text-muted-foreground border-t border-border">
                         Cálculo: (4.5 × 40%) + (4.0 × 30%) + (3.5 × 30%) = 1.8 + 1.2 + 1.05 = 4.05
                     </div>
                 </div>
@@ -346,7 +346,7 @@ function GradesGuide() {
 function ProfileGuide() {
     return (
         <div className="space-y-5">
-            <p className="text-gray-600">Puedes actualizar tus datos personales y cambiar tu contraseña.</p>
+            <p className="text-muted-foreground">Puedes actualizar tus datos personales y cambiar tu contraseña.</p>
             <StepList
                 color="bg-gray-600"
                 steps={[
@@ -371,8 +371,8 @@ const sections: GuideSection[] = [
         title: 'Cómo Iniciar Sesión',
         icon: LogIn,
         color: 'bg-blue-500',
-        bgColor: 'bg-blue-50',
-        borderColor: 'border-blue-200',
+        bgColor: 'bg-blue-50 dark:bg-blue-950/30',
+        borderColor: 'border-blue-200 dark:border-blue-800',
         content: <LoginGuide />,
     },
     {
@@ -380,8 +380,8 @@ const sections: GuideSection[] = [
         title: 'Guía para Estudiantes',
         icon: Award,
         color: 'bg-pink-500',
-        bgColor: 'bg-pink-50',
-        borderColor: 'border-pink-200',
+        bgColor: 'bg-pink-50 dark:bg-pink-950/30',
+        borderColor: 'border-pink-200 dark:border-pink-800',
         content: <StudentGuide />,
     },
     {
@@ -389,8 +389,8 @@ const sections: GuideSection[] = [
         title: 'Guía para Padres y Acudientes',
         icon: Heart,
         color: 'bg-rose-500',
-        bgColor: 'bg-rose-50',
-        borderColor: 'border-rose-200',
+        bgColor: 'bg-rose-50 dark:bg-rose-950/30',
+        borderColor: 'border-rose-200 dark:border-rose-800',
         content: <ParentGuide />,
     },
     {
@@ -398,8 +398,8 @@ const sections: GuideSection[] = [
         title: 'Cómo Entender las Calificaciones',
         icon: BarChart,
         color: 'bg-amber-600',
-        bgColor: 'bg-amber-50',
-        borderColor: 'border-amber-200',
+        bgColor: 'bg-amber-50 dark:bg-amber-950/30',
+        borderColor: 'border-amber-200 dark:border-amber-800',
         content: <GradesGuide />,
     },
     {
@@ -407,8 +407,8 @@ const sections: GuideSection[] = [
         title: 'Cómo Configurar mi Perfil',
         icon: Lock,
         color: 'bg-gray-600',
-        bgColor: 'bg-gray-50',
-        borderColor: 'border-gray-200',
+        bgColor: 'bg-muted',
+        borderColor: 'border-border',
         content: <ProfileGuide />,
     },
 ];
@@ -421,9 +421,9 @@ export default function Guia() {
                 <meta name="description" content="Guía de uso de la plataforma KAIROS para estudiantes y padres de la Academia Linaje." />
             </Head>
 
-            <div className="min-h-screen bg-gradient-to-b from-amber-50/50 via-white to-white">
+            <div className="min-h-screen bg-gradient-to-b from-amber-50/50 dark:from-neutral-950 via-white dark:via-neutral-900 to-white dark:to-neutral-900">
                 {/* Header */}
-                <header className="bg-white border-b-2 border-amber-600/40 shadow-sm">
+                <header className="bg-card border-b-2 border-amber-600/40 shadow-sm">
                     <div className="mx-auto max-w-3xl px-4 sm:px-6 py-4 flex items-center justify-between">
                         <a href="/" className="flex items-center gap-3">
                             <img
@@ -449,10 +449,10 @@ export default function Guia() {
                                 <GraduationCap className="h-8 w-8 text-white" />
                             </div>
                         </div>
-                        <h1 className="text-3xl sm:text-4xl font-extrabold text-gray-900">
+                        <h1 className="text-3xl sm:text-4xl font-extrabold text-foreground">
                             Guía de Uso
                         </h1>
-                        <p className="text-lg text-gray-500 max-w-xl mx-auto">
+                        <p className="text-lg text-muted-foreground max-w-xl mx-auto">
                             Aprende a usar la plataforma KAIROS para consultar calificaciones, horarios y más.
                         </p>
                     </div>
@@ -470,10 +470,10 @@ export default function Guia() {
                             <a
                                 key={i}
                                 href={item.href}
-                                className="flex flex-col items-center gap-2 rounded-xl border border-gray-200 bg-white p-4 text-center hover:shadow-md hover:border-amber-300 transition-all"
+                                className="flex flex-col items-center gap-2 rounded-xl border border-border bg-card p-4 text-center hover:shadow-md hover:border-amber-300 dark:hover:border-amber-700 transition-all"
                             >
                                 <item.icon className={`h-6 w-6 ${item.color}`} />
-                                <span className="text-xs font-semibold text-gray-700">{item.label}</span>
+                                <span className="text-xs font-semibold text-muted-foreground">{item.label}</span>
                             </a>
                         ))}
                     </div>
@@ -493,7 +493,7 @@ export default function Guia() {
                         <p className="text-amber-100 mb-5 text-sm">Ingresa a la plataforma y consulta tus calificaciones.</p>
                         <Link
                             href={login()}
-                            className="inline-flex items-center gap-2 rounded-lg bg-white px-6 py-3 text-sm font-bold text-amber-800 shadow-md hover:shadow-lg transition-all hover:bg-amber-50"
+                            className="inline-flex items-center gap-2 rounded-lg bg-card px-6 py-3 text-sm font-bold text-amber-800 dark:text-amber-200 shadow-md hover:shadow-lg transition-all hover:bg-amber-50 dark:hover:bg-amber-950/30"
                         >
                             <LogIn className="h-4 w-4" />
                             Iniciar Sesión
@@ -502,10 +502,10 @@ export default function Guia() {
 
                     {/* Footer */}
                     <div className="text-center pt-8 pb-4">
-                        <p className="text-xs text-gray-400">
+                        <p className="text-xs text-muted-foreground">
                             Academia Linaje — Plataforma KAIROS · 2026
                         </p>
-                        <p className="text-xs text-gray-400 mt-1">
+                        <p className="text-xs text-muted-foreground mt-1">
                             ¿Necesitas ayuda? Escríbenos por{' '}
                             <a href="https://wa.me/573004218146" target="_blank" rel="noopener noreferrer" className="text-green-600 hover:underline font-medium">
                                 WhatsApp

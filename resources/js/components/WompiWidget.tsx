@@ -139,7 +139,7 @@ export default function WompiWidget({
     return (
         <div className="w-full">
             {/* Información del pago */}
-            <div className="mb-6 p-6 bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl">
+            <div className="mb-6 p-6 bg-gradient-to-br from-green-50 dark:from-green-950/30 to-emerald-50 dark:to-emerald-950/30 border-2 border-green-200 dark:border-green-800 rounded-xl">
                 <div className="text-center space-y-4">
                     <div className="inline-flex items-center justify-center w-16 h-16 bg-green-500 rounded-full">
                         <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -147,18 +147,18 @@ export default function WompiWidget({
                         </svg>
                     </div>
                     <div>
-                        <h3 className="text-lg font-semibold text-gray-900 mb-1">
+                        <h3 className="text-lg font-semibold text-foreground mb-1">
                             Pago Seguro con Wompi
                         </h3>
-                        <p className="text-sm text-gray-600">
+                        <p className="text-sm text-muted-foreground">
                             Haz clic en el botón de abajo para continuar
                         </p>
                     </div>
                     <div className="pt-2">
-                        <p className="text-2xl font-bold text-green-700">
+                        <p className="text-2xl font-bold text-green-700 dark:text-green-300">
                             ${(amountInCents / 100).toLocaleString('es-CO')} COP
                         </p>
-                        <p className="text-xs text-gray-500 mt-1">
+                        <p className="text-xs text-muted-foreground mt-1">
                             Referencia: {reference}
                         </p>
                     </div>
@@ -174,7 +174,7 @@ export default function WompiWidget({
 
             {/* Instrucciones */}
             <div className="mt-6">
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
                     <div className="flex gap-3">
                         <div className="flex-shrink-0">
                             <svg className="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
@@ -182,10 +182,10 @@ export default function WompiWidget({
                             </svg>
                         </div>
                         <div className="flex-1">
-                            <p className="text-sm font-medium text-blue-900 mb-1">
+                            <p className="text-sm font-medium text-blue-900 dark:text-blue-100 mb-1">
                                 Instrucciones de pago
                             </p>
-                            <ul className="text-xs text-blue-800 space-y-1">
+                            <ul className="text-xs text-blue-800 dark:text-blue-200 space-y-1">
                                 <li>• Haz clic en el botón "Pagar con Wompi"</li>
                                 <li>• Se abrirá una ventana segura de Wompi</li>
                                 <li>• Elige tu método de pago (tarjeta, PSE, Nequi, etc.)</li>

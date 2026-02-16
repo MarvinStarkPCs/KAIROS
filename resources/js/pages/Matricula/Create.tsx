@@ -240,10 +240,10 @@ export default function Create({ programs, paymentMethods, modalityPrices, disco
             case 1:
                 return (
                     <Card className="border-2 shadow-xl hover:shadow-2xl transition-shadow duration-300">
-                        <CardHeader className="bg-gradient-to-r from-amber-50 to-orange-50 border-b">
+                        <CardHeader className="bg-gradient-to-r from-amber-50 dark:from-amber-950/30 to-orange-50 dark:to-orange-950/30 border-b">
                             <div className="flex items-center gap-3 mb-2">
-                                <div className="p-2 bg-amber-100 rounded-lg">
-                                    <User className="h-5 w-5 text-amber-700" />
+                                <div className="p-2 bg-amber-100 dark:bg-amber-900/30 rounded-lg">
+                                    <User className="h-5 w-5 text-amber-700 dark:text-amber-300" />
                                 </div>
                                 <CardTitle className="text-xl sm:text-2xl">Datos del Responsable</CardTitle>
                             </div>
@@ -394,10 +394,10 @@ export default function Create({ programs, paymentMethods, modalityPrices, disco
             case 2:
                 return (
                     <Card className="border-2 shadow-xl hover:shadow-2xl transition-shadow duration-300">
-                        <CardHeader className="bg-gradient-to-r from-amber-50 to-orange-50 border-b">
+                        <CardHeader className="bg-gradient-to-r from-amber-50 dark:from-amber-950/30 to-orange-50 dark:to-orange-950/30 border-b">
                             <div className="flex items-center gap-3 mb-2">
-                                <div className="p-2 bg-amber-100 rounded-lg">
-                                    <MapPin className="h-5 w-5 text-amber-700" />
+                                <div className="p-2 bg-amber-100 dark:bg-amber-900/30 rounded-lg">
+                                    <MapPin className="h-5 w-5 text-amber-700 dark:text-amber-300" />
                                 </div>
                                 <CardTitle className="text-xl sm:text-2xl">Datos de Localización</CardTitle>
                             </div>
@@ -484,7 +484,7 @@ export default function Create({ programs, paymentMethods, modalityPrices, disco
 
                             <div className="mt-6 pt-6 border-t">
                                 <Label className="text-lg font-semibold">¿La matrícula es para un menor de edad?</Label>
-                                <p className="text-sm text-gray-600 mt-2 mb-4">
+                                <p className="text-sm text-muted-foreground mt-2 mb-4">
                                     Si la matrícula es para uno o más menores de edad, deberá ingresar los datos de cada estudiante
                                     en el siguiente paso.
                                 </p>
@@ -542,10 +542,10 @@ export default function Create({ programs, paymentMethods, modalityPrices, disco
                 if (!data.is_minor) {
                     return (
                         <Card className="border-2 shadow-xl hover:shadow-2xl transition-shadow duration-300">
-                            <CardHeader className="bg-gradient-to-r from-amber-50 to-orange-50 border-b">
+                            <CardHeader className="bg-gradient-to-r from-amber-50 dark:from-amber-950/30 to-orange-50 dark:to-orange-950/30 border-b">
                                 <div className="flex items-center gap-3 mb-2">
-                                    <div className="p-2 bg-amber-100 rounded-lg">
-                                        <Music2 className="h-5 w-5 text-amber-700" />
+                                    <div className="p-2 bg-amber-100 dark:bg-amber-900/30 rounded-lg">
+                                        <Music2 className="h-5 w-5 text-amber-700 dark:text-amber-300" />
                                     </div>
                                     <CardTitle className="text-xl sm:text-2xl">Datos Musicales y Programa</CardTitle>
                                 </div>
@@ -628,8 +628,8 @@ export default function Create({ programs, paymentMethods, modalityPrices, disco
 
                                     <div>
                                         <Label>Modalidad</Label>
-                                        <div className="p-3 bg-green-50 border border-green-200 rounded-md">
-                                            <p className="font-medium text-green-800">Linaje Big (18+ años)</p>
+                                        <div className="p-3 bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 rounded-md">
+                                            <p className="font-medium text-green-800 dark:text-green-200">Linaje Big (18+ años)</p>
                                             {getModalityPrice('Linaje Big') && (
                                                 <p className="text-sm text-primary font-medium mt-1">
                                                     Valor de matrícula: {formatPrice(getModalityPrice('Linaje Big')!)}
@@ -668,11 +668,11 @@ export default function Create({ programs, paymentMethods, modalityPrices, disco
 
                                     {data.responsable.program_id && (
                                         <>
-                                            <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
+                                            <div className="p-4 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg">
                                                 <h4 className="font-semibold mb-2">
                                                     {programs.find((p) => p.id.toString() === data.responsable.program_id)?.name}
                                                 </h4>
-                                                <p className="text-sm text-gray-700">
+                                                <p className="text-sm text-muted-foreground">
                                                     {programs.find((p) => p.id.toString() === data.responsable.program_id)?.description}
                                                 </p>
                                             </div>
@@ -685,7 +685,7 @@ export default function Create({ programs, paymentMethods, modalityPrices, disco
                                                 return availableSchedules.length > 0 && (
                                                     <div>
                                                         <Label>Horario (Opcional)</Label>
-                                                        <p className="text-xs text-gray-600 mb-2">
+                                                        <p className="text-xs text-muted-foreground mb-2">
                                                             Selecciona un horario si deseas inscribirte en una clase específica
                                                         </p>
                                                         <Select
@@ -720,10 +720,10 @@ export default function Create({ programs, paymentMethods, modalityPrices, disco
 
                 return (
                     <Card className="border-2 shadow-xl hover:shadow-2xl transition-shadow duration-300">
-                        <CardHeader className="bg-gradient-to-r from-amber-50 to-orange-50 border-b">
+                        <CardHeader className="bg-gradient-to-r from-amber-50 dark:from-amber-950/30 to-orange-50 dark:to-orange-950/30 border-b">
                             <div className="flex items-center gap-3 mb-2">
-                                <div className="p-2 bg-amber-100 rounded-lg">
-                                    <Music2 className="h-5 w-5 text-amber-700" />
+                                <div className="p-2 bg-amber-100 dark:bg-amber-900/30 rounded-lg">
+                                    <Music2 className="h-5 w-5 text-amber-700 dark:text-amber-300" />
                                 </div>
                                 <CardTitle className="text-xl sm:text-2xl">Datos de los Estudiantes</CardTitle>
                             </div>
@@ -735,7 +735,7 @@ export default function Create({ programs, paymentMethods, modalityPrices, disco
                             {/* Pestañas de estudiantes - Mejoradas */}
                             <div className="space-y-3">
                                 <div className="flex items-center justify-between">
-                                    <h3 className="text-sm font-medium text-gray-700">
+                                    <h3 className="text-sm font-medium text-muted-foreground">
                                         {data.estudiantes.length === 1
                                             ? '1 Estudiante'
                                             : `${data.estudiantes.length} Estudiantes`}
@@ -745,7 +745,7 @@ export default function Create({ programs, paymentMethods, modalityPrices, disco
                                         variant="outline"
                                         size="sm"
                                         onClick={handleAddStudent}
-                                        className="flex items-center gap-2 text-green-600 border-green-600 hover:bg-green-50"
+                                        className="flex items-center gap-2 text-green-600 border-green-600 hover:bg-green-50 dark:hover:bg-green-950/30"
                                     >
                                         <Plus className="h-4 w-4" />
                                         Agregar Hijo/a
@@ -763,8 +763,8 @@ export default function Create({ programs, paymentMethods, modalityPrices, disco
                                                 className={cn(
                                                     'relative flex items-center gap-2 rounded-lg border-2 transition-all',
                                                     isCurrent
-                                                        ? 'border-amber-500 bg-amber-50 shadow-md'
-                                                        : 'border-gray-200 bg-white hover:border-gray-300'
+                                                        ? 'border-amber-500 bg-amber-50 dark:bg-amber-950/30 shadow-md'
+                                                        : 'border-border bg-card hover:border-input'
                                                 )}
                                             >
                                                 <button
@@ -778,8 +778,8 @@ export default function Create({ programs, paymentMethods, modalityPrices, disco
                                                             isCurrent
                                                                 ? 'bg-amber-600 text-white'
                                                                 : isComplete
-                                                                ? 'bg-green-100 text-green-700'
-                                                                : 'bg-gray-100 text-gray-600'
+                                                                ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300'
+                                                                : 'bg-muted text-muted-foreground'
                                                         )}
                                                     >
                                                         {isComplete && !isCurrent ? (
@@ -792,13 +792,13 @@ export default function Create({ programs, paymentMethods, modalityPrices, disco
                                                         <p
                                                             className={cn(
                                                                 'text-sm font-medium',
-                                                                isCurrent ? 'text-amber-900' : 'text-gray-700'
+                                                                isCurrent ? 'text-amber-900 dark:text-amber-100' : 'text-muted-foreground'
                                                             )}
                                                         >
                                                             {est.name || `Estudiante ${index + 1}`}
                                                         </p>
                                                         {est.program_id && (
-                                                            <p className="text-xs text-gray-500">
+                                                            <p className="text-xs text-muted-foreground">
                                                                 {programs.find((p) => p.id.toString() === est.program_id)?.name}
                                                             </p>
                                                         )}
@@ -809,7 +809,7 @@ export default function Create({ programs, paymentMethods, modalityPrices, disco
                                                     <button
                                                         type="button"
                                                         onClick={() => handleRemoveStudent(index)}
-                                                        className="h-full px-3 border-l-2 border-gray-200 text-red-600 hover:text-red-700 hover:bg-red-50 transition-colors"
+                                                        className="h-full px-3 border-l-2 border-border text-red-600 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors"
                                                         title="Eliminar estudiante"
                                                     >
                                                         <Trash2 className="h-4 w-4" />
@@ -950,7 +950,7 @@ export default function Create({ programs, paymentMethods, modalityPrices, disco
                                                 placeholder="correo@ejemplo.com"
                                             />
                                             <InputError message={errors[`estudiantes.${currentEstudianteIndex}.email`]} />
-                                            <p className="text-xs text-gray-600 mt-1">
+                                            <p className="text-xs text-muted-foreground mt-1">
                                                 Si el estudiante tiene correo, podrá acceder para ver su avance
                                             </p>
                                         </div>
@@ -1100,11 +1100,11 @@ export default function Create({ programs, paymentMethods, modalityPrices, disco
 
                                         {estudianteActual.program_id && (
                                             <>
-                                                <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
+                                                <div className="p-4 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg">
                                                     <h4 className="font-semibold mb-2">
                                                         {programs.find((p) => p.id.toString() === estudianteActual.program_id)?.name}
                                                     </h4>
-                                                    <p className="text-sm text-gray-700">
+                                                    <p className="text-sm text-muted-foreground">
                                                         {
                                                             programs.find((p) => p.id.toString() === estudianteActual.program_id)
                                                                 ?.description
@@ -1120,7 +1120,7 @@ export default function Create({ programs, paymentMethods, modalityPrices, disco
                                                     return availableSchedules.length > 0 && (
                                                         <div>
                                                             <Label>Horario (Opcional)</Label>
-                                                            <p className="text-xs text-gray-600 mb-2">
+                                                            <p className="text-xs text-muted-foreground mb-2">
                                                                 Selecciona un horario si deseas inscribirte en una clase específica
                                                             </p>
                                                             <Select
@@ -1157,10 +1157,10 @@ export default function Create({ programs, paymentMethods, modalityPrices, disco
             case 4:
                 return (
                     <Card className="border-2 shadow-xl hover:shadow-2xl transition-shadow duration-300">
-                        <CardHeader className="bg-gradient-to-r from-green-50 to-emerald-50 border-b">
+                        <CardHeader className="bg-gradient-to-r from-green-50 dark:from-green-950/30 to-emerald-50 dark:to-emerald-950/30 border-b">
                             <div className="flex items-center gap-3 mb-2">
-                                <div className="p-2 bg-green-100 rounded-lg">
-                                    <FileText className="h-5 w-5 text-green-700" />
+                                <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-lg">
+                                    <FileText className="h-5 w-5 text-green-700 dark:text-green-300" />
                                 </div>
                                 <CardTitle className="text-xl sm:text-2xl">Autorizaciones y Compromiso</CardTitle>
                             </div>
@@ -1172,7 +1172,7 @@ export default function Create({ programs, paymentMethods, modalityPrices, disco
                             {data.is_minor && (
                                 <div className="p-4 border rounded-lg space-y-3">
                                     <h4 className="font-semibold">Autorización para Menores de Edad</h4>
-                                    <p className="text-sm text-gray-700">
+                                    <p className="text-sm text-muted-foreground">
                                         Por medio de la presente doy la autorización a {data.estudiantes.length > 1 ? 'mis hijos' : 'mi hijo(a)'}
                                         {' '}para que {data.estudiantes.length > 1 ? 'estudien y desarrollen' : 'estudie y desarrolle'} en la Academia de
                                         formación Musical y Espiritual LINAJE. Estoy de acuerdo en la completa aplicación del
@@ -1183,14 +1183,14 @@ export default function Create({ programs, paymentMethods, modalityPrices, disco
                                     <div className="mt-3 space-y-2">
                                         <p className="text-sm font-semibold">Estudiantes a matricular:</p>
                                         {data.estudiantes.map((est, index) => (
-                                            <div key={index} className="p-3 bg-gray-50 rounded text-sm">
+                                            <div key={index} className="p-3 bg-muted rounded text-sm">
                                                 <p>
                                                     <strong>{est.name} {est.last_name}</strong>
                                                 </p>
-                                                <p className="text-gray-600">
+                                                <p className="text-muted-foreground">
                                                     Programa: {programs.find((p) => p.id.toString() === est.program_id)?.name || 'No seleccionado'}
                                                 </p>
-                                                <p className="text-gray-600">Modalidad: {est.datos_musicales.modality}</p>
+                                                <p className="text-muted-foreground">Modalidad: {est.datos_musicales.modality}</p>
                                                 {est.datos_musicales.modality && getModalityPrice(est.datos_musicales.modality) && (
                                                     <p className="text-primary font-medium">
                                                         Valor: {formatPrice(getModalityPrice(est.datos_musicales.modality)!)}
@@ -1218,13 +1218,13 @@ export default function Create({ programs, paymentMethods, modalityPrices, disco
 
                             <div className="p-4 border rounded-lg space-y-3">
                                 <h4 className="font-semibold">Compromiso de Pago</h4>
-                                <p className="text-sm text-gray-700">
+                                <p className="text-sm text-muted-foreground">
                                     La Academia de formación Musical y Espiritual LINAJE, desea tener constancia del compromiso
                                     de pago que hace usted como {data.is_minor ? 'padre, madre o encargado de los estudiantes menores de edad' : 'estudiante inscrito'}. Este compromiso se
                                     extiende desde que el estudiante es aceptado hasta que el mismo termina el programa escogido
                                     o decide no continuar con sus estudios en la Academia.
                                 </p>
-                                <p className="text-sm text-gray-700">
+                                <p className="text-sm text-muted-foreground">
                                     Mediante este documento usted deja constado todo lo que involucra en los Pagos de
                                     Matrículas. Entiéndase que en caso de que una de las partes no cumpla con
                                     dicho acuerdo, es usted quien tiene la responsabilidad final de los pagos con la Academia.
@@ -1240,7 +1240,7 @@ export default function Create({ programs, paymentMethods, modalityPrices, disco
                                                 const discountAmount = hasDiscount && price ? Math.round(price * (discountPercentage / 100)) : 0;
                                                 const finalPrice = price ? price - discountAmount : null;
                                                 return (
-                                                    <div key={index} className="text-sm p-2 bg-gray-50 rounded">
+                                                    <div key={index} className="text-sm p-2 bg-muted rounded">
                                                         <div className="flex items-center justify-between">
                                                             <p>
                                                                 <strong>{est.name} {est.last_name}</strong> - {est.datos_musicales.modality} -{' '}
@@ -1250,10 +1250,10 @@ export default function Create({ programs, paymentMethods, modalityPrices, disco
                                                                 <div className="text-right">
                                                                     {hasDiscount ? (
                                                                         <>
-                                                                            <span className="line-through text-gray-400 text-xs mr-1">
+                                                                            <span className="line-through text-muted-foreground text-xs mr-1">
                                                                                 {formatPrice(price!)}
                                                                             </span>
-                                                                            <span className="font-semibold text-green-700">
+                                                                            <span className="font-semibold text-green-700 dark:text-green-300">
                                                                                 {formatPrice(finalPrice)}
                                                                             </span>
                                                                         </>
@@ -1269,7 +1269,7 @@ export default function Create({ programs, paymentMethods, modalityPrices, disco
                                                 );
                                             })}
                                             {hasDiscount && (
-                                                <div className="p-2 bg-green-50 border border-green-200 rounded text-sm text-green-800 flex items-center gap-2">
+                                                <div className="p-2 bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 rounded text-sm text-green-800 dark:text-green-200 flex items-center gap-2">
                                                     <CheckCircle className="h-4 w-4 flex-shrink-0" />
                                                     <span>
                                                         <strong>{discountPercentage}% de descuento</strong> aplicado por matricular {data.estudiantes.length} estudiantes
@@ -1285,7 +1285,7 @@ export default function Create({ programs, paymentMethods, modalityPrices, disco
                                     return price !== null ? (
                                         <div className="pt-2 space-y-2">
                                             <p className="text-sm font-semibold">Resumen de matrícula:</p>
-                                            <div className="text-sm p-2 bg-gray-50 rounded flex items-center justify-between">
+                                            <div className="text-sm p-2 bg-muted rounded flex items-center justify-between">
                                                 <p>
                                                     <strong>{data.responsable.name} {data.responsable.last_name}</strong> - {data.responsable.modality} -{' '}
                                                     {programs.find((p) => p.id.toString() === data.responsable.program_id)?.name}
@@ -1314,7 +1314,7 @@ export default function Create({ programs, paymentMethods, modalityPrices, disco
                             {/* Método de Pago */}
                             <div className="p-4 border rounded-lg space-y-4">
                                 <h4 className="font-semibold">Método de Pago</h4>
-                                <p className="text-sm text-gray-700">
+                                <p className="text-sm text-muted-foreground">
                                     Selecciona cómo deseas realizar el pago de la matrícula:
                                 </p>
 
@@ -1326,20 +1326,20 @@ export default function Create({ programs, paymentMethods, modalityPrices, disco
                                         className={cn(
                                             "p-4 border-2 rounded-lg cursor-pointer transition-all duration-200",
                                             data.payment_method === 'online'
-                                                ? "border-amber-500 bg-amber-50 shadow-md"
-                                                : "border-gray-200 hover:border-amber-300 hover:bg-amber-50/50"
+                                                ? "border-amber-500 bg-amber-50 dark:bg-amber-950/30 shadow-md"
+                                                : "border-border hover:border-amber-300 dark:hover:border-amber-700 hover:bg-amber-50/50"
                                         )}
                                     >
                                         <div className="flex items-center gap-3 mb-2">
                                             <div className={cn(
                                                 "p-2 rounded-full",
-                                                data.payment_method === 'online' ? "bg-amber-500 text-white" : "bg-gray-100 text-gray-500"
+                                                data.payment_method === 'online' ? "bg-amber-500 text-white" : "bg-muted text-muted-foreground"
                                             )}>
                                                 <CreditCard className="h-5 w-5" />
                                             </div>
                                             <span className="font-semibold">Pago en Línea</span>
                                         </div>
-                                        <p className="text-sm text-gray-600">
+                                        <p className="text-sm text-muted-foreground">
                                             Paga de forma segura con tarjeta de crédito, débito o PSE a través de nuestra pasarela de pagos.
                                         </p>
                                     </div>
@@ -1352,20 +1352,20 @@ export default function Create({ programs, paymentMethods, modalityPrices, disco
                                         className={cn(
                                             "p-4 border-2 rounded-lg cursor-pointer transition-all duration-200",
                                             data.payment_method === 'manual'
-                                                ? "border-green-500 bg-green-50 shadow-md"
-                                                : "border-gray-200 hover:border-green-300 hover:bg-green-50/50"
+                                                ? "border-green-500 bg-green-50 dark:bg-green-950/30 shadow-md"
+                                                : "border-border hover:border-green-300 dark:hover:border-green-700 hover:bg-green-50/50"
                                         )}
                                     >
                                         <div className="flex items-center gap-3 mb-2">
                                             <div className={cn(
                                                 "p-2 rounded-full",
-                                                data.payment_method === 'manual' ? "bg-green-500 text-white" : "bg-gray-100 text-gray-500"
+                                                data.payment_method === 'manual' ? "bg-green-500 text-white" : "bg-muted text-muted-foreground"
                                             )}>
                                                 <Banknote className="h-5 w-5" />
                                             </div>
                                             <span className="font-semibold">Pago Manual</span>
                                         </div>
-                                        <p className="text-sm text-gray-600">
+                                        <p className="text-sm text-muted-foreground">
                                             Realiza el pago en efectivo o por transferencia bancaria. Un asesor se comunicará contigo.
                                         </p>
                                     </div>
@@ -1373,10 +1373,10 @@ export default function Create({ programs, paymentMethods, modalityPrices, disco
                                 </div>
                             </div>
 
-                            <div className="p-4 bg-green-50 border border-green-200 rounded-lg text-center">
+                            <div className="p-4 bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 rounded-lg text-center">
                                 <CheckCircle className="h-12 w-12 text-green-600 mx-auto mb-2" />
-                                <p className="text-lg font-semibold text-green-900">¡Todo listo!</p>
-                                <p className="text-sm text-green-700 mt-1">
+                                <p className="text-lg font-semibold text-green-900 dark:text-green-100">¡Todo listo!</p>
+                                <p className="text-sm text-green-700 dark:text-green-300 mt-1">
                                     {data.payment_method === 'online'
                                         ? 'Haz clic en "Completar Matrícula" para proceder al pago en línea'
                                         : 'Haz clic en "Completar Matrícula" para registrar tu inscripción'
@@ -1400,29 +1400,29 @@ export default function Create({ programs, paymentMethods, modalityPrices, disco
             <Head title="Matrícula" />
             <Toaster />
 
-            <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-amber-100 py-8 sm:py-12 px-3 sm:px-4 lg:px-6">
+            <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-amber-100 dark:from-neutral-950 dark:via-neutral-900 dark:to-neutral-950 py-8 sm:py-12 px-3 sm:px-4 lg:px-6">
                 <div className="max-w-5xl mx-auto">
                     {/* Banner de errores */}
                     {Object.keys(errors).length > 0 && (
-                        <Card className="mb-6 border-red-200 bg-red-50">
+                        <Card className="mb-6 border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-950/30">
                             <CardContent className="pt-6">
                                 <div className="flex items-start gap-3">
                                     <div className="flex-shrink-0">
-                                        <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
+                                        <div className="w-10 h-10 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
                                             <AlertCircle className="h-5 w-5 text-red-600" />
                                         </div>
                                     </div>
                                     <div className="flex-1">
-                                        <h3 className="text-base font-semibold text-red-900 mb-1">
+                                        <h3 className="text-base font-semibold text-red-900 dark:text-red-100 mb-1">
                                             Por favor revisa la información del formulario
                                         </h3>
-                                        <p className="text-sm text-red-700 mb-3">
+                                        <p className="text-sm text-red-700 dark:text-red-300 mb-3">
                                             Se encontraron {Object.keys(errors).length} {Object.keys(errors).length === 1 ? 'error' : 'errores'} que deben ser corregidos:
                                         </p>
-                                        <div className="bg-white rounded-lg p-3 border border-red-200">
+                                        <div className="bg-card rounded-lg p-3 border border-red-200 dark:border-red-800">
                                             <ul className="space-y-1.5">
                                                 {Object.entries(errors).slice(0, 8).map(([key, message]) => (
-                                                    <li key={key} className="flex items-start gap-2 text-sm text-gray-700">
+                                                    <li key={key} className="flex items-start gap-2 text-sm text-muted-foreground">
                                                         <span className="text-red-500 mt-0.5">•</span>
                                                         <span>{message as string}</span>
                                                     </li>
@@ -1447,7 +1447,7 @@ export default function Create({ programs, paymentMethods, modalityPrices, disco
                     {/* Progress Bar - Mejorado y Responsive */}
                     <div className="mb-6 sm:mb-10 animate-fade-in">
                         {/* Progress Percentage Bar */}
-                        <div className="mb-6 bg-white rounded-full p-1 shadow-inner">
+                        <div className="mb-6 bg-card rounded-full p-1 shadow-inner">
                             <div
                                 className="h-2 sm:h-2.5 bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 rounded-full transition-all duration-500 ease-out relative overflow-hidden"
                                 style={{ width: `${(step / TOTAL_STEPS) * 100}%` }}
@@ -1482,7 +1482,7 @@ export default function Create({ programs, paymentMethods, modalityPrices, disco
                                                     isCurrent && 'ring-4 ring-amber-300 scale-110 shadow-lg',
                                                     isPast && 'bg-gradient-to-br from-green-500 to-green-600 text-white hover:scale-105 hover:shadow-xl',
                                                     isCurrent && 'bg-gradient-to-br from-amber-500 to-orange-500 text-white shadow-lg',
-                                                    !isCurrent && !isPast && 'bg-gray-200 text-gray-400',
+                                                    !isCurrent && !isPast && 'bg-muted text-muted-foreground',
                                                     s.num <= step && 'cursor-pointer hover:scale-105',
                                                     s.num > step && 'cursor-not-allowed opacity-50'
                                                 )}
@@ -1501,9 +1501,9 @@ export default function Create({ programs, paymentMethods, modalityPrices, disco
                                             <span
                                                 className={cn(
                                                     'text-xs lg:text-sm mt-2 text-center font-medium transition-all duration-300 px-2',
-                                                    isCurrent && 'text-amber-700 font-bold scale-110',
-                                                    isPast && 'text-green-700 font-semibold',
-                                                    !isCurrent && !isPast && 'text-gray-500'
+                                                    isCurrent && 'text-amber-700 dark:text-amber-300 font-bold scale-110',
+                                                    isPast && 'text-green-700 dark:text-green-300 font-semibold',
+                                                    !isCurrent && !isPast && 'text-muted-foreground'
                                                 )}
                                             >
                                                 {s.label}
@@ -1513,7 +1513,7 @@ export default function Create({ programs, paymentMethods, modalityPrices, disco
                                         {/* Connecting line */}
                                         {index < 3 && (
                                             <div className="relative flex-1 mx-2 lg:mx-3 h-1">
-                                                <div className="absolute inset-0 bg-gray-200 rounded"></div>
+                                                <div className="absolute inset-0 bg-muted rounded"></div>
                                                 <div
                                                     className={cn(
                                                         'absolute inset-y-0 left-0 rounded transition-all duration-500 ease-out',
@@ -1528,7 +1528,7 @@ export default function Create({ programs, paymentMethods, modalityPrices, disco
                         </div>
 
                         {/* Mobile Step Indicator */}
-                        <div className="sm:hidden flex items-center justify-between bg-white rounded-lg p-4 shadow-md">
+                        <div className="sm:hidden flex items-center justify-between bg-card rounded-lg p-4 shadow-md">
                             <div className="flex items-center gap-3">
                                 <div className={cn(
                                     "w-12 h-12 rounded-full flex items-center justify-center bg-gradient-to-br from-amber-500 to-orange-500 text-white shadow-lg"
@@ -1539,10 +1539,10 @@ export default function Create({ programs, paymentMethods, modalityPrices, disco
                                     {step === 4 && <FileText className="h-6 w-6" />}
                                 </div>
                                 <div>
-                                    <p className="text-sm font-semibold text-gray-900">
+                                    <p className="text-sm font-semibold text-foreground">
                                         Paso {step} de {TOTAL_STEPS}
                                     </p>
-                                    <p className="text-xs text-gray-600">
+                                    <p className="text-xs text-muted-foreground">
                                         {step === 1 && 'Datos del Responsable'}
                                         {step === 2 && 'Ubicación y Tipo'}
                                         {step === 3 && 'Datos de Estudiantes'}
@@ -1570,7 +1570,7 @@ export default function Create({ programs, paymentMethods, modalityPrices, disco
                                     onClick={prevStep}
                                     variant="outline"
                                     size="lg"
-                                    className="gap-2 group hover:scale-105 transition-all duration-200 hover:border-amber-500 hover:text-amber-700 order-2 sm:order-1 w-full sm:w-auto"
+                                    className="gap-2 group hover:scale-105 transition-all duration-200 hover:border-amber-500 hover:text-amber-700 dark:hover:text-amber-300 order-2 sm:order-1 w-full sm:w-auto"
                                 >
                                     <ChevronLeft className="h-4 w-4 sm:h-5 sm:w-5 group-hover:-translate-x-1 transition-transform" />
                                     <span className="hidden sm:inline">Anterior</span>
@@ -1584,7 +1584,7 @@ export default function Create({ programs, paymentMethods, modalityPrices, disco
                             {step < TOTAL_STEPS && (
                                 <div className="ml-auto flex flex-col items-end gap-2 order-1 sm:order-2 w-full sm:w-auto">
                                     {!validateStep(step) && (
-                                        <p className="text-xs sm:text-sm text-amber-700 flex items-center gap-1.5 bg-amber-50 px-3 py-2 rounded-lg animate-shake-error">
+                                        <p className="text-xs sm:text-sm text-amber-700 dark:text-amber-300 flex items-center gap-1.5 bg-amber-50 dark:bg-amber-950/30 px-3 py-2 rounded-lg animate-shake-error">
                                             <AlertCircle className="h-4 w-4 flex-shrink-0" />
                                             <span className="text-left">Completa los campos requeridos para continuar</span>
                                         </p>
@@ -1608,7 +1608,7 @@ export default function Create({ programs, paymentMethods, modalityPrices, disco
                             {step === TOTAL_STEPS && (
                                 <div className="ml-auto flex flex-col items-end gap-2 order-1 sm:order-2 w-full sm:w-auto">
                                     {!validateStep(step) && (
-                                        <p className="text-xs sm:text-sm text-red-700 flex items-center gap-1.5 bg-red-50 px-3 py-2 rounded-lg animate-shake-error">
+                                        <p className="text-xs sm:text-sm text-red-700 dark:text-red-300 flex items-center gap-1.5 bg-red-50 dark:bg-red-950/30 px-3 py-2 rounded-lg animate-shake-error">
                                             <AlertCircle className="h-4 w-4 flex-shrink-0" />
                                             <span className="text-left">Debes aceptar los compromisos para finalizar</span>
                                         </p>

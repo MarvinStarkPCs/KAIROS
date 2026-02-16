@@ -37,7 +37,7 @@ export function MusicalDataFields({
     return (
         <div className="space-y-6">
             {/* Header */}
-            <div className="flex items-center gap-2 text-amber-700">
+            <div className="flex items-center gap-2 text-amber-700 dark:text-amber-300">
                 <Music className="h-5 w-5" />
                 <h3 className="font-semibold">Información Musical</h3>
             </div>
