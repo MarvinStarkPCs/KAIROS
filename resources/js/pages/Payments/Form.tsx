@@ -70,7 +70,6 @@ export default function PaymentForm({ payment, enrollments }: Props) {
     const [abonoData, setAbonoData] = useState({
         amount: '',
         payment_method: 'cash',
-        reference_number: '',
         notes: '',
     });
     const [abonoProcessing, setAbonoProcessing] = useState(false);
@@ -117,7 +116,7 @@ export default function PaymentForm({ payment, enrollments }: Props) {
         setAbonoProcessing(true);
         router.post(`/pagos/${payment.id}/add-transaction`, abonoData, {
             onSuccess: () => {
-                setAbonoData({ amount: '', payment_method: 'cash', reference_number: '', notes: '' });
+                setAbonoData({ amount: '', payment_method: 'cash', notes: '' });
                 setShowAbonoForm(false);
                 setAbonoProcessing(false);
             },
@@ -257,7 +256,7 @@ export default function PaymentForm({ payment, enrollments }: Props) {
                         ) : (
                             <form onSubmit={handleAbonoSubmit} className="mt-4 rounded-lg border border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-950/30 p-4">
                                 <h4 className="mb-3 font-medium text-green-900 dark:text-green-100">Nuevo Abono</h4>
-                                <div className="grid gap-4 md:grid-cols-2">
+                                <div className="grid gap-4 md:grid-cols-3">
                                     <div>
                                         <Label htmlFor="abono_amount">Monto *</Label>
                                         <Input
@@ -285,16 +284,6 @@ export default function PaymentForm({ payment, enrollments }: Props) {
                                             <option value="transfer">Transferencia</option>
                                             <option value="credit_card">Tarjeta de Crédito</option>
                                         </select>
-                                    </div>
-                                    <div>
-                                        <Label htmlFor="abono_reference">Número de Referencia</Label>
-                                        <Input
-                                            id="abono_reference"
-                                            type="text"
-                                            value={abonoData.reference_number}
-                                            onChange={(e) => setAbonoData({ ...abonoData, reference_number: e.target.value })}
-                                            placeholder="Comprobante"
-                                        />
                                     </div>
                                     <div>
                                         <Label htmlFor="abono_notes">Notas</Label>
@@ -438,20 +427,22 @@ export default function PaymentForm({ payment, enrollments }: Props) {
                             <InputError message={errors.concept} />
                         </div>
 
-                        {/* Tipo de Pago */}
-                        <div>
-                            <Label htmlFor="payment_type">Tipo de Pago *</Label>
-                            <select
-                                id="payment_type"
-                                value={data.payment_type}
-                                onChange={(e) => setData('payment_type', e.target.value as 'single' | 'partial')}
-                                className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground"
-                            >
-                                <option value="single">Pago Único</option>
-                                <option value="partial">Permite Abonos Parciales</option>
-                            </select>
-                            <InputError message={errors.payment_type} />
-                        </div>
+                        {/* Tipo de Pago - Solo al crear */}
+                        {!isEditing && (
+                            <div>
+                                <Label htmlFor="payment_type">Tipo de Pago *</Label>
+                                <select
+                                    id="payment_type"
+                                    value={data.payment_type}
+                                    onChange={(e) => setData('payment_type', e.target.value as 'single' | 'partial')}
+                                    className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground"
+                                >
+                                    <option value="single">Pago Único</option>
+                                    <option value="partial">Permite Abonos Parciales</option>
+                                </select>
+                                <InputError message={errors.payment_type} />
+                            </div>
+                        )}
 
                         {/* Monto */}
                         <div>
@@ -468,18 +459,20 @@ export default function PaymentForm({ payment, enrollments }: Props) {
                             <InputError message={errors.amount} />
                         </div>
 
-                        {/* Fecha de Vencimiento */}
-                        <div>
-                            <Label htmlFor="due_date">Fecha de Vencimiento *</Label>
-                            <Input
-                                id="due_date"
-                                type="date"
-                                value={data.due_date}
-                                onChange={(e) => setData('due_date', e.target.value)}
-                                required
-                            />
-                            <InputError message={errors.due_date} />
-                        </div>
+                        {/* Fecha de Vencimiento - Solo al crear */}
+                        {!isEditing && (
+                            <div>
+                                <Label htmlFor="due_date">Fecha de Vencimiento *</Label>
+                                <Input
+                                    id="due_date"
+                                    type="date"
+                                    value={data.due_date}
+                                    onChange={(e) => setData('due_date', e.target.value)}
+                                    required
+                                />
+                                <InputError message={errors.due_date} />
+                            </div>
+                        )}
 
                         {/* Estado */}
                         <div>
@@ -552,7 +545,7 @@ export default function PaymentForm({ payment, enrollments }: Props) {
                                 Cancelar
                             </Button>
                         </Link>
-                        <Button type="submit" disabled={processing || !selectedEnrollment}>
+                        <Button type="submit" disabled={processing || (!isEditing && !selectedEnrollment)}>
                             <Save className="mr-2 h-4 w-4" />
                             {processing ? 'Guardando...' : payment ? 'Actualizar Pago' : 'Registrar Pago'}
                         </Button>

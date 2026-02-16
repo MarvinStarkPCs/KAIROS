@@ -47,6 +47,10 @@ return Application::configure(basePath: dirname(__DIR__))
         // Verificar pagos manuales pendientes del 1-5 del mes
         // Se ejecuta el día 6 de cada mes a las 7:00 AM
         $schedule->command('payments:check-pending-manual')->monthlyOn(6, '07:00');
+
+        // Enviar recordatorios de pago 3 días antes del vencimiento
+        // Se ejecuta diariamente a las 8:00 AM
+        $schedule->command('payments:send-reminders')->dailyAt('08:00');
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //

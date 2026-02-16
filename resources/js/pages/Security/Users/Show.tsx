@@ -5,7 +5,8 @@ import { Badge } from '@/components/ui/badge';
 import {
     ChevronLeft, Edit2, User, GraduationCap, Music, Phone, MapPin,
     Calendar, FileText, Heart, AlertCircle, BookOpen, CheckCircle,
-    XCircle, Clock, DollarSign, Users, CalendarDays, CreditCard, School
+    XCircle, Clock, DollarSign, Users, CalendarDays, CreditCard, School,
+    Shield, Mail, IdCard
 } from 'lucide-react';
 import { route } from 'ziggy-js';
 import AppLayout from '@/layouts/app-layout';
@@ -46,6 +47,24 @@ interface Parent {
     id: number;
     name: string;
     email: string | null;
+    phone: string | null;
+    mobile: string | null;
+    document_type: string | null;
+    document_number: string | null;
+    address: string | null;
+    neighborhood: string | null;
+    city: string | null;
+    department: string | null;
+}
+
+interface ParentGuardianData {
+    id: number;
+    relationship_type: string | null;
+    name: string;
+    address: string | null;
+    phone: string | null;
+    has_signed_authorization: boolean;
+    authorization_date: string | null;
 }
 
 interface Enrollment {
@@ -112,12 +131,31 @@ interface RecentPayment {
 interface DependentEnrollment {
     program_name: string | null;
     status: string;
+    enrollment_date: string | null;
+    enrolled_level: number | null;
+}
+
+interface DependentStudentProfile {
+    modality: string | null;
+    desired_instrument: string | null;
+    current_level: number | null;
+    emergency_contact_name: string | null;
+    emergency_contact_phone: string | null;
+    medical_conditions: string | null;
+    allergies: string | null;
 }
 
 interface DependentWithSummary {
     id: number;
     name: string;
     email: string | null;
+    phone: string | null;
+    mobile: string | null;
+    document_type: string | null;
+    document_number: string | null;
+    birth_date: string | null;
+    gender: string | null;
+    student_profile: DependentStudentProfile | null;
     enrollments: DependentEnrollment[];
     payments_pending: number;
     payments_pending_amount: number;
@@ -143,6 +181,7 @@ interface UserData {
     department: string | null;
     parent_id: number | null;
     parent: Parent | null;
+    parent_guardians: ParentGuardianData[];
     dependents: Parent[];
     dependents_with_summary: DependentWithSummary[];
     roles: Role[];
@@ -708,51 +747,166 @@ export default function UsersShow({ user }: ShowProps) {
                         </Card>
                     )}
 
-                    {/* Relaciones Familiares (simple - para no-padres) */}
-                    {(user.parent || (user.dependents.length > 0 && !isParent)) && (
-                        <Card>
+                    {/* === RESPONSABLE / ACUDIENTES (PARA ESTUDIANTES) === */}
+                    {(user.parent || (user.parent_guardians && user.parent_guardians.length > 0)) && (
+                        <Card className="md:col-span-2">
                             <CardHeader>
                                 <CardTitle className="flex items-center gap-2">
-                                    <Users className="h-5 w-5" />
-                                    Relaciones Familiares
+                                    <Shield className="h-5 w-5" />
+                                    Responsables y Acudientes
                                 </CardTitle>
+                                <CardDescription>
+                                    Personas responsables del estudiante
+                                </CardDescription>
                             </CardHeader>
-                            <CardContent className="space-y-4">
+                            <CardContent className="space-y-6">
+                                {/* Responsable principal (user.parent - relación directa) */}
                                 {user.parent && (
-                                    <div>
-                                        <p className="text-sm text-muted-foreground">Responsable/Tutor</p>
-                                        <Link href={route('usuarios.show', user.parent.id)} className="text-blue-600 hover:underline font-medium">
-                                            {user.parent.name}
-                                        </Link>
-                                        {user.parent.email && (
-                                            <p className="text-sm text-muted-foreground">{user.parent.email}</p>
-                                        )}
-                                    </div>
-                                )}
-                                {user.dependents.length > 0 && !isParent && (
-                                    <div>
-                                        <p className="text-sm text-muted-foreground mb-2">Dependientes ({user.dependents.length})</p>
-                                        <div className="space-y-2">
-                                            {user.dependents.map((dep) => (
-                                                <div key={dep.id} className="flex items-center justify-between p-2 bg-muted rounded">
+                                    <div className="rounded-lg border bg-card p-5">
+                                        <div className="flex items-center gap-3 mb-4">
+                                            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-orange-100 dark:bg-orange-900/30">
+                                                <Users className="h-5 w-5 text-orange-700 dark:text-orange-300" />
+                                            </div>
+                                            <div>
+                                                <Link href={route('usuarios.show', user.parent.id)} className="text-lg font-semibold text-blue-700 dark:text-blue-300 hover:underline">
+                                                    {user.parent.name}
+                                                </Link>
+                                                <p className="text-sm text-muted-foreground">Responsable Principal (cuenta del sistema)</p>
+                                            </div>
+                                        </div>
+                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                            {user.parent.email && (
+                                                <div className="flex items-center gap-2">
+                                                    <Mail className="h-4 w-4 text-muted-foreground" />
                                                     <div>
-                                                        <Link href={route('usuarios.show', dep.id)} className="text-blue-600 hover:underline font-medium">
-                                                            {dep.name}
-                                                        </Link>
-                                                        {dep.email && (
-                                                            <p className="text-sm text-muted-foreground">{dep.email}</p>
-                                                        )}
+                                                        <p className="text-xs text-muted-foreground">Email</p>
+                                                        <p className="text-sm font-medium">{user.parent.email}</p>
                                                     </div>
                                                 </div>
-                                            ))}
+                                            )}
+                                            {(user.parent.phone || user.parent.mobile) && (
+                                                <div className="flex items-center gap-2">
+                                                    <Phone className="h-4 w-4 text-muted-foreground" />
+                                                    <div>
+                                                        <p className="text-xs text-muted-foreground">Teléfono</p>
+                                                        <p className="text-sm font-medium">{user.parent.mobile || user.parent.phone}</p>
+                                                    </div>
+                                                </div>
+                                            )}
+                                            {(user.parent.document_type || user.parent.document_number) && (
+                                                <div className="flex items-center gap-2">
+                                                    <IdCard className="h-4 w-4 text-muted-foreground" />
+                                                    <div>
+                                                        <p className="text-xs text-muted-foreground">Documento</p>
+                                                        <p className="text-sm font-medium">
+                                                            {user.parent.document_type && `${user.parent.document_type} `}{user.parent.document_number || '-'}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            )}
+                                            {user.parent.address && (
+                                                <div className="flex items-center gap-2 md:col-span-2">
+                                                    <MapPin className="h-4 w-4 text-muted-foreground" />
+                                                    <div>
+                                                        <p className="text-xs text-muted-foreground">Dirección</p>
+                                                        <p className="text-sm font-medium">
+                                                            {user.parent.address}
+                                                            {user.parent.neighborhood && `, ${user.parent.neighborhood}`}
+                                                            {user.parent.city && ` - ${user.parent.city}`}
+                                                            {user.parent.department && `, ${user.parent.department}`}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            )}
                                         </div>
+                                    </div>
+                                )}
+
+                                {/* Acudientes de matrícula (parent_guardians) */}
+                                {user.parent_guardians && user.parent_guardians.length > 0 && (
+                                    <div className="space-y-3">
+                                        <h4 className="text-sm font-semibold text-muted-foreground">Acudientes Registrados en Matrícula</h4>
+                                        {user.parent_guardians.map((pg) => (
+                                            <div key={pg.id} className="rounded-lg border bg-card p-4">
+                                                <div className="flex items-center justify-between mb-3">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/30">
+                                                            <Heart className="h-4 w-4 text-blue-700 dark:text-blue-300" />
+                                                        </div>
+                                                        <div>
+                                                            <p className="font-semibold">{pg.name}</p>
+                                                            <Badge variant="secondary" className="text-xs capitalize">
+                                                                {pg.relationship_type || 'Acudiente'}
+                                                            </Badge>
+                                                        </div>
+                                                    </div>
+                                                    {pg.has_signed_authorization ? (
+                                                        <div className="flex items-center gap-1 text-green-600">
+                                                            <CheckCircle className="h-4 w-4" />
+                                                            <span className="text-xs">Autorización firmada</span>
+                                                        </div>
+                                                    ) : (
+                                                        <div className="flex items-center gap-1 text-muted-foreground">
+                                                            <XCircle className="h-4 w-4" />
+                                                            <span className="text-xs">Sin autorización</span>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
+                                                    {pg.phone && (
+                                                        <div className="flex items-center gap-2">
+                                                            <Phone className="h-3.5 w-3.5 text-muted-foreground" />
+                                                            <span>{pg.phone}</span>
+                                                        </div>
+                                                    )}
+                                                    {pg.address && (
+                                                        <div className="flex items-center gap-2 md:col-span-2">
+                                                            <MapPin className="h-3.5 w-3.5 text-muted-foreground" />
+                                                            <span>{pg.address}</span>
+                                                        </div>
+                                                    )}
+                                                    {pg.authorization_date && (
+                                                        <div className="flex items-center gap-2">
+                                                            <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
+                                                            <span className="text-muted-foreground">Firmó el {pg.authorization_date}</span>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        ))}
                                     </div>
                                 )}
                             </CardContent>
                         </Card>
                     )}
 
-                    {/* === PORTAL DE PADRE/RESPONSABLE: Dependientes con resumen === */}
+                    {/* Dependientes simples (para usuarios no-padre que tienen dependientes) */}
+                    {user.dependents.length > 0 && !isParent && !user.parent && (
+                        <Card>
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-2">
+                                    <Users className="h-5 w-5" />
+                                    Dependientes
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent className="space-y-2">
+                                {user.dependents.map((dep) => (
+                                    <div key={dep.id} className="flex items-center justify-between p-2 bg-muted rounded">
+                                        <div>
+                                            <Link href={route('usuarios.show', dep.id)} className="text-blue-600 hover:underline font-medium">
+                                                {dep.name}
+                                            </Link>
+                                            {dep.email && (
+                                                <p className="text-sm text-muted-foreground">{dep.email}</p>
+                                            )}
+                                        </div>
+                                    </div>
+                                ))}
+                            </CardContent>
+                        </Card>
+                    )}
+
+                    {/* === PORTAL DE PADRE/RESPONSABLE: Dependientes con info completa === */}
                     {isParent && user.dependents_with_summary && user.dependents_with_summary.length > 0 && (
                         <Card className="md:col-span-2">
                             <CardHeader>
@@ -761,21 +915,27 @@ export default function UsersShow({ user }: ShowProps) {
                                     Hijos / Dependientes
                                 </CardTitle>
                                 <CardDescription>
-                                    Resumen de inscripciones y pagos de cada dependiente
+                                    Información completa, inscripciones y pagos de cada dependiente
                                 </CardDescription>
                             </CardHeader>
                             <CardContent>
-                                <div className="space-y-4">
+                                <div className="space-y-6">
                                     {user.dependents_with_summary.map((dep) => (
-                                        <div key={dep.id} className="rounded-lg border bg-card p-5">
-                                            <div className="flex items-center justify-between mb-3">
-                                                <div>
-                                                    <Link href={route('usuarios.show', dep.id)} className="text-lg font-semibold text-blue-700 dark:text-blue-300 hover:underline">
-                                                        {dep.name}
-                                                    </Link>
-                                                    {dep.email && (
-                                                        <p className="text-sm text-muted-foreground">{dep.email}</p>
-                                                    )}
+                                        <div key={dep.id} className="rounded-lg border bg-card p-5 space-y-4">
+                                            {/* Encabezado del dependiente */}
+                                            <div className="flex items-center justify-between">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/30">
+                                                        <GraduationCap className="h-5 w-5 text-green-700 dark:text-green-300" />
+                                                    </div>
+                                                    <div>
+                                                        <Link href={route('usuarios.show', dep.id)} className="text-lg font-semibold text-blue-700 dark:text-blue-300 hover:underline">
+                                                            {dep.name}
+                                                        </Link>
+                                                        {dep.email && (
+                                                            <p className="text-sm text-muted-foreground">{dep.email}</p>
+                                                        )}
+                                                    </div>
                                                 </div>
                                                 {dep.payments_pending > 0 && (
                                                     <div className="text-right">
@@ -788,15 +948,109 @@ export default function UsersShow({ user }: ShowProps) {
                                                     </div>
                                                 )}
                                             </div>
-                                            {dep.enrollments.length > 0 ? (
-                                                <div className="flex flex-wrap gap-2">
-                                                    {dep.enrollments.map((enr, idx) => (
-                                                        <div key={idx} className="inline-flex items-center gap-2 rounded-full bg-muted px-3 py-1.5 text-sm">
-                                                            <School className="h-3.5 w-3.5 text-muted-foreground" />
-                                                            <span className="font-medium text-foreground">{enr.program_name || 'Sin programa'}</span>
-                                                            {getStatusBadge(enr.status)}
+
+                                            {/* Datos personales del dependiente */}
+                                            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm bg-muted rounded-lg p-3">
+                                                {(dep.document_type || dep.document_number) && (
+                                                    <div>
+                                                        <p className="text-xs text-muted-foreground">Documento</p>
+                                                        <p className="font-medium">{dep.document_type && `${dep.document_type} `}{dep.document_number || '-'}</p>
+                                                    </div>
+                                                )}
+                                                {dep.birth_date && (
+                                                    <div>
+                                                        <p className="text-xs text-muted-foreground">Fecha de Nacimiento</p>
+                                                        <p className="font-medium">{formatDate(dep.birth_date)}</p>
+                                                    </div>
+                                                )}
+                                                {dep.gender && (
+                                                    <div>
+                                                        <p className="text-xs text-muted-foreground">Género</p>
+                                                        <p className="font-medium">{getGenderLabel(dep.gender)}</p>
+                                                    </div>
+                                                )}
+                                                {(dep.phone || dep.mobile) && (
+                                                    <div>
+                                                        <p className="text-xs text-muted-foreground">Teléfono</p>
+                                                        <p className="font-medium">{dep.mobile || dep.phone}</p>
+                                                    </div>
+                                                )}
+                                            </div>
+
+                                            {/* Perfil de estudiante del dependiente */}
+                                            {dep.student_profile && (
+                                                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+                                                    {dep.student_profile.desired_instrument && (
+                                                        <div>
+                                                            <p className="text-xs text-muted-foreground">Instrumento</p>
+                                                            <p className="font-medium">{dep.student_profile.desired_instrument}</p>
                                                         </div>
-                                                    ))}
+                                                    )}
+                                                    {dep.student_profile.modality && (
+                                                        <div>
+                                                            <p className="text-xs text-muted-foreground">Modalidad</p>
+                                                            <Badge variant="secondary">{dep.student_profile.modality}</Badge>
+                                                        </div>
+                                                    )}
+                                                    {dep.student_profile.current_level !== null && (
+                                                        <div>
+                                                            <p className="text-xs text-muted-foreground">Nivel</p>
+                                                            <p className="font-medium">{dep.student_profile.current_level}</p>
+                                                        </div>
+                                                    )}
+                                                    {(dep.student_profile.emergency_contact_name || dep.student_profile.emergency_contact_phone) && (
+                                                        <div>
+                                                            <p className="text-xs text-muted-foreground flex items-center gap-1">
+                                                                <AlertCircle className="h-3 w-3" /> Emergencia
+                                                            </p>
+                                                            <p className="font-medium">{dep.student_profile.emergency_contact_name || '-'}</p>
+                                                            {dep.student_profile.emergency_contact_phone && (
+                                                                <p className="text-xs text-muted-foreground">{dep.student_profile.emergency_contact_phone}</p>
+                                                            )}
+                                                        </div>
+                                                    )}
+                                                    {dep.student_profile.medical_conditions && (
+                                                        <div className="col-span-2">
+                                                            <p className="text-xs text-muted-foreground flex items-center gap-1">
+                                                                <Heart className="h-3 w-3" /> Condiciones Médicas
+                                                            </p>
+                                                            <p className="font-medium text-sm">{dep.student_profile.medical_conditions}</p>
+                                                        </div>
+                                                    )}
+                                                    {dep.student_profile.allergies && (
+                                                        <div className="col-span-2">
+                                                            <p className="text-xs text-muted-foreground">Alergias</p>
+                                                            <p className="font-medium text-sm">{dep.student_profile.allergies}</p>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            )}
+
+                                            {/* Inscripciones del dependiente */}
+                                            {dep.enrollments.length > 0 ? (
+                                                <div>
+                                                    <p className="text-xs font-semibold text-muted-foreground mb-2">Inscripciones</p>
+                                                    <div className="space-y-2">
+                                                        {dep.enrollments.map((enr, idx) => (
+                                                            <div key={idx} className="flex items-center justify-between rounded-lg bg-muted px-4 py-2.5">
+                                                                <div className="flex items-center gap-2">
+                                                                    <School className="h-4 w-4 text-muted-foreground" />
+                                                                    <span className="font-medium">{enr.program_name || 'Sin programa'}</span>
+                                                                    {enr.enrolled_level && (
+                                                                        <span className="text-xs text-muted-foreground">Nivel {enr.enrolled_level}</span>
+                                                                    )}
+                                                                </div>
+                                                                <div className="flex items-center gap-3">
+                                                                    {enr.enrollment_date && (
+                                                                        <span className="text-xs text-muted-foreground">
+                                                                            {new Date(enr.enrollment_date).toLocaleDateString('es-ES')}
+                                                                        </span>
+                                                                    )}
+                                                                    {getStatusBadge(enr.status)}
+                                                                </div>
+                                                            </div>
+                                                        ))}
+                                                    </div>
                                                 </div>
                                             ) : (
                                                 <p className="text-sm text-muted-foreground">Sin inscripciones</p>

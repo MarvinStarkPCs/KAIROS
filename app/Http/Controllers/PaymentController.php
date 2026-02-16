@@ -218,6 +218,24 @@ class PaymentController extends Controller
             'notes.max' => 'Las notas no pueden exceder 500 caracteres',
         ]);
 
+        // Si se cambia el monto, recalcular remaining_amount basado en los abonos ya realizados
+        if (isset($validated['amount']) && $validated['amount'] != $payment->amount) {
+            $newAmount = $validated['amount'];
+            $paidAmount = $payment->paid_amount ?? 0;
+            $newRemaining = max(0, $newAmount - $paidAmount);
+
+            $validated['remaining_amount'] = $newRemaining;
+
+            // Si ya se pagó todo o más, marcar como completado
+            if ($newRemaining <= 0 && $paidAmount > 0) {
+                $validated['status'] = 'completed';
+                $validated['remaining_amount'] = 0;
+                if (!$payment->payment_date) {
+                    $validated['payment_date'] = now();
+                }
+            }
+        }
+
         // If changing to completed and no payment_date, set it to now
         if (isset($validated['status']) && $validated['status'] === 'completed' && !$payment->payment_date) {
             $validated['payment_date'] = now();
@@ -362,7 +380,6 @@ class PaymentController extends Controller
         $validated = $request->validate([
             'amount' => 'required|numeric|min:0.01',
             'payment_method' => 'required|string|max:50',
-            'reference_number' => 'nullable|string|max:100',
             'notes' => 'nullable|string|max:500',
         ], [
             'amount.required' => 'El monto del abono es obligatorio',
@@ -378,10 +395,14 @@ class PaymentController extends Controller
             return redirect()->back();
         }
 
+        // Generar número de referencia automático: ABN-{payment_id}-{número secuencial}-{timestamp}
+        $transactionCount = $payment->transactions()->count() + 1;
+        $referenceNumber = 'ABN-' . $payment->id . '-' . str_pad($transactionCount, 3, '0', STR_PAD_LEFT) . '-' . now()->format('YmdHis');
+
         $payment->addTransaction(
             $validated['amount'],
             $validated['payment_method'],
-            $validated['reference_number'] ?? null,
+            $referenceNumber,
             $validated['notes'] ?? null
         );
 

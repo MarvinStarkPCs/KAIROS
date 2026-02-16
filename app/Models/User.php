@@ -219,6 +219,12 @@ class User extends Authenticatable
         return $this->hasMany(User::class, 'parent_id');
     }
 
+    // Acudientes/responsables registrados para este estudiante (tabla parent_guardians)
+    public function parentGuardians()
+    {
+        return $this->hasMany(ParentGuardian::class, 'student_id');
+    }
+
     // Verificar si es menor de edad
     public function isMinor(): bool
     {
