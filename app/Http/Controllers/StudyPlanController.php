@@ -155,4 +155,18 @@ class StudyPlanController extends Controller
 
         return back()->with('success', 'Criterio de evaluación eliminado exitosamente.');
     }
+
+    // Set all evaluation criteria max_points to 10 for all activities in a program
+    public function setAllCriteriaToTenPoints(AcademicProgram $program)
+    {
+        $updated = EvaluationCriteria::whereHas('activity.studyPlan', function ($query) use ($program) {
+            $query->where('program_id', $program->id);
+        })->update(['max_points' => 10]);
+
+        if ($updated === 0) {
+            return back()->with('warning', 'No se encontraron criterios de evaluación para actualizar.');
+        }
+
+        return back()->with('success', "Se actualizaron {$updated} criterios de evaluación a 10 puntos.");
+    }
 }

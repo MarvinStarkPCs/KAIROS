@@ -1,5 +1,5 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
-import { ArrowLeft, Plus, Book, ListChecks, Award, Trash2, Info, AlertTriangle, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft, Plus, Book, ListChecks, Award, Trash2, Info, AlertTriangle, CheckCircle2, Wand2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import ProgramAcademyController from '@/actions/App/Http/Controllers/program_academy';
@@ -127,6 +127,9 @@ export default function Show({ program, studyPlans }: ShowProps) {
         criteria?: EvaluationCriteria;
     }>({ open: false });
 
+    // State for "set all criteria to 10 points" confirmation
+    const [setTenPointsDialog, setSetTenPointsDialog] = useState(false);
+
     // Delete handlers
     const handleDeleteStudyPlan = () => {
         if (deleteStudyPlan.studyPlan) {
@@ -154,6 +157,18 @@ export default function Show({ program, studyPlans }: ShowProps) {
             });
         }
     };
+
+    const handleSetAllCriteriaToTenPoints = () => {
+        router.post(`/programas_academicos/${program.id}/criteria/set-ten-points`, {}, {
+            preserveScroll: true,
+            onSuccess: () => setSetTenPointsDialog(false),
+        });
+    };
+
+    // Check if there are any evaluation criteria in the program
+    const hasCriteria = studyPlans.some(sp =>
+        sp.activities.some(a => a.evaluation_criteria.length > 0)
+    );
 
     return (
         <AppLayout>
@@ -201,10 +216,21 @@ export default function Show({ program, studyPlans }: ShowProps) {
                 <div className="space-y-4">
                     <div className="flex items-center justify-between">
                         <h2 className="text-2xl font-bold text-foreground">Plan de Estudios</h2>
-                        <Button onClick={() => setStudyPlanDialog({ open: true })}>
-                            <Plus className="mr-2 h-4 w-4" />
-                            Agregar Módulo
-                        </Button>
+                        <div className="flex items-center gap-2">
+                            {hasCriteria && can('editar_criterio_evaluacion') && (
+                                <Button
+                                    variant="outline"
+                                    onClick={() => setSetTenPointsDialog(true)}
+                                >
+                                    <Wand2 className="mr-2 h-4 w-4" />
+                                    Todos los criterios a 10 pts
+                                </Button>
+                            )}
+                            <Button onClick={() => setStudyPlanDialog({ open: true })}>
+                                <Plus className="mr-2 h-4 w-4" />
+                                Agregar Módulo
+                            </Button>
+                        </div>
                     </div>
 
                     {/* Info Alert about Points and Percentages */}
@@ -636,6 +662,28 @@ export default function Show({ program, studyPlans }: ShowProps) {
                             className="bg-red-600 hover:bg-red-700"
                         >
                             Eliminar
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+
+            <AlertDialog
+                open={setTenPointsDialog}
+                onOpenChange={setSetTenPointsDialog}
+            >
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Establecer todos los criterios a 10 puntos</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            ¿Estás seguro de que deseas cambiar la puntuación máxima de todos los criterios
+                            de evaluación de este programa a 10 puntos? Esta acción afectará a todos los
+                            módulos y actividades del programa.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleSetAllCriteriaToTenPoints}>
+                            Confirmar
                         </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>

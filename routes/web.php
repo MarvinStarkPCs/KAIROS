@@ -207,6 +207,9 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/activities/{activity}/criteria', [StudyPlanController::class, 'storeCriteria'])->name('criteria.store');
     });
     Route::middleware(['permission:editar_criterio_evaluacion'])->group(function () {
+        Route::post('/programas_academicos/{program}/criteria/set-ten-points', [StudyPlanController::class, 'setAllCriteriaToTenPoints'])->name('criteria.set-ten-points');
+    });
+    Route::middleware(['permission:editar_criterio_evaluacion'])->group(function () {
         Route::put('/criteria/{criteria}', [StudyPlanController::class, 'updateCriteria'])->name('criteria.update');
     });
     Route::middleware(['permission:eliminar_criterio_evaluacion'])->group(function () {
