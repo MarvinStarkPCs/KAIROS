@@ -1,5 +1,5 @@
 import { Head, Link, router } from '@inertiajs/react';
-import { Plus, Search, Filter, Eye, Edit, Trash2, DollarSign, CheckCircle, Clock, XCircle, CreditCard, List as ListIcon, RefreshCw, Settings } from 'lucide-react';
+import { Plus, Search, Filter, Eye, Edit, Trash2, DollarSign, CheckCircle, Clock, XCircle, CreditCard, List as ListIcon, RefreshCw, Settings, BarChart3 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -117,6 +117,12 @@ export default function PaymentsList({ payments, programs, filters }: Props) {
                         <p className="mt-2 text-muted-foreground">Gestiona mensualidades, cuotas y abonos</p>
                     </div>
                     <div className="flex items-center gap-3">
+                        <Link href="/reportes/pagos">
+                            <Button variant="outline" className="flex items-center space-x-2">
+                                <BarChart3 className="h-5 w-5" />
+                                <span>Reportes</span>
+                            </Button>
+                        </Link>
                         <Link href="/pagos/settings">
                             <Button variant="outline" className="flex items-center space-x-2">
                                 <Settings className="h-5 w-5" />

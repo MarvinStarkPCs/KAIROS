@@ -32,6 +32,7 @@ import EnrollmentController from '@/actions/App/Http/Controllers/EnrollmentContr
 import ScheduleController from '@/actions/App/Http/Controllers/ScheduleController';
 import AttendanceController from '@/actions/App/Http/Controllers/AttendanceController';
 import PaymentController from '@/actions/App/Http/Controllers/PaymentController';
+import ReportController from '@/actions/App/Http/Controllers/ReportController';
 import TeacherController from '@/actions/App/Http/Controllers/TeacherController';
 import StudentController from '@/actions/App/Http/Controllers/StudentController';
 
@@ -87,6 +88,12 @@ const allNavItems: NavItem[] = [
         href: PaymentController.index(),
         icon: CreditCard,
         permission: 'ver_pagos',
+    },
+    {
+        title: 'Reportes',
+        href: ReportController.payments(),
+        icon: BarChart,
+        permission: 'ver_reportes',
     },
 ];
 

@@ -18,6 +18,7 @@ use App\Http\Controllers\MatriculaController;
 use App\Http\Controllers\DemoLeadController;
 use App\Http\Controllers\Admin\DemoLeadController as AdminDemoLeadController;
 use App\Http\Controllers\ParentController;
+use App\Http\Controllers\ReportController;
 use App\Http\Controllers\DependentController;
 use App\Http\Controllers\TeacherRegistrationController;
 
@@ -373,6 +374,12 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/comunicacion/start', [CommunicationController::class, 'start'])->name('comunicacion.start');
         Route::post('/comunicacion/{conversation}/message', [CommunicationController::class, 'sendMessage'])->name('comunicacion.send');
         Route::get('/api/comunicacion/users', [CommunicationController::class, 'users'])->name('comunicacion.users');
+    });
+
+    // === MÓDULO DE REPORTES ===
+    Route::prefix('reportes')->middleware(['permission:ver_reportes'])->group(function () {
+        Route::get('/pagos', [ReportController::class, 'payments'])->name('reportes.pagos');
+        Route::get('/pagos/export', [ReportController::class, 'exportPayments'])->name('reportes.pagos.export');
     });
 
     // === RUTAS COMPARTIDAS (APIs y recursos de solo lectura) ===

@@ -17,6 +17,7 @@ import StudentController from './StudentController'
 import ParentController from './ParentController'
 import DependentController from './DependentController'
 import CommunicationController from './CommunicationController'
+import ReportController from './ReportController'
 import Settings from './Settings'
 const Controllers = {
     Auth: Object.assign(Auth, Auth),
@@ -38,6 +39,7 @@ StudentController: Object.assign(StudentController, StudentController),
 ParentController: Object.assign(ParentController, ParentController),
 DependentController: Object.assign(DependentController, DependentController),
 CommunicationController: Object.assign(CommunicationController, CommunicationController),
+ReportController: Object.assign(ReportController, ReportController),
 Settings: Object.assign(Settings, Settings),
 }
 
