@@ -46,7 +46,6 @@ export function Step2LocationForm({
                         data={{
                             address: data.address,
                             neighborhood: data.neighborhood,
-                            phone: data.phone,
                             mobile: data.mobile,
                             city: data.city,
                             department: data.department
@@ -54,7 +53,6 @@ export function Step2LocationForm({
                         errors={{
                             address: errors['responsable.address'],
                             neighborhood: errors['responsable.neighborhood'],
-                            phone: errors['responsable.phone'],
                             mobile: errors['responsable.mobile'],
                             city: errors['responsable.city'],
                             department: errors['responsable.department']

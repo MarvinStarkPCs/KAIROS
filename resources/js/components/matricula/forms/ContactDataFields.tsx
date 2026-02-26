@@ -7,7 +7,6 @@ export interface ContactDataFieldsProps {
     data: {
         address: string;
         neighborhood: string;
-        phone: string;
         mobile: string;
         city: string;
         department: string;
@@ -15,7 +14,6 @@ export interface ContactDataFieldsProps {
     errors?: {
         address?: string;
         neighborhood?: string;
-        phone?: string;
         mobile?: string;
         city?: string;
         department?: string;
@@ -69,37 +67,20 @@ export function ContactDataFields({
                 {errors.neighborhood && <InputError message={errors.neighborhood} />}
             </div>
 
-            {/* Teléfonos */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                    <Label htmlFor={getFieldName('phone')}>
-                        Teléfono Fijo *
-                    </Label>
-                    <Input
-                        id={getFieldName('phone')}
-                        type="tel"
-                        value={data.phone}
-                        onChange={(e) => onChange('phone', e.target.value)}
-                        placeholder="5701234"
-                        autoComplete="tel-local"
-                    />
-                    {errors.phone && <InputError message={errors.phone} />}
-                </div>
-
-                <div>
-                    <Label htmlFor={getFieldName('mobile')}>
-                        Celular *
-                    </Label>
-                    <Input
-                        id={getFieldName('mobile')}
-                        type="tel"
-                        value={data.mobile}
-                        onChange={(e) => onChange('mobile', e.target.value)}
-                        placeholder="3001234567"
-                        autoComplete="tel-national"
-                    />
-                    {errors.mobile && <InputError message={errors.mobile} />}
-                </div>
+            {/* Celular */}
+            <div>
+                <Label htmlFor={getFieldName('mobile')}>
+                    Celular *
+                </Label>
+                <Input
+                    id={getFieldName('mobile')}
+                    type="tel"
+                    value={data.mobile}
+                    onChange={(e) => onChange('mobile', e.target.value)}
+                    placeholder="3001234567"
+                    autoComplete="tel-national"
+                />
+                {errors.mobile && <InputError message={errors.mobile} />}
             </div>
 
             {/* Ubicación - Si se pasa children (department selector custom), lo usa */}

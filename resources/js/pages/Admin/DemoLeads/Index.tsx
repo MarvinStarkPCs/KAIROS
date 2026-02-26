@@ -1,10 +1,10 @@
 import { Head, Link, router, useForm } from '@inertiajs/react';
 import { useState } from 'react';
+import type React from 'react';
 import AppLayout from '@/layouts/app-layout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Search, Filter, Eye, Trash2, Users, Clock, CheckCircle, XCircle } from 'lucide-react';
@@ -87,18 +87,18 @@ export default function Index({ leads, stats, filters }: Props) {
         });
     };
 
-    const getStatusBadgeVariant = (color: string) => {
+    const getStatusStyle = (color: string): React.CSSProperties => {
         switch (color) {
             case 'yellow':
-                return 'default';
+                return { backgroundColor: '#fef9c3', color: '#854d0e', borderColor: '#fde047' };
             case 'blue':
-                return 'secondary';
+                return { backgroundColor: '#dbeafe', color: '#1e40af', borderColor: '#93c5fd' };
             case 'green':
-                return 'default';
+                return { backgroundColor: '#dcfce7', color: '#166534', borderColor: '#86efac' };
             case 'red':
-                return 'destructive';
+                return { backgroundColor: '#fee2e2', color: '#991b1b', borderColor: '#fca5a5' };
             default:
-                return 'outline';
+                return { backgroundColor: '#f3f4f6', color: '#374151', borderColor: '#d1d5db' };
         }
     };
 
@@ -283,9 +283,12 @@ export default function Index({ leads, stats, filters }: Props) {
                                                 )}
                                             </TableCell>
                                             <TableCell>
-                                                <Badge variant={getStatusBadgeVariant(lead.status_color)}>
+                                                <span
+                                                    style={getStatusStyle(lead.status_color)}
+                                                    className="inline-flex items-center rounded-md border px-2 py-0.5 text-xs font-medium"
+                                                >
                                                     {lead.status_label}
-                                                </Badge>
+                                                </span>
                                             </TableCell>
                                             <TableCell className="text-sm text-muted-foreground">
                                                 {formatDate(lead.created_at)}

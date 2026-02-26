@@ -212,7 +212,7 @@ class program_academy extends Controller
         if ($program->activeStudents()->count() > 0) {
             return back()->with('error', 'No se puede eliminar el programa porque tiene estudiantes activos.');
         }
-
+        
         if ($program->schedules()->count() > 0) {
             return back()->with('error', 'No se puede eliminar el programa porque tiene horarios asociados.');
         }

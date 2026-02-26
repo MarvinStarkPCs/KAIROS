@@ -29,6 +29,11 @@ class DemoLead extends Model
         'updated_at' => 'datetime',
     ];
 
+    protected $appends = [
+        'status_label',
+        'status_color',
+    ];
+
     // Constantes de estados
     const STATUS_PENDING = 'pending';
     const STATUS_CONTACTED = 'contacted';

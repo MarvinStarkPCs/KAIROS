@@ -49,34 +49,84 @@ class EnrollmentRequest extends FormRequest
             'responsable.program_id' => ['nullable', 'required_if:is_minor,false', 'exists:academic_programs,id'],
             'responsable.schedule_id' => ['nullable', 'exists:schedules,id'],
 
-            // Estudiantes (si es menor)
+            // Estudiantes (solo si es menor)
             'estudiantes' => [
-                'required_if:is_minor,true',
+                Rule::requiredIf(fn() => $this->boolean('is_minor')),
+                'nullable',
                 'array',
                 function ($attribute, $value, $fail) {
-                    // Solo validar min:1 si is_minor es true
-                    if ($this->input('is_minor') === true || $this->input('is_minor') === 'true') {
-                        if (!is_array($value) || count($value) < 1) {
-                            $fail('Debe agregar al menos un estudiante');
-                        }
+                    if (!$this->boolean('is_minor')) return;
+                    if (!is_array($value) || count($value) < 1) {
+                        $fail('Debe agregar al menos un estudiante');
                     }
                 },
                 'max:10'
             ],
-            'estudiantes.*.name' => ['required', 'string', 'max:255'],
-            'estudiantes.*.last_name' => ['required', 'string', 'max:255'],
-            'estudiantes.*.email' => ['nullable', 'email', 'max:255', 'unique:users,email'],
-            'estudiantes.*.document_type' => ['required', Rule::in(['TI', 'CC', 'CE', 'Pasaporte'])],
-            'estudiantes.*.document_number' => ['required', 'string', 'max:50', 'unique:users,document_number'],
+            'estudiantes.*.name' => [
+                Rule::requiredIf(fn() => $this->boolean('is_minor')),
+                'nullable', 'string', 'max:255',
+            ],
+            'estudiantes.*.last_name' => [
+                Rule::requiredIf(fn() => $this->boolean('is_minor')),
+                'nullable', 'string', 'max:255',
+            ],
+            'estudiantes.*.email' => [
+                'nullable',
+                'email',
+                'max:255',
+                'unique:users,email',
+                function ($attribute, $value, $fail) {
+                    if (!$this->boolean('is_minor')) return;
+                    if ($value && strtolower($value) === strtolower($this->input('responsable.email'))) {
+                        $fail('El correo del estudiante no puede ser igual al del responsable.');
+                    }
+                },
+                function ($attribute, $value, $fail) {
+                    if (!$this->boolean('is_minor') || !$value) return;
+                    $emails = collect($this->input('estudiantes', []))
+                        ->pluck('email')
+                        ->filter()
+                        ->map(fn($e) => strtolower($e));
+                    if ($emails->duplicates()->isNotEmpty()) {
+                        $fail('Los correos de los estudiantes no pueden repetirse.');
+                    }
+                },
+            ],
+            'estudiantes.*.document_type' => [
+                Rule::requiredIf(fn() => $this->boolean('is_minor')),
+                'nullable', Rule::in(['TI', 'CC', 'CE', 'Pasaporte']),
+            ],
+            'estudiantes.*.document_number' => [
+                Rule::requiredIf(fn() => $this->boolean('is_minor')),
+                'nullable', 'string', 'max:50', 'unique:users,document_number',
+            ],
             'estudiantes.*.birth_place' => ['nullable', 'string', 'max:255'],
-            'estudiantes.*.birth_date' => ['required', 'date', 'before:today'],
-            'estudiantes.*.gender' => ['required', Rule::in(['M', 'F'])],
-            'estudiantes.*.datos_musicales.plays_instrument' => ['required', 'boolean'],
+            'estudiantes.*.birth_date' => [
+                Rule::requiredIf(fn() => $this->boolean('is_minor')),
+                'nullable', 'date', 'before:today',
+            ],
+            'estudiantes.*.gender' => [
+                Rule::requiredIf(fn() => $this->boolean('is_minor')),
+                'nullable', Rule::in(['M', 'F']),
+            ],
+            'estudiantes.*.datos_musicales.plays_instrument' => [
+                Rule::requiredIf(fn() => $this->boolean('is_minor')),
+                'nullable', 'boolean',
+            ],
             'estudiantes.*.datos_musicales.instruments_played' => ['nullable', 'string'],
-            'estudiantes.*.datos_musicales.has_music_studies' => ['required', 'boolean'],
+            'estudiantes.*.datos_musicales.has_music_studies' => [
+                Rule::requiredIf(fn() => $this->boolean('is_minor')),
+                'nullable', 'boolean',
+            ],
             'estudiantes.*.datos_musicales.music_schools' => ['nullable', 'string'],
-            'estudiantes.*.datos_musicales.modality' => ['required', Rule::in(['Linaje Kids', 'Linaje Teens', 'Linaje Big'])],
-            'estudiantes.*.program_id' => ['required', 'exists:academic_programs,id'],
+            'estudiantes.*.datos_musicales.modality' => [
+                Rule::requiredIf(fn() => $this->boolean('is_minor')),
+                'nullable', Rule::in(['Linaje Kids', 'Linaje Teens', 'Linaje Big']),
+            ],
+            'estudiantes.*.program_id' => [
+                Rule::requiredIf(fn() => $this->boolean('is_minor')),
+                'nullable', 'exists:academic_programs,id',
+            ],
             'estudiantes.*.schedule_id' => ['nullable', 'exists:schedules,id'],
 
             // Autorizaciones

@@ -362,31 +362,6 @@ export default function Create({ programs, paymentMethods, modalityPrices, disco
                                 <InputError message={errors['responsable.email']} />
                             </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                    <Label htmlFor="responsable_phone">Teléfono Fijo</Label>
-                                    <Input
-                                        id="responsable_phone"
-                                        value={data.responsable.phone}
-                                        onChange={(e) => setData('responsable', { ...data.responsable, phone: e.target.value })}
-                                        placeholder="607 123 4567"
-                                        aria-invalid={!!errors['responsable.phone']}
-                                    />
-                                    <InputError message={errors['responsable.phone']} />
-                                </div>
-                                <div>
-                                    <Label htmlFor="responsable_mobile">Celular *</Label>
-                                    <Input
-                                        id="responsable_mobile"
-                                        value={data.responsable.mobile}
-                                        onChange={(e) => setData('responsable', { ...data.responsable, mobile: e.target.value })}
-                                        placeholder="300 123 4567"
-                                        aria-invalid={!!errors['responsable.mobile']}
-                                    />
-                                    <InputError message={errors['responsable.mobile']} />
-                                </div>
-                            </div>
-
                         </CardContent>
                     </Card>
                 );
@@ -406,6 +381,18 @@ export default function Create({ programs, paymentMethods, modalityPrices, disco
                             </CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-4 sm:space-y-5 pt-6">
+                            <div>
+                                <Label htmlFor="responsable_mobile">Celular *</Label>
+                                <Input
+                                    id="responsable_mobile"
+                                    value={data.responsable.mobile}
+                                    onChange={(e) => setData('responsable', { ...data.responsable, mobile: e.target.value })}
+                                    placeholder="300 123 4567"
+                                    aria-invalid={!!errors['responsable.mobile']}
+                                />
+                                <InputError message={errors['responsable.mobile']} />
+                            </div>
+
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
                                     <Label htmlFor="responsable_address">Dirección *</Label>
@@ -493,30 +480,54 @@ export default function Create({ programs, paymentMethods, modalityPrices, disco
                                     onValueChange={(value) => {
                                         const esMinor = value === 'yes';
 
-                                        // Si selecciona que sí es menor y no hay estudiantes, agregar uno automáticamente
-                                        if (esMinor && students.length === 0) {
-                                            const newStudent = crearNuevoEstudiante();
-                                            setStudentsData([newStudent]);
-                                            setData({
-                                                ...data,
-                                                is_minor: true,
-                                                estudiantes: [newStudent],
-                                                responsable: { ...data.responsable, modality: '' },
-                                            });
-                                            setCurrentEstudianteIndex(0);
-                                        } else if (esMinor) {
-                                            // Es menor pero ya hay estudiantes
-                                            setData({
-                                                ...data,
-                                                is_minor: true,
-                                                responsable: { ...data.responsable, modality: '' },
-                                            });
+                                        // Siempre resetear campos musicales/programa del responsable adulto
+                                        const responsableReset = {
+                                            ...data.responsable,
+                                            plays_instrument: false,
+                                            instruments_played: '',
+                                            has_music_studies: false,
+                                            music_schools: '',
+                                            modality: esMinor ? '' : 'Linaje Big',
+                                            program_id: '',
+                                            schedule_id: '',
+                                        };
+
+                                        if (esMinor) {
+                                            // Cambiar a menor: limpiar datos musicales del adulto,
+                                            // conservar estudiantes ya ingresados o crear uno nuevo
+                                            if (students.length === 0) {
+                                                const newStudent = crearNuevoEstudiante();
+                                                setStudentsData([newStudent]);
+                                                setCurrentEstudianteIndex(0);
+                                                setData({
+                                                    ...data,
+                                                    is_minor: true,
+                                                    responsable: responsableReset,
+                                                    estudiantes: [newStudent],
+                                                    parental_authorization: false,
+                                                    payment_commitment: false,
+                                                });
+                                            } else {
+                                                setCurrentEstudianteIndex(0);
+                                                setData({
+                                                    ...data,
+                                                    is_minor: true,
+                                                    responsable: responsableReset,
+                                                    parental_authorization: false,
+                                                    payment_commitment: false,
+                                                });
+                                            }
                                         } else {
-                                            // Es adulto, asignar modalidad automáticamente
+                                            // Cambiar a adulto: limpiar estudiantes y datos musicales
+                                            setStudentsData([]);
+                                            setCurrentEstudianteIndex(0);
                                             setData({
                                                 ...data,
                                                 is_minor: false,
-                                                responsable: { ...data.responsable, modality: 'Linaje Big' },
+                                                responsable: responsableReset,
+                                                estudiantes: [],
+                                                parental_authorization: false,
+                                                payment_commitment: false,
                                             });
                                         }
                                     }}
