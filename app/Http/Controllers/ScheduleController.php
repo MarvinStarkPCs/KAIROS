@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Schedule;
 use App\Models\AcademicProgram;
+use App\Models\ScheduleSetting;
 use App\Models\User;
 use App\Models\ScheduleEnrollment;
 use Illuminate\Http\Request;
@@ -103,11 +104,15 @@ class ScheduleController extends Controller
             'status.in' => 'El estado debe ser: activo, inactivo o completado',
         ]);
 
+        $scheduleSetting = ScheduleSetting::first();
+
         // Validar que no haya solapamiento de horarios para el mismo programa académico
-        $this->validateProgramOverlap($validated, null);
+        if (!$scheduleSetting || $scheduleSetting->validate_program_overlap) {
+            $this->validateProgramOverlap($validated, null);
+        }
 
         // Validar que no haya solapamiento de horarios para el mismo profesor
-        if ($request->filled('professor_id')) {
+        if ($request->filled('professor_id') && (!$scheduleSetting || $scheduleSetting->validate_professor_overlap)) {
             $this->validateProfessorOverlap($validated, null);
         }
 
@@ -290,11 +295,15 @@ class ScheduleController extends Controller
             'status.in' => 'El estado debe ser: activo, inactivo o completado',
         ]);
 
+        $scheduleSetting = ScheduleSetting::first();
+
         // Validar que no haya solapamiento de horarios para el mismo programa académico
-        $this->validateProgramOverlap($validated, $schedule->id);
+        if (!$scheduleSetting || $scheduleSetting->validate_program_overlap) {
+            $this->validateProgramOverlap($validated, $schedule->id);
+        }
 
         // Validar que no haya solapamiento de horarios para el mismo profesor
-        if ($request->filled('professor_id')) {
+        if ($request->filled('professor_id') && (!$scheduleSetting || $scheduleSetting->validate_professor_overlap)) {
             $this->validateProfessorOverlap($validated, $schedule->id);
         }
 
@@ -428,7 +437,8 @@ class ScheduleController extends Controller
         ]);
 
         // Si se asigna un profesor, validar que no tenga conflictos de horario
-        if ($request->filled('professor_id')) {
+        $scheduleSetting = ScheduleSetting::first();
+        if ($request->filled('professor_id') && (!$scheduleSetting || $scheduleSetting->validate_professor_overlap)) {
             $data = [
                 'professor_id' => $validated['professor_id'],
                 'days_of_week' => $schedule->days_of_week,
@@ -637,5 +647,45 @@ class ScheduleController extends Controller
                 'professor_id' => 'El profesor ya tiene un horario asignado en el mismo día y hora',
             ]);
         }
+    }
+
+    /**
+     * Mostrar configuración de validaciones de horarios
+     */
+    public function settings()
+    {
+        $scheduleSetting = ScheduleSetting::first();
+
+        return Inertia::render('Schedules/Settings', [
+            'scheduleSetting' => $scheduleSetting,
+        ]);
+    }
+
+    /**
+     * Actualizar configuración de validaciones de horarios
+     */
+    public function updateSettings(Request $request)
+    {
+        $validated = $request->validate([
+            'validate_program_overlap' => ['required', 'boolean'],
+            'validate_professor_overlap' => ['required', 'boolean'],
+        ], [
+            'validate_program_overlap.required' => 'La configuración de solapamiento de programa es obligatoria',
+            'validate_program_overlap.boolean' => 'El valor debe ser verdadero o falso',
+            'validate_professor_overlap.required' => 'La configuración de solapamiento de profesor es obligatoria',
+            'validate_professor_overlap.boolean' => 'El valor debe ser verdadero o falso',
+        ]);
+
+        $scheduleSetting = ScheduleSetting::first();
+
+        if ($scheduleSetting) {
+            $scheduleSetting->update($validated);
+        } else {
+            ScheduleSetting::create($validated);
+        }
+
+        flash_success('Configuración de horarios actualizada correctamente');
+
+        return redirect()->back();
     }
 }

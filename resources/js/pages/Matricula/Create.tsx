@@ -33,7 +33,7 @@ import { FormField } from '@/components/matricula/FormField';
 export default function Create({ programs, paymentMethods, modalityPrices, discountInfo }: CreateProps) {
     const onlineEnabled = paymentMethods?.online ?? true;
     const manualEnabled = paymentMethods?.manual ?? true;
-    const discountMinStudents = discountInfo?.min_students ?? 3;
+    const discountMinStudents = discountInfo?.min_students ?? 2;
     const discountPercentage = discountInfo?.percentage ?? 0;
 
     // Función para formatear precio
@@ -1242,7 +1242,14 @@ export default function Create({ programs, paymentMethods, modalityPrices, disco
                                 </p>
 
                                 {data.is_minor && data.estudiantes.length > 0 && (() => {
-                                    const hasDiscount = discountPercentage > 0 && data.estudiantes.length >= discountMinStudents;
+                                    const getPrimerApellido = (lastName: string) =>
+                                        lastName.trim().split(/\s+/)[0].toLowerCase();
+                                    const primerApellidos = data.estudiantes.map(e => getPrimerApellido(e.last_name));
+                                    const esMismaFamilia =
+                                        data.estudiantes.length >= discountMinStudents &&
+                                        primerApellidos[0] !== '' &&
+                                        primerApellidos.every(ap => ap === primerApellidos[0]);
+                                    const hasDiscount = discountPercentage > 0 && esMismaFamilia;
                                     return (
                                         <div className="pt-2 space-y-2">
                                             <p className="text-sm font-semibold">Resumen de matrículas:</p>
@@ -1283,7 +1290,7 @@ export default function Create({ programs, paymentMethods, modalityPrices, disco
                                                 <div className="p-2 bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 rounded text-sm text-green-800 dark:text-green-200 flex items-center gap-2">
                                                     <CheckCircle className="h-4 w-4 flex-shrink-0" />
                                                     <span>
-                                                        <strong>{discountPercentage}% de descuento</strong> aplicado por matricular {data.estudiantes.length} estudiantes
+                                                        <strong>{discountPercentage}% de descuento familiar</strong> aplicado por matricular {data.estudiantes.length} hermanos
                                                     </span>
                                                 </div>
                                             )}

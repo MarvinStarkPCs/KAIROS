@@ -15,6 +15,7 @@ import {
     Filter,
     Grid,
     CalendarDays,
+    Settings,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -207,12 +208,19 @@ export default function SchedulesIndex({ schedules, stats, allProfessors, allStu
                         <h1 className="text-3xl font-bold text-foreground">Horarios</h1>
                         <p className="mt-2 text-muted-foreground">Gestiona los horarios y clases académicas</p>
                     </div>
-                    <Link href="/horarios/create">
-                        <Button className="flex items-center space-x-2">
-                            <Plus className="h-5 w-5" />
-                            <span>Nuevo Horario</span>
-                        </Button>
-                    </Link>
+                    <div className="flex items-center gap-2">
+                        <Link href="/horarios/settings">
+                            <Button variant="outline" size="icon" title="Configuración de validaciones">
+                                <Settings className="h-5 w-5" />
+                            </Button>
+                        </Link>
+                        <Link href="/horarios/create">
+                            <Button className="flex items-center space-x-2">
+                                <Plus className="h-5 w-5" />
+                                <span>Nuevo Horario</span>
+                            </Button>
+                        </Link>
+                    </div>
                 </div>
 
                 {/* Stats Cards */}

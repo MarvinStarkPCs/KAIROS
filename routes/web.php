@@ -244,6 +244,11 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/horarios/create', [ScheduleController::class, 'create'])->name('horarios.create');
         Route::post('/horarios', [ScheduleController::class, 'store'])->name('horarios.store');
     });
+    Route::middleware(['permission:editar_horario'])->group(function () {
+        // Rutas estáticas antes de {schedule} para evitar colisiones
+        Route::get('/horarios/settings', [ScheduleController::class, 'settings'])->name('horarios.settings');
+        Route::patch('/horarios/settings', [ScheduleController::class, 'updateSettings'])->name('horarios.settings.update');
+    });
     Route::middleware(['permission:ver_horarios'])->group(function () {
         Route::get('/horarios', [ScheduleController::class, 'index'])->name('horarios.index');
         Route::get('/horarios/{schedule}', [ScheduleController::class, 'show'])->name('horarios.show');
