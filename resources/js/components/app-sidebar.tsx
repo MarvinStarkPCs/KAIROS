@@ -44,6 +44,12 @@ const allNavItems: NavItem[] = [
         icon: Award,
         role: 'Estudiante',
     },
+    {
+        title: 'Mis Pagos',
+        href: StudentController.payments(),
+        icon: CreditCard,
+        role: 'Estudiante',
+    },
     // Portal de Padres/Responsables
     {
         title: 'Mis Hijos',

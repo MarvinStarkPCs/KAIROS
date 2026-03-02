@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Enrollment;
 use App\Models\ActivityEvaluation;
 use App\Models\Attendance;
+use App\Models\Payment;
 use App\Models\ScheduleEnrollment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -165,7 +166,46 @@ class StudentController extends Controller
             'programStats' => $programStats,
             'attendanceStats' => $attendanceData['stats'],
             'recentAttendances' => $attendanceData['recent'],
+            'programPayments' => $programId ? $this->getProgramPayments($student->id, (int) $programId) : [],
         ]);
+    }
+
+    /**
+     * Obtener pagos de un programa específico para el estudiante
+     */
+    private function getProgramPayments(int $studentId, int $programId): array
+    {
+        return Payment::with(['transactions'])
+            ->where('student_id', $studentId)
+            ->where('program_id', $programId)
+            ->whereNull('parent_payment_id')
+            ->orderBy('due_date', 'asc')
+            ->get()
+            ->map(function ($p) {
+                return [
+                    'id'              => $p->id,
+                    'concept'         => $p->concept,
+                    'amount'          => (float) ($p->amount ?? 0),
+                    'paid_amount'     => (float) ($p->paid_amount ?? 0),
+                    'pending_balance' => (float) ($p->getPendingBalance() ?? 0),
+                    'status'          => $p->status,
+                    'due_date'        => $p->due_date?->format('Y-m-d'),
+                    'payment_date'    => $p->payment_date?->format('Y-m-d'),
+                    'payment_method'  => $p->payment_method,
+                    'has_transactions' => $p->transactions->isNotEmpty(),
+                    'transactions'    => $p->transactions->map(function ($t) {
+                        return [
+                            'id'             => $t->id,
+                            'amount'         => (float) ($t->amount ?? 0),
+                            'payment_method' => $t->payment_method,
+                            'notes'          => $t->notes,
+                            'created_at'     => $t->created_at->format('Y-m-d'),
+                        ];
+                    })->values()->toArray(),
+                ];
+            })
+            ->values()
+            ->toArray();
     }
 
     /**
@@ -218,5 +258,57 @@ class StudentController extends Controller
             ],
             'recent' => $recentAttendances,
         ];
+    }
+
+    /**
+     * Ver los pagos propios del estudiante autenticado
+     */
+    public function payments()
+    {
+        $student = Auth::user();
+
+        $payments = Payment::with(['program', 'transactions'])
+            ->where('student_id', $student->id)
+            ->whereNull('parent_payment_id')
+            ->orderBy('due_date', 'asc')
+            ->get()
+            ->map(function ($p) {
+                return [
+                    'id'              => $p->id,
+                    'concept'         => $p->concept,
+                    'payment_type'    => $p->payment_type,
+                    'amount'          => (float) ($p->amount ?? 0),
+                    'paid_amount'     => (float) ($p->paid_amount ?? 0),
+                    'remaining_amount' => (float) ($p->remaining_amount ?? 0),
+                    'pending_balance' => (float) ($p->getPendingBalance() ?? 0),
+                    'status'          => $p->status,
+                    'due_date'        => $p->due_date?->format('Y-m-d'),
+                    'payment_date'    => $p->payment_date?->format('Y-m-d'),
+                    'payment_method'  => $p->payment_method,
+                    'program_name'    => $p->program?->name,
+                    'program_color'   => $p->program?->color ?? '#6b5544',
+                    'has_transactions' => $p->transactions->isNotEmpty(),
+                    'transactions'    => $p->transactions->map(function ($t) {
+                        return [
+                            'id'             => $t->id,
+                            'amount'         => (float) ($t->amount ?? 0),
+                            'payment_method' => $t->payment_method,
+                            'notes'          => $t->notes,
+                            'created_at'     => $t->created_at->format('Y-m-d'),
+                        ];
+                    }),
+                ];
+            });
+
+        $summary = [
+            'total_pendiente' => $payments->whereIn('status', ['pending', 'overdue'])->sum('pending_balance'),
+            'total_pagado'    => $payments->sum('paid_amount'),
+            'pagos_vencidos'  => $payments->where('status', 'overdue')->count(),
+        ];
+
+        return Inertia::render('Student/Payments', [
+            'payments' => $payments,
+            'summary'  => $summary,
+        ]);
     }
 }

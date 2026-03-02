@@ -136,8 +136,8 @@ const MODALITY_COLORS: Record<string, string> = {
 };
 
 // === HELPERS ===
-const formatCurrency = (value: number) =>
-    '$' + value.toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+const formatCurrency = (value: number | null | undefined) =>
+    '$' + (value ?? 0).toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
 
 const formatDate = (date: string) => {
     if (!date) return '—';

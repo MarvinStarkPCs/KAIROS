@@ -295,11 +295,11 @@ export default function PaymentsList({ payments, programs, filters }: Props) {
                                                 <td className="px-6 py-4">
                                                     <div className="flex items-center gap-1 font-semibold text-foreground">
                                                         <DollarSign className="h-4 w-4" />
-                                                        {payment.amount.toLocaleString('es-CO')}
+                                                        {(payment.amount ?? 0).toLocaleString('es-CO')}
                                                     </div>
-                                                    {payment.pending_balance > 0 && payment.status !== 'completed' && (
+                                                    {(payment.pending_balance ?? 0) > 0 && payment.status !== 'completed' && (
                                                         <div className="text-xs text-orange-600 dark:text-orange-400">
-                                                            Pendiente: ${payment.pending_balance.toLocaleString('es-CO')}
+                                                            Pendiente: ${(payment.pending_balance ?? 0).toLocaleString('es-CO')}
                                                         </div>
                                                     )}
                                                 </td>

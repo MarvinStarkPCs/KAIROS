@@ -63,9 +63,9 @@ const PAYMENT_TYPE_MAP: Record<string, string> = {
 };
 
 export default function PaymentShow({ payment }: Props) {
-    const totalAmount = payment.original_amount ?? payment.amount;
+    const totalAmount = payment.original_amount ?? payment.amount ?? 0;
     const paidAmount = payment.paid_amount ?? 0;
-    const pendingBalance = payment.pending_balance ?? (payment.remaining_amount ?? totalAmount);
+    const pendingBalance = payment.pending_balance ?? (payment.remaining_amount ?? totalAmount) ?? 0;
     const progressPercent = totalAmount > 0 ? Math.min((paidAmount / totalAmount) * 100, 100) : 0;
     const statusInfo = STATUS_MAP[payment.status] ?? STATUS_MAP.pending;
     const StatusIcon = statusInfo.icon;

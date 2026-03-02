@@ -334,6 +334,7 @@ Route::middleware(['auth'])->group(function () {
     Route::prefix('estudiante')->group(function () {
         Route::middleware(['role:Estudiante|Administrador'])->group(function () {
             Route::get('/calificaciones/{programId?}', [StudentController::class, 'grades'])->name('estudiante.calificaciones');
+            Route::get('/pagos', [StudentController::class, 'payments'])->name('estudiante.pagos');
         });
     });
 
