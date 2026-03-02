@@ -45,7 +45,9 @@
       "Bash(del \"C:\\\\laragon\\\\www\\\\KAIROS\\\\fix-dark-mode.ps1\")",
       "Bash(del \"C:\\\\laragon\\\\www\\\\KAIROS\\\\fix-dark-mode2.ps1\")",
       "Bash(powershell -File:*)",
-      "Bash(npx vite build)"
+      "Bash(npx vite build)",
+      "Bash(test -d /c/laragon/www/KAIROS/storage/app/public)",
+      "Bash(test -L /c/laragon/www/KAIROS/public/storage)"
     ],
     "deny": [],
     "ask": []

@@ -43,14 +43,16 @@ class CheckPendingManualPayments extends Command
         $firstDay = $today->copy()->startOfMonth();
         $fifthDay = $today->copy()->startOfMonth()->day(5);
 
-        $pendingPayments = Payment::where('status', 'pending')
+        // Buscar pagos ya marcados como vencidos por mark-overdue (que corrió a las 6AM)
+        // O aún pendientes (edge case). Solo pagos manuales sin referencia de pasarela.
+        $pendingPayments = Payment::whereIn('status', ['pending', 'overdue'])
             ->whereNull('wompi_reference') // Pagos manuales (no de pasarela)
             ->whereBetween('due_date', [$firstDay, $fifthDay])
             ->with(['student', 'program', 'enrollment'])
             ->get();
 
         if ($pendingPayments->isEmpty()) {
-            $this->info('No se encontraron pagos manuales pendientes del 1-5 de este mes.');
+            $this->info('No se encontraron pagos manuales vencidos del 1-5 de este mes.');
             return 0;
         }
 
@@ -58,9 +60,11 @@ class CheckPendingManualPayments extends Command
         $suspended = 0;
 
         foreach ($pendingPayments as $payment) {
-            // Cambiar estado del pago a vencido (overdue)
-            $payment->status = 'overdue';
-            $payment->save();
+            // Asegurarse que el pago quede como vencido
+            if ($payment->status !== 'overdue') {
+                $payment->status = 'overdue';
+                $payment->save();
+            }
 
             $this->warn("  ⚠️  Pago vencido: {$payment->student->name} - {$payment->concept}");
             $updated++;

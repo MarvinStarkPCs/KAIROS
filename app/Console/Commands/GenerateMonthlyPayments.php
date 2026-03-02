@@ -34,7 +34,7 @@ class GenerateMonthlyPayments extends Command
         // Obtener el mes para el cual generar pagos
         $month = $this->option('month')
             ? Carbon::parse($this->option('month'))
-            : Carbon::now()->addMonth(); // Mes siguiente
+            : Carbon::now(); // Mes actual
 
         $dueDate = $month->copy()->day(5); // Vencimiento el día 5 del mes
 
