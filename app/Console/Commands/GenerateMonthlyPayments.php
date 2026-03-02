@@ -35,7 +35,7 @@ class GenerateMonthlyPayments extends Command
         }
 
         // Obtener todas las inscripciones activas
-        $activeEnrollments = Enrollment::with(['student', 'program'])
+        $activeEnrollments = Enrollment::with(['student.studentProfile', 'program'])
             ->where('status', 'active')
             ->get();
 
@@ -66,7 +66,7 @@ class GenerateMonthlyPayments extends Command
             }
 
             // Calcular monto según modalidad o fallback al monthly_fee del programa
-            $modality          = $student->modality;
+            $modality          = $student->studentProfile?->modality;
             $finalAmount       = null;
             $originalAmount    = null;
             $discountPct       = null;
