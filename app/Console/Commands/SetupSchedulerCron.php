@@ -86,20 +86,23 @@ class SetupSchedulerCron extends Command
         $tmpFile = tempnam(sys_get_temp_dir(), 'crontab_');
         file_put_contents($tmpFile, $newCrontab);
 
-        $result = shell_exec("crontab {$tmpFile} 2>&1");
+        shell_exec("crontab {$tmpFile} 2>/dev/null");
         unlink($tmpFile);
 
-        if ($result === null || $result === '') {
+        // Verificar que quedó instalado leyendo el crontab resultante
+        $installedCrontab = shell_exec('crontab -l 2>/dev/null') ?? '';
+
+        if (str_contains($installedCrontab, 'schedule:run')) {
             $this->info('✅ Cron instalado correctamente.');
             $this->newLine();
             $this->line("  {$cronLine}");
             $this->newLine();
             $this->line('Verifica con: crontab -l');
         } else {
-            $this->error('❌ Error al instalar el cron:');
-            $this->line($result);
+            $this->error('❌ No se pudo instalar el cron automáticamente.');
             $this->newLine();
-            $this->info('Agrégalo manualmente en cPanel → Cron Jobs.');
+            $this->info('Agrégalo manualmente en cPanel → Cron Jobs:');
+            $this->line("  {$cronLine}");
         }
 
         return 0;
