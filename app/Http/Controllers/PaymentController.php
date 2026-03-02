@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Models\AcademicProgram;
 use App\Models\Enrollment;
 use App\Models\PaymentSetting;
+use App\Mail\AbonoRegistrado;
 use App\Mail\PaymentConfirmed;
 use App\Services\WompiService;
 use Illuminate\Http\Request;
@@ -399,12 +400,47 @@ class PaymentController extends Controller
         $transactionCount = $payment->transactions()->count() + 1;
         $referenceNumber = 'ABN-' . $payment->id . '-' . str_pad($transactionCount, 3, '0', STR_PAD_LEFT) . '-' . now()->format('YmdHis');
 
-        $payment->addTransaction(
+        $transaction = $payment->addTransaction(
             $validated['amount'],
             $validated['payment_method'],
             $referenceNumber,
             $validated['notes'] ?? null
         );
+
+        // Recargar el pago para tener los montos actualizados
+        $payment->refresh()->load(['student', 'program']);
+        $student = $payment->student;
+        $studentName = trim($student->name . ' ' . ($student->last_name ?? ''));
+
+        // Enviar correo de abono al estudiante y/o responsable
+        try {
+            $recipients = [];
+
+            if ($student->parent_id) {
+                $parent = User::find($student->parent_id);
+                if ($parent?->email) {
+                    $recipients[] = [
+                        'email' => $parent->email,
+                        'name'  => trim($parent->name . ' ' . ($parent->last_name ?? '')),
+                    ];
+                }
+            }
+
+            if ($student->email) {
+                $recipients[] = [
+                    'email' => $student->email,
+                    'name'  => $studentName,
+                ];
+            }
+
+            foreach ($recipients as $recipient) {
+                Mail::to($recipient['email'])->send(
+                    new AbonoRegistrado($payment, $transaction, $recipient['name'], $studentName)
+                );
+            }
+        } catch (\Exception $e) {
+            \Log::error("Error enviando correo de abono #{$payment->id}: {$e->getMessage()}");
+        }
 
         flash_success('Abono registrado exitosamente');
         return redirect()->back();
