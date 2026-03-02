@@ -2,67 +2,57 @@
 
 namespace App\Console\Commands;
 
-use App\Models\Payment;
 use App\Models\Enrollment;
+use App\Models\Payment;
+use App\Models\PaymentSetting;
 use App\Models\User;
-use Illuminate\Console\Command;
+use App\Services\EnrollmentService;
 use Carbon\Carbon;
+use Illuminate\Console\Command;
 
 class GenerateMonthlyPayments extends Command
 {
-    /**
-     * The name and signature of the console command.
-     *
-     * @var string
-     */
-    protected $signature = 'payments:generate-monthly {--month= : Month (YYYY-MM)}';
+    protected $signature = 'payments:generate-monthly {--month= : Mes a generar (YYYY-MM)}';
+    protected $description = 'Generar mensualidades automáticamente para estudiantes inscritos según su modalidad';
 
-    /**
-     * The console command description.
-     *
-     * @var string
-     */
-    protected $description = 'Generar mensualidades automáticamente para estudiantes inscritos';
-
-    /**
-     * Execute the console command.
-     */
-    public function handle()
+    public function handle(EnrollmentService $enrollmentService): int
     {
         $this->info('Generando mensualidades...');
 
         // Obtener el mes para el cual generar pagos
-        $month = $this->option('month')
-            ? Carbon::parse($this->option('month'))
-            : Carbon::now(); // Mes actual
+        $month   = $this->option('month') ? Carbon::parse($this->option('month')) : Carbon::now();
+        $dueDate = $month->copy()->day(5);
 
-        $dueDate = $month->copy()->day(5); // Vencimiento el día 5 del mes
+        $this->info("Mes       : {$month->locale('es')->isoFormat('MMMM YYYY')}");
+        $this->info("Vencimiento: {$dueDate->format('d/m/Y')}");
+        $this->newLine();
 
-        $this->info("Generando pagos para el mes: {$month->format('F Y')}");
-        $this->info("Fecha de vencimiento: {$dueDate->format('d/m/Y')}");
+        // Configuración de pagos activa (opcional — se usa como fallback si no hay modalidad)
+        $paymentSetting = PaymentSetting::where('is_active', true)->first();
 
-        // Obtener todos los estudiantes con inscripciones activas
+        if (! $paymentSetting) {
+            $this->warn('⚠️  No hay configuración de pagos activa. Se usará el monthly_fee de cada programa como fallback.');
+        }
+
+        // Obtener todas las inscripciones activas
         $activeEnrollments = Enrollment::with(['student', 'program'])
             ->where('status', 'active')
             ->get();
 
         if ($activeEnrollments->isEmpty()) {
-            $this->warn('No se encontraron inscripciones activas');
+            $this->warn('No se encontraron inscripciones activas.');
             return 0;
         }
 
         $generated = 0;
-        $skipped = 0;
+        $skipped   = 0;
+        $errors    = 0;
 
         foreach ($activeEnrollments as $enrollment) {
-            // Verificar que el programa tenga tarifa mensual configurada
-            if (!$enrollment->program->monthly_fee || $enrollment->program->monthly_fee <= 0) {
-                $this->warn("  ⏭️  {$enrollment->student->name} - {$enrollment->program->name} no tiene tarifa mensual configurada");
-                $skipped++;
-                continue;
-            }
+            $student = $enrollment->student;
+            $program = $enrollment->program;
 
-            // Verificar si ya existe un pago para este estudiante, programa y mes
+            // Saltar si ya existe el cobro para este mes
             $existingPayment = Payment::where('student_id', $enrollment->student_id)
                 ->where('program_id', $enrollment->program_id)
                 ->where('enrollment_id', $enrollment->id)
@@ -70,36 +60,97 @@ class GenerateMonthlyPayments extends Command
                 ->exists();
 
             if ($existingPayment) {
-                $this->warn("  ⏭️  {$enrollment->student->name} - Ya tiene mensualidad para " . $dueDate->locale('es')->isoFormat('MMMM YYYY'));
+                $this->line("  ⏭️  {$student->name} — ya tiene cobro para " . $dueDate->locale('es')->isoFormat('MMMM YYYY'));
                 $skipped++;
                 continue;
             }
 
-            $amount = $enrollment->program->monthly_fee;
+            // Calcular monto según modalidad o fallback al monthly_fee del programa
+            $modality          = $student->modality;
+            $finalAmount       = null;
+            $originalAmount    = null;
+            $discountPct       = null;
+            $discountAmount    = null;
 
-            Payment::create([
-                'student_id' => $enrollment->student_id,
-                'program_id' => $enrollment->program_id,
-                'enrollment_id' => $enrollment->id,
-                'concept' => "Mensualidad {$enrollment->program->name} - " . $dueDate->locale('es')->isoFormat('MMMM YYYY'),
-                'payment_type' => 'single',
-                'amount' => $amount,
-                'original_amount' => $amount,
-                'paid_amount' => 0,
-                'remaining_amount' => $amount,
-                'due_date' => $dueDate,
-                'status' => 'pending',
-            ]);
+            if ($modality && $paymentSetting) {
+                // Contar hermanos activos para descuento familiar
+                $siblingsCount = 1;
+                if ($student->parent_id) {
+                    $siblingsCount = User::where('parent_id', $student->parent_id)
+                        ->whereHas('programEnrollments', fn($q) => $q->whereIn('status', ['active', 'waiting']))
+                        ->count();
+                }
 
-            $this->info("  ✅ {$enrollment->student->name} - {$enrollment->program->name}: \${$amount}");
-            $generated++;
+                $paymentInfo    = $enrollmentService->getPaymentAmount($modality, $siblingsCount);
+                $finalAmount    = $paymentInfo['amount'];
+                $originalAmount = $paymentInfo['original_amount'];
+                $discountPct    = $paymentInfo['discount_percentage'] > 0 ? $paymentInfo['discount_percentage'] : null;
+                $discountAmount = $paymentInfo['discount_amount'] > 0 ? $paymentInfo['discount_amount'] : null;
+
+            } else {
+                // Fallback: usar monthly_fee del programa
+                $finalAmount    = (float) ($program->monthly_fee ?? 0);
+                $originalAmount = $finalAmount;
+
+                if ($finalAmount <= 0) {
+                    $this->warn("  ⏭️  {$student->name} — sin modalidad ni monthly_fee configurado, se omite.");
+                    $skipped++;
+                    continue;
+                }
+
+                if (! $modality) {
+                    $this->warn("  ⚠️  {$student->name} — sin modalidad asignada, usando monthly_fee del programa (\${$finalAmount}).");
+                }
+            }
+
+            $concept = "Mensualidad {$program->name} — " . $dueDate->locale('es')->isoFormat('MMMM YYYY');
+            if ($modality) {
+                $concept .= " ({$modality})";
+            }
+            if ($discountPct) {
+                $concept .= " — Descuento familiar {$discountPct}%";
+            }
+
+            try {
+                Payment::create([
+                    'student_id'          => $enrollment->student_id,
+                    'program_id'          => $enrollment->program_id,
+                    'enrollment_id'       => $enrollment->id,
+                    'concept'             => $concept,
+                    'modality'            => $modality,
+                    'payment_type'        => 'single',
+                    'amount'              => $finalAmount,
+                    'original_amount'     => $originalAmount,
+                    'discount_percentage' => $discountPct,
+                    'discount_amount'     => $discountAmount,
+                    'paid_amount'         => 0,
+                    'remaining_amount'    => $finalAmount,
+                    'due_date'            => $dueDate,
+                    'status'              => 'pending',
+                ]);
+
+                $line = "  ✅ {$student->name}";
+                $line .= $modality ? " ({$modality})" : " (sin modalidad)";
+                $line .= " — {$program->name}: $" . number_format($finalAmount, 0, ',', '.');
+                if ($discountPct) {
+                    $line .= " (Descuento {$discountPct}%)";
+                }
+                $this->info($line);
+                $generated++;
+
+            } catch (\Exception $e) {
+                $this->error("  ❌ Error con {$student->name}: {$e->getMessage()}");
+                $errors++;
+            }
         }
 
         $this->newLine();
-        $this->info("✨ Resumen:");
-        $this->info("   Mensualidades generadas: {$generated}");
-        $this->info("   Omitidas (ya existían): {$skipped}");
-        $this->info("   Total inscripciones activas: {$activeEnrollments->count()}");
+        $this->info('✨ Resumen:');
+        $this->info("   Generados : {$generated}");
+        $this->info("   Omitidos  : {$skipped}");
+        if ($errors > 0) {
+            $this->error("   Errores   : {$errors}");
+        }
 
         return 0;
     }

@@ -38,8 +38,8 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withSchedule(function (\Illuminate\Console\Scheduling\Schedule $schedule) {
-        // Generar mensualidades el día 2 de cada mes a las 00:00 AM
-        $schedule->command('payments:generate-monthly')->monthlyOn(2, '00:00');
+        // Generar mensualidades el día 1 de cada mes a las 00:00 AM
+        $schedule->command('payments:generate-monthly')->monthlyOn(1, '00:00');
 
         // Marcar pagos vencidos diariamente a las 6:00 AM (después del día 5)
         $schedule->command('payments:mark-overdue')->dailyAt('06:00');
