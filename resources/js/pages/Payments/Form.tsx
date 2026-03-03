@@ -459,20 +459,18 @@ export default function PaymentForm({ payment, enrollments }: Props) {
                             <InputError message={errors.amount} />
                         </div>
 
-                        {/* Fecha de Vencimiento - Solo al crear */}
-                        {!isEditing && (
-                            <div>
-                                <Label htmlFor="due_date">Fecha de Vencimiento *</Label>
-                                <Input
-                                    id="due_date"
-                                    type="date"
-                                    value={data.due_date}
-                                    onChange={(e) => setData('due_date', e.target.value)}
-                                    required
-                                />
-                                <InputError message={errors.due_date} />
-                            </div>
-                        )}
+                        {/* Fecha de Vencimiento */}
+                        <div>
+                            <Label htmlFor="due_date">Fecha de Vencimiento *</Label>
+                            <Input
+                                id="due_date"
+                                type="date"
+                                value={data.due_date}
+                                onChange={(e) => setData('due_date', e.target.value)}
+                                required
+                            />
+                            <InputError message={errors.due_date} />
+                        </div>
 
                         {/* Método de Pago y Referencia - Solo si está completado */}
                         {data.status === 'completed' && (

@@ -16,19 +16,56 @@
         @endif
     </p>
 
+    {{-- Saldo pendiente destacado --}}
     <table role="presentation" style="width: 100%; border-collapse: collapse; background-color: #fffbeb; border-left: 4px solid #f59e0b; border-radius: 4px; margin-bottom: 20px;">
         <tr>
             <td style="padding: 15px;">
-                <p style="margin: 0 0 8px 0; font-size: 14px; color: #6b7280;">Estudiante:</p>
-                <p style="margin: 0 0 12px 0; font-size: 15px; color: #111827; font-weight: 600;">{{ $studentName }}</p>
-                <p style="margin: 0 0 8px 0; font-size: 14px; color: #6b7280;">Programa:</p>
-                <p style="margin: 0 0 12px 0; font-size: 15px; color: #111827; font-weight: 600;">{{ $programName }}</p>
-                <p style="margin: 0 0 8px 0; font-size: 14px; color: #6b7280;">Concepto:</p>
-                <p style="margin: 0 0 12px 0; font-size: 15px; color: #111827; font-weight: 600;">{{ $payment->concept }}</p>
-                <p style="margin: 0 0 8px 0; font-size: 14px; color: #6b7280;">Monto pendiente:</p>
-                <p style="margin: 0 0 12px 0; font-size: 18px; color: #92400e; font-weight: 700;">${{ $amount }} COP</p>
-                <p style="margin: 0 0 8px 0; font-size: 14px; color: #6b7280;">Fecha de vencimiento:</p>
-                <p style="margin: 0; font-size: 15px; color: #111827; font-weight: 600;">{{ $dueDateFormatted }}</p>
+                <p style="margin: 0 0 4px 0; font-size: 13px; color: #92400e; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Valor que debe pagar</p>
+                <p style="margin: 0; font-size: 30px; color: #92400e; font-weight: 800;">${{ $amount }} COP</p>
+                <p style="margin: 6px 0 0 0; font-size: 13px; color: #78350f;">Fecha límite: {{ $dueDateFormatted }}</p>
+            </td>
+        </tr>
+    </table>
+
+    {{-- Detalle del cobro --}}
+    <table role="presentation" style="width: 100%; border-collapse: collapse; background-color: #ffffff; border-left: 4px solid #e5e7eb; border-radius: 4px; margin-bottom: 20px;">
+        <tr>
+            <td style="padding: 15px;">
+                <p style="margin: 0 0 12px 0; font-size: 14px; color: #374151; font-weight: 600;">Detalle del cobro</p>
+
+                <table role="presentation" style="width: 100%; border-collapse: collapse;">
+                    <tr>
+                        <td style="padding: 5px 0; font-size: 14px; color: #6b7280;">Estudiante:</td>
+                        <td style="padding: 5px 0; font-size: 14px; color: #111827; font-weight: 600; text-align: right;">{{ $studentName }}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 5px 0; font-size: 14px; color: #6b7280;">Programa:</td>
+                        <td style="padding: 5px 0; font-size: 14px; color: #111827; font-weight: 600; text-align: right;">{{ $programName }}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 5px 0; font-size: 14px; color: #6b7280;">Concepto:</td>
+                        <td style="padding: 5px 0; font-size: 14px; color: #111827; font-weight: 600; text-align: right;">{{ $payment->concept }}</td>
+                    </tr>
+
+                    @if($hasPartialPayments)
+                    {{-- Mostrar desglose si hay abonos --}}
+                    <tr>
+                        <td colspan="2" style="padding: 8px 0 4px 0; border-top: 1px solid #f3f4f6;"></td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 4px 0; font-size: 14px; color: #6b7280;">Valor total del cobro:</td>
+                        <td style="padding: 4px 0; font-size: 14px; color: #6b7280; text-align: right;">${{ $totalAmount }} COP</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 4px 0; font-size: 14px; color: #16a34a;">Abonos realizados:</td>
+                        <td style="padding: 4px 0; font-size: 14px; color: #16a34a; text-align: right;">- ${{ $paidAmount }} COP</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 6px 0; font-size: 15px; color: #92400e; font-weight: 700; border-top: 1px solid #f3f4f6;">Saldo pendiente:</td>
+                        <td style="padding: 6px 0; font-size: 15px; color: #92400e; font-weight: 700; text-align: right; border-top: 1px solid #f3f4f6;">${{ $amount }} COP</td>
+                    </tr>
+                    @endif
+                </table>
             </td>
         </tr>
     </table>
@@ -38,8 +75,7 @@
         <tr>
             <td style="padding: 15px;">
                 <p style="margin: 0; font-size: 14px; color: #991b1b; line-height: 1.5;">
-                    <strong>⚠️ Importante:</strong> Si el pago no se realiza antes de la fecha de vencimiento,
-                    puede generarse un recargo o la suspensión temporal del servicio.
+                    <strong>⚠️ Importante:</strong> Si el pago no se realiza hoy, puede generarse la suspensión temporal de la matrícula.
                 </p>
             </td>
         </tr>

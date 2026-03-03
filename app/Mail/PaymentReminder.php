@@ -46,16 +46,25 @@ class PaymentReminder extends Mailable
      */
     public function content(): Content
     {
+        // Saldo pendiente real: si hay abonos usa remaining_amount, si no el total
+        $totalAmount     = (float) $this->payment->amount;
+        $paidAmount      = (float) ($this->payment->paid_amount ?? 0);
+        $remainingAmount = (float) ($this->payment->remaining_amount ?? $totalAmount);
+        $hasPartialPayments = $paidAmount > 0;
+
         return new Content(
             view: 'emails.payment-reminder',
             with: [
-                'payment' => $this->payment,
-                'recipientName' => $this->recipientName,
-                'studentName' => $this->studentName,
-                'daysUntilDue' => $this->daysUntilDue,
-                'programName' => $this->payment->program?->name ?? 'N/A',
-                'amount' => number_format($this->payment->remaining_amount ?? $this->payment->amount, 0, ',', '.'),
-                'dueDateFormatted' => $this->payment->due_date->locale('es')->isoFormat('D [de] MMMM [de] YYYY'),
+                'payment'           => $this->payment,
+                'recipientName'     => $this->recipientName,
+                'studentName'       => $this->studentName,
+                'daysUntilDue'      => $this->daysUntilDue,
+                'programName'       => $this->payment->program?->name ?? 'N/A',
+                'amount'            => number_format($remainingAmount, 0, ',', '.'),
+                'totalAmount'       => number_format($totalAmount, 0, ',', '.'),
+                'paidAmount'        => number_format($paidAmount, 0, ',', '.'),
+                'hasPartialPayments' => $hasPartialPayments,
+                'dueDateFormatted'  => $this->payment->due_date->locale('es')->isoFormat('D [de] MMMM [de] YYYY'),
             ],
         );
     }

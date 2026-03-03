@@ -208,7 +208,7 @@ class EnrollmentService
             'discount_amount' => $paymentInfo['discount_amount'] > 0 ? $paymentInfo['discount_amount'] : null,
             'paid_amount' => 0,
             'remaining_amount' => $paymentInfo['amount'],
-            'due_date' => Carbon::today(),
+            'due_date' => Carbon::today()->startOfMonth(),
             'status' => 'pending',
             'wompi_reference' => "MAT-{$enrollmentId}-".time(),
         ]);
