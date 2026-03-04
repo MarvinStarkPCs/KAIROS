@@ -1,4 +1,5 @@
-import { Head, Link, useForm, router } from '@inertiajs/react';
+import { Head, Link, useForm, router, usePage } from '@inertiajs/react';
+import type { SharedData } from '@/types';
 import { ArrowLeft, Save, Search, Check, Plus, DollarSign, Receipt } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -131,6 +132,9 @@ export default function PaymentForm({ payment, enrollments }: Props) {
         enrollment.student_email.toLowerCase().includes(searchTerm.toLowerCase()) ||
         enrollment.program_name.toLowerCase().includes(searchTerm.toLowerCase())
     );
+
+    const { auth } = usePage<SharedData>().props;
+    const isSuperAdmin = auth.user.id === 1;
 
     const isEditing = !!payment?.id;
     // Usar 'amount' (con descuento aplicado) como total a pagar, no 'original_amount' (sin descuento)
@@ -459,18 +463,39 @@ export default function PaymentForm({ payment, enrollments }: Props) {
                             <InputError message={errors.amount} />
                         </div>
 
-                        {/* Fecha de Vencimiento */}
-                        <div>
-                            <Label htmlFor="due_date">Fecha de Vencimiento *</Label>
-                            <Input
-                                id="due_date"
-                                type="date"
-                                value={data.due_date}
-                                onChange={(e) => setData('due_date', e.target.value)}
-                                required
-                            />
-                            <InputError message={errors.due_date} />
-                        </div>
+                        {/* Fecha de Vencimiento - Solo super admin */}
+                        {isSuperAdmin && (
+                            <div>
+                                <Label htmlFor="due_date">Fecha de Vencimiento *</Label>
+                                <Input
+                                    id="due_date"
+                                    type="date"
+                                    value={data.due_date}
+                                    onChange={(e) => setData('due_date', e.target.value)}
+                                    required
+                                />
+                                <InputError message={errors.due_date} />
+                            </div>
+                        )}
+
+                        {/* Estado - Solo super admin */}
+                        {isSuperAdmin && (
+                            <div>
+                                <Label htmlFor="status">Estado</Label>
+                                <select
+                                    id="status"
+                                    value={data.status}
+                                    onChange={(e) => setData('status', e.target.value as 'pending' | 'completed' | 'overdue' | 'cancelled')}
+                                    className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground"
+                                >
+                                    <option value="pending">Pendiente</option>
+                                    <option value="completed">Completado</option>
+                                    <option value="overdue">Vencido</option>
+                                    <option value="cancelled">Cancelado</option>
+                                </select>
+                                <InputError message={errors.status} />
+                            </div>
+                        )}
 
                         {/* Método de Pago y Referencia - Solo si está completado */}
                         {data.status === 'completed' && (
