@@ -50,10 +50,18 @@ class PaymentController extends Controller
             $query->where('payment_type', $request->payment_type);
         }
 
+        if ($request->filled('date_from')) {
+            $query->whereDate('due_date', '>=', $request->date_from);
+        }
+
+        if ($request->filled('date_to')) {
+            $query->whereDate('due_date', '<=', $request->date_to);
+        }
+
         // Solo mostrar pagos principales (no cuotas hijas)
         $query->whereNull('parent_payment_id');
 
-        $payments = $query->orderBy('created_at', 'desc')->paginate(20);
+        $payments = $query->orderBy('created_at', 'desc')->paginate(20)->withQueryString();
 
         // Agregar información calculada a cada pago
         $payments->getCollection()->transform(function ($payment) {
@@ -67,7 +75,7 @@ class PaymentController extends Controller
         return Inertia::render('Payments/Index', [
             'payments' => $payments,
             'programs' => $programs,
-            'filters' => $request->only(['status', 'search', 'program_id', 'payment_type']),
+            'filters' => $request->only(['status', 'search', 'program_id', 'payment_type', 'date_from', 'date_to']),
         ]);
     }
 

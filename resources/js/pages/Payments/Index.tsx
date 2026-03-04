@@ -1,5 +1,5 @@
 import { Head, Link, router } from '@inertiajs/react';
-import { Plus, Search, Filter, Eye, Edit, Trash2, DollarSign, CheckCircle, Clock, XCircle, CreditCard, List as ListIcon, RefreshCw, Settings, BarChart3 } from 'lucide-react';
+import { Plus, Search, Filter, Eye, Edit, Trash2, DollarSign, CheckCircle, Clock, XCircle, CreditCard, List as ListIcon, RefreshCw, Settings, BarChart3, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -55,6 +55,8 @@ interface Props {
         status?: string;
         search?: string;
         program_id?: number;
+        date_from?: string;
+        date_to?: string;
     };
 }
 
@@ -68,6 +70,8 @@ export default function PaymentsList({ payments, programs, filters }: Props) {
         status: filters.status || '',
         search: filters.search || '',
         program_id: filters.program_id || '',
+        date_from: filters.date_from || '',
+        date_to: filters.date_to || '',
     });
 
     const handleFilter = () => {
@@ -75,8 +79,12 @@ export default function PaymentsList({ payments, programs, filters }: Props) {
     };
 
     const handleClearFilters = () => {
-        setLocalFilters({ status: '', search: '', program_id: '' });
+        setLocalFilters({ status: '', search: '', program_id: '', date_from: '', date_to: '' });
         router.get('/pagos');
+    };
+
+    const handlePageChange = (page: number) => {
+        router.get('/pagos', { ...filters, page }, { preserveState: true, preserveScroll: true });
     };
 
     const handleDelete = () => {
@@ -144,7 +152,7 @@ export default function PaymentsList({ payments, programs, filters }: Props) {
                         <Filter className="h-5 w-5 text-muted-foreground" />
                         <h2 className="text-lg font-semibold text-foreground">Filtros</h2>
                     </div>
-                    <div className="grid gap-4 md:grid-cols-4">
+                    <div className="grid gap-4 md:grid-cols-3 xl:grid-cols-5">
                         <div>
                             <Label htmlFor="status">Estado</Label>
                             <select
@@ -161,13 +169,13 @@ export default function PaymentsList({ payments, programs, filters }: Props) {
                             </select>
                         </div>
                         <div>
-                            <Label htmlFor="search">Estudiante (nombre o identificación)</Label>
+                            <Label htmlFor="search">Estudiante</Label>
                             <Input
                                 id="search"
                                 type="text"
                                 value={localFilters.search}
                                 onChange={(e) => setLocalFilters({ ...localFilters, search: e.target.value })}
-                                placeholder="Buscar por nombre o documento..."
+                                placeholder="Nombre o documento..."
                                 className="mt-1"
                                 onKeyDown={(e) => e.key === 'Enter' && handleFilter()}
                             />
@@ -188,20 +196,45 @@ export default function PaymentsList({ payments, programs, filters }: Props) {
                                 ))}
                             </select>
                         </div>
-                        <div className="flex items-end gap-2">
-                            <Button onClick={handleFilter} className="flex-1">
-                                <Search className="mr-2 h-4 w-4" />
-                                Filtrar
-                            </Button>
-                            <Button variant="outline" onClick={handleClearFilters}>
-                                Limpiar
-                            </Button>
+                        <div>
+                            <Label>Vencimiento desde</Label>
+                            <Input
+                                type="date"
+                                value={localFilters.date_from}
+                                onChange={(e) => setLocalFilters({ ...localFilters, date_from: e.target.value })}
+                                className="mt-1"
+                            />
                         </div>
+                        <div>
+                            <Label>Vencimiento hasta</Label>
+                            <Input
+                                type="date"
+                                value={localFilters.date_to}
+                                onChange={(e) => setLocalFilters({ ...localFilters, date_to: e.target.value })}
+                                className="mt-1"
+                            />
+                        </div>
+                    </div>
+                    <div className="mt-3 flex gap-2">
+                        <Button onClick={handleFilter}>
+                            <Search className="mr-2 h-4 w-4" />
+                            Filtrar
+                        </Button>
+                        <Button variant="outline" onClick={handleClearFilters}>
+                            Limpiar
+                        </Button>
                     </div>
                 </div>
 
                 {/* Table */}
                 <div className="rounded-xl border border-border bg-card shadow-sm">
+                    {payments.meta && (
+                        <div className="flex items-center justify-between border-b border-border px-6 py-3 text-sm text-muted-foreground">
+                            <span>
+                                Mostrando <strong>{payments.meta.from ?? 0}</strong>–<strong>{payments.meta.to ?? 0}</strong> de <strong>{payments.meta.total}</strong> pagos
+                            </span>
+                        </div>
+                    )}
                     <div className="overflow-x-auto">
                         <table className="w-full">
                             <thead className="border-b border-border bg-muted">
@@ -356,6 +389,55 @@ export default function PaymentsList({ payments, programs, filters }: Props) {
                     </div>
                 </div>
             </div>
+
+            {/* Pagination */}
+            {payments.meta && payments.meta.last_page > 1 && (
+                <div className="flex items-center justify-center gap-1 py-2">
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={payments.meta.current_page === 1}
+                        onClick={() => handlePageChange(payments.meta.current_page - 1)}
+                    >
+                        <ChevronLeft className="h-4 w-4" />
+                    </Button>
+
+                    {Array.from({ length: payments.meta.last_page }, (_, i) => i + 1)
+                        .filter((page) => {
+                            const cur = payments.meta.current_page;
+                            return page === 1 || page === payments.meta.last_page || Math.abs(page - cur) <= 2;
+                        })
+                        .reduce<(number | 'ellipsis')[]>((acc, page, idx, arr) => {
+                            if (idx > 0 && page - (arr[idx - 1] as number) > 1) acc.push('ellipsis');
+                            acc.push(page);
+                            return acc;
+                        }, [])
+                        .map((item, idx) =>
+                            item === 'ellipsis' ? (
+                                <span key={`e-${idx}`} className="px-2 text-muted-foreground">…</span>
+                            ) : (
+                                <Button
+                                    key={item}
+                                    variant={item === payments.meta.current_page ? 'default' : 'outline'}
+                                    size="sm"
+                                    onClick={() => handlePageChange(item as number)}
+                                    className="min-w-9"
+                                >
+                                    {item}
+                                </Button>
+                            )
+                        )}
+
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={payments.meta.current_page === payments.meta.last_page}
+                        onClick={() => handlePageChange(payments.meta.current_page + 1)}
+                    >
+                        <ChevronRight className="h-4 w-4" />
+                    </Button>
+                </div>
+            )}
 
             {/* Delete Dialog */}
             <AlertDialog open={deleteDialog.open} onOpenChange={(open) => setDeleteDialog({ ...deleteDialog, open })}>
