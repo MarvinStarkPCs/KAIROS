@@ -31,10 +31,9 @@ class MarkOverduePayments extends Command
 
         $today = Carbon::today();
 
-        // Buscar pagos pendientes cuyo período de gracia (hasta el día 5 del mes) ya venció.
-        // Un pago se considera vencido cuando hoy es posterior al día 5 del mes de su due_date.
+        // Buscar pagos pendientes cuya fecha de vencimiento (día 5) ya pasó.
         $overduePayments = Payment::where('status', 'pending')
-            ->whereRaw("DATE_FORMAT(due_date, '%Y-%m-05') < CURDATE()")
+            ->where('due_date', '<', $today)
             ->get();
 
         if ($overduePayments->isEmpty()) {
