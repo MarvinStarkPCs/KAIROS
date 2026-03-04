@@ -21,6 +21,7 @@ use App\Http\Controllers\ParentController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\DependentController;
 use App\Http\Controllers\TeacherRegistrationController;
+use App\Http\Controllers\LogViewerController;
 
 // Demo Lead desde Welcome (sin autenticación, con rate limiting)
 Route::middleware(['throttle:5,1'])->group(function () {
@@ -158,6 +159,9 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/auditoria', [AuditController::class, 'index'])->name('audit.index');
         Route::get('/auditoria/filter', [AuditController::class, 'filter'])->name('audit.filter');
     });
+
+    // Logs del sistema (solo super admin id=1)
+    Route::get('/logs', [LogViewerController::class, 'index'])->name('logs.index');
 
     // Demo Leads (Gestión de solicitudes de clases demo)
     Route::prefix('admin/demo-leads')->name('admin.demo-leads.')->middleware(['permission:ver_demo_leads'])->group(function () {

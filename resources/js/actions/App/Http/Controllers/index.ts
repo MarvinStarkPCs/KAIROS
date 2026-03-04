@@ -6,6 +6,7 @@ import TeacherRegistrationController from './TeacherRegistrationController'
 import RoleController from './RoleController'
 import UserController from './UserController'
 import AuditController from './AuditController'
+import LogViewerController from './LogViewerController'
 import Admin from './Admin'
 import program_academy from './program_academy'
 import StudyPlanController from './StudyPlanController'
@@ -28,6 +29,7 @@ TeacherRegistrationController: Object.assign(TeacherRegistrationController, Teac
 RoleController: Object.assign(RoleController, RoleController),
 UserController: Object.assign(UserController, UserController),
 AuditController: Object.assign(AuditController, AuditController),
+LogViewerController: Object.assign(LogViewerController, LogViewerController),
 Admin: Object.assign(Admin, Admin),
 program_academy: Object.assign(program_academy, program_academy),
 StudyPlanController: Object.assign(StudyPlanController, StudyPlanController),

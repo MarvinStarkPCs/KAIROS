@@ -40,11 +40,13 @@ interface NavItem {
     icon: React.ComponentType<{ className?: string }>;
     permission?: string;
     role?: string;
+    superAdminOnly?: boolean;
     submenu?: Array<{
         title: string;
         href: string;
         icon: React.ComponentType<{ className?: string }>;
         permission?: string;
+        superAdminOnly?: boolean;
     }>;
 }
 
@@ -70,6 +72,7 @@ import {
     Award,
     Loader2,
     X,
+    ScrollText,
 } from 'lucide-react';
 import { useState, useRef, useEffect, useCallback } from 'react';
 
@@ -169,6 +172,12 @@ const allNavItems: NavItem[] = [
                 icon: FileText,
                 permission: 'ver_auditoria',
             },
+            {
+                title: 'Logs del Sistema',
+                href: '/logs',
+                icon: ScrollText,
+                superAdminOnly: true,
+            },
         ]
     },
 ];
@@ -257,6 +266,7 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
     // Filtrar items del menú según permisos y roles del usuario
     const userPermissions = auth?.permissions || [];
     const userRoles = auth?.roles || [];
+    const isSuperAdmin = auth?.user?.id === 1;
     const mainNavItems = allNavItems.filter(item => {
         // Verificar rol si está especificado
         if (item.role && !userRoles.includes(item.role)) {
@@ -268,9 +278,10 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
         }
         // Filtrar submenu si existe
         if (item.submenu) {
-            item.submenu = item.submenu.filter(subitem =>
-                !subitem.permission || userPermissions.includes(subitem.permission)
-            );
+            item.submenu = item.submenu.filter(subitem => {
+                if (subitem.superAdminOnly && !isSuperAdmin) return false;
+                return !subitem.permission || userPermissions.includes(subitem.permission);
+            });
         }
         return true;
     });
