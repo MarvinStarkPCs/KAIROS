@@ -1,50 +1,54 @@
 import { Head, Link, useForm } from '@inertiajs/react';
 import AppLayout from '@/layouts/app-layout';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '@/components/ui/select';
-import { ArrowLeft, Save } from 'lucide-react';
+import { ArrowLeft, Save, Clock, MapPin, User as UserIcon } from 'lucide-react';
 import { FormEventHandler } from 'react';
 
-interface Student {
+interface Schedule {
     id: number;
     name: string;
-    email: string;
+    days_of_week: string | string[];
+    start_time: string;
+    end_time: string;
+    classroom: string | null;
+    professor: { id: number; name: string } | null;
 }
 
-interface Program {
+interface ScheduleEnrollment {
     id: number;
-    name: string;
+    schedule_id: number;
+    schedule: Schedule;
 }
 
 interface Enrollment {
     id: number;
-    student_id: number;
-    program_id: number;
-    enrollment_date: string;
-    status: 'active' | 'waiting' | 'withdrawn';
-    student: Student;
-    program: Program;
+    student: { id: number; name: string; email: string };
+    program: { id: number; name: string };
 }
 
 interface Props {
     enrollment: Enrollment;
-    programs: Program[];
+    schedules: Schedule[];
+    currentScheduleEnrollment: ScheduleEnrollment | null;
 }
 
-export default function Edit({ enrollment, programs }: Props) {
+function formatDays(days: string | string[]): string {
+    if (Array.isArray(days)) return days.join(', ');
+    if (!days) return '';
+    // Intenta parsear como JSON, si falla asume CSV
+    try {
+        const parsed = JSON.parse(days);
+        return Array.isArray(parsed) ? parsed.join(', ') : days;
+    } catch {
+        return days;
+    }
+}
+
+export default function Edit({ enrollment, schedules, currentScheduleEnrollment }: Props) {
     const { data, setData, put, processing, errors } = useForm({
-        program_id: enrollment.program_id.toString(),
-        enrollment_date: enrollment.enrollment_date,
-        status: enrollment.status,
+        schedule_id: currentScheduleEnrollment?.schedule_id?.toString() ?? '',
     });
 
     const submit: FormEventHandler = (e) => {
@@ -62,7 +66,7 @@ export default function Edit({ enrollment, programs }: Props) {
                     <div>
                         <h1 className="text-3xl font-bold">Editar Matrícula</h1>
                         <p className="text-muted-foreground">
-                            Modificar matrícula de {enrollment.student.name}
+                            Cambiar horario de {enrollment.student.name}
                         </p>
                     </div>
                     <Link href="/matriculas">
@@ -73,93 +77,103 @@ export default function Edit({ enrollment, programs }: Props) {
                     </Link>
                 </div>
 
-                {/* Form */}
                 <form onSubmit={submit}>
                     <Card>
                         <CardHeader>
-                            <CardTitle>Datos de la Matrícula</CardTitle>
+                            <CardTitle>Horario del Programa</CardTitle>
                             <CardDescription>
-                                Actualice los datos de la matrícula. El estudiante no puede ser modificado.
+                                Selecciona el horario para {enrollment.program.name}
                             </CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-6">
-                            {/* Estudiante (Read-only) */}
-                            <div className="space-y-2">
+                            {/* Estudiante (solo lectura) */}
+                            <div className="space-y-1">
                                 <Label>Estudiante</Label>
-                                <div className="p-3 bg-muted rounded-md">
+                                <div className="rounded-md border border-border bg-muted p-3">
                                     <p className="font-medium">{enrollment.student.name}</p>
                                     <p className="text-sm text-muted-foreground">{enrollment.student.email}</p>
                                 </div>
-                                <p className="text-xs text-muted-foreground">
-                                    El estudiante no puede ser modificado en una matrícula existente
-                                </p>
                             </div>
 
-                            {/* Programa */}
+                            {/* Programa (solo lectura) */}
+                            <div className="space-y-1">
+                                <Label>Programa</Label>
+                                <div className="rounded-md border border-border bg-muted p-3">
+                                    <p className="font-medium">{enrollment.program.name}</p>
+                                </div>
+                            </div>
+
+                            {/* Selector de horario */}
                             <div className="space-y-2">
-                                <Label htmlFor="program_id">
-                                    Programa Académico <span className="text-destructive">*</span>
-                                </Label>
-                                <Select
-                                    value={data.program_id}
-                                    onValueChange={(value) => setData('program_id', value)}
-                                >
-                                    <SelectTrigger id="program_id">
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {programs.map((program) => (
-                                            <SelectItem key={program.id} value={program.id.toString()}>
-                                                {program.name}
-                                            </SelectItem>
+                                <Label>Horario <span className="text-destructive">*</span></Label>
+
+                                {schedules.length === 0 ? (
+                                    <p className="text-sm text-muted-foreground">
+                                        No hay horarios activos disponibles para este programa.
+                                    </p>
+                                ) : (
+                                    <div className="grid gap-3 sm:grid-cols-2">
+                                        {/* Opción sin horario */}
+                                        <label
+                                            className={`flex cursor-pointer flex-col gap-1 rounded-lg border p-4 transition-colors ${
+                                                data.schedule_id === ''
+                                                    ? 'border-primary bg-primary/5'
+                                                    : 'border-border hover:border-primary/50'
+                                            }`}
+                                        >
+                                            <input
+                                                type="radio"
+                                                name="schedule_id"
+                                                value=""
+                                                checked={data.schedule_id === ''}
+                                                onChange={() => setData('schedule_id', '')}
+                                                className="sr-only"
+                                            />
+                                            <span className="font-medium text-muted-foreground">Sin horario asignado</span>
+                                        </label>
+
+                                        {schedules.map((schedule) => (
+                                            <label
+                                                key={schedule.id}
+                                                className={`flex cursor-pointer flex-col gap-1 rounded-lg border p-4 transition-colors ${
+                                                    data.schedule_id === schedule.id.toString()
+                                                        ? 'border-primary bg-primary/5'
+                                                        : 'border-border hover:border-primary/50'
+                                                }`}
+                                            >
+                                                <input
+                                                    type="radio"
+                                                    name="schedule_id"
+                                                    value={schedule.id.toString()}
+                                                    checked={data.schedule_id === schedule.id.toString()}
+                                                    onChange={() => setData('schedule_id', schedule.id.toString())}
+                                                    className="sr-only"
+                                                />
+                                                <span className="font-medium">{schedule.name}</span>
+                                                <span className="flex items-center gap-1 text-sm text-muted-foreground">
+                                                    <Clock className="h-3.5 w-3.5" />
+                                                    {formatDays(schedule.days_of_week)} · {schedule.start_time} – {schedule.end_time}
+                                                </span>
+                                                {schedule.classroom && (
+                                                    <span className="flex items-center gap-1 text-sm text-muted-foreground">
+                                                        <MapPin className="h-3.5 w-3.5" />
+                                                        {schedule.classroom}
+                                                    </span>
+                                                )}
+                                                {schedule.professor && (
+                                                    <span className="flex items-center gap-1 text-sm text-muted-foreground">
+                                                        <UserIcon className="h-3.5 w-3.5" />
+                                                        {schedule.professor.name}
+                                                    </span>
+                                                )}
+                                            </label>
                                         ))}
-                                    </SelectContent>
-                                </Select>
-                                {errors.program_id && (
-                                    <p className="text-sm text-destructive">{errors.program_id}</p>
+                                    </div>
                                 )}
-                            </div>
 
-                            {/* Fecha de Matrícula */}
-                            <div className="space-y-2">
-                                <Label htmlFor="enrollment_date">Fecha de Matrícula</Label>
-                                <Input
-                                    id="enrollment_date"
-                                    type="date"
-                                    value={data.enrollment_date}
-                                    onChange={(e) => setData('enrollment_date', e.target.value)}
-                                />
-                                {errors.enrollment_date && (
-                                    <p className="text-sm text-destructive">{errors.enrollment_date}</p>
+                                {errors.schedule_id && (
+                                    <p className="text-sm text-destructive">{errors.schedule_id}</p>
                                 )}
-                            </div>
-
-                            {/* Estado */}
-                            <div className="space-y-2">
-                                <Label htmlFor="status">
-                                    Estado <span className="text-destructive">*</span>
-                                </Label>
-                                <Select
-                                    value={data.status}
-                                    onValueChange={(value: 'active' | 'waiting' | 'withdrawn') =>
-                                        setData('status', value)
-                                    }
-                                >
-                                    <SelectTrigger id="status">
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="active">Activo</SelectItem>
-                                        <SelectItem value="waiting">En Espera</SelectItem>
-                                        <SelectItem value="withdrawn">Retirado</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                                {errors.status && <p className="text-sm text-destructive">{errors.status}</p>}
-                                <p className="text-xs text-muted-foreground">
-                                    {data.status === 'active' && 'La matrícula está activa y el estudiante puede acceder al programa'}
-                                    {data.status === 'waiting' && 'El estudiante está en lista de espera'}
-                                    {data.status === 'withdrawn' && 'El estudiante se ha retirado del programa'}
-                                </p>
                             </div>
 
                             {/* Actions */}

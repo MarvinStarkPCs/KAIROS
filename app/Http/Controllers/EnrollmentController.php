@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Enrollment;
 use App\Models\AcademicProgram;
+use App\Models\Schedule;
+use App\Models\ScheduleEnrollment;
 use App\Models\User;
 use App\Models\Payment;
 use Illuminate\Http\Request;
@@ -215,48 +217,53 @@ class EnrollmentController extends Controller
     {
         $enrollment->load('student', 'program');
 
-        $programs = AcademicProgram::where('status', 'active')
-            ->where('is_demo', false)
-            ->orderBy('name')
-            ->get(['id', 'name']);
+        $schedules = Schedule::where('academic_program_id', $enrollment->program_id)
+            ->where('status', 'active')
+            ->with('professor:id,name')
+            ->get(['id', 'name', 'days_of_week', 'start_time', 'end_time', 'classroom', 'professor_id']);
+
+        $currentScheduleEnrollment = ScheduleEnrollment::where('student_id', $enrollment->student_id)
+            ->whereHas('schedule', fn($q) => $q->where('academic_program_id', $enrollment->program_id))
+            ->where('status', 'enrolled')
+            ->with('schedule:id,name,days_of_week,start_time,end_time,classroom')
+            ->first();
 
         return Inertia::render('Enrollments/Edit', [
             'enrollment' => $enrollment,
-            'programs' => $programs,
+            'schedules' => $schedules,
+            'currentScheduleEnrollment' => $currentScheduleEnrollment,
         ]);
     }
 
     public function update(Request $request, Enrollment $enrollment)
     {
         $validated = $request->validate([
-            'program_id' => ['required', 'exists:academic_programs,id'],
-            'enrollment_date' => ['nullable', 'date'],
-            'status' => ['required', Rule::in(['active', 'waiting', 'withdrawn'])],
+            'schedule_id' => ['nullable', 'exists:schedules,id'],
         ], [
-            'program_id.required' => 'El programa académico es obligatorio',
-            'program_id.exists' => 'El programa académico seleccionado no existe',
-            'enrollment_date.date' => 'La fecha de inscripción debe ser una fecha válida',
-            'status.required' => 'El estado es obligatorio',
-            'status.in' => 'El estado debe ser: activo, en espera o retirado',
+            'schedule_id.exists' => 'El horario seleccionado no existe',
         ]);
 
-        // Si cambia de programa, verificar que no esté ya inscrito
-        if ($validated['program_id'] != $enrollment->program_id) {
-            $existingEnrollment = Enrollment::where('student_id', $enrollment->student_id)
-                ->where('program_id', $validated['program_id'])
-                ->where('id', '!=', $enrollment->id)
-                ->whereIn('status', ['active', 'waiting'])
-                ->exists();
+        $currentScheduleEnrollment = ScheduleEnrollment::where('student_id', $enrollment->student_id)
+            ->whereHas('schedule', fn($q) => $q->where('academic_program_id', $enrollment->program_id))
+            ->where('status', 'enrolled')
+            ->first();
 
-            if ($existingEnrollment) {
-                flash_error('El estudiante ya está inscrito en este programa');
-                return redirect()->back()->withInput();
+        if ($validated['schedule_id']) {
+            if ($currentScheduleEnrollment) {
+                $currentScheduleEnrollment->update(['schedule_id' => $validated['schedule_id']]);
+            } else {
+                ScheduleEnrollment::create([
+                    'student_id' => $enrollment->student_id,
+                    'schedule_id' => $validated['schedule_id'],
+                    'enrollment_date' => now(),
+                    'status' => 'enrolled',
+                ]);
             }
+        } elseif ($currentScheduleEnrollment) {
+            $currentScheduleEnrollment->update(['status' => 'dropped']);
         }
 
-        $enrollment->update($validated);
-
-        flash_success('Inscripción actualizada exitosamente');
+        flash_success('Horario actualizado exitosamente');
 
         return redirect()->route('inscripciones.index');
     }

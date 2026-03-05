@@ -387,57 +387,62 @@ export default function PaymentsList({ payments, programs, filters }: Props) {
                             </tbody>
                         </table>
                     </div>
+
+                    {/* Pagination */}
+                    {payments.meta && payments.meta.last_page > 1 && (
+                        <div className="flex items-center justify-between border-t border-border px-6 py-4">
+                            <span className="text-sm text-muted-foreground">
+                                Página <strong>{payments.meta.current_page}</strong> de <strong>{payments.meta.last_page}</strong>
+                            </span>
+                            <div className="flex items-center gap-1">
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    disabled={payments.meta.current_page === 1}
+                                    onClick={() => handlePageChange(payments.meta.current_page - 1)}
+                                >
+                                    <ChevronLeft className="h-4 w-4" />
+                                </Button>
+
+                                {Array.from({ length: payments.meta.last_page }, (_, i) => i + 1)
+                                    .filter((page) => {
+                                        const cur = payments.meta.current_page;
+                                        return page === 1 || page === payments.meta.last_page || Math.abs(page - cur) <= 2;
+                                    })
+                                    .reduce<(number | 'ellipsis')[]>((acc, page, idx, arr) => {
+                                        if (idx > 0 && page - (arr[idx - 1] as number) > 1) acc.push('ellipsis');
+                                        acc.push(page);
+                                        return acc;
+                                    }, [])
+                                    .map((item, idx) =>
+                                        item === 'ellipsis' ? (
+                                            <span key={`e-${idx}`} className="px-2 text-muted-foreground">…</span>
+                                        ) : (
+                                            <Button
+                                                key={item}
+                                                variant={item === payments.meta.current_page ? 'default' : 'outline'}
+                                                size="sm"
+                                                onClick={() => handlePageChange(item as number)}
+                                                className="min-w-9"
+                                            >
+                                                {item}
+                                            </Button>
+                                        )
+                                    )}
+
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    disabled={payments.meta.current_page === payments.meta.last_page}
+                                    onClick={() => handlePageChange(payments.meta.current_page + 1)}
+                                >
+                                    <ChevronRight className="h-4 w-4" />
+                                </Button>
+                            </div>
+                        </div>
+                    )}
                 </div>
             </div>
-
-            {/* Pagination */}
-            {payments.meta && payments.meta.last_page > 1 && (
-                <div className="flex items-center justify-center gap-1 py-2">
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        disabled={payments.meta.current_page === 1}
-                        onClick={() => handlePageChange(payments.meta.current_page - 1)}
-                    >
-                        <ChevronLeft className="h-4 w-4" />
-                    </Button>
-
-                    {Array.from({ length: payments.meta.last_page }, (_, i) => i + 1)
-                        .filter((page) => {
-                            const cur = payments.meta.current_page;
-                            return page === 1 || page === payments.meta.last_page || Math.abs(page - cur) <= 2;
-                        })
-                        .reduce<(number | 'ellipsis')[]>((acc, page, idx, arr) => {
-                            if (idx > 0 && page - (arr[idx - 1] as number) > 1) acc.push('ellipsis');
-                            acc.push(page);
-                            return acc;
-                        }, [])
-                        .map((item, idx) =>
-                            item === 'ellipsis' ? (
-                                <span key={`e-${idx}`} className="px-2 text-muted-foreground">…</span>
-                            ) : (
-                                <Button
-                                    key={item}
-                                    variant={item === payments.meta.current_page ? 'default' : 'outline'}
-                                    size="sm"
-                                    onClick={() => handlePageChange(item as number)}
-                                    className="min-w-9"
-                                >
-                                    {item}
-                                </Button>
-                            )
-                        )}
-
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        disabled={payments.meta.current_page === payments.meta.last_page}
-                        onClick={() => handlePageChange(payments.meta.current_page + 1)}
-                    >
-                        <ChevronRight className="h-4 w-4" />
-                    </Button>
-                </div>
-            )}
 
             {/* Delete Dialog */}
             <AlertDialog open={deleteDialog.open} onOpenChange={(open) => setDeleteDialog({ ...deleteDialog, open })}>
