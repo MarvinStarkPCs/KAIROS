@@ -31,7 +31,7 @@ class ReportController extends Controller
                 ->where('status', 'completed')
                 ->sum('paid_amount'),
             'total_pendiente' => (float) (clone $paymentsInRange)
-                ->whereIn('status', ['pending', 'overdue'])
+                ->where('status', 'pending')
                 ->sum('remaining_amount'),
             'pagos_vencidos_count' => (clone $paymentsInRange)
                 ->where('status', 'overdue')

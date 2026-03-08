@@ -171,17 +171,16 @@ class Payment extends Model
             'notes' => $notes,
         ]);
 
-        // Actualizar el pago
-        // Usar 'amount' (monto con descuento aplicado) como base, no 'original_amount' (monto sin descuento)
+        // Actualizar el pago usando getPendingBalance() como base para consistencia
         $newPaidAmount = $this->paid_amount + $amount;
-        $newRemainingAmount = $this->amount - $newPaidAmount;
+        $newRemainingAmount = round($this->getPendingBalance() - $amount, 2);
 
         $isCompleted = $newRemainingAmount <= 0;
 
         $this->update([
             'paid_amount' => $newPaidAmount,
             'remaining_amount' => max(0, $newRemainingAmount),
-            'status' => $isCompleted ? 'completed' : 'pending',
+            'status' => $isCompleted ? 'completed' : $this->status,
             'payment_date' => $isCompleted ? now() : $this->payment_date,
         ]);
 
