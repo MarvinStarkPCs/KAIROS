@@ -71,6 +71,7 @@ class HandleInertiaRequests extends Middleware
                 'unreadMessages' => $unreadMessagesCount,
             ],
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
+            'status' => $request->session()->get('status'),
             'flash' => [
                 'success' => $request->session()->get('success'),
                 'error' => $request->session()->get('error'),
