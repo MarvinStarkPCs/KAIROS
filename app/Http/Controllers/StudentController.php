@@ -267,47 +267,49 @@ class StudentController extends Controller
     {
         $student = Auth::user();
 
-        $payments = Payment::with(['program', 'transactions'])
+        $baseQuery = Payment::with(['program', 'transactions'])
             ->where('student_id', $student->id)
             ->whereNull('parent_payment_id')
-            ->orderBy('due_date', 'asc')
-            ->get()
-            ->map(function ($p) {
-                return [
-                    'id'              => $p->id,
-                    'concept'         => $p->concept,
-                    'payment_type'    => $p->payment_type,
-                    'amount'          => (float) ($p->amount ?? 0),
-                    'paid_amount'     => (float) ($p->paid_amount ?? 0),
-                    'remaining_amount' => (float) ($p->remaining_amount ?? 0),
-                    'pending_balance' => (float) ($p->getPendingBalance() ?? 0),
-                    'status'          => $p->status,
-                    'due_date'        => $p->due_date?->format('Y-m-d'),
-                    'payment_date'    => $p->payment_date?->format('Y-m-d'),
-                    'payment_method'  => $p->payment_method,
-                    'program_name'    => $p->program?->name,
-                    'program_color'   => $p->program?->color ?? '#6b5544',
-                    'has_transactions' => $p->transactions->isNotEmpty(),
-                    'transactions'    => $p->transactions->map(function ($t) {
-                        return [
-                            'id'             => $t->id,
-                            'amount'         => (float) ($t->amount ?? 0),
-                            'payment_method' => $t->payment_method,
-                            'notes'          => $t->notes,
-                            'created_at'     => $t->created_at->format('Y-m-d'),
-                        ];
-                    }),
-                ];
-            });
+            ->orderBy('due_date', 'asc');
 
+        // Resumen calculado sobre todos los pagos
+        $allPayments = (clone $baseQuery)->get();
         $summary = [
-            'total_pendiente' => $payments->whereIn('status', ['pending', 'overdue'])->sum('pending_balance'),
-            'total_pagado'    => $payments->sum('paid_amount'),
-            'pagos_vencidos'  => $payments->where('status', 'overdue')->count(),
+            'total_pendiente' => $allPayments->whereIn('status', ['pending', 'overdue'])->sum(fn($p) => $p->getPendingBalance()),
+            'total_pagado'    => $allPayments->sum('paid_amount'),
+            'pagos_vencidos'  => $allPayments->where('status', 'overdue')->count(),
         ];
 
+        // Paginación
+        $paginated = $baseQuery->paginate(10)->withQueryString();
+        $paginated->getCollection()->transform(function ($p) {
+            return [
+                'id'               => $p->id,
+                'concept'          => $p->concept,
+                'payment_type'     => $p->payment_type,
+                'amount'           => (float) ($p->amount ?? 0),
+                'paid_amount'      => (float) ($p->paid_amount ?? 0),
+                'remaining_amount' => (float) ($p->remaining_amount ?? 0),
+                'pending_balance'  => (float) ($p->getPendingBalance() ?? 0),
+                'status'           => $p->status,
+                'due_date'         => $p->due_date?->format('Y-m-d'),
+                'payment_date'     => $p->payment_date?->format('Y-m-d'),
+                'payment_method'   => $p->payment_method,
+                'program_name'     => $p->program?->name,
+                'program_color'    => $p->program?->color ?? '#6b5544',
+                'has_transactions' => $p->transactions->isNotEmpty(),
+                'transactions'     => $p->transactions->map(fn($t) => [
+                    'id'             => $t->id,
+                    'amount'         => (float) ($t->amount ?? 0),
+                    'payment_method' => $t->payment_method,
+                    'notes'          => $t->notes,
+                    'created_at'     => $t->created_at->format('Y-m-d'),
+                ]),
+            ];
+        });
+
         return Inertia::render('Student/Payments', [
-            'payments' => $payments,
+            'payments' => $paginated,
             'summary'  => $summary,
         ]);
     }

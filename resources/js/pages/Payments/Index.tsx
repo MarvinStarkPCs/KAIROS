@@ -1,10 +1,11 @@
 import { Head, Link, router } from '@inertiajs/react';
-import { Plus, Search, Filter, Eye, Edit, Trash2, DollarSign, CheckCircle, Clock, XCircle, CreditCard, List as ListIcon, RefreshCw, Settings, BarChart3, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Plus, Search, Filter, Eye, Edit, Trash2, DollarSign, CheckCircle, Clock, XCircle, CreditCard, List as ListIcon, RefreshCw, Settings, BarChart3, ChevronLeft, ChevronRight, LayoutGrid, Table2, Calendar, Banknote } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/app-layout';
 import { useState } from 'react';
+import { cn } from '@/lib/utils';
 import {
     AlertDialog,
     AlertDialogAction,
@@ -60,11 +61,35 @@ interface Props {
     };
 }
 
+const PAYMENT_METHODS: Record<string, string> = {
+    cash: 'Efectivo',
+    transfer: 'Transferencia',
+    credit_card: 'Tarjeta de crédito',
+    online: 'Pago en línea',
+};
+
+const STATUS_MAP = {
+    pending:   { label: 'Pendiente',  icon: Clock,        bg: 'bg-yellow-100 dark:bg-yellow-900/30', text: 'text-yellow-700 dark:text-yellow-400' },
+    completed: { label: 'Completado', icon: CheckCircle,  bg: 'bg-green-100 dark:bg-green-900/30',   text: 'text-green-700 dark:text-green-400'   },
+    overdue:   { label: 'Vencido',    icon: XCircle,      bg: 'bg-red-100 dark:bg-red-900/30',       text: 'text-red-700 dark:text-red-400'       },
+    cancelled: { label: 'Cancelado',  icon: XCircle,      bg: 'bg-muted',                             text: 'text-muted-foreground'                },
+};
+
+const formatCurrency = (value: number) =>
+    '$' + (value ?? 0).toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+
+const formatDate = (date: string | null | undefined) => {
+    if (!date) return '—';
+    const [y, m, d] = date.split('-');
+    return `${d}/${m}/${y}`;
+};
+
 export default function PaymentsList({ payments, programs, filters }: Props) {
     const [deleteDialog, setDeleteDialog] = useState<{ open: boolean; paymentId: number | null }>({
         open: false,
         paymentId: null,
     });
+    const [view, setView] = useState<'table' | 'grid'>('table');
 
     const [localFilters, setLocalFilters] = useState({
         status: filters.status || '',
@@ -125,6 +150,23 @@ export default function PaymentsList({ payments, programs, filters }: Props) {
                         <p className="mt-2 text-muted-foreground">Gestiona mensualidades, cuotas y abonos</p>
                     </div>
                     <div className="flex items-center gap-3">
+                        {/* View toggle */}
+                        <div className="flex rounded-lg border border-border overflow-hidden">
+                            <button
+                                onClick={() => setView('table')}
+                                className={cn('px-3 py-2 text-sm flex items-center gap-1.5 transition-colors', view === 'table' ? 'bg-primary text-primary-foreground' : 'bg-background text-muted-foreground hover:bg-muted')}
+                            >
+                                <Table2 className="h-4 w-4" />
+                                Tabla
+                            </button>
+                            <button
+                                onClick={() => setView('grid')}
+                                className={cn('px-3 py-2 text-sm flex items-center gap-1.5 transition-colors', view === 'grid' ? 'bg-primary text-primary-foreground' : 'bg-background text-muted-foreground hover:bg-muted')}
+                            >
+                                <LayoutGrid className="h-4 w-4" />
+                                Tarjetas
+                            </button>
+                        </div>
                         <Link href="/reportes/pagos">
                             <Button variant="outline" className="flex items-center space-x-2">
                                 <BarChart3 className="h-5 w-5" />
@@ -226,7 +268,161 @@ export default function PaymentsList({ payments, programs, filters }: Props) {
                     </div>
                 </div>
 
+                {/* Grid view */}
+                {view === 'grid' && (
+                    <div className="space-y-3">
+                        {payments.meta && (
+                            <div className="text-sm text-muted-foreground">
+                                Mostrando <strong>{payments.meta.from ?? 0}</strong>–<strong>{payments.meta.to ?? 0}</strong> de <strong>{payments.meta.total}</strong> pagos
+                            </div>
+                        )}
+                        {payments.data.length === 0 ? (
+                            <div className="rounded-xl border border-border bg-card p-12 text-center shadow-sm">
+                                <CreditCard className="mx-auto h-12 w-12 text-muted-foreground/40" />
+                                <p className="mt-4 text-lg font-semibold text-foreground">No se encontraron pagos</p>
+                            </div>
+                        ) : (
+                            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                                {payments.data.map((payment) => {
+                                    const statusInfo = STATUS_MAP[payment.status] ?? STATUS_MAP.pending;
+                                    const StatusIcon = statusInfo.icon;
+                                    const progress = payment.amount > 0
+                                        ? Math.min(Math.round((payment.paid_amount / payment.amount) * 100), 100)
+                                        : 0;
+
+                                    return (
+                                        <div key={payment.id} className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
+                                            {payment.program && (
+                                                <div className="h-1 w-full bg-primary/40" />
+                                            )}
+                                            <div className="p-4 space-y-3">
+                                                {/* Header */}
+                                                <div className="flex items-start justify-between gap-2">
+                                                    <div className="min-w-0 flex-1">
+                                                        <p className="font-semibold text-foreground truncate">{payment.student.name} {payment.student.last_name || ''}</p>
+                                                        <p className="text-xs text-muted-foreground truncate">{payment.concept}</p>
+                                                        {payment.program && (
+                                                            <p className="text-xs text-muted-foreground">{payment.program.name}</p>
+                                                        )}
+                                                    </div>
+                                                    <span className={cn('inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium shrink-0', statusInfo.bg, statusInfo.text)}>
+                                                        <StatusIcon className="h-3 w-3" />
+                                                        {statusInfo.label}
+                                                    </span>
+                                                </div>
+
+                                                {/* Amounts */}
+                                                <div className="grid grid-cols-3 gap-2 text-center text-xs">
+                                                    <div className="rounded-lg bg-muted p-2">
+                                                        <p className="text-muted-foreground">Total</p>
+                                                        <p className="font-bold text-foreground">{formatCurrency(payment.amount)}</p>
+                                                    </div>
+                                                    <div className="rounded-lg bg-green-50 dark:bg-green-900/20 p-2">
+                                                        <p className="text-muted-foreground">Pagado</p>
+                                                        <p className="font-bold text-green-600">{formatCurrency(payment.paid_amount)}</p>
+                                                    </div>
+                                                    <div className="rounded-lg bg-orange-50 dark:bg-orange-900/20 p-2">
+                                                        <p className="text-muted-foreground">Pendiente</p>
+                                                        <p className="font-bold text-orange-600">{formatCurrency(payment.pending_balance)}</p>
+                                                    </div>
+                                                </div>
+
+                                                {/* Progress */}
+                                                {payment.status !== 'cancelled' && (
+                                                    <div>
+                                                        <div className="flex justify-between text-xs text-muted-foreground mb-1">
+                                                            <span>Progreso</span><span>{progress}%</span>
+                                                        </div>
+                                                        <div className="h-1.5 w-full rounded-full bg-muted">
+                                                            <div
+                                                                className={cn('h-1.5 rounded-full', payment.status === 'completed' ? 'bg-green-500' : 'bg-blue-500')}
+                                                                style={{ width: `${progress}%` }}
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                )}
+
+                                                {/* Dates */}
+                                                <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
+                                                    {payment.due_date && (
+                                                        <span className="flex items-center gap-1">
+                                                            <Calendar className="h-3 w-3" />
+                                                            Vence: {formatDate(payment.due_date)}
+                                                        </span>
+                                                    )}
+                                                    {payment.payment_method && (
+                                                        <span className="flex items-center gap-1">
+                                                            <Banknote className="h-3 w-3" />
+                                                            {PAYMENT_METHODS[payment.payment_method] ?? payment.payment_method}
+                                                        </span>
+                                                    )}
+                                                </div>
+
+                                                {/* Actions */}
+                                                <div className="flex items-center justify-end gap-1 border-t border-border pt-2">
+                                                    {payment.wompi_transaction_id && payment.status === 'pending' && (
+                                                        <Button variant="outline" size="sm" onClick={() => handleCheckWompi(payment.id)} title="Verificar Wompi">
+                                                            <RefreshCw className="h-3.5 w-3.5" />
+                                                        </Button>
+                                                    )}
+                                                    <Link href={`/pagos/${payment.id}`}>
+                                                        <Button variant="outline" size="sm"><Eye className="h-3.5 w-3.5" /></Button>
+                                                    </Link>
+                                                    <Link href={`/pagos/${payment.id}/edit`}>
+                                                        <Button variant="outline" size="sm"><Edit className="h-3.5 w-3.5" /></Button>
+                                                    </Link>
+                                                    <Button
+                                                        variant="outline" size="sm"
+                                                        className="text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
+                                                        onClick={() => setDeleteDialog({ open: true, paymentId: payment.id })}
+                                                    >
+                                                        <Trash2 className="h-3.5 w-3.5" />
+                                                    </Button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        )}
+
+                        {/* Grid Pagination */}
+                        {payments.meta && payments.meta.last_page > 1 && (
+                            <div className="flex items-center justify-between rounded-xl border border-border bg-card px-6 py-4 shadow-sm">
+                                <span className="text-sm text-muted-foreground">
+                                    Mostrando <strong>{payments.meta.from}</strong>–<strong>{payments.meta.to}</strong> de <strong>{payments.meta.total}</strong> pagos
+                                </span>
+                                <div className="flex items-center gap-1">
+                                    <Button variant="outline" size="sm" disabled={payments.meta.current_page === 1} onClick={() => handlePageChange(payments.meta.current_page - 1)}>
+                                        <ChevronLeft className="h-4 w-4" />
+                                    </Button>
+                                    {Array.from({ length: payments.meta.last_page }, (_, i) => i + 1)
+                                        .filter(p => p === 1 || p === payments.meta.last_page || Math.abs(p - payments.meta.current_page) <= 2)
+                                        .reduce<(number | 'ellipsis')[]>((acc, p, i, arr) => {
+                                            if (i > 0 && p - (arr[i - 1] as number) > 1) acc.push('ellipsis');
+                                            acc.push(p);
+                                            return acc;
+                                        }, [])
+                                        .map((item, idx) =>
+                                            item === 'ellipsis' ? (
+                                                <span key={`e-${idx}`} className="px-2 text-muted-foreground">…</span>
+                                            ) : (
+                                                <Button key={item} variant={item === payments.meta.current_page ? 'default' : 'outline'} size="sm" className="min-w-9" onClick={() => handlePageChange(item as number)}>
+                                                    {item}
+                                                </Button>
+                                            )
+                                        )}
+                                    <Button variant="outline" size="sm" disabled={payments.meta.current_page === payments.meta.last_page} onClick={() => handlePageChange(payments.meta.current_page + 1)}>
+                                        <ChevronRight className="h-4 w-4" />
+                                    </Button>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                )}
+
                 {/* Table */}
+                {view === 'table' && (
                 <div className="rounded-xl border border-border bg-card shadow-sm">
                     {payments.meta && (
                         <div className="flex items-center justify-between border-b border-border px-6 py-3 text-sm text-muted-foreground">
@@ -442,6 +638,7 @@ export default function PaymentsList({ payments, programs, filters }: Props) {
                         </div>
                     )}
                 </div>
+                )}
             </div>
 
             {/* Delete Dialog */}

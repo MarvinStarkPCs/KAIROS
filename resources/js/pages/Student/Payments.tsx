@@ -1,4 +1,4 @@
-import { Head } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
 import AppLayout from '@/layouts/app-layout';
 import {
     CreditCard,
@@ -11,9 +11,12 @@ import {
     DollarSign,
     Calendar,
     Banknote,
+    ChevronLeft,
+    ChevronRight,
 } from 'lucide-react';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
 
 // ── Tipos ──────────────────────────────────────────────────────────────────
 
@@ -50,7 +53,10 @@ interface Summary {
 }
 
 interface Props {
-    payments: Payment[];
+    payments: {
+        data: Payment[];
+        meta: { current_page: number; last_page: number; from: number; to: number; total: number };
+    };
     summary: Summary;
 }
 
@@ -85,6 +91,10 @@ export default function StudentPayments({ payments, summary }: Props) {
     const [expanded, setExpanded] = useState<number | null>(null);
 
     const toggle = (id: number) => setExpanded(prev => prev === id ? null : id);
+
+    const goToPage = (page: number) => {
+        router.get('/estudiante/pagos', { page }, { preserveState: true, preserveScroll: true });
+    };
 
     return (
         <AppLayout>
@@ -137,7 +147,7 @@ export default function StudentPayments({ payments, summary }: Props) {
                 </div>
 
                 {/* Lista de pagos */}
-                {payments.length === 0 ? (
+                {payments.data.length === 0 ? (
                     <div className="rounded-xl border border-border bg-card p-12 text-center shadow-sm">
                         <CreditCard className="mx-auto h-12 w-12 text-muted-foreground/40" />
                         <p className="mt-4 text-lg font-semibold text-foreground">No tienes pagos registrados</p>
@@ -145,7 +155,7 @@ export default function StudentPayments({ payments, summary }: Props) {
                     </div>
                 ) : (
                     <div className="space-y-3">
-                        {payments.map((payment) => {
+                        {payments.data.map((payment) => {
                             const statusInfo = STATUS_MAP[payment.status] ?? STATUS_MAP.pending;
                             const StatusIcon = statusInfo.icon;
                             const progress = payment.amount > 0
@@ -290,6 +300,55 @@ export default function StudentPayments({ payments, summary }: Props) {
                                 </div>
                             );
                         })}
+                    </div>
+                )}
+
+                {/* Paginador */}
+                {payments.meta && payments.meta.last_page > 1 && (
+                    <div className="flex items-center justify-between rounded-xl border border-border bg-card px-6 py-4 shadow-sm">
+                        <span className="text-sm text-muted-foreground">
+                            Mostrando <strong>{payments.meta.from}</strong>–<strong>{payments.meta.to}</strong> de <strong>{payments.meta.total}</strong> pagos
+                        </span>
+                        <div className="flex items-center gap-1">
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                disabled={payments.meta.current_page === 1}
+                                onClick={() => goToPage(payments.meta.current_page - 1)}
+                            >
+                                <ChevronLeft className="h-4 w-4" />
+                            </Button>
+                            {Array.from({ length: payments.meta.last_page }, (_, i) => i + 1)
+                                .filter(p => p === 1 || p === payments.meta.last_page || Math.abs(p - payments.meta.current_page) <= 2)
+                                .reduce<(number | 'ellipsis')[]>((acc, p, i, arr) => {
+                                    if (i > 0 && p - (arr[i - 1] as number) > 1) acc.push('ellipsis');
+                                    acc.push(p);
+                                    return acc;
+                                }, [])
+                                .map((item, idx) =>
+                                    item === 'ellipsis' ? (
+                                        <span key={`e-${idx}`} className="px-2 text-muted-foreground">…</span>
+                                    ) : (
+                                        <Button
+                                            key={item}
+                                            variant={item === payments.meta.current_page ? 'default' : 'outline'}
+                                            size="sm"
+                                            className="min-w-9"
+                                            onClick={() => goToPage(item as number)}
+                                        >
+                                            {item}
+                                        </Button>
+                                    )
+                                )}
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                disabled={payments.meta.current_page === payments.meta.last_page}
+                                onClick={() => goToPage(payments.meta.current_page + 1)}
+                            >
+                                <ChevronRight className="h-4 w-4" />
+                            </Button>
+                        </div>
                     </div>
                 )}
             </div>
