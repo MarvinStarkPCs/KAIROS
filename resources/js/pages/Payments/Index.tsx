@@ -48,8 +48,13 @@ interface Program {
 interface Props {
     payments: {
         data: Payment[];
-        links: any;
-        meta: any;
+        links: any[];
+        current_page: number;
+        last_page: number;
+        from: number | null;
+        to: number | null;
+        total: number;
+        per_page: number;
     };
     programs: Program[];
     filters: {
@@ -58,6 +63,7 @@ interface Props {
         program_id?: number;
         date_from?: string;
         date_to?: string;
+        per_page?: number;
     };
 }
 
@@ -80,7 +86,8 @@ const formatCurrency = (value: number) =>
 
 const formatDate = (date: string | null | undefined) => {
     if (!date) return '—';
-    const [y, m, d] = date.split('-');
+    const plain = date.includes('T') ? date.split('T')[0] : date;
+    const [y, m, d] = plain.split('-');
     return `${d}/${m}/${y}`;
 };
 
@@ -97,7 +104,13 @@ export default function PaymentsList({ payments, programs, filters }: Props) {
         program_id: filters.program_id || '',
         date_from: filters.date_from || '',
         date_to: filters.date_to || '',
+        per_page: filters.per_page || 20,
     });
+
+    const handlePerPageChange = (value: number) => {
+        setLocalFilters(prev => ({ ...prev, per_page: value }));
+        router.get('/pagos', { ...filters, per_page: value, page: 1 }, { preserveState: true, preserveScroll: true });
+    };
 
     const handleFilter = () => {
         router.get('/pagos', localFilters, { preserveState: true });
@@ -271,11 +284,6 @@ export default function PaymentsList({ payments, programs, filters }: Props) {
                 {/* Grid view */}
                 {view === 'grid' && (
                     <div className="space-y-3">
-                        {payments.meta && (
-                            <div className="text-sm text-muted-foreground">
-                                Mostrando <strong>{payments.meta.from ?? 0}</strong>–<strong>{payments.meta.to ?? 0}</strong> de <strong>{payments.meta.total}</strong> pagos
-                            </div>
-                        )}
                         {payments.data.length === 0 ? (
                             <div className="rounded-xl border border-border bg-card p-12 text-center shadow-sm">
                                 <CreditCard className="mx-auto h-12 w-12 text-muted-foreground/40" />
@@ -387,35 +395,46 @@ export default function PaymentsList({ payments, programs, filters }: Props) {
                         )}
 
                         {/* Grid Pagination */}
-                        {payments.meta && payments.meta.last_page > 1 && (
+                        {payments.total > 0 && (
                             <div className="flex items-center justify-between rounded-xl border border-border bg-card px-6 py-4 shadow-sm">
-                                <span className="text-sm text-muted-foreground">
-                                    Mostrando <strong>{payments.meta.from}</strong>–<strong>{payments.meta.to}</strong> de <strong>{payments.meta.total}</strong> pagos
-                                </span>
-                                <div className="flex items-center gap-1">
-                                    <Button variant="outline" size="sm" disabled={payments.meta.current_page === 1} onClick={() => handlePageChange(payments.meta.current_page - 1)}>
-                                        <ChevronLeft className="h-4 w-4" />
-                                    </Button>
-                                    {Array.from({ length: payments.meta.last_page }, (_, i) => i + 1)
-                                        .filter(p => p === 1 || p === payments.meta.last_page || Math.abs(p - payments.meta.current_page) <= 2)
-                                        .reduce<(number | 'ellipsis')[]>((acc, p, i, arr) => {
-                                            if (i > 0 && p - (arr[i - 1] as number) > 1) acc.push('ellipsis');
-                                            acc.push(p);
-                                            return acc;
-                                        }, [])
-                                        .map((item, idx) =>
-                                            item === 'ellipsis' ? (
-                                                <span key={`e-${idx}`} className="px-2 text-muted-foreground">…</span>
-                                            ) : (
-                                                <Button key={item} variant={item === payments.meta.current_page ? 'default' : 'outline'} size="sm" className="min-w-9" onClick={() => handlePageChange(item as number)}>
-                                                    {item}
-                                                </Button>
-                                            )
-                                        )}
-                                    <Button variant="outline" size="sm" disabled={payments.meta.current_page === payments.meta.last_page} onClick={() => handlePageChange(payments.meta.current_page + 1)}>
-                                        <ChevronRight className="h-4 w-4" />
-                                    </Button>
+                                <div className="flex items-center gap-3">
+                                    <span className="text-sm text-muted-foreground">
+                                        Mostrando <strong>{payments.from ?? 0}</strong>–<strong>{payments.to ?? 0}</strong> de <strong>{payments.total}</strong> pagos
+                                    </span>
+                                    <select
+                                        value={localFilters.per_page}
+                                        onChange={(e) => handlePerPageChange(Number(e.target.value))}
+                                        className="rounded-md border border-input bg-background px-2 py-1 text-xs text-foreground"
+                                    >
+                                        {[10, 20, 30, 100].map(n => <option key={n} value={n}>{n} por página</option>)}
+                                    </select>
                                 </div>
+                                {payments.last_page > 1 && (
+                                    <div className="flex items-center gap-1">
+                                        <Button variant="outline" size="sm" disabled={payments.current_page === 1} onClick={() => handlePageChange(payments.current_page - 1)}>
+                                            <ChevronLeft className="h-4 w-4" />
+                                        </Button>
+                                        {Array.from({ length: payments.last_page }, (_, i) => i + 1)
+                                            .filter(p => p === 1 || p === payments.last_page || Math.abs(p - payments.current_page) <= 2)
+                                            .reduce<(number | 'ellipsis')[]>((acc, p, i, arr) => {
+                                                if (i > 0 && p - (arr[i - 1] as number) > 1) acc.push('ellipsis');
+                                                acc.push(p);
+                                                return acc;
+                                            }, [])
+                                            .map((item, idx) =>
+                                                item === 'ellipsis' ? (
+                                                    <span key={`e-${idx}`} className="px-2 text-muted-foreground">…</span>
+                                                ) : (
+                                                    <Button key={item} variant={item === payments.current_page ? 'default' : 'outline'} size="sm" className="min-w-9" onClick={() => handlePageChange(item as number)}>
+                                                        {item}
+                                                    </Button>
+                                                )
+                                            )}
+                                        <Button variant="outline" size="sm" disabled={payments.current_page === payments.last_page} onClick={() => handlePageChange(payments.current_page + 1)}>
+                                            <ChevronRight className="h-4 w-4" />
+                                        </Button>
+                                    </div>
+                                )}
                             </div>
                         )}
                     </div>
@@ -424,13 +443,11 @@ export default function PaymentsList({ payments, programs, filters }: Props) {
                 {/* Table */}
                 {view === 'table' && (
                 <div className="rounded-xl border border-border bg-card shadow-sm">
-                    {payments.meta && (
-                        <div className="flex items-center justify-between border-b border-border px-6 py-3 text-sm text-muted-foreground">
-                            <span>
-                                Mostrando <strong>{payments.meta.from ?? 0}</strong>–<strong>{payments.meta.to ?? 0}</strong> de <strong>{payments.meta.total}</strong> pagos
-                            </span>
-                        </div>
-                    )}
+                    <div className="flex items-center justify-between border-b border-border px-6 py-3 text-sm text-muted-foreground">
+                        <span>
+                            Mostrando <strong>{payments.from ?? 0}</strong>–<strong>{payments.to ?? 0}</strong> de <strong>{payments.total}</strong> pagos
+                        </span>
+                    </div>
                     <div className="overflow-x-auto">
                         <table className="w-full">
                             <thead className="border-b border-border bg-muted">
@@ -533,7 +550,7 @@ export default function PaymentsList({ payments, programs, filters }: Props) {
                                                     )}
                                                 </td>
                                                 <td className="px-6 py-4 text-sm text-muted-foreground">
-                                                    {new Date(payment.due_date).toLocaleDateString('es-CO')}
+                                                    {formatDate(payment.due_date)}
                                                 </td>
                                                 <td className="px-6 py-4">
                                                     <span
@@ -585,25 +602,35 @@ export default function PaymentsList({ payments, programs, filters }: Props) {
                     </div>
 
                     {/* Pagination */}
-                    {payments.meta && payments.meta.last_page > 1 && (
+                    {payments.total > 0 && (
                         <div className="flex items-center justify-between border-t border-border px-6 py-4">
-                            <span className="text-sm text-muted-foreground">
-                                Página <strong>{payments.meta.current_page}</strong> de <strong>{payments.meta.last_page}</strong>
-                            </span>
+                            <div className="flex items-center gap-3">
+                                <span className="text-sm text-muted-foreground">
+                                    Página <strong>{payments.current_page}</strong> de <strong>{payments.last_page}</strong>
+                                </span>
+                                <select
+                                    value={localFilters.per_page}
+                                    onChange={(e) => handlePerPageChange(Number(e.target.value))}
+                                    className="rounded-md border border-input bg-background px-2 py-1 text-xs text-foreground"
+                                >
+                                    {[10, 20, 30, 100].map(n => <option key={n} value={n}>{n} por página</option>)}
+                                </select>
+                            </div>
+                            {payments.last_page > 1 && (
                             <div className="flex items-center gap-1">
                                 <Button
                                     variant="outline"
                                     size="sm"
-                                    disabled={payments.meta.current_page === 1}
-                                    onClick={() => handlePageChange(payments.meta.current_page - 1)}
+                                    disabled={payments.current_page === 1}
+                                    onClick={() => handlePageChange(payments.current_page - 1)}
                                 >
                                     <ChevronLeft className="h-4 w-4" />
                                 </Button>
 
-                                {Array.from({ length: payments.meta.last_page }, (_, i) => i + 1)
+                                {Array.from({ length: payments.last_page }, (_, i) => i + 1)
                                     .filter((page) => {
-                                        const cur = payments.meta.current_page;
-                                        return page === 1 || page === payments.meta.last_page || Math.abs(page - cur) <= 2;
+                                        const cur = payments.current_page;
+                                        return page === 1 || page === payments.last_page || Math.abs(page - cur) <= 2;
                                     })
                                     .reduce<(number | 'ellipsis')[]>((acc, page, idx, arr) => {
                                         if (idx > 0 && page - (arr[idx - 1] as number) > 1) acc.push('ellipsis');
@@ -616,7 +643,7 @@ export default function PaymentsList({ payments, programs, filters }: Props) {
                                         ) : (
                                             <Button
                                                 key={item}
-                                                variant={item === payments.meta.current_page ? 'default' : 'outline'}
+                                                variant={item === payments.current_page ? 'default' : 'outline'}
                                                 size="sm"
                                                 onClick={() => handlePageChange(item as number)}
                                                 className="min-w-9"
@@ -629,12 +656,13 @@ export default function PaymentsList({ payments, programs, filters }: Props) {
                                 <Button
                                     variant="outline"
                                     size="sm"
-                                    disabled={payments.meta.current_page === payments.meta.last_page}
-                                    onClick={() => handlePageChange(payments.meta.current_page + 1)}
+                                    disabled={payments.current_page === payments.last_page}
+                                    onClick={() => handlePageChange(payments.current_page + 1)}
                                 >
                                     <ChevronRight className="h-4 w-4" />
                                 </Button>
                             </div>
+                            )}
                         </div>
                     )}
                 </div>

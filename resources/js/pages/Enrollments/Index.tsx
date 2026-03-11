@@ -22,7 +22,7 @@ import {
 import { Plus, Search, Eye, Edit, Trash, Users, UserCheck, UserX, Clock } from 'lucide-react';
 import { useState } from 'react';
 
-type EnrollmentStatus = 'active' | 'waiting' | 'withdrawn' | 'suspended';
+type EnrollmentStatus = 'active' | 'waiting' | 'withdrawn' | 'suspended' | 'cancelled';
 
 interface Student {
     id: number;
@@ -108,10 +108,11 @@ export default function Index({ enrollments, stats, programs, students, filters 
 
     const getStatusBadge = (status: EnrollmentStatus) => {
         const badges = {
-            active: <Badge className="bg-green-500">Activo</Badge>,
-            waiting: <Badge className="bg-yellow-500">En espera</Badge>,
+            active:    <Badge className="bg-green-500">Activo</Badge>,
+            waiting:   <Badge className="bg-yellow-500">En espera</Badge>,
             withdrawn: <Badge className="bg-gray-500">Retirado</Badge>,
             suspended: <Badge className="bg-red-500">Suspendido</Badge>,
+            cancelled: <Badge className="bg-zinc-400">Cancelado</Badge>,
         };
         return badges[status] || <Badge>{status}</Badge>;
     };

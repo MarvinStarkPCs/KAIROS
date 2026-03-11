@@ -139,17 +139,23 @@ const MODALITY_COLORS: Record<string, string> = {
 const formatCurrency = (value: number | null | undefined) =>
     '$' + (value ?? 0).toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
 
+const parseDate = (date: string): Date => {
+    // Handles "YYYY-MM-DD" and full ISO strings like "2026-03-05T05:00:00.000000Z"
+    if (!date) return new Date(NaN);
+    const plain = date.includes('T') ? date.split('T')[0] : date;
+    return new Date(plain + 'T00:00:00');
+};
+
 const formatDate = (date: string) => {
     if (!date) return '—';
-    return new Date(date + 'T00:00:00').toLocaleDateString('es-CO', {
-        day: '2-digit',
-        month: 'short',
-        year: 'numeric',
-    });
+    const d = parseDate(date);
+    if (isNaN(d.getTime())) return '—';
+    return d.toLocaleDateString('es-CO', { day: '2-digit', month: 'short', year: 'numeric' });
 };
 
 const getDaysOverdue = (dueDate: string): number => {
-    const due = new Date(dueDate + 'T00:00:00');
+    const due = parseDate(dueDate);
+    if (isNaN(due.getTime())) return 0;
     const now = new Date();
     const diff = Math.floor((now.getTime() - due.getTime()) / (1000 * 60 * 60 * 24));
     return Math.max(0, diff);

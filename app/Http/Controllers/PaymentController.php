@@ -61,7 +61,8 @@ class PaymentController extends Controller
         // Solo mostrar pagos principales (no cuotas hijas)
         $query->whereNull('parent_payment_id');
 
-        $payments = $query->orderBy('created_at', 'desc')->paginate(20)->withQueryString();
+        $perPage = in_array((int) $request->per_page, [10, 20, 30, 100]) ? (int) $request->per_page : 20;
+        $payments = $query->orderBy('created_at', 'desc')->paginate($perPage)->withQueryString();
 
         // Agregar información calculada a cada pago
         $payments->getCollection()->transform(function ($payment) {
@@ -75,7 +76,7 @@ class PaymentController extends Controller
         return Inertia::render('Payments/Index', [
             'payments' => $payments,
             'programs' => $programs,
-            'filters' => $request->only(['status', 'search', 'program_id', 'payment_type', 'date_from', 'date_to']),
+            'filters' => $request->only(['status', 'search', 'program_id', 'payment_type', 'date_from', 'date_to', 'per_page']),
         ]);
     }
 

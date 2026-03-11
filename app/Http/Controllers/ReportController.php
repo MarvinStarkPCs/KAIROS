@@ -83,7 +83,12 @@ class ReportController extends Controller
             ->selectRaw("academic_programs.name as program_name, SUM(payments.paid_amount) as total, COUNT(*) as count")
             ->groupBy('academic_programs.name')
             ->orderByDesc('total')
-            ->get();
+            ->get()
+            ->map(fn ($item) => [
+                'program_name' => $item->program_name,
+                'total'        => (float) $item->total,
+                'count'        => (int) $item->count,
+            ]);
 
         // === PAYMENT METHOD BREAKDOWN (pie chart) ===
         $paymentMethodBreakdown = Payment::where('status', 'completed')
@@ -115,21 +120,51 @@ class ReportController extends Controller
             ->whereNotNull('modality')
             ->selectRaw("modality, SUM(paid_amount) as total, COUNT(*) as count")
             ->groupBy('modality')
-            ->get();
+            ->get()
+            ->map(fn ($item) => [
+                'modality' => $item->modality,
+                'total'    => (float) $item->total,
+                'count'    => (int) $item->count,
+            ]);
+
+        $normalizePayment = fn ($p) => [
+            'id'             => $p->id,
+            'concept'        => $p->concept,
+            'modality'       => $p->modality,
+            'status'         => $p->status,
+            'amount'         => (float) $p->amount,
+            'paid_amount'    => (float) $p->paid_amount,
+            'remaining_amount' => (float) ($p->remaining_amount ?? 0),
+            'payment_method' => $p->payment_method,
+            'due_date'       => $p->getRawOriginal('due_date'),   // plain Y-m-d string
+            'payment_date'   => $p->getRawOriginal('payment_date'),
+            'created_at'     => $p->created_at?->toIso8601String(),
+            'student' => [
+                'id'        => $p->student?->id,
+                'name'      => $p->student?->name,
+                'last_name' => $p->student?->last_name,
+            ],
+            'program' => $p->program ? [
+                'id'   => $p->program->id,
+                'name' => $p->program->name,
+            ] : null,
+        ];
 
         // === RECENT PAYMENTS (table - last 20) ===
         $recentPayments = Payment::with(['student', 'program'])
             ->whereBetween('created_at', [$startDate, $endDate])
             ->orderByDesc('created_at')
             ->limit(20)
-            ->get();
+            ->get()
+            ->map($normalizePayment);
 
         // === OVERDUE PAYMENTS (table - always show all current overdue) ===
         $overduePayments = Payment::with(['student', 'program'])
             ->where('status', 'overdue')
             ->orderBy('due_date')
             ->limit(50)
-            ->get();
+            ->get()
+            ->map($normalizePayment);
 
         return Inertia::render('Reports/Payments', [
             'summary' => $summary,

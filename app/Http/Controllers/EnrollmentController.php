@@ -229,9 +229,15 @@ class EnrollmentController extends Controller
             ->first();
 
         return Inertia::render('Enrollments/Edit', [
-            'enrollment' => $enrollment,
+            'enrollment' => [
+                'id'      => $enrollment->id,
+                'status'  => $enrollment->status,
+                'student' => ['id' => $enrollment->student->id, 'name' => $enrollment->student->name, 'email' => $enrollment->student->email],
+                'program' => ['id' => $enrollment->program->id, 'name' => $enrollment->program->name],
+            ],
             'schedules' => $schedules,
             'currentScheduleEnrollment' => $currentScheduleEnrollment,
+            'authId' => auth()->id(),
         ]);
     }
 
@@ -321,12 +327,18 @@ class EnrollmentController extends Controller
     }
 
     /**
-     * Cambiar estado de inscripción
+     * Cambiar estado de inscripción (solo usuario ID 1)
      */
     public function changeStatus(Request $request, Enrollment $enrollment)
     {
+        if (auth()->id() !== 1) {
+            abort(403, 'No tienes permiso para cambiar el estado de una matrícula.');
+        }
+
         $validated = $request->validate([
-            'status' => ['required', Rule::in(['active', 'waiting', 'withdrawn'])],
+            'status' => ['required', Rule::in(['active', 'waiting', 'suspended', 'withdrawn', 'cancelled'])],
+        ], [
+            'status.in' => 'Estado no válido',
         ]);
 
         $previousStatus = $enrollment->status;
@@ -338,9 +350,11 @@ class EnrollmentController extends Controller
         }
 
         $statusMessages = [
-            'active' => 'Inscripción activada exitosamente',
-            'waiting' => 'Inscripción movida a lista de espera',
+            'active'    => 'Inscripción activada exitosamente',
+            'waiting'   => 'Inscripción movida a lista de espera',
+            'suspended' => 'Inscripción suspendida',
             'withdrawn' => 'Inscripción marcada como retirada',
+            'cancelled' => 'Inscripción cancelada',
         ];
 
         flash_success($statusMessages[$validated['status']]);

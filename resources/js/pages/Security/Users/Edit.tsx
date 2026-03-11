@@ -1,4 +1,5 @@
-import { useForm, Link, Head } from '@inertiajs/react';
+import { useForm, Link, Head, router } from '@inertiajs/react';
+import { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -13,7 +14,7 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { ChevronLeft, User, GraduationCap, Music, Phone, MapPin, Heart } from 'lucide-react';
+import { ChevronLeft, User, GraduationCap, Music, Phone, MapPin, Heart, Camera, Trash2 } from 'lucide-react';
 import { route } from 'ziggy-js';
 import AppLayout from '@/layouts/app-layout';
 
@@ -54,6 +55,7 @@ interface UserData {
     name: string;
     last_name: string | null;
     email: string | null;
+    avatar: string | null;
     document_type: string | null;
     document_number: string | null;
     birth_date: string | null;
@@ -77,6 +79,25 @@ interface EditProps {
 }
 
 export default function UsersEdit({ user, roles, hasStudentRole, hasTeacherRole }: EditProps) {
+    const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
+
+    const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = () => setAvatarPreview(reader.result as string);
+        reader.readAsDataURL(file);
+        const formData = new FormData();
+        formData.append('avatar', file);
+        router.post(route('usuarios.avatar', user.id), formData, {
+            forceFormData: true,
+            onSuccess: () => setAvatarPreview(null),
+        });
+    };
+
+    const avatarUrl = avatarPreview ?? (user.avatar ? `/storage/${user.avatar}` : null);
+
     const { data, setData, put, processing, errors } = useForm({
         name: user.name || '',
         last_name: user.last_name || '',
@@ -170,6 +191,52 @@ export default function UsersEdit({ user, roles, hasStudentRole, hasTeacherRole 
                 </div>
 
                 <form onSubmit={handleSubmit} className="space-y-6">
+                    {/* Avatar */}
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2">
+                                <Camera className="h-5 w-5" />
+                                Foto de perfil
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="flex items-center gap-6">
+                                <div className="relative h-24 w-24 shrink-0">
+                                    {avatarUrl ? (
+                                        <img
+                                            src={avatarUrl}
+                                            alt={user.name}
+                                            className="h-24 w-24 rounded-full object-cover border border-border"
+                                        />
+                                    ) : (
+                                        <div className="flex h-24 w-24 items-center justify-center rounded-full bg-muted border border-border">
+                                            <User className="h-10 w-10 text-muted-foreground" />
+                                        </div>
+                                    )}
+                                </div>
+                                <div className="flex flex-col gap-2">
+                                    <input
+                                        ref={fileInputRef}
+                                        type="file"
+                                        accept="image/*"
+                                        className="hidden"
+                                        onChange={handleAvatarChange}
+                                    />
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => fileInputRef.current?.click()}
+                                    >
+                                        <Camera className="mr-2 h-4 w-4" />
+                                        Cambiar foto
+                                    </Button>
+                                    <p className="text-xs text-muted-foreground">JPG, PNG o GIF · máx. 2 MB</p>
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+
                     <div className="grid gap-6 md:grid-cols-2">
                         {/* Datos Basicos */}
                         <Card>

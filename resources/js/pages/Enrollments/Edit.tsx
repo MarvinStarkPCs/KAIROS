@@ -1,9 +1,16 @@
-import { Head, Link, useForm } from '@inertiajs/react';
+import { Head, Link, useForm, router } from '@inertiajs/react';
 import AppLayout from '@/layouts/app-layout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
-import { ArrowLeft, Save, Clock, MapPin, User as UserIcon } from 'lucide-react';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
+import { ArrowLeft, Save, Clock, MapPin, User as UserIcon, ShieldCheck } from 'lucide-react';
 import { FormEventHandler } from 'react';
 
 interface Schedule {
@@ -22,8 +29,11 @@ interface ScheduleEnrollment {
     schedule: Schedule;
 }
 
+type EnrollmentStatus = 'active' | 'waiting' | 'suspended' | 'withdrawn' | 'cancelled';
+
 interface Enrollment {
     id: number;
+    status: EnrollmentStatus;
     student: { id: number; name: string; email: string };
     program: { id: number; name: string };
 }
@@ -32,7 +42,16 @@ interface Props {
     enrollment: Enrollment;
     schedules: Schedule[];
     currentScheduleEnrollment: ScheduleEnrollment | null;
+    authId: number;
 }
+
+const STATUS_OPTIONS: { value: EnrollmentStatus; label: string }[] = [
+    { value: 'active',    label: 'Activo' },
+    { value: 'waiting',   label: 'En espera' },
+    { value: 'suspended', label: 'Suspendido' },
+    { value: 'withdrawn', label: 'Retirado' },
+    { value: 'cancelled', label: 'Cancelado' },
+];
 
 function formatDays(days: string | string[]): string {
     if (Array.isArray(days)) return days.join(', ');
@@ -46,7 +65,7 @@ function formatDays(days: string | string[]): string {
     }
 }
 
-export default function Edit({ enrollment, schedules, currentScheduleEnrollment }: Props) {
+export default function Edit({ enrollment, schedules, currentScheduleEnrollment, authId }: Props) {
     const { data, setData, put, processing, errors } = useForm({
         schedule_id: currentScheduleEnrollment?.schedule_id?.toString() ?? '',
     });
@@ -54,6 +73,14 @@ export default function Edit({ enrollment, schedules, currentScheduleEnrollment 
     const submit: FormEventHandler = (e) => {
         e.preventDefault();
         put(`/matriculas/${enrollment.id}`);
+    };
+
+    const handleStatusChange = (newStatus: string) => {
+        router.post(
+            `/matriculas/${enrollment.id}/change-status`,
+            { status: newStatus },
+            { preserveScroll: true },
+        );
     };
 
     return (
@@ -76,6 +103,38 @@ export default function Edit({ enrollment, schedules, currentScheduleEnrollment 
                         </Button>
                     </Link>
                 </div>
+
+                {/* Estado — solo visible para usuario ID 1 */}
+                {authId === 1 && (
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2 text-base">
+                                <ShieldCheck className="h-4 w-4" />
+                                Estado de la matrícula
+                            </CardTitle>
+                            <CardDescription>
+                                Solo el administrador principal puede modificar este campo.
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="w-56">
+                                <Label className="mb-2 block">Estado</Label>
+                                <Select value={enrollment.status} onValueChange={handleStatusChange}>
+                                    <SelectTrigger>
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {STATUS_OPTIONS.map(opt => (
+                                            <SelectItem key={opt.value} value={opt.value}>
+                                                {opt.label}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        </CardContent>
+                    </Card>
+                )}
 
                 <form onSubmit={submit}>
                     <Card>

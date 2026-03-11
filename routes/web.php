@@ -149,6 +149,7 @@ Route::middleware(['auth'])->group(function () {
     Route::middleware(['permission:editar_usuario'])->group(function () {
         Route::get('/usuarios/{user}/edit', [UserController::class, 'edit'])->name('usuarios.edit');
         Route::put('/usuarios/{user}', [UserController::class, 'update'])->name('usuarios.update');
+        Route::post('/usuarios/{user}/avatar', [UserController::class, 'updateAvatar'])->name('usuarios.avatar');
     });
     Route::middleware(['permission:eliminar_usuario'])->group(function () {
         Route::delete('/usuarios/{user}', [UserController::class, 'destroy'])->name('usuarios.destroy');

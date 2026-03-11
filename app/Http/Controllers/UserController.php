@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rules\Password;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Spatie\Permission\Models\Role;
 
@@ -431,6 +432,7 @@ class UserController extends Controller
                 'name' => $user->name,
                 'last_name' => $user->last_name,
                 'email' => $user->email,
+                'avatar' => $user->avatar,
                 // Datos personales
                 'document_type' => $user->document_type,
                 'document_number' => $user->document_number,
@@ -573,6 +575,31 @@ class UserController extends Controller
         flash_success('Usuario actualizado exitosamente');
 
         return redirect()->route('usuarios.index');
+    }
+
+    /**
+     * Actualizar avatar de usuario
+     */
+    public function updateAvatar(Request $request, User $user)
+    {
+        $request->validate([
+            'avatar' => ['required', 'image', 'max:2048'],
+        ], [
+            'avatar.required' => 'Selecciona una imagen',
+            'avatar.image'    => 'El archivo debe ser una imagen',
+            'avatar.max'      => 'La imagen no puede superar 2MB',
+        ]);
+
+        if ($user->avatar && Storage::disk('public')->exists($user->avatar)) {
+            Storage::disk('public')->delete($user->avatar);
+        }
+
+        $path = $request->file('avatar')->store('avatars', 'public');
+        $user->update(['avatar' => $path]);
+
+        flash_success('Foto de perfil actualizada');
+
+        return back();
     }
 
     /**
