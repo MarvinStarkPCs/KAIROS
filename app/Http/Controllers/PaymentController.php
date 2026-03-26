@@ -213,8 +213,6 @@ class PaymentController extends Controller
             'concept' => 'nullable|string|max:255',
             'amount' => 'nullable|numeric|min:0',
             'due_date' => 'nullable|date',
-            'status' => 'nullable|in:pending,completed,overdue,cancelled',
-            'payment_method' => 'nullable|string|max:50',
             'reference_number' => 'nullable|string|max:100',
             'notes' => 'nullable|string|max:500',
         ], [
@@ -222,11 +220,17 @@ class PaymentController extends Controller
             'amount.numeric' => 'El monto debe ser un número',
             'amount.min' => 'El monto debe ser mayor o igual a 0',
             'due_date.date' => 'La fecha debe ser válida',
-            'status.in' => 'El estado debe ser: pendiente, completado, vencido o cancelado',
-            'payment_method.max' => 'El método de pago no puede exceder 50 caracteres',
             'reference_number.max' => 'El número de referencia no puede exceder 100 caracteres',
             'notes.max' => 'Las notas no pueden exceder 500 caracteres',
         ]);
+
+        // Solo el usuario ID 1 puede cambiar el estado
+        if (auth()->id() === 1 && $request->filled('status')) {
+            $request->validate(['status' => 'in:pending,completed,overdue,cancelled'], [
+                'status.in' => 'El estado debe ser: pendiente, completado, vencido o cancelado',
+            ]);
+            $validated['status'] = $request->status;
+        }
 
         // Si se cambia el monto, recalcular remaining_amount basado en los abonos ya realizados
         if (isset($validated['amount']) && $validated['amount'] != $payment->amount) {

@@ -10,7 +10,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import { ArrowLeft, Save, Clock, MapPin, User as UserIcon, ShieldCheck } from 'lucide-react';
+import { ArrowLeft, Save, Clock, MapPin, User as UserIcon, ShieldCheck, BookOpen } from 'lucide-react';
 import { FormEventHandler } from 'react';
 
 interface Schedule {
@@ -38,11 +38,28 @@ interface Enrollment {
     program: { id: number; name: string };
 }
 
+interface ProgramSchedule {
+    id: number;
+    name: string;
+    days_of_week: string | string[];
+    start_time: string;
+    end_time: string;
+    classroom: string | null;
+    professor: { id: number; name: string } | null;
+}
+
+interface Program {
+    id: number;
+    name: string;
+    schedules: ProgramSchedule[];
+}
+
 interface Props {
     enrollment: Enrollment;
     schedules: Schedule[];
     currentScheduleEnrollment: ScheduleEnrollment | null;
     authId: number;
+    allPrograms: Program[];
 }
 
 const STATUS_OPTIONS: { value: EnrollmentStatus; label: string }[] = [
@@ -65,10 +82,17 @@ function formatDays(days: string | string[]): string {
     }
 }
 
-export default function Edit({ enrollment, schedules, currentScheduleEnrollment, authId }: Props) {
+export default function Edit({ enrollment, schedules, currentScheduleEnrollment, authId, allPrograms }: Props) {
     const { data, setData, put, processing, errors } = useForm({
         schedule_id: currentScheduleEnrollment?.schedule_id?.toString() ?? '',
     });
+
+    const { data: programData, setData: setProgramData, post: postProgram, processing: processingProgram, errors: programErrors } = useForm({
+        program_id: '',
+        schedule_id: '',
+    });
+
+    const selectedProgram = allPrograms.find((p) => p.id.toString() === programData.program_id) ?? null;
 
     const submit: FormEventHandler = (e) => {
         e.preventDefault();
@@ -81,6 +105,11 @@ export default function Edit({ enrollment, schedules, currentScheduleEnrollment,
             { status: newStatus },
             { preserveScroll: true },
         );
+    };
+
+    const handleProgramChange: FormEventHandler = (e) => {
+        e.preventDefault();
+        postProgram(`/matriculas/${enrollment.id}/change-program`, { preserveScroll: true });
     };
 
     return (
@@ -132,6 +161,98 @@ export default function Edit({ enrollment, schedules, currentScheduleEnrollment,
                                     </SelectContent>
                                 </Select>
                             </div>
+                        </CardContent>
+                    </Card>
+                )}
+
+                {/* Cambio de programa — solo visible para usuario ID 1 */}
+                {authId === 1 && (
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2 text-base">
+                                <BookOpen className="h-4 w-4" />
+                                Cambiar programa académico
+                            </CardTitle>
+                            <CardDescription>
+                                Solo el administrador principal puede cambiar el programa de una matrícula.
+                                Programa actual: <strong>{enrollment.program.name}</strong>
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <form onSubmit={handleProgramChange} className="space-y-4">
+                                <div className="grid gap-4 sm:grid-cols-2">
+                                    {/* Selector de programa */}
+                                    <div className="space-y-1">
+                                        <Label>Nuevo programa <span className="text-destructive">*</span></Label>
+                                        <Select
+                                            value={programData.program_id}
+                                            onValueChange={(v) => {
+                                                setProgramData('program_id', v);
+                                                setProgramData('schedule_id', '');
+                                            }}
+                                        >
+                                            <SelectTrigger>
+                                                <SelectValue placeholder="Selecciona un programa" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {allPrograms
+                                                    .filter((p) => p.id !== enrollment.program.id)
+                                                    .map((p) => (
+                                                        <SelectItem key={p.id} value={p.id.toString()}>
+                                                            {p.name}
+                                                        </SelectItem>
+                                                    ))}
+                                            </SelectContent>
+                                        </Select>
+                                        {programErrors.program_id && (
+                                            <p className="text-sm text-destructive">{programErrors.program_id}</p>
+                                        )}
+                                    </div>
+
+                                    {/* Selector de horario — aparece cuando hay programa seleccionado */}
+                                    {selectedProgram && (
+                                        <div className="space-y-1">
+                                            <Label>Horario <span className="text-destructive">*</span></Label>
+                                            {selectedProgram.schedules.length === 0 ? (
+                                                <p className="text-sm text-muted-foreground pt-2">
+                                                    Este programa no tiene horarios activos.
+                                                </p>
+                                            ) : (
+                                                <Select
+                                                    value={programData.schedule_id}
+                                                    onValueChange={(v) => setProgramData('schedule_id', v)}
+                                                >
+                                                    <SelectTrigger>
+                                                        <SelectValue placeholder="Selecciona un horario" />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        {selectedProgram.schedules.map((s) => (
+                                                            <SelectItem key={s.id} value={s.id.toString()}>
+                                                                {s.name} · {formatDays(s.days_of_week)} {s.start_time}–{s.end_time}
+                                                                {s.professor ? ` (${s.professor.name})` : ''}
+                                                            </SelectItem>
+                                                        ))}
+                                                    </SelectContent>
+                                                </Select>
+                                            )}
+                                            {programErrors.schedule_id && (
+                                                <p className="text-sm text-destructive">{programErrors.schedule_id}</p>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div className="flex justify-end">
+                                    <Button
+                                        type="submit"
+                                        variant="outline"
+                                        disabled={processingProgram || !programData.program_id || !programData.schedule_id}
+                                    >
+                                        <Save className="mr-2 h-4 w-4" />
+                                        {processingProgram ? 'Guardando...' : 'Cambiar programa'}
+                                    </Button>
+                                </div>
+                            </form>
                         </CardContent>
                     </Card>
                 )}

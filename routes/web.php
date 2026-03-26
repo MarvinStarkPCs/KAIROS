@@ -239,6 +239,7 @@ Route::middleware(['auth'])->group(function () {
     });
     Route::middleware(['permission:cambiar_estado_inscripcion'])->group(function () {
         Route::post('/matriculas/{enrollment}/change-status', [EnrollmentController::class, 'changeStatus'])->name('inscripciones.change-status');
+        Route::post('/matriculas/{enrollment}/change-program', [EnrollmentController::class, 'changeProgram'])->name('inscripciones.change-program');
     });
     Route::middleware(['permission:eliminar_inscripcion'])->group(function () {
         Route::delete('/matriculas/{enrollment}', [EnrollmentController::class, 'destroy'])->name('inscripciones.destroy');

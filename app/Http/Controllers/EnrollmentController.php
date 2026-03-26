@@ -228,6 +228,14 @@ class EnrollmentController extends Controller
             ->with('schedule:id,name,days_of_week,start_time,end_time,classroom')
             ->first();
 
+        // Solo para usuario ID 1: pasar lista de programas con sus horarios activos
+        $allPrograms = auth()->id() === 1
+            ? AcademicProgram::where('status', 'active')
+                ->where('is_demo', false)
+                ->with(['schedules' => fn($q) => $q->where('status', 'active')->with('professor:id,name')->select('id', 'academic_program_id', 'name', 'days_of_week', 'start_time', 'end_time', 'classroom', 'professor_id')])
+                ->get(['id', 'name'])
+            : collect();
+
         return Inertia::render('Enrollments/Edit', [
             'enrollment' => [
                 'id'      => $enrollment->id,
@@ -235,9 +243,10 @@ class EnrollmentController extends Controller
                 'student' => ['id' => $enrollment->student->id, 'name' => $enrollment->student->name, 'email' => $enrollment->student->email],
                 'program' => ['id' => $enrollment->program->id, 'name' => $enrollment->program->name],
             ],
-            'schedules' => $schedules,
-            'currentScheduleEnrollment' => $currentScheduleEnrollment,
-            'authId' => auth()->id(),
+            'schedules'                  => $schedules,
+            'currentScheduleEnrollment'  => $currentScheduleEnrollment,
+            'authId'                     => auth()->id(),
+            'allPrograms'                => $allPrograms,
         ]);
     }
 
@@ -358,6 +367,55 @@ class EnrollmentController extends Controller
         ];
 
         flash_success($statusMessages[$validated['status']]);
+
+        return redirect()->back();
+    }
+
+    /**
+     * Cambiar programa académico de una inscripción (solo usuario ID 1)
+     */
+    public function changeProgram(Request $request, Enrollment $enrollment)
+    {
+        if (auth()->id() !== 1) {
+            abort(403, 'No tienes permiso para cambiar el programa de una matrícula.');
+        }
+
+        $validated = $request->validate([
+            'program_id'  => ['required', 'exists:academic_programs,id', 'different:' . $enrollment->program_id],
+            'schedule_id' => ['required', 'exists:schedules,id'],
+        ], [
+            'program_id.required'  => 'Debes seleccionar un programa',
+            'program_id.exists'    => 'El programa seleccionado no existe',
+            'program_id.different' => 'El programa seleccionado es el mismo que el actual',
+            'schedule_id.required' => 'Debes seleccionar un horario del nuevo programa',
+            'schedule_id.exists'   => 'El horario seleccionado no existe',
+        ]);
+
+        $newProgram  = AcademicProgram::findOrFail($validated['program_id']);
+        $newSchedule = Schedule::findOrFail($validated['schedule_id']);
+
+        // Verificar que el horario pertenezca al nuevo programa
+        if ($newSchedule->academic_program_id !== $newProgram->id) {
+            flash_error('El horario seleccionado no pertenece al programa elegido.');
+            return redirect()->back();
+        }
+
+        // Retirar al estudiante del horario actual del programa viejo
+        ScheduleEnrollment::where('student_id', $enrollment->student_id)
+            ->whereHas('schedule', fn($q) => $q->where('academic_program_id', $enrollment->program_id))
+            ->where('status', 'enrolled')
+            ->update(['status' => 'dropped']);
+
+        $oldProgramName = $enrollment->program->name;
+        $enrollment->update(['program_id' => $validated['program_id']]);
+
+        // Inscribir en el horario del nuevo programa
+        ScheduleEnrollment::firstOrCreate(
+            ['student_id' => $enrollment->student_id, 'schedule_id' => $newSchedule->id],
+            ['enrollment_date' => Carbon::today(), 'status' => 'enrolled']
+        )->update(['status' => 'enrolled']);
+
+        flash_success("Programa cambiado de \"{$oldProgramName}\" a \"{$newProgram->name}\" y asignado al horario \"{$newSchedule->name}\".");
 
         return redirect()->back();
     }

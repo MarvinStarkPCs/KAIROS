@@ -84,7 +84,6 @@ export default function PaymentForm({ payment, enrollments }: Props) {
         amount: payment?.amount || '',
         due_date: payment?.due_date || '',
         status: payment?.status || 'pending',
-        payment_method: payment?.payment_method || '',
         reference_number: payment?.reference_number || '',
         notes: payment?.notes || '',
     });
@@ -497,38 +496,18 @@ export default function PaymentForm({ payment, enrollments }: Props) {
                             </div>
                         )}
 
-                        {/* Método de Pago y Referencia - Solo si está completado */}
-                        {data.status === 'completed' && (
-                            <>
-                                <div>
-                                    <Label htmlFor="payment_method">Método de Pago</Label>
-                                    <select
-                                        id="payment_method"
-                                        value={data.payment_method}
-                                        onChange={(e) => setData('payment_method', e.target.value)}
-                                        className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground"
-                                    >
-                                        <option value="">Seleccionar</option>
-                                        <option value="cash">Efectivo</option>
-                                        <option value="transfer">Transferencia</option>
-                                        <option value="credit_card">Tarjeta de Crédito</option>
-                                    </select>
-                                    <InputError message={errors.payment_method} />
-                                </div>
-
-                                <div>
-                                    <Label htmlFor="reference_number">Número de Referencia</Label>
-                                    <Input
-                                        id="reference_number"
-                                        type="text"
-                                        value={data.reference_number}
-                                        onChange={(e) => setData('reference_number', e.target.value)}
-                                        placeholder="Número de comprobante"
-                                    />
-                                    <InputError message={errors.reference_number} />
-                                </div>
-                            </>
-                        )}
+                        {/* Número de Referencia */}
+                        <div>
+                            <Label htmlFor="reference_number">Número de Referencia</Label>
+                            <Input
+                                id="reference_number"
+                                type="text"
+                                value={data.reference_number}
+                                onChange={(e) => setData('reference_number', e.target.value)}
+                                placeholder="Número de comprobante"
+                            />
+                            <InputError message={errors.reference_number} />
+                        </div>
 
                         {/* Notas */}
                         <div className="md:col-span-2">
