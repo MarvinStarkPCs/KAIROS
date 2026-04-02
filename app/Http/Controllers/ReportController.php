@@ -159,8 +159,13 @@ class ReportController extends Controller
             ->map($normalizePayment);
 
         // === OVERDUE PAYMENTS (table - always show all current overdue) ===
+        // Excluir pagos cuya matrícula asociada esté cancelada o retirada (deuda incobrable)
         $overduePayments = Payment::with(['student', 'program'])
             ->where('status', 'overdue')
+            ->where(function ($q) {
+                $q->whereNull('enrollment_id')
+                  ->orWhereHas('enrollment', fn($e) => $e->whereNotIn('status', ['cancelled', 'withdrawn']));
+            })
             ->orderBy('due_date')
             ->limit(50)
             ->get()

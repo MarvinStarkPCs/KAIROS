@@ -105,6 +105,9 @@ class TeacherRegistrationController extends Controller
                 'is_active' => true,
             ]);
 
+            // Enviar correo de verificación de correo
+            $teacher->sendEmailVerificationNotification();
+
             \Log::info('Nuevo profesor registrado', [
                 'teacher_id' => $teacher->id,
                 'email' => $teacher->email,

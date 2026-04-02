@@ -32,10 +32,23 @@
                     {{-- Closing --}}
                     <tr>
                         <td style="padding: 0 40px 30px 40px;">
-                            <p style="margin: 0; color: #111827; font-size: 15px;">
-                                <strong>¡Bienvenido/a a la familia Academia Linaje!</strong><br>
+                            <p style="margin: 0 0 16px 0; color: #111827; font-size: 15px;">
+                                <strong>¡Gracias por ser parte de la familia Academia Linaje!</strong><br>
                                 <span style="color: #6b7280;">Estamos emocionados de ser parte de tu camino musical. 🎶</span>
                             </p>
+                            <table role="presentation" style="width:100%; border-collapse:collapse; background:#fffbeb; border-radius:8px; border:1px solid #fde68a;">
+                                <tr>
+                                    <td style="padding:14px 18px;">
+                                        <p style="margin:0 0 6px 0; font-size:13px; color:#92400e; font-weight:700;">¿Necesitas ayuda? Contáctanos:</p>
+                                        <p style="margin:0 0 4px 0; font-size:14px; color:#374151;">
+                                            📞 WhatsApp: <a href="https://wa.me/573004218146" style="color:#d97706; text-decoration:none; font-weight:600;">300 421 8146</a>
+                                        </p>
+                                        <p style="margin:0; font-size:14px; color:#374151;">
+                                            ✉️ Correo: <a href="mailto:Linajeacademia@gmail.com" style="color:#d97706; text-decoration:none; font-weight:600;">Linajeacademia@gmail.com</a>
+                                        </p>
+                                    </td>
+                                </tr>
+                            </table>
                         </td>
                     </tr>
 
@@ -43,10 +56,10 @@
                     <tr>
                         <td style="padding: 25px 40px; border-top: 2px solid #f3f4f6; background-color: #fafafa; text-align: center;">
                             <p style="color: #9ca3af; font-size: 12px; margin: 0 0 6px 0;">
-                                Este es un correo automático, por favor no responder a este mensaje.
+                                Este es un correo automático, por favor no responder directamente a este mensaje.
                             </p>
                             <p style="color: #9ca3af; font-size: 12px; margin: 0;">
-                                &copy; {{ date('Y') }} Academia Linaje. Todos los derechos reservados.
+                                &copy; {{ date('Y') }} Academia Linaje — <a href="https://academialinaje.com" style="color:#d97706; text-decoration:none;">academialinaje.com</a>
                             </p>
                         </td>
                     </tr>

@@ -71,7 +71,8 @@ class EnrollmentService
             'birth_place' => $data['birth_place'] ?? null,
             'birth_date' => $data['birth_date'],
             'gender' => $data['gender'],
-            'parent_id' => $parentId, // Vincular con el responsable
+            'parent_id' => $parentId,
+            'email_verified_at' => Carbon::now(), // Menores creados por admin — auto-verificados
         ]);
 
         // Crear perfil de estudiante con datos musicales
@@ -260,6 +261,11 @@ class EnrollmentService
             // 1. Crear usuario responsable (que también es el estudiante)
             $responsible = $this->createResponsible($data['responsable'], true);
 
+            // Enviar correo de verificación (registro público — no auto-verificado)
+            if ($responsible->email) {
+                $responsible->sendEmailVerificationNotification();
+            }
+
             // 2. Asignar rol de estudiante
             $this->assignRole($responsible, 'Estudiante');
 
@@ -308,6 +314,11 @@ class EnrollmentService
         return DB::transaction(function () use ($data) {
             // 1. Crear usuario responsable (padre/madre)
             $responsible = $this->createResponsible($data['responsable']);
+
+            // Enviar correo de verificación al responsable (registro público)
+            if ($responsible->email) {
+                $responsible->sendEmailVerificationNotification();
+            }
 
             // 2. Asignar rol de padre/madre
             $this->assignRole($responsible, 'Padre/Madre');

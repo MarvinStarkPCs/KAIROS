@@ -62,6 +62,6 @@
     </table>
 
     <p style="font-size: 15px; color: #374151; margin: 0; line-height: 1.6;">
-        Si tienes alguna pregunta o necesitas asistencia, no dudes en contactarnos.
+        Si tienes alguna pregunta, escríbenos al WhatsApp <a href="https://wa.me/573004218146" style="color:#d97706;">300 421 8146</a> o al correo <a href="mailto:Linajeacademia@gmail.com" style="color:#d97706;">Linajeacademia@gmail.com</a>.
     </p>
 @endsection

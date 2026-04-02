@@ -384,6 +384,7 @@ class UserController extends Controller
             'birth_date' => $validated['birth_date'] ?? null,
             'gender' => $validated['gender'] ?? null,
             'mobile' => $validated['mobile'] ?? null,
+            'email_verified_at' => now(), // Creado por admin — auto-verificado
         ]);
 
         if ($validated['roles'] ?? []) {

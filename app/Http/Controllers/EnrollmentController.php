@@ -2,19 +2,24 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\EnrollmentWelcome;
 use App\Models\Enrollment;
 use App\Models\AcademicProgram;
 use App\Models\Schedule;
 use App\Models\ScheduleEnrollment;
 use App\Models\User;
 use App\Models\Payment;
+use App\Services\EnrollmentService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Carbon\Carbon;
 
 class EnrollmentController extends Controller
 {
+    public function __construct(protected EnrollmentService $enrollmentService) {}
+
     public function index(Request $request)
     {
         $query = Enrollment::with(['student', 'program'])
@@ -135,11 +140,37 @@ class EnrollmentController extends Controller
         $scheduleId = $validated['schedule_id'] ?? null;
         unset($validated['schedule_id']); // Remove from enrollment data
 
+        // Si el status solicitado es 'active', se crea en 'waiting' hasta que
+        // se registre el pago — Payment::addTransaction() la activa automáticamente
+        $requestedActive = $validated['status'] === 'active';
+        if ($requestedActive) {
+            $validated['status'] = 'waiting';
+        }
+
         $enrollment = Enrollment::create($validated);
 
-        // Generar el primer pago mensual automáticamente si la inscripción es activa
-        if ($validated['status'] === 'active') {
-            $this->generateMonthlyPayment($enrollment);
+        // Generar el pago pendiente para que el admin pueda registrarlo
+        $payment = null;
+        if ($requestedActive) {
+            $payment = $this->generateMonthlyPayment($enrollment);
+        }
+
+        // Enviar correo de bienvenida si se generó el pago
+        if ($payment) {
+            try {
+                $enrollment->load('student');
+                $student = $enrollment->student;
+                $isMinor = (bool) $student->parent_id;
+                $responsible = $isMinor ? User::find($student->parent_id) : $student;
+
+                if ($responsible?->email) {
+                    Mail::to($responsible->email)->send(
+                        new EnrollmentWelcome($responsible, [$payment], $isMinor)
+                    );
+                }
+            } catch (\Exception $e) {
+                \Log::error("Error enviando correo de bienvenida (inscripción #{$enrollment->id}): {$e->getMessage()}");
+            }
         }
 
         // Si se seleccionó un horario, inscribir al estudiante en ese horario
@@ -172,12 +203,18 @@ class EnrollmentController extends Controller
                     'status' => 'enrolled',
                 ]);
 
-                flash_success('Inscripción creada exitosamente y estudiante inscrito en el horario seleccionado');
+                $msg = $requestedActive
+                    ? 'Inscripción en espera — se activará al registrar el pago. Estudiante inscrito en el horario.'
+                    : 'Inscripción creada exitosamente y estudiante inscrito en el horario seleccionado';
+                flash_success($msg);
             } else {
                 flash_success('Inscripción al programa creada exitosamente (el estudiante ya estaba inscrito en el horario)');
             }
         } else {
-            flash_success('Inscripción creada exitosamente');
+            $msg = $requestedActive
+                ? 'Inscripción en espera — se activará automáticamente al registrar el pago.'
+                : 'Inscripción creada exitosamente';
+            flash_success($msg);
         }
 
         return redirect()->route('inscripciones.index');
@@ -421,6 +458,27 @@ class EnrollmentController extends Controller
     }
 
     /**
+     * Generar pago del mes actual si no existe (solo usuario ID 1)
+     */
+    public function generatePayment(Enrollment $enrollment)
+    {
+        if (auth()->id() !== 1) {
+            abort(403);
+        }
+
+        $enrollment->load('program');
+        $payment = $this->generateMonthlyPayment($enrollment);
+
+        if ($payment) {
+            flash_success('Pago del mes generado exitosamente.');
+        } else {
+            flash_info('Ya existe un pago pendiente para este mes.');
+        }
+
+        return redirect()->back();
+    }
+
+    /**
      * Obtener estudiantes disponibles para un programa
      */
     public function availableStudents(AcademicProgram $program)
@@ -442,28 +500,40 @@ class EnrollmentController extends Controller
     /**
      * Generar pago mensual para una inscripción
      */
-    private function generateMonthlyPayment(Enrollment $enrollment): void
+    private function generateMonthlyPayment(Enrollment $enrollment): ?Payment
     {
-        // Cargar el programa para obtener el monthly_fee
         $program = $enrollment->program;
+        $student = User::with('studentProfile')->find($enrollment->student_id);
+        $modality = $student->studentProfile?->modality;
 
-        // Verificar que el programa tenga un monthly_fee configurado
-        if (!$program->monthly_fee || $program->monthly_fee <= 0) {
-            return; // No generar pago si no hay tarifa mensual
-        }
-
-        // Calcular la fecha de vencimiento (día 5 del próximo mes)
-        // Si estamos entre el día 1 y 5 del mes, el vencimiento es del mes actual
-        $today = Carbon::today();
-        $dueDate = Carbon::today();
-
-        if ($today->day > 5) {
-            // Si ya pasó el día 5, el vencimiento es el día 5 del próximo mes
-            $dueDate = $today->copy()->addMonth()->day(5);
+        // Determinar monto según modalidad o fallback a monthly_fee del programa
+        if ($modality) {
+            $siblingsCount = 1;
+            if ($student->parent_id) {
+                $siblingsCount = User::where('parent_id', $student->parent_id)
+                    ->whereHas('programEnrollments', fn($q) => $q->whereIn('status', ['active', 'waiting']))
+                    ->count();
+            }
+            $paymentInfo    = $this->enrollmentService->getPaymentAmount($modality, $siblingsCount);
+            $amount         = $paymentInfo['amount'];
+            $originalAmount = $paymentInfo['original_amount'];
+            $discountPct    = $paymentInfo['discount_percentage'] > 0 ? $paymentInfo['discount_percentage'] : null;
+            $discountAmount = $paymentInfo['discount_amount'] > 0 ? $paymentInfo['discount_amount'] : null;
         } else {
-            // Si estamos entre el 1 y el 5, el vencimiento es el día 5 de este mes
-            $dueDate = $today->copy()->day(5);
+            if (!$program->monthly_fee || $program->monthly_fee <= 0) {
+                return null;
+            }
+            $amount         = (float) $program->monthly_fee;
+            $originalAmount = $amount;
+            $discountPct    = null;
+            $discountAmount = null;
         }
+
+        // Fecha de vencimiento: día 5 del mes actual o del siguiente
+        $today   = Carbon::today();
+        $dueDate = $today->day > 5
+            ? $today->copy()->addMonth()->day(5)
+            : $today->copy()->day(5);
 
         // Verificar si ya existe un pago para este mes
         $existingPayment = Payment::where('student_id', $enrollment->student_id)
@@ -474,23 +544,33 @@ class EnrollmentController extends Controller
             ->exists();
 
         if ($existingPayment) {
-            return; // Ya existe un pago para este mes
+            return null;
         }
 
-        // Crear el pago mensual
-        Payment::create([
-            'student_id' => $enrollment->student_id,
-            'program_id' => $program->id,
-            'enrollment_id' => $enrollment->id,
-            'concept' => "Mensualidad {$program->name} - " . $dueDate->locale('es')->isoFormat('MMMM YYYY'),
-            'payment_type' => 'single',
-            'amount' => $program->monthly_fee,
-            'original_amount' => $program->monthly_fee,
-            'paid_amount' => 0,
-            'remaining_amount' => $program->monthly_fee,
-            'due_date' => $dueDate,
-            'status' => 'pending',
-            'recorded_by' => auth()->id(),
+        $concept = "Mensualidad {$program->name} — " . $dueDate->locale('es')->isoFormat('MMMM YYYY');
+        if ($modality) {
+            $concept .= " ({$modality})";
+        }
+        if ($discountPct) {
+            $concept .= " — Descuento familiar {$discountPct}%";
+        }
+
+        return Payment::create([
+            'student_id'          => $enrollment->student_id,
+            'program_id'          => $program->id,
+            'enrollment_id'       => $enrollment->id,
+            'concept'             => $concept,
+            'payment_type'        => 'single',
+            'modality'            => $modality,
+            'amount'              => $amount,
+            'original_amount'     => $originalAmount,
+            'discount_percentage' => $discountPct,
+            'discount_amount'     => $discountAmount,
+            'paid_amount'         => 0,
+            'remaining_amount'    => $amount,
+            'due_date'            => $dueDate,
+            'status'              => 'pending',
+            'recorded_by'         => auth()->id(),
         ]);
     }
 }

@@ -453,7 +453,7 @@ export default function Create() {
                                         </div>
 
                                         <div>
-                                            <Label htmlFor="experience_years">Anos de Experiencia</Label>
+                                            <Label htmlFor="experience_years">Años de Experiencia</Label>
                                             <Input
                                                 id="experience_years"
                                                 type="number"

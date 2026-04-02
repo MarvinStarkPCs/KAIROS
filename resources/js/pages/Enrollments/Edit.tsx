@@ -10,7 +10,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import { ArrowLeft, Save, Clock, MapPin, User as UserIcon, ShieldCheck, BookOpen } from 'lucide-react';
+import { ArrowLeft, Save, Clock, MapPin, User as UserIcon, ShieldCheck, BookOpen, BadgeDollarSign } from 'lucide-react';
 import { FormEventHandler } from 'react';
 
 interface Schedule {
@@ -112,6 +112,10 @@ export default function Edit({ enrollment, schedules, currentScheduleEnrollment,
         postProgram(`/matriculas/${enrollment.id}/change-program`, { preserveScroll: true });
     };
 
+    const handleGeneratePayment = () => {
+        router.post(`/matriculas/${enrollment.id}/generate-payment`, {}, { preserveScroll: true });
+    };
+
     return (
         <AppLayout>
             <Head title="Editar Matrícula" />
@@ -161,6 +165,27 @@ export default function Edit({ enrollment, schedules, currentScheduleEnrollment,
                                     </SelectContent>
                                 </Select>
                             </div>
+                        </CardContent>
+                    </Card>
+                )}
+
+                {/* Generar pago del mes — solo visible para usuario ID 1 */}
+                {authId === 1 && (
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2 text-base">
+                                <BadgeDollarSign className="h-4 w-4" />
+                                Generar pago del mes actual
+                            </CardTitle>
+                            <CardDescription>
+                                Genera el pago pendiente del mes actual si el estudiante aún no lo tiene.
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <Button variant="outline" onClick={handleGeneratePayment}>
+                                <BadgeDollarSign className="mr-2 h-4 w-4" />
+                                Generar pago del mes
+                            </Button>
                         </CardContent>
                     </Card>
                 )}

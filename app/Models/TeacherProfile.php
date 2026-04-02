@@ -10,7 +10,7 @@ use Spatie\Activitylog\Traits\LogsActivity;
 
 class TeacherProfile extends Model
 {
-    use HasFactory, LogsActivity;
+    use Ha sFactory, LogsActivity;
 
     /**
      * The attributes that are mass assignable.

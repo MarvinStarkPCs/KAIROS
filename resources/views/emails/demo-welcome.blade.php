@@ -116,8 +116,9 @@
             <td align="center" style="padding: 20px;">
                 <p style="margin: 0 0 8px 0; color: #111827; font-size: 16px; font-weight: bold;">¿Necesitas ayuda?</p>
                 <p style="margin: 0; color: #6b7280; font-size: 14px; line-height: 1.6;">
-                    Estamos aquí para ti. Responde este correo o contáctanos:<br>
-                    <strong style="color: #f59e0b; font-size: 16px;">📞 +57 (123) 456-7890</strong>
+                    Estamos aquí para ti. Escríbenos:<br>
+                    <a href="https://wa.me/573004218146" style="color:#d97706; font-weight:700; font-size:15px; text-decoration:none;">📞 WhatsApp: 300 421 8146</a><br>
+                    <a href="mailto:Linajeacademia@gmail.com" style="color:#d97706; font-size:14px; text-decoration:none;">✉️ Linajeacademia@gmail.com</a>
                 </p>
             </td>
         </tr>
