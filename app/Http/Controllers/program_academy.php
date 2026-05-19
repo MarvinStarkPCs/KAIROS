@@ -65,7 +65,7 @@ class program_academy extends Controller
         // Estadísticas generales
         $stats = [
             'total_programs' => AcademicProgram::count(),
-            'active_programs' => AcademicProgram::where('status', 'active')->count(),
+            'active_programs' => AcademicProgram::active()->count(),
             'total_students' => \App\Models\User::whereHas('roles', function($q) {
                 $q->where('name', 'Estudiante');
             })->count(),
@@ -229,7 +229,7 @@ class program_academy extends Controller
     public function getSchedules(AcademicProgram $program)
     {
         $schedules = $program->schedules()
-            ->where('status', 'active')
+            ->active()
             ->with('professor')
             ->withCount(['enrollments as enrolled_count' => function ($query) {
                 $query->where('status', 'enrolled');

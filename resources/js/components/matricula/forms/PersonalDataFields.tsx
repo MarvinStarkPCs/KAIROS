@@ -30,6 +30,8 @@ export interface PersonalDataFieldsProps {
     onChange: (field: string, value: string) => void;
     includeEmail?: boolean;
     emailRequired?: boolean;
+    emailLabel?: string;
+    emailHelper?: string;
 }
 
 /**
@@ -42,7 +44,9 @@ export function PersonalDataFields({
     errors = {},
     onChange,
     includeEmail = false,
-    emailRequired = false
+    emailRequired = false,
+    emailLabel,
+    emailHelper,
 }: PersonalDataFieldsProps) {
     const getFieldName = (field: string) => namePrefix ? `${namePrefix}.${field}` : field;
 
@@ -80,24 +84,6 @@ export function PersonalDataFields({
                     {errors.last_name && <InputError message={errors.last_name} />}
                 </div>
             </div>
-
-            {/* Email (opcional) */}
-            {includeEmail && (
-                <div>
-                    <Label htmlFor={getFieldName('email')}>
-                        Correo Electrónico {emailRequired && '*'}
-                    </Label>
-                    <Input
-                        id={getFieldName('email')}
-                        type="email"
-                        value={data.email || ''}
-                        onChange={(e) => onChange('email', e.target.value)}
-                        placeholder="correo@ejemplo.com"
-                        autoComplete="email"
-                    />
-                    {errors.email && <InputError message={errors.email} />}
-                </div>
-            )}
 
             {/* Documento */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -159,6 +145,27 @@ export function PersonalDataFields({
                 onChange={(value) => onChange('gender', value)}
                 error={errors.gender}
             />
+
+            {/* Email (al final) */}
+            {includeEmail && (
+                <div>
+                    <Label htmlFor={getFieldName('email')}>
+                        {emailLabel ?? `Correo Electrónico${emailRequired ? ' *' : ''}`}
+                    </Label>
+                    <Input
+                        id={getFieldName('email')}
+                        type="email"
+                        value={data.email || ''}
+                        onChange={(e) => onChange('email', e.target.value)}
+                        placeholder="correo@ejemplo.com"
+                        autoComplete="email"
+                    />
+                    {emailHelper && (
+                        <p className="text-xs text-muted-foreground mt-1">{emailHelper}</p>
+                    )}
+                    {errors.email && <InputError message={errors.email} />}
+                </div>
+            )}
         </div>
     );
 }

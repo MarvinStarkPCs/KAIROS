@@ -1,13 +1,18 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { MusicalDataFields } from '@/components/matricula/forms/MusicalDataFields';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import InputError from '@/components/input-error';
 import { ProgramSelector } from '@/components/matricula/forms/ProgramSelector';
-import type { Responsable, AcademicProgram, FormErrors, DatosMusicales } from '@/types/matricula';
+import type { Responsable, AcademicProgram, FormErrors } from '@/types/matricula';
+import { Music2 } from 'lucide-react';
 
 export interface Step3AdultMusicalFormProps {
     data: Responsable;
     programs: AcademicProgram[];
     errors: FormErrors;
     onChange: <K extends keyof Responsable>(field: K, value: Responsable[K]) => void;
+    getModalityPrice?: (modality: string) => number | null;
+    formatPrice?: (price: number) => string;
 }
 
 /**
@@ -18,52 +23,120 @@ export function Step3AdultMusicalForm({
     data,
     programs,
     errors,
-    onChange
+    onChange,
+    getModalityPrice,
+    formatPrice,
 }: Step3AdultMusicalFormProps) {
-    // Construir objeto DatosMusicales desde Responsable
-    const musicalData: DatosMusicales = {
-        plays_instrument: data.plays_instrument,
-        instruments_played: data.instruments_played,
-        has_music_studies: data.has_music_studies,
-        music_schools: data.music_schools,
-        desired_instrument: data.desired_instrument,
-        modality: data.modality,
-        current_level: data.current_level
-    };
-
-    const handleMusicalDataChange = (field: string, value: string | number | boolean) => {
-        onChange(field as keyof Responsable, value as any);
-    };
+    const modalityPrice = getModalityPrice ? getModalityPrice('Linaje Big') : null;
 
     return (
-        <Card>
-            <CardHeader>
-                <CardTitle>Información Musical</CardTitle>
-                <CardDescription>
-                    Complete la información sobre su experiencia musical y seleccione su programa
+        <Card className="border-2 shadow-xl hover:shadow-2xl transition-shadow duration-300">
+            <CardHeader className="bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/30 border-b">
+                <div className="flex items-center gap-3 mb-2">
+                    <div className="p-2 bg-amber-100 dark:bg-amber-900/40 rounded-lg">
+                        <Music2 className="h-5 w-5 text-amber-700 dark:text-amber-400" />
+                    </div>
+                    <CardTitle className="text-xl sm:text-2xl">Datos Musicales y Programa</CardTitle>
+                </div>
+                <CardDescription className="text-sm sm:text-base">
+                    Completa tu información musical y selecciona el programa al que deseas inscribirte
                 </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-6">
-                {/* Datos Musicales - Usando componente reutilizable */}
-                <MusicalDataFields
-                    namePrefix="responsable"
-                    data={musicalData}
-                    errors={{
-                        plays_instrument: errors['responsable.plays_instrument'],
-                        instruments_played: errors['responsable.instruments_played'],
-                        has_music_studies: errors['responsable.has_music_studies'],
-                        music_schools: errors['responsable.music_schools'],
-                        desired_instrument: errors['responsable.desired_instrument'],
-                        modality: errors['responsable.modality'],
-                        current_level: errors['responsable.current_level']
-                    }}
-                    onChange={handleMusicalDataChange}
-                    birthDate={data.birth_date}
-                />
+            <CardContent className="space-y-6 pt-6">
 
-                {/* Separador */}
-                <div className="border-t pt-6">
-                    {/* Selector de Programa - Usando componente reutilizable */}
+                {/* Experiencia Musical */}
+                <div className="space-y-4">
+                    <h3 className="font-semibold text-lg border-b pb-2">Experiencia Musical</h3>
+
+                    <div>
+                        <Label>¿Ejecutas algún instrumento?</Label>
+                        <div className="flex gap-4 mt-2">
+                            <label className="flex items-center gap-2 cursor-pointer">
+                                <input
+                                    type="radio"
+                                    checked={data.plays_instrument === true}
+                                    onChange={() => onChange('plays_instrument', true)}
+                                    className="h-4 w-4 text-amber-600"
+                                />
+                                <span>Sí</span>
+                            </label>
+                            <label className="flex items-center gap-2 cursor-pointer">
+                                <input
+                                    type="radio"
+                                    checked={data.plays_instrument === false}
+                                    onChange={() => onChange('plays_instrument', false)}
+                                    className="h-4 w-4 text-amber-600"
+                                />
+                                <span>No</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    {data.plays_instrument && (
+                        <div>
+                            <Label>Indique cuál o cuáles instrumentos</Label>
+                            <Textarea
+                                value={data.instruments_played || ''}
+                                onChange={(e) => onChange('instruments_played', e.target.value)}
+                                placeholder="Ej: Piano, Guitarra, Canto"
+                                rows={2}
+                            />
+                        </div>
+                    )}
+
+                    <div>
+                        <Label>¿Tienes estudios formales de música?</Label>
+                        <div className="flex gap-4 mt-2">
+                            <label className="flex items-center gap-2 cursor-pointer">
+                                <input
+                                    type="radio"
+                                    checked={data.has_music_studies === true}
+                                    onChange={() => onChange('has_music_studies', true)}
+                                    className="h-4 w-4 text-amber-600"
+                                />
+                                <span>Sí</span>
+                            </label>
+                            <label className="flex items-center gap-2 cursor-pointer">
+                                <input
+                                    type="radio"
+                                    checked={data.has_music_studies === false}
+                                    onChange={() => onChange('has_music_studies', false)}
+                                    className="h-4 w-4 text-amber-600"
+                                />
+                                <span>No</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    {data.has_music_studies && (
+                        <div>
+                            <Label>Nombre(s) de escuela(s)</Label>
+                            <Textarea
+                                value={data.music_schools || ''}
+                                onChange={(e) => onChange('music_schools', e.target.value)}
+                                placeholder="Ej: Conservatorio Nacional"
+                                rows={2}
+                            />
+                        </div>
+                    )}
+
+                    {/* Modalidad — display estático */}
+                    <div>
+                        <Label>Modalidad</Label>
+                        <div className="p-3 bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 rounded-md">
+                            <p className="font-medium text-green-800 dark:text-green-300">Linaje Big (18+ años)</p>
+                            {modalityPrice !== null && formatPrice && (
+                                <p className="text-sm text-primary font-medium mt-1">
+                                    Valor de matrícula: {formatPrice(modalityPrice)}
+                                </p>
+                            )}
+                        </div>
+                    </div>
+                </div>
+
+                {/* Programa Académico */}
+                <div className="space-y-4 border-t pt-6">
+                    <h3 className="font-semibold text-lg border-b pb-2">Programa Académico</h3>
                     <ProgramSelector
                         programs={programs}
                         selectedProgramId={data.program_id}

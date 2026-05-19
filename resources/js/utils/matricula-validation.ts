@@ -54,12 +54,11 @@ export const validateAllStudents = (students: Student[]): boolean => {
 };
 
 // Validar datos musicales del adulto
-// Nota: modality ya no se requiere porque los adultos son automáticamente "Linaje Big"
 export const validateAdultMusicalData = (data: MatriculaFormData['responsable']): boolean => {
     return !!(
         data.program_id
+        // modality es auto-asignada (Linaje Big)
         // schedule_id es opcional
-        // modality es automático (Linaje Big) para adultos
     );
 };
 

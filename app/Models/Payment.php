@@ -103,6 +103,13 @@ class Payment extends Model
         return $this->belongsTo(User::class, 'recorded_by');
     }
 
+    // Scopes de estado
+    public function scopePending($query) { return $query->where('status', 'pending'); }
+    public function scopeCompleted($query) { return $query->where('status', 'completed'); }
+    public function scopeOverdue($query) { return $query->where('status', 'overdue'); }
+    public function scopeCancelled($query) { return $query->where('status', 'cancelled'); }
+    public function scopeTopLevel($query) { return $query->whereNull('parent_payment_id'); }
+
     // Verificar si el pago está pendiente
     public function isPending(): bool
     {

@@ -7,6 +7,7 @@ use App\Models\AcademicProgram;
 use App\Models\ScheduleSetting;
 use App\Models\User;
 use App\Models\ScheduleEnrollment;
+use App\Http\Requests\StoreScheduleRequest;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
@@ -46,17 +47,20 @@ class ScheduleController extends Controller
             ->orderBy('name')
             ->get(['id', 'name', 'email']);
 
+        $allPrograms = AcademicProgram::orderBy('name')->get(['id', 'name', 'color']);
+
         return Inertia::render('Schedules/Index', [
             'schedules' => $schedules,
             'stats' => $stats,
             'allProfessors' => $allProfessors,
             'allStudents' => $allStudents,
+            'allPrograms' => $allPrograms,
         ]);
     }
 
     public function create()
     {
-        $programs = AcademicProgram::where('status', 'active')
+        $programs = AcademicProgram::active()
             ->orderBy('name')
             ->get(['id', 'name']);
 
@@ -70,39 +74,9 @@ class ScheduleController extends Controller
         ]);
     }
 
-    public function store(Request $request)
+    public function store(StoreScheduleRequest $request)
     {
-        $validated = $request->validate([
-            'academic_program_id' => ['required', 'exists:academic_programs,id'],
-            'professor_id' => ['nullable', 'exists:users,id'],
-            'name' => ['required', 'string', 'max:255'],
-            'description' => ['nullable', 'string', 'max:1000'],
-            'days_of_week' => ['required', 'string'], // "lunes,miércoles,viernes"
-            'start_time' => ['required', 'date_format:H:i'],
-            'end_time' => ['required', 'date_format:H:i', 'after:start_time'],
-            'classroom' => ['nullable', 'string', 'max:100'],
-            'semester' => ['nullable', 'string', 'max:50'],
-            'max_students' => ['required', 'integer', 'min:1', 'max:200'],
-            'status' => ['required', Rule::in(['active', 'inactive', 'completed'])],
-        ], [
-            'academic_program_id.required' => 'El programa académico es obligatorio',
-            'academic_program_id.exists' => 'El programa académico seleccionado no existe',
-            'professor_id.exists' => 'El profesor seleccionado no existe',
-            'name.required' => 'El nombre del horario es obligatorio',
-            'name.max' => 'El nombre no puede superar los 255 caracteres',
-            'days_of_week.required' => 'Los días de la semana son obligatorios',
-            'start_time.required' => 'La hora de inicio es obligatoria',
-            'start_time.date_format' => 'La hora de inicio debe tener formato HH:MM',
-            'end_time.required' => 'La hora de fin es obligatoria',
-            'end_time.date_format' => 'La hora de fin debe tener formato HH:MM',
-            'end_time.after' => 'La hora de fin debe ser posterior a la hora de inicio',
-            'max_students.required' => 'El cupo máximo es obligatorio',
-            'max_students.integer' => 'El cupo máximo debe ser un número entero',
-            'max_students.min' => 'El cupo máximo debe ser al menos 1',
-            'max_students.max' => 'El cupo máximo no puede superar los 200 estudiantes',
-            'status.required' => 'El estado es obligatorio',
-            'status.in' => 'El estado debe ser: activo, inactivo o completado',
-        ]);
+        $validated = $request->validated();
 
         $scheduleSetting = ScheduleSetting::first();
 
@@ -122,97 +96,6 @@ class ScheduleController extends Controller
 
         return redirect()->route('horarios.index');
     }
-
-
-// public function store(Request $request)
-// {
-//     // 🧠 1. Verificar qué datos llegan del formulario
-//     Log::info('Iniciando store de horario', ['input' => $request->all()]);
-//     dump('Datos recibidos:', $request->all());
-
-//     try {
-//         // 🧩 2. Validar los datos
-//         $validated = $request->validate([
-//             'academic_program_id' => ['required', 'exists:academic_programs,id'],
-//             'professor_id' => ['nullable', 'exists:users,id'],
-//             'name' => ['required', 'string', 'max:255'],
-//             'description' => ['nullable', 'string', 'max:1000'],
-//             'days_of_week' => ['required', 'string'],
-//             'start_time' => ['required', 'date_format:H:i'],
-//             'end_time' => ['required', 'date_format:H:i', 'after:start_time'],
-//             'classroom' => ['nullable', 'string', 'max:100'],
-//             'semester' => ['nullable', 'string', 'max:50'],
-//             'max_students' => ['required', 'integer', 'min:1', 'max:200'],
-//             'status' => ['required', Rule::in(['active', 'inactive', 'completed'])],
-//         ], [
-//             'academic_program_id.required' => 'El programa académico es obligatorio',
-//             'academic_program_id.exists' => 'El programa académico seleccionado no existe',
-//             'professor_id.exists' => 'El profesor seleccionado no existe',
-//             'name.required' => 'El nombre del horario es obligatorio',
-//             'name.max' => 'El nombre no puede superar los 255 caracteres',
-//             'days_of_week.required' => 'Los días de la semana son obligatorios',
-//             'start_time.required' => 'La hora de inicio es obligatoria',
-//             'start_time.date_format' => 'La hora de inicio debe tener formato HH:MM',
-//             'end_time.required' => 'La hora de fin es obligatoria',
-//             'end_time.date_format' => 'La hora de fin debe tener formato HH:MM',
-//             'end_time.after' => 'La hora de fin debe ser posterior a la hora de inicio',
-//             'max_students.required' => 'El cupo máximo es obligatorio',
-//             'max_students.integer' => 'El cupo máximo debe ser un número entero',
-//             'max_students.min' => 'El cupo máximo debe ser al menos 1',
-//             'max_students.max' => 'El cupo máximo no puede superar los 200 estudiantes',
-//             'status.required' => 'El estado es obligatorio',
-//             'status.in' => 'El estado debe ser: activo, inactivo o completado',
-//         ]);
-
-//         dump('Datos validados correctamente:', $validated);
-//         Log::info('Datos validados correctamente', ['validated' => $validated]);
-
-//         // 🧱 3. Validar solapamiento de horarios del programa
-//         Log::info('Validando solapamiento de programa');
-//         $this->validateProgramOverlap($validated, null);
-
-//         // 🧱 4. Validar solapamiento de horarios del profesor (si existe)
-//         if ($request->filled('professor_id')) {
-//             Log::info('Validando solapamiento de profesor', ['professor_id' => $request->professor_id]);
-//             $this->validateProfessorOverlap($validated, null);
-//         }
-
-//         // 🧩 5. Verificar si el modelo permite la asignación masiva
-//         $fillable = (new Schedule())->getFillable();
-//         Log::info('Campos fillable del modelo Schedule', ['fillable' => $fillable]);
-//         dump('Campos fillable del modelo:', $fillable);
-
-//         // 🧠 6. Intentar crear el registro
-//         $schedule = Schedule::create($validated);
-//         Log::info('Horario creado correctamente', ['schedule' => $schedule]);
-//         dump('Horario guardado exitosamente:', $schedule->toArray());
-
-//         flash_success('Horario creado exitosamente');
-
-//         // 🧭 7. Redirigir al índice
-//         Log::info('Redirigiendo a horarios.index');
-//         return redirect()->route('horarios.index');
-
-//     } catch (\Illuminate\Validation\ValidationException $e) {
-//         // 🚨 Error de validación
-//         Log::error('Error de validación al crear horario', [
-//             'errors' => $e->errors(),
-//             'message' => $e->getMessage()
-//         ]);
-//         dd('Error de validación:', $e->errors());
-
-//     } catch (\Exception $e) {
-//         // 🚨 Cualquier otro error general
-//         Log::error('Error inesperado al crear horario', [
-//             'mensaje' => $e->getMessage(),
-//             'linea' => $e->getLine(),
-//             'archivo' => $e->getFile(),
-//             'trace' => $e->getTraceAsString(),
-//         ]);
-//         dd('Error inesperado:', $e->getMessage(), 'Línea:', $e->getLine());
-//     }
-// }
-
 
 
     public function show(Schedule $schedule)
@@ -244,7 +127,7 @@ class ScheduleController extends Controller
 
     public function edit(Schedule $schedule)
     {
-        $programs = AcademicProgram::where('status', 'active')
+        $programs = AcademicProgram::active()
             ->orderBy('name')
             ->get(['id', 'name']);
 
@@ -261,39 +144,9 @@ class ScheduleController extends Controller
         ]);
     }
 
-    public function update(Request $request, Schedule $schedule)
+    public function update(StoreScheduleRequest $request, Schedule $schedule)
     {
-        $validated = $request->validate([
-            'academic_program_id' => ['required', 'exists:academic_programs,id'],
-            'professor_id' => ['nullable', 'exists:users,id'],
-            'name' => ['required', 'string', 'max:255'],
-            'description' => ['nullable', 'string', 'max:1000'],
-            'days_of_week' => ['required', 'string'],
-            'start_time' => ['required', 'date_format:H:i'],
-            'end_time' => ['required', 'date_format:H:i', 'after:start_time'],
-            'classroom' => ['nullable', 'string', 'max:100'],
-            'semester' => ['nullable', 'string', 'max:50'],
-            'max_students' => ['required', 'integer', 'min:1', 'max:200'],
-            'status' => ['required', Rule::in(['active', 'inactive', 'completed'])],
-        ], [
-            'academic_program_id.required' => 'El programa académico es obligatorio',
-            'academic_program_id.exists' => 'El programa académico seleccionado no existe',
-            'professor_id.exists' => 'El profesor seleccionado no existe',
-            'name.required' => 'El nombre del horario es obligatorio',
-            'name.max' => 'El nombre no puede superar los 255 caracteres',
-            'days_of_week.required' => 'Los días de la semana son obligatorios',
-            'start_time.required' => 'La hora de inicio es obligatoria',
-            'start_time.date_format' => 'La hora de inicio debe tener formato HH:MM',
-            'end_time.required' => 'La hora de fin es obligatoria',
-            'end_time.date_format' => 'La hora de fin debe tener formato HH:MM',
-            'end_time.after' => 'La hora de fin debe ser posterior a la hora de inicio',
-            'max_students.required' => 'El cupo máximo es obligatorio',
-            'max_students.integer' => 'El cupo máximo debe ser un número entero',
-            'max_students.min' => 'El cupo máximo debe ser al menos 1',
-            'max_students.max' => 'El cupo máximo no puede superar los 200 estudiantes',
-            'status.required' => 'El estado es obligatorio',
-            'status.in' => 'El estado debe ser: activo, inactivo o completado',
-        ]);
+        $validated = $request->validated();
 
         $scheduleSetting = ScheduleSetting::first();
 
@@ -407,8 +260,7 @@ class ScheduleController extends Controller
         if ($request->filled('status')) {
             $query->where('status', $request->status);
         } else {
-            // Por defecto, solo mostrar horarios activos
-            $query->where('status', 'active');
+            $query->active();
         }
 
         if ($request->filled('semester')) {

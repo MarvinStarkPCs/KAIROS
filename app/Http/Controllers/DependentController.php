@@ -198,7 +198,7 @@ class DependentController extends Controller
 
         // Verificar que no tenga pagos pendientes
         $pendingPayments = $dependent->payments()
-            ->where('status', 'pending')
+            ->pending()
             ->count();
 
         if ($pendingPayments > 0) {

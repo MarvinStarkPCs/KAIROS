@@ -9,6 +9,7 @@ use App\Models\Schedule;
 use App\Models\ScheduleEnrollment;
 use App\Models\User;
 use App\Models\Payment;
+use App\Http\Requests\StoreEnrollmentRequest;
 use App\Services\EnrollmentService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
@@ -49,14 +50,14 @@ class EnrollmentController extends Controller
         // Estadísticas
         $stats = [
             'total_enrollments' => Enrollment::count(),
-            'active_enrollments' => Enrollment::where('status', 'active')->count(),
-            'waiting_list' => Enrollment::where('status', 'waiting')->count(),
-            'suspended' => Enrollment::where('status', 'suspended')->count(),
-            'withdrawn' => Enrollment::where('status', 'withdrawn')->count(),
+            'active_enrollments' => Enrollment::active()->count(),
+            'waiting_list' => Enrollment::waiting()->count(),
+            'suspended' => Enrollment::suspended()->count(),
+            'withdrawn' => Enrollment::withdrawn()->count(),
         ];
 
         // Listas para filtros (excluyendo programas demo)
-        $programs = AcademicProgram::where('status', 'active')
+        $programs = AcademicProgram::active()
             ->where('is_demo', false)
             ->orderBy('name')
             ->get(['id', 'name']);
@@ -76,11 +77,9 @@ class EnrollmentController extends Controller
 
     public function create()
     {
-        $programs = AcademicProgram::where('status', 'active')
+        $programs = AcademicProgram::active()
             ->where('is_demo', false)
-            ->withCount(['enrollments as active_count' => function ($query) {
-                $query->where('status', 'active');
-            }])
+            ->withCount(['enrollments as active_count' => fn ($query) => $query->active()])
             ->orderBy('name')
             ->get();
 
@@ -101,24 +100,9 @@ class EnrollmentController extends Controller
         ]);
     }
 
-    public function store(Request $request)
+    public function store(StoreEnrollmentRequest $request)
     {
-        $validated = $request->validate([
-            'student_id' => ['required', 'exists:users,id'],
-            'program_id' => ['required', 'exists:academic_programs,id'],
-            'schedule_id' => ['nullable', 'exists:schedules,id'],
-            'enrollment_date' => ['nullable', 'date'],
-            'status' => ['required', Rule::in(['active', 'waiting', 'withdrawn'])],
-        ], [
-            'student_id.required' => 'El estudiante es obligatorio',
-            'student_id.exists' => 'El estudiante seleccionado no existe',
-            'program_id.required' => 'El programa académico es obligatorio',
-            'program_id.exists' => 'El programa académico seleccionado no existe',
-            'schedule_id.exists' => 'El horario seleccionado no existe',
-            'enrollment_date.date' => 'La fecha de inscripción debe ser una fecha válida',
-            'status.required' => 'El estado es obligatorio',
-            'status.in' => 'El estado debe ser: activo, en espera o retirado',
-        ]);
+        $validated = $request->validated();
 
         // Verificar que el estudiante no esté ya inscrito en el mismo programa
         $existingEnrollment = Enrollment::where('student_id', $validated['student_id'])
@@ -267,9 +251,9 @@ class EnrollmentController extends Controller
 
         // Solo para usuario ID 1: pasar lista de programas con sus horarios activos
         $allPrograms = auth()->id() === 1
-            ? AcademicProgram::where('status', 'active')
+            ? AcademicProgram::active()
                 ->where('is_demo', false)
-                ->with(['schedules' => fn($q) => $q->where('status', 'active')->with('professor:id,name')->select('id', 'academic_program_id', 'name', 'days_of_week', 'start_time', 'end_time', 'classroom', 'professor_id')])
+                ->with(['schedules' => fn($q) => $q->active()->with('professor:id,name')->select('id', 'academic_program_id', 'name', 'days_of_week', 'start_time', 'end_time', 'classroom', 'professor_id')])
                 ->get(['id', 'name'])
             : collect();
 
@@ -540,7 +524,7 @@ class EnrollmentController extends Controller
             ->where('program_id', $program->id)
             ->where('enrollment_id', $enrollment->id)
             ->where('due_date', $dueDate)
-            ->where('status', 'pending')
+            ->pending()
             ->exists();
 
         if ($existingPayment) {

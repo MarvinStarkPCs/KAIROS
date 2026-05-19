@@ -68,8 +68,7 @@ export function ScheduleCalendar({
                 const response = await fetch(`/horarios-api/calendar-events?${queryParams}`);
                 const data = await response.json();
                 setEvents(data);
-            } catch (error) {
-                console.error('Error loading calendar events:', error);
+            } catch {
             } finally {
                 setLoading(false);
             }

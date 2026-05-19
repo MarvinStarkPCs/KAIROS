@@ -90,6 +90,7 @@ interface SchedulesIndexProps {
     stats: Stats;
     allProfessors: Professor[];
     allStudents: Student[];
+    allPrograms: AcademicProgram[];
 }
 
 const diasSemana = [
@@ -101,7 +102,7 @@ const diasSemana = [
     { nombre: 'Sábado', key: 'sábado' },
 ];
 
-export default function SchedulesIndex({ schedules, stats, allProfessors, allStudents }: SchedulesIndexProps) {
+export default function SchedulesIndex({ schedules, stats, allProfessors, allStudents, allPrograms }: SchedulesIndexProps) {
     const [currentWeek] = useState('Semana Actual');
     const [selectedSchedule, setSelectedSchedule] = useState<Schedule | null>(null);
     const [sheetOpen, setSheetOpen] = useState(false);
@@ -115,10 +116,8 @@ export default function SchedulesIndex({ schedules, stats, allProfessors, allStu
     const [filterProfessor, setFilterProfessor] = useState<string>('');
     const [filterStatus, setFilterStatus] = useState<string>('active');
 
-    // Obtener programas únicos de los horarios
-    const availablePrograms = Array.from(
-        new Map(schedules.map(s => [s.academic_program.id, s.academic_program])).values()
-    );
+    // Todos los programas vienen del backend
+    const availablePrograms = allPrograms;
 
     // Reset selected values when sheet opens
     useEffect(() => {

@@ -83,7 +83,6 @@ export default function CheckoutMultiple({ payments, totalAmount, wompiPublicKey
 
         script.onload = () => {
             setIsProcessing(false);
-            console.log('Wompi widget cargado para:', currentPayment.student.name);
 
             // Auto-abrir el modal
             const interval = setInterval(() => {

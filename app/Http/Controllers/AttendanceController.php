@@ -159,7 +159,7 @@ class AttendanceController extends Controller
         $alertas = $this->getStudentAlerts();
 
         // Get programs and professors for filters
-        $programs = AcademicProgram::where('status', 'active')
+        $programs = AcademicProgram::active()
             ->orderBy('name')
             ->get(['id', 'name']);
 

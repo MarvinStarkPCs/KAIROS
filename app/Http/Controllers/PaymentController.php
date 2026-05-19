@@ -9,6 +9,9 @@ use App\Models\Enrollment;
 use App\Models\PaymentSetting;
 use App\Mail\AbonoRegistrado;
 use App\Mail\PaymentConfirmed;
+use App\Http\Requests\StorePaymentRequest;
+use App\Http\Requests\StoreInstallmentsRequest;
+use App\Http\Requests\AddTransactionRequest;
 use App\Services\WompiService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
@@ -71,7 +74,7 @@ class PaymentController extends Controller
             return $payment;
         });
 
-        $programs = AcademicProgram::where('status', 'active')->orderBy('name')->get(['id', 'name']);
+        $programs = AcademicProgram::active()->orderBy('name')->get(['id', 'name']);
 
         return Inertia::render('Payments/Index', [
             'payments' => $payments,
@@ -87,7 +90,7 @@ class PaymentController extends Controller
     {
         // Cargar inscripciones activas con estudiante y programa
         $enrollments = Enrollment::with(['student', 'program'])
-            ->where('status', 'active')
+            ->active()
             ->get()
             ->map(function ($enrollment) {
                 return [
@@ -108,38 +111,9 @@ class PaymentController extends Controller
     /**
      * Store a new payment record
      */
-    public function store(Request $request)
+    public function store(StorePaymentRequest $request)
     {
-        $validated = $request->validate([
-            'student_id' => 'required|exists:users,id',
-            'program_id' => 'nullable|exists:academic_programs,id',
-            'enrollment_id' => 'nullable|exists:enrollments,id',
-            'concept' => 'required|string|max:255',
-            'payment_type' => 'nullable|in:single,partial',
-            'amount' => 'required|numeric|min:0',
-            'due_date' => 'required|date',
-            'status' => 'required|in:pending,completed,overdue,cancelled',
-            'payment_method' => 'nullable|string|max:50',
-            'reference_number' => 'nullable|string|max:100',
-            'notes' => 'nullable|string|max:500',
-        ], [
-            'student_id.required' => 'El estudiante es obligatorio',
-            'student_id.exists' => 'El estudiante seleccionado no existe',
-            'program_id.exists' => 'El programa seleccionado no existe',
-            'enrollment_id.exists' => 'La inscripción seleccionada no existe',
-            'concept.required' => 'El concepto del pago es obligatorio',
-            'concept.max' => 'El concepto no puede exceder 255 caracteres',
-            'amount.required' => 'El monto es obligatorio',
-            'amount.numeric' => 'El monto debe ser un número',
-            'amount.min' => 'El monto debe ser mayor o igual a 0',
-            'due_date.required' => 'La fecha de vencimiento es obligatoria',
-            'due_date.date' => 'La fecha debe ser válida',
-            'status.required' => 'El estado es obligatorio',
-            'status.in' => 'El estado debe ser: pendiente, completado, vencido o cancelado',
-            'payment_method.max' => 'El método de pago no puede exceder 50 caracteres',
-            'reference_number.max' => 'El número de referencia no puede exceder 100 caracteres',
-            'notes.max' => 'Las notas no pueden exceder 500 caracteres',
-        ]);
+        $validated = $request->validated();
 
         $validated['recorded_by'] = auth()->id();
         $validated['payment_type'] = $validated['payment_type'] ?? 'single';
@@ -171,7 +145,8 @@ class PaymentController extends Controller
         $payment->pending_balance = $payment->getPendingBalance();
 
         return Inertia::render('Payments/Show', [
-            'payment' => $payment,
+            'payment'     => $payment,
+            'canEditAbonos' => auth()->id() === 1,
         ]);
     }
 
@@ -185,7 +160,7 @@ class PaymentController extends Controller
 
         // Cargar inscripciones activas con estudiante y programa
         $enrollments = Enrollment::with(['student', 'program'])
-            ->where('status', 'active')
+            ->active()
             ->get()
             ->map(function ($enrollment) {
                 return [
@@ -199,8 +174,9 @@ class PaymentController extends Controller
             });
 
         return Inertia::render('Payments/Form', [
-            'payment' => $payment,
-            'enrollments' => $enrollments,
+            'payment'       => $payment,
+            'enrollments'   => $enrollments,
+            'canEditAbonos' => auth()->id() === 1,
         ]);
     }
 
@@ -295,44 +271,17 @@ class PaymentController extends Controller
         return redirect()->back();
     }
 
-    /**
-     * Generate invoice PDF (placeholder)
-     */
     public function generateInvoice(Payment $payment)
     {
-        // TODO: Implement PDF generation
-        return redirect()->back()
-            ->with('info', 'Generación de facturas próximamente');
+        abort(501, 'Generación de facturas no implementada');
     }
 
     /**
      * Create installment plan
      */
-    public function createInstallments(Request $request)
+    public function createInstallments(StoreInstallmentsRequest $request)
     {
-        $validated = $request->validate([
-            'student_id' => 'required|exists:users,id',
-            'program_id' => 'nullable|exists:academic_programs,id',
-            'enrollment_id' => 'nullable|exists:enrollments,id',
-            'concept' => 'required|string|max:255',
-            'total_amount' => 'required|numeric|min:0',
-            'number_of_installments' => 'required|integer|min:2|max:12',
-            'start_date' => 'required|date',
-            'modality' => 'nullable|string',
-        ], [
-            'student_id.required' => 'El estudiante es obligatorio',
-            'student_id.exists' => 'El estudiante seleccionado no existe',
-            'concept.required' => 'El concepto es obligatorio',
-            'total_amount.required' => 'El monto total es obligatorio',
-            'total_amount.numeric' => 'El monto debe ser un número',
-            'total_amount.min' => 'El monto debe ser mayor a 0',
-            'number_of_installments.required' => 'El número de cuotas es obligatorio',
-            'number_of_installments.integer' => 'El número de cuotas debe ser un entero',
-            'number_of_installments.min' => 'Debe haber al menos 2 cuotas',
-            'number_of_installments.max' => 'No puede haber más de 12 cuotas',
-            'start_date.required' => 'La fecha de inicio es obligatoria',
-            'start_date.date' => 'La fecha debe ser válida',
-        ]);
+        $validated = $request->validated();
 
         // Calcular descuento familiar si el estudiante tiene hermanos
         $student = User::findOrFail($validated['student_id']);
@@ -389,18 +338,9 @@ class PaymentController extends Controller
     /**
      * Add transaction (partial payment) to a payment
      */
-    public function addTransaction(Request $request, Payment $payment)
+    public function addTransaction(AddTransactionRequest $request, Payment $payment)
     {
-        $validated = $request->validate([
-            'amount' => 'required|numeric|min:0.01',
-            'payment_method' => 'required|string|max:50',
-            'notes' => 'nullable|string|max:500',
-        ], [
-            'amount.required' => 'El monto del abono es obligatorio',
-            'amount.numeric' => 'El monto debe ser un número',
-            'amount.min' => 'El monto debe ser mayor a 0',
-            'payment_method.required' => 'El método de pago es obligatorio',
-        ]);
+        $validated = $request->validated();
 
         // Validar que el monto no exceda el saldo pendiente
         $pendingBalance = $payment->getPendingBalance();
@@ -456,6 +396,56 @@ class PaymentController extends Controller
         }
 
         flash_success('Abono registrado exitosamente');
+        return redirect()->back();
+    }
+
+    /**
+     * Update an existing transaction (abono) — solo usuario id=1
+     */
+    public function updateTransaction(Request $request, Payment $payment, \App\Models\PaymentTransaction $paymentTransaction)
+    {
+        if (auth()->id() !== 1) {
+            flash_error('No tienes permiso para editar abonos.');
+            return redirect()->back();
+        }
+
+        if ($paymentTransaction->payment_id !== $payment->id) {
+            abort(404);
+        }
+
+        // Máximo permitido = total del pago menos lo que ya abonaron los OTROS abonos
+        $otherTransactionsTotal = $payment->transactions()
+            ->where('id', '!=', $paymentTransaction->id)
+            ->sum('amount');
+        $maxAllowed = (float) $payment->amount - (float) $otherTransactionsTotal;
+
+        $validated = $request->validate([
+            'amount'         => ['required', 'numeric', 'min:0.01', "max:{$maxAllowed}"],
+            'payment_method' => ['required', 'string', 'in:cash,transfer,credit_card,manual'],
+            'notes'          => ['nullable', 'string', 'max:500'],
+        ], [
+            'amount.required'         => 'El monto es obligatorio.',
+            'amount.min'              => 'El monto debe ser mayor a cero.',
+            'amount.max'              => 'El monto no puede superar el valor total del pago ($' . number_format($maxAllowed, 2) . ').',
+            'payment_method.required' => 'El método de pago es obligatorio.',
+            'payment_method.in'       => 'Método de pago no válido.',
+        ]);
+
+        $paymentTransaction->update($validated);
+
+        // Recalcular paid_amount y remaining_amount en el pago padre
+        $totalPaid                 = $payment->transactions()->sum('amount');
+        $payment->paid_amount      = $totalPaid;
+        $payment->remaining_amount = max(0, $payment->amount - $totalPaid);
+        if ($payment->remaining_amount <= 0) {
+            $payment->status       = 'completed';
+            $payment->payment_date = $payment->payment_date ?? now()->toDateString();
+        } else {
+            $payment->status = $payment->due_date < now()->toDateString() ? 'overdue' : 'pending';
+        }
+        $payment->save();
+
+        flash_success('Abono actualizado correctamente.');
         return redirect()->back();
     }
 

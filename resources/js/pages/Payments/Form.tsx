@@ -1,10 +1,12 @@
 import { Head, Link, useForm, router, usePage } from '@inertiajs/react';
 import type { SharedData } from '@/types';
-import { ArrowLeft, Save, Search, Check, Plus, DollarSign, Receipt } from 'lucide-react';
+import { ArrowLeft, Save, Search, Check, Plus, DollarSign, Receipt, Pencil } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import AppLayout from '@/layouts/app-layout';
 import InputError from '@/components/input-error';
 import { useState } from 'react';
@@ -51,6 +53,7 @@ interface Payment {
 interface Props {
     payment?: Payment;
     enrollments: Enrollment[];
+    canEditAbonos?: boolean;
 }
 
 const PAYMENT_METHODS: Record<string, string> = {
@@ -59,7 +62,8 @@ const PAYMENT_METHODS: Record<string, string> = {
     credit_card: 'Tarjeta de Crédito',
 };
 
-export default function PaymentForm({ payment, enrollments }: Props) {
+export default function PaymentForm({ payment, enrollments, canEditAbonos = false }: Props) {
+    if (typeof window !== 'undefined') (window as any).__DEBUG_canEditAbonos = canEditAbonos;
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedEnrollment, setSelectedEnrollment] = useState<Enrollment | null>(
         payment?.enrollment_id
@@ -74,6 +78,38 @@ export default function PaymentForm({ payment, enrollments }: Props) {
         notes: '',
     });
     const [abonoProcessing, setAbonoProcessing] = useState(false);
+
+    // Estado para editar abono existente (solo id=1)
+    const [editingTx, setEditingTx] = useState<PaymentTransaction | null>(null);
+    const [editMaxAmount, setEditMaxAmount] = useState(0);
+
+    const {
+        data: editData,
+        setData: setEditData,
+        put: putEdit,
+        processing: editProcessing,
+        errors: editErrors,
+        reset: resetEdit,
+    } = useForm({ amount: '', payment_method: 'cash', notes: '' });
+
+    const openEditTx = (tx: PaymentTransaction) => {
+        const otherTotal = (payment?.transactions ?? [])
+            .filter((t) => t.id !== tx.id)
+            .reduce((sum, t) => sum + Number(t.amount), 0);
+        setEditMaxAmount(Number(payment?.amount ?? 0) - otherTotal);
+        setEditData('amount', String(tx.amount));
+        setEditData('payment_method', tx.payment_method);
+        setEditData('notes', tx.notes ?? '');
+        setEditingTx(tx);
+    };
+
+    const closeEditTx = () => { setEditingTx(null); resetEdit(); };
+
+    const submitEditTx = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!editingTx || !payment?.id) return;
+        putEdit(`/pagos/${payment.id}/transaction/${editingTx.id}`, { onSuccess: closeEditTx });
+    };
 
     const { data, setData, post, put, processing, errors } = useForm({
         student_id: payment?.student_id || '',
@@ -216,6 +252,7 @@ export default function PaymentForm({ payment, enrollments }: Props) {
                                                 <th className="px-4 py-2 text-left font-medium text-muted-foreground">Método</th>
                                                 <th className="px-4 py-2 text-left font-medium text-muted-foreground">Referencia</th>
                                                 <th className="px-4 py-2 text-left font-medium text-muted-foreground">Notas</th>
+                                                {canEditAbonos && <th className="px-4 py-2 text-left font-medium text-muted-foreground">Acciones</th>}
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y divide-border">
@@ -236,6 +273,19 @@ export default function PaymentForm({ payment, enrollments }: Props) {
                                                     <td className="px-4 py-2 text-muted-foreground">
                                                         {tx.notes || '—'}
                                                     </td>
+                                                    {canEditAbonos && (
+                                                        <td className="px-4 py-2">
+                                                            <Button
+                                                                type="button"
+                                                                variant="ghost"
+                                                                size="sm"
+                                                                className="h-8 w-8 p-0"
+                                                                onClick={() => openEditTx(tx)}
+                                                            >
+                                                                <Pencil className="h-4 w-4 text-muted-foreground" />
+                                                            </Button>
+                                                        </td>
+                                                    )}
                                                 </tr>
                                             ))}
                                         </tbody>
@@ -462,20 +512,6 @@ export default function PaymentForm({ payment, enrollments }: Props) {
                             <InputError message={errors.amount} />
                         </div>
 
-                        {/* Fecha de Vencimiento - Solo super admin */}
-                        {isSuperAdmin && (
-                            <div>
-                                <Label htmlFor="due_date">Fecha de Vencimiento *</Label>
-                                <Input
-                                    id="due_date"
-                                    type="date"
-                                    value={data.due_date}
-                                    onChange={(e) => setData('due_date', e.target.value)}
-                                    required
-                                />
-                                <InputError message={errors.due_date} />
-                            </div>
-                        )}
 
                         {/* Estado - Solo super admin */}
                         {isSuperAdmin && (
@@ -537,6 +573,66 @@ export default function PaymentForm({ payment, enrollments }: Props) {
                     </div>
                 </form>
             </div>
+            {/* Modal editar abono — solo id=1 */}
+            <Dialog open={!!editingTx} onOpenChange={closeEditTx}>
+                <DialogContent className="max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>Editar Abono #{editingTx?.id}</DialogTitle>
+                    </DialogHeader>
+                    <form onSubmit={submitEditTx} className="space-y-4">
+                        <div className="space-y-1">
+                            <Label htmlFor="edit-amount">
+                                Monto{' '}
+                                <span className="text-xs text-muted-foreground">
+                                    (máx. ${editMaxAmount.toLocaleString('es-CO')})
+                                </span>
+                            </Label>
+                            <Input
+                                id="edit-amount"
+                                type="number"
+                                min="0.01"
+                                max={editMaxAmount}
+                                step="0.01"
+                                value={editData.amount}
+                                onChange={e => setEditData('amount', e.target.value)}
+                            />
+                            {editErrors.amount && <p className="text-sm text-destructive">{editErrors.amount}</p>}
+                        </div>
+
+                        <div className="space-y-1">
+                            <Label htmlFor="edit-method">Método de pago</Label>
+                            <Select value={editData.payment_method} onValueChange={v => setEditData('payment_method', v)}>
+                                <SelectTrigger id="edit-method">
+                                    <SelectValue placeholder="Seleccionar método" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {Object.entries(PAYMENT_METHODS).map(([value, label]) => (
+                                        <SelectItem key={value} value={value}>{label}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                            {editErrors.payment_method && <p className="text-sm text-destructive">{editErrors.payment_method}</p>}
+                        </div>
+
+                        <div className="space-y-1">
+                            <Label htmlFor="edit-notes">Notas</Label>
+                            <Input
+                                id="edit-notes"
+                                value={editData.notes}
+                                onChange={e => setEditData('notes', e.target.value)}
+                                placeholder="Opcional"
+                            />
+                        </div>
+
+                        <DialogFooter>
+                            <Button type="button" variant="outline" onClick={closeEditTx}>Cancelar</Button>
+                            <Button type="submit" disabled={editProcessing}>
+                                {editProcessing ? 'Guardando...' : 'Guardar cambios'}
+                            </Button>
+                        </DialogFooter>
+                    </form>
+                </DialogContent>
+            </Dialog>
         </AppLayout>
     );
 }

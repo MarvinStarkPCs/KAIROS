@@ -1,4 +1,5 @@
 import { Head, router } from '@inertiajs/react';
+import { formatCurrencyShort, formatDateShort } from '@/lib/format';
 import AppLayout from '@/layouts/app-layout';
 import {
     CreditCard,
@@ -62,15 +63,6 @@ interface Props {
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 
-const formatCurrency = (value: number) =>
-    '$' + (value ?? 0).toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
-
-const formatDate = (date: string | null) => {
-    if (!date) return '—';
-    const [y, m, d] = date.split('-');
-    return `${d}/${m}/${y}`;
-};
-
 const PAYMENT_METHODS: Record<string, string> = {
     cash: 'Efectivo',
     transfer: 'Transferencia',
@@ -116,7 +108,7 @@ export default function StudentPayments({ payments, summary }: Props) {
                             </div>
                             <div>
                                 <p className="text-xs text-muted-foreground">Saldo pendiente</p>
-                                <p className="text-xl font-bold text-yellow-600">{formatCurrency(summary.total_pendiente)}</p>
+                                <p className="text-xl font-bold text-yellow-600">{formatCurrencyShort(summary.total_pendiente)}</p>
                             </div>
                         </div>
                     </div>
@@ -128,7 +120,7 @@ export default function StudentPayments({ payments, summary }: Props) {
                             </div>
                             <div>
                                 <p className="text-xs text-muted-foreground">Total pagado</p>
-                                <p className="text-xl font-bold text-green-600">{formatCurrency(summary.total_pagado)}</p>
+                                <p className="text-xl font-bold text-green-600">{formatCurrencyShort(summary.total_pagado)}</p>
                             </div>
                         </div>
                     </div>
@@ -200,15 +192,15 @@ export default function StudentPayments({ payments, summary }: Props) {
                                         <div className="mt-4 grid grid-cols-3 gap-3 text-center text-sm">
                                             <div className="rounded-lg bg-muted p-2">
                                                 <p className="text-xs text-muted-foreground">Total</p>
-                                                <p className="font-bold text-foreground">{formatCurrency(payment.amount)}</p>
+                                                <p className="font-bold text-foreground">{formatCurrencyShort(payment.amount)}</p>
                                             </div>
                                             <div className="rounded-lg bg-green-50 dark:bg-green-900/20 p-2">
                                                 <p className="text-xs text-muted-foreground">Pagado</p>
-                                                <p className="font-bold text-green-600">{formatCurrency(payment.paid_amount)}</p>
+                                                <p className="font-bold text-green-600">{formatCurrencyShort(payment.paid_amount)}</p>
                                             </div>
                                             <div className="rounded-lg bg-orange-50 dark:bg-orange-900/20 p-2">
                                                 <p className="text-xs text-muted-foreground">Pendiente</p>
-                                                <p className="font-bold text-orange-600">{formatCurrency(payment.pending_balance)}</p>
+                                                <p className="font-bold text-orange-600">{formatCurrencyShort(payment.pending_balance)}</p>
                                             </div>
                                         </div>
 
@@ -236,13 +228,13 @@ export default function StudentPayments({ payments, summary }: Props) {
                                             {payment.due_date && (
                                                 <span className="flex items-center gap-1">
                                                     <Calendar className="h-3.5 w-3.5" />
-                                                    Vence: {formatDate(payment.due_date)}
+                                                    Vence: {formatDateShort(payment.due_date)}
                                                 </span>
                                             )}
                                             {payment.payment_date && (
                                                 <span className="flex items-center gap-1">
                                                     <CheckCircle className="h-3.5 w-3.5 text-green-500" />
-                                                    Pagado: {formatDate(payment.payment_date)}
+                                                    Pagado: {formatDateShort(payment.payment_date)}
                                                 </span>
                                             )}
                                             {payment.payment_method && (
@@ -278,10 +270,10 @@ export default function StudentPayments({ payments, summary }: Props) {
                                                             >
                                                                 <div>
                                                                     <p className="font-medium text-foreground">
-                                                                        {formatCurrency(tx.amount)}
+                                                                        {formatCurrencyShort(tx.amount)}
                                                                     </p>
                                                                     <p className="text-xs text-muted-foreground">
-                                                                        {formatDate(tx.created_at)}
+                                                                        {formatDateShort(tx.created_at)}
                                                                         {tx.payment_method && ` · ${PAYMENT_METHODS[tx.payment_method] ?? tx.payment_method}`}
                                                                     </p>
                                                                 </div>

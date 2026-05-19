@@ -1,4 +1,5 @@
 import { Head, router } from '@inertiajs/react';
+import { StatusBadge } from '@/components/StatusBadge';
 import AppLayout from '@/layouts/app-layout';
 import { Button } from '@/components/ui/button';
 import {
@@ -84,33 +85,6 @@ interface Props {
     attendances: Attendance[];
 }
 
-const statusColors = {
-    active: 'bg-green-500',
-    waiting: 'bg-yellow-500',
-    graduated: 'bg-blue-500',
-    cancelled: 'bg-red-500',
-    pending: 'bg-yellow-500',
-    completed: 'bg-green-500',
-    overdue: 'bg-red-500',
-    present: 'bg-green-500',
-    absent: 'bg-red-500',
-    excused: 'bg-yellow-500',
-    late: 'bg-orange-500',
-};
-
-const statusLabels = {
-    active: 'Activo',
-    waiting: 'En espera',
-    graduated: 'Graduado',
-    cancelled: 'Cancelado',
-    pending: 'Pendiente',
-    completed: 'Completado',
-    overdue: 'Vencido',
-    present: 'Presente',
-    absent: 'Ausente',
-    excused: 'Justificado',
-    late: 'Tardanza',
-};
 
 export default function Show({
     dependent,
@@ -343,21 +317,7 @@ export default function Show({
                                                         )}
                                                     </TableCell>
                                                     <TableCell>
-                                                        <Badge
-                                                            className={
-                                                                statusColors[
-                                                                    enrollment
-                                                                        .status as keyof typeof statusColors
-                                                                ]
-                                                            }
-                                                        >
-                                                            {
-                                                                statusLabels[
-                                                                    enrollment
-                                                                        .status as keyof typeof statusLabels
-                                                                ]
-                                                            }
-                                                        </Badge>
+                                                        <StatusBadge status={enrollment.status} />
                                                     </TableCell>
                                                 </TableRow>
                                             ))}
@@ -422,21 +382,7 @@ export default function Show({
                                                         )}
                                                     </TableCell>
                                                     <TableCell>
-                                                        <Badge
-                                                            className={
-                                                                statusColors[
-                                                                    payment
-                                                                        .status as keyof typeof statusColors
-                                                                ]
-                                                            }
-                                                        >
-                                                            {
-                                                                statusLabels[
-                                                                    payment
-                                                                        .status as keyof typeof statusLabels
-                                                                ]
-                                                            }
-                                                        </Badge>
+                                                        <StatusBadge status={payment.status} />
                                                     </TableCell>
                                                 </TableRow>
                                             ))}
@@ -484,21 +430,7 @@ export default function Show({
                                                         )}
                                                     </TableCell>
                                                     <TableCell>
-                                                        <Badge
-                                                            className={
-                                                                statusColors[
-                                                                    attendance
-                                                                        .status as keyof typeof statusColors
-                                                                ]
-                                                            }
-                                                        >
-                                                            {
-                                                                statusLabels[
-                                                                    attendance
-                                                                        .status as keyof typeof statusLabels
-                                                                ]
-                                                            }
-                                                        </Badge>
+                                                        <StatusBadge status={attendance.status} />
                                                     </TableCell>
                                                     <TableCell>
                                                         {attendance.notes || (

@@ -7,6 +7,7 @@ export interface ContactDataFieldsProps {
     data: {
         address: string;
         neighborhood: string;
+        phone?: string;
         mobile: string;
         city: string;
         department: string;
@@ -14,6 +15,7 @@ export interface ContactDataFieldsProps {
     errors?: {
         address?: string;
         neighborhood?: string;
+        phone?: string;
         mobile?: string;
         city?: string;
         department?: string;
@@ -66,6 +68,24 @@ export function ContactDataFields({
                 />
                 {errors.neighborhood && <InputError message={errors.neighborhood} />}
             </div>
+
+            {/* Teléfono Fijo (opcional) */}
+            {data.phone !== undefined && (
+                <div>
+                    <Label htmlFor={getFieldName('phone')}>
+                        Teléfono Fijo
+                    </Label>
+                    <Input
+                        id={getFieldName('phone')}
+                        type="tel"
+                        value={data.phone}
+                        onChange={(e) => onChange('phone', e.target.value)}
+                        placeholder="6075551234"
+                        autoComplete="tel"
+                    />
+                    {errors.phone && <InputError message={errors.phone} />}
+                </div>
+            )}
 
             {/* Celular */}
             <div>

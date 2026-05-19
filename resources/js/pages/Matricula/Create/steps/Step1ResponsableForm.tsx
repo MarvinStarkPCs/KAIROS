@@ -1,10 +1,8 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import InputError from '@/components/input-error';
 import { PersonalDataFields } from '@/components/matricula/forms/PersonalDataFields';
 import type { Responsable, FormErrors } from '@/types/matricula';
-import { Lock, Mail } from 'lucide-react';
+import { User } from 'lucide-react';
 
 export interface Step1ResponsableFormProps {
     data: Responsable;
@@ -14,19 +12,24 @@ export interface Step1ResponsableFormProps {
 
 /**
  * Paso 1: Formulario de datos del responsable
- * Incluye datos personales, credenciales de acceso
+ * Datos personales + teléfonos
  */
 export function Step1ResponsableForm({ data, errors, onChange }: Step1ResponsableFormProps) {
     return (
-        <Card>
-            <CardHeader>
-                <CardTitle>Datos del Responsable</CardTitle>
-                <CardDescription>
+        <Card className="border-2 shadow-xl hover:shadow-2xl transition-shadow duration-300">
+            <CardHeader className="bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/30 border-b">
+                <div className="flex items-center gap-3 mb-2">
+                    <div className="p-2 bg-amber-100 dark:bg-amber-900/40 rounded-lg">
+                        <User className="h-5 w-5 text-amber-700 dark:text-amber-400" />
+                    </div>
+                    <CardTitle className="text-xl sm:text-2xl">Datos del Responsable</CardTitle>
+                </div>
+                <CardDescription className="text-sm sm:text-base">
                     Ingrese los datos de la persona responsable de la matrícula
                 </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-6">
-                {/* Datos Personales - Usando componente reutilizable */}
+            <CardContent className="space-y-4 sm:space-y-5 pt-6">
+                {/* Datos Personales */}
                 <PersonalDataFields
                     namePrefix="responsable"
                     data={{
@@ -54,44 +57,6 @@ export function Step1ResponsableForm({ data, errors, onChange }: Step1Responsabl
                     emailRequired
                 />
 
-                {/* Separador */}
-                <div className="border-t pt-6">
-                    <div className="flex items-center gap-2 text-amber-700 dark:text-amber-300 mb-4">
-                        <Lock className="h-5 w-5" />
-                        <h3 className="font-semibold">Credenciales de Acceso</h3>
-                    </div>
-
-                    {/* Contraseña */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <Label htmlFor="responsable_password">Contraseña *</Label>
-                            <Input
-                                id="responsable_password"
-                                type="password"
-                                value={data.password}
-                                onChange={(e) => onChange('password', e.target.value)}
-                                placeholder="Mínimo 8 caracteres"
-                                autoComplete="new-password"
-                            />
-                            <InputError message={errors['responsable.password']} />
-                        </div>
-
-                        <div>
-                            <Label htmlFor="responsable_password_confirmation">
-                                Confirmar Contraseña *
-                            </Label>
-                            <Input
-                                id="responsable_password_confirmation"
-                                type="password"
-                                value={data.password_confirmation}
-                                onChange={(e) => onChange('password_confirmation', e.target.value)}
-                                placeholder="Repita la contraseña"
-                                autoComplete="new-password"
-                            />
-                            <InputError message={errors['responsable.password_confirmation']} />
-                        </div>
-                    </div>
-                </div>
             </CardContent>
         </Card>
     );

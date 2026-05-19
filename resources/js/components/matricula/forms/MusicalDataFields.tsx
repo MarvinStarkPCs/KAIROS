@@ -20,6 +20,7 @@ export interface MusicalDataFieldsProps {
     };
     onChange: (field: string, value: string | number | boolean) => void;
     birthDate?: string; // Para validar edad vs modalidad
+    isMinor?: boolean;  // Si true, oculta Linaje Big del select
 }
 
 /**
@@ -30,7 +31,8 @@ export function MusicalDataFields({
     data,
     errors = {},
     onChange,
-    birthDate
+    birthDate,
+    isMinor = false,
 }: MusicalDataFieldsProps) {
     const getFieldName = (field: string) => namePrefix ? `${namePrefix}.${field}` : field;
 
@@ -149,6 +151,7 @@ export function MusicalDataFields({
                 onChange={(value) => onChange('modality', value as StudyModality)}
                 error={errors.modality}
                 birthDate={birthDate}
+                excludeBig={isMinor}
             />
         </div>
     );

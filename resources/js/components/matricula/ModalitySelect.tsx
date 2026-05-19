@@ -10,6 +10,7 @@ interface ModalitySelectProps {
     error?: string;
     required?: boolean;
     placeholder?: string;
+    excludeBig?: boolean; // Para menores: oculta Linaje Big
 }
 
 export function ModalitySelect({
@@ -18,7 +19,8 @@ export function ModalitySelect({
     onChange,
     error,
     required = true,
-    placeholder = 'Seleccione una modalidad'
+    placeholder = 'Seleccione una modalidad',
+    excludeBig = false,
 }: ModalitySelectProps) {
     return (
         <div>
@@ -29,7 +31,7 @@ export function ModalitySelect({
                 </SelectTrigger>
                 <SelectContent>
                     {Object.entries(MODALITIES)
-                        .filter(([key]) => key !== '')
+                        .filter(([key]) => key !== '' && !(excludeBig && key === 'Linaje Big'))
                         .map(([key, displayValue]) => (
                             <SelectItem key={key} value={key}>
                                 {displayValue}

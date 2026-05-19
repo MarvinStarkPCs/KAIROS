@@ -28,25 +28,25 @@ class ReportController extends Controller
         // === KPI SUMMARY ===
         $summary = [
             'total_recaudado' => (float) Payment::whereBetween('payment_date', [$startDate, $endDate])
-                ->where('status', 'completed')
+                ->completed()
                 ->sum('paid_amount'),
             'total_pendiente' => (float) (clone $paymentsInRange)
-                ->where('status', 'pending')
+                ->pending()
                 ->sum('remaining_amount'),
             'pagos_vencidos_count' => (clone $paymentsInRange)
-                ->where('status', 'overdue')
+                ->overdue()
                 ->count(),
             'pagos_vencidos_amount' => (float) (clone $paymentsInRange)
-                ->where('status', 'overdue')
+                ->overdue()
                 ->sum('remaining_amount'),
             'total_pagos' => (clone $paymentsInRange)->count(),
-            'pagos_completados' => (clone $paymentsInRange)->where('status', 'completed')->count(),
-            'pagos_pendientes' => (clone $paymentsInRange)->where('status', 'pending')->count(),
-            'pagos_cancelados' => (clone $paymentsInRange)->where('status', 'cancelled')->count(),
+            'pagos_completados' => (clone $paymentsInRange)->completed()->count(),
+            'pagos_pendientes' => (clone $paymentsInRange)->pending()->count(),
+            'pagos_cancelados' => (clone $paymentsInRange)->cancelled()->count(),
         ];
 
         // === MONTHLY REVENUE (bar chart) ===
-        $monthlyRevenue = Payment::where('status', 'completed')
+        $monthlyRevenue = Payment::completed()
             ->whereBetween('payment_date', [$startDate, $endDate])
             ->selectRaw("DATE_FORMAT(payment_date, '%Y-%m') as month, SUM(paid_amount) as total")
             ->groupBy('month')
@@ -91,7 +91,7 @@ class ReportController extends Controller
             ]);
 
         // === PAYMENT METHOD BREAKDOWN (pie chart) ===
-        $paymentMethodBreakdown = Payment::where('status', 'completed')
+        $paymentMethodBreakdown = Payment::completed()
             ->whereBetween('payment_date', [$startDate, $endDate])
             ->whereNotNull('payment_method')
             ->selectRaw("payment_method, COUNT(*) as count, SUM(paid_amount) as total")
@@ -115,7 +115,7 @@ class ReportController extends Controller
             ]);
 
         // === REVENUE BY MODALITY ===
-        $revenueByModality = Payment::where('status', 'completed')
+        $revenueByModality = Payment::completed()
             ->whereBetween('payment_date', [$startDate, $endDate])
             ->whereNotNull('modality')
             ->selectRaw("modality, SUM(paid_amount) as total, COUNT(*) as count")
@@ -161,7 +161,7 @@ class ReportController extends Controller
         // === OVERDUE PAYMENTS (table - always show all current overdue) ===
         // Excluir pagos cuya matrícula asociada esté cancelada o retirada (deuda incobrable)
         $overduePayments = Payment::with(['student', 'program'])
-            ->where('status', 'overdue')
+            ->overdue()
             ->where(function ($q) {
                 $q->whereNull('enrollment_id')
                   ->orWhereHas('enrollment', fn($e) => $e->whereNotIn('status', ['cancelled', 'withdrawn']));

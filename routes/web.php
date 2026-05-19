@@ -53,25 +53,6 @@ Route::middleware(['throttle:10,1'])->group(function () {
     Route::get('/registro-profesor/confirmacion/{teacher}', [TeacherRegistrationController::class, 'confirmation'])->name('registro-profesor.confirmacion');
 });
 
-// TEST: Ruta de prueba para verificar errores de Inertia
-Route::get('/test-errors', function () {
-    return Inertia::render('TestErrors');
-})->name('test.errors');
-
-Route::post('/test-errors', function (\Illuminate\Http\Request $request) {
-    $request->validate([
-        'name' => 'required|min:3',
-        'email' => 'required|email',
-    ], [
-        'name.required' => 'El nombre es obligatorio',
-        'name.min' => 'El nombre debe tener al menos 3 caracteres',
-        'email.required' => 'El email es obligatorio',
-        'email.email' => 'El email debe ser válido',
-    ]);
-
-    flash_success('Formulario enviado correctamente');
-    return redirect()->back();
-})->name('test.errors.store');
 
 Route::get('/', function () {
     $demoPrograms = \App\Models\AcademicProgram::where('is_demo', true)
@@ -313,6 +294,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::middleware(['permission:procesar_pago'])->group(function () {
         Route::post('/pagos/{payment}/mark-paid', [PaymentController::class, 'markAsPaid'])->name('pagos.mark-paid');
         Route::post('/pagos/{payment}/add-transaction', [PaymentController::class, 'addTransaction'])->name('pagos.add-transaction');
+        Route::put('/pagos/{payment}/transaction/{paymentTransaction}', [PaymentController::class, 'updateTransaction'])->name('pagos.transaction.update');
         Route::post('/pagos/{payment}/check-wompi', [PaymentController::class, 'checkWompiStatus'])->name('pagos.check-wompi');
     });
     Route::middleware(['permission:generar_factura'])->group(function () {

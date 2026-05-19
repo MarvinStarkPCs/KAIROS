@@ -1,7 +1,12 @@
-import { Head, Link } from '@inertiajs/react';
-import { ArrowLeft, Edit, DollarSign, Receipt, CheckCircle, Clock, XCircle, User, BookOpen, Calendar, CreditCard, FileText } from 'lucide-react';
+import { Head, Link, useForm } from '@inertiajs/react';
+import { ArrowLeft, Edit, DollarSign, Receipt, CheckCircle, Clock, XCircle, User, BookOpen, Calendar, FileText, Pencil, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import AppLayout from '@/layouts/app-layout';
+import { useState } from 'react';
 
 interface PaymentTransaction {
     id: number;
@@ -40,6 +45,7 @@ interface Payment {
 
 interface Props {
     payment: Payment;
+    canEditAbonos: boolean;
 }
 
 const PAYMENT_METHODS: Record<string, string> = {
@@ -51,8 +57,8 @@ const PAYMENT_METHODS: Record<string, string> = {
 
 const STATUS_MAP: Record<string, { bg: string; text: string; label: string; icon: typeof CheckCircle }> = {
     completed: { bg: 'bg-green-100 dark:bg-green-900/30', text: 'text-green-700 dark:text-green-400', label: 'Completado', icon: CheckCircle },
-    pending: { bg: 'bg-yellow-100 dark:bg-yellow-900/30', text: 'text-yellow-700 dark:text-yellow-400', label: 'Pendiente', icon: Clock },
-    overdue: { bg: 'bg-red-100 dark:bg-red-900/30', text: 'text-red-700 dark:text-red-400', label: 'Vencido', icon: XCircle },
+    pending:   { bg: 'bg-yellow-100 dark:bg-yellow-900/30', text: 'text-yellow-700 dark:text-yellow-400', label: 'Pendiente', icon: Clock },
+    overdue:   { bg: 'bg-red-100 dark:bg-red-900/30', text: 'text-red-700 dark:text-red-400', label: 'Vencido', icon: XCircle },
     cancelled: { bg: 'bg-muted', text: 'text-muted-foreground', label: 'Cancelado', icon: XCircle },
 };
 
@@ -62,13 +68,81 @@ const PAYMENT_TYPE_MAP: Record<string, string> = {
     installment: 'Cuotas',
 };
 
-export default function PaymentShow({ payment }: Props) {
-    const totalAmount = payment.original_amount ?? payment.amount ?? 0;
-    const paidAmount = payment.paid_amount ?? 0;
+export default function PaymentShow({ payment, canEditAbonos }: Props) {
+    const totalAmount    = payment.original_amount ?? payment.amount ?? 0;
+    const paidAmount     = payment.paid_amount ?? 0;
     const pendingBalance = payment.pending_balance ?? (payment.remaining_amount ?? totalAmount) ?? 0;
     const progressPercent = totalAmount > 0 ? Math.min((paidAmount / totalAmount) * 100, 100) : 0;
-    const statusInfo = STATUS_MAP[payment.status] ?? STATUS_MAP.pending;
-    const StatusIcon = statusInfo.icon;
+    const statusInfo     = STATUS_MAP[payment.status] ?? STATUS_MAP.pending;
+    const StatusIcon     = statusInfo.icon;
+
+    const [editingTx, setEditingTx]   = useState<PaymentTransaction | null>(null);
+    const [maxAmount, setMaxAmount]   = useState<number>(0);
+    const [showAddAbono, setShowAddAbono] = useState(false);
+
+    // Form para EDITAR abono existente
+    const { data, setData, put, processing, errors, reset } = useForm({
+        amount:         '',
+        payment_method: '',
+        notes:          '',
+    });
+
+    // Form para AGREGAR nuevo abono
+    const {
+        data: addData,
+        setData: setAddData,
+        post: postAbono,
+        processing: addProcessing,
+        errors: addErrors,
+        reset: resetAdd,
+    } = useForm({
+        amount:         '',
+        payment_method: 'cash',
+        notes:          '',
+    });
+
+    const openAddAbono = () => {
+        resetAdd();
+        setShowAddAbono(true);
+    };
+
+    const submitAddAbono = (e: React.FormEvent) => {
+        e.preventDefault();
+        postAbono(`/pagos/${payment.id}/transaction`, {
+            onSuccess: () => {
+                setShowAddAbono(false);
+                resetAdd();
+            },
+        });
+    };
+
+    const openEdit = (tx: PaymentTransaction) => {
+        // Máximo = total del pago menos lo que abonaron los OTROS abonos
+        const otherTotal = (payment.transactions ?? [])
+            .filter(t => t.id !== tx.id)
+            .reduce((sum, t) => sum + Number(t.amount), 0);
+        const max = Number(payment.amount) - otherTotal;
+        setMaxAmount(max);
+        setEditingTx(tx);
+        setData({
+            amount:         String(tx.amount),
+            payment_method: tx.payment_method,
+            notes:          tx.notes ?? '',
+        });
+    };
+
+    const closeEdit = () => {
+        setEditingTx(null);
+        reset();
+    };
+
+    const submitEdit = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!editingTx) return;
+        put(`/pagos/${payment.id}/transaction/${editingTx.id}`, {
+            onSuccess: closeEdit,
+        });
+    };
 
     return (
         <AppLayout>
@@ -84,12 +158,20 @@ export default function PaymentShow({ payment }: Props) {
                         </Link>
                         <h1 className="text-3xl font-bold text-foreground">Detalle de Pago #{payment.id}</h1>
                     </div>
-                    <Link href={`/pagos/${payment.id}/edit`}>
-                        <Button>
-                            <Edit className="mr-2 h-4 w-4" />
-                            Editar
-                        </Button>
-                    </Link>
+                    <div className="flex items-center gap-2">
+                        {payment.status !== 'completed' && payment.status !== 'cancelled' && (
+                            <Button onClick={openAddAbono} variant="outline">
+                                <Plus className="mr-2 h-4 w-4" />
+                                Registrar Abono
+                            </Button>
+                        )}
+                        <Link href={`/pagos/${payment.id}/edit`}>
+                            <Button>
+                                <Edit className="mr-2 h-4 w-4" />
+                                Editar
+                            </Button>
+                        </Link>
+                    </div>
                 </div>
 
                 {/* Progress Bar */}
@@ -104,7 +186,6 @@ export default function PaymentShow({ payment }: Props) {
                             {statusInfo.label}
                         </span>
                     </div>
-
                     <div className="mt-4">
                         <div className="flex items-center justify-between text-sm">
                             <span className="text-muted-foreground">Progreso de pago</span>
@@ -135,7 +216,6 @@ export default function PaymentShow({ payment }: Props) {
 
                 {/* Info Grid */}
                 <div className="grid gap-6 md:grid-cols-2">
-                    {/* Estudiante */}
                     <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
                         <h3 className="flex items-center gap-2 text-sm font-semibold uppercase text-muted-foreground">
                             <User className="h-4 w-4" />
@@ -144,9 +224,7 @@ export default function PaymentShow({ payment }: Props) {
                         <div className="mt-4 space-y-3">
                             <div>
                                 <div className="text-sm text-muted-foreground">Nombre</div>
-                                <div className="font-medium text-foreground">
-                                    {payment.student.name} {payment.student.last_name ?? ''}
-                                </div>
+                                <div className="font-medium text-foreground">{payment.student.name} {payment.student.last_name ?? ''}</div>
                             </div>
                             {payment.student.document_number && (
                                 <div>
@@ -163,7 +241,6 @@ export default function PaymentShow({ payment }: Props) {
                         </div>
                     </div>
 
-                    {/* Detalles del Pago */}
                     <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
                         <h3 className="flex items-center gap-2 text-sm font-semibold uppercase text-muted-foreground">
                             <FileText className="h-4 w-4" />
@@ -193,7 +270,6 @@ export default function PaymentShow({ payment }: Props) {
                         </div>
                     </div>
 
-                    {/* Programa y Matrícula */}
                     <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
                         <h3 className="flex items-center gap-2 text-sm font-semibold uppercase text-muted-foreground">
                             <BookOpen className="h-4 w-4" />
@@ -227,7 +303,6 @@ export default function PaymentShow({ payment }: Props) {
                         </div>
                     </div>
 
-                    {/* Fechas */}
                     <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
                         <h3 className="flex items-center gap-2 text-sm font-semibold uppercase text-muted-foreground">
                             <Calendar className="h-4 w-4" />
@@ -258,7 +333,6 @@ export default function PaymentShow({ payment }: Props) {
                     </div>
                 </div>
 
-                {/* Notas */}
                 {payment.notes && (
                     <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
                         <h3 className="text-sm font-semibold uppercase text-muted-foreground">Notas</h3>
@@ -284,6 +358,9 @@ export default function PaymentShow({ payment }: Props) {
                                         <th className="px-4 py-3 text-left font-medium text-muted-foreground">Referencia</th>
                                         <th className="px-4 py-3 text-left font-medium text-muted-foreground">Registrado por</th>
                                         <th className="px-4 py-3 text-left font-medium text-muted-foreground">Notas</th>
+                                        {canEditAbonos && (
+                                            <th className="px-4 py-3 text-left font-medium text-muted-foreground">Acciones</th>
+                                        )}
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-border">
@@ -308,6 +385,18 @@ export default function PaymentShow({ payment }: Props) {
                                             <td className="px-4 py-3 text-muted-foreground">
                                                 {tx.notes || '—'}
                                             </td>
+                                            {canEditAbonos && (
+                                                <td className="px-4 py-3">
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        onClick={() => openEdit(tx)}
+                                                        className="h-8 w-8 p-0"
+                                                    >
+                                                        <Pencil className="h-4 w-4 text-muted-foreground" />
+                                                    </Button>
+                                                </td>
+                                            )}
                                         </tr>
                                     ))}
                                 </tbody>
@@ -316,6 +405,131 @@ export default function PaymentShow({ payment }: Props) {
                     </div>
                 )}
             </div>
+
+            {/* Modal registrar nuevo abono */}
+            <Dialog open={showAddAbono} onOpenChange={setShowAddAbono}>
+                <DialogContent className="max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>Registrar Abono</DialogTitle>
+                    </DialogHeader>
+                    <form onSubmit={submitAddAbono} className="space-y-4">
+                        <div className="space-y-1">
+                            <Label htmlFor="add-amount">
+                                Monto{' '}
+                                <span className="text-xs text-muted-foreground">
+                                    (máx. ${pendingBalance.toLocaleString('es-CO')})
+                                </span>
+                            </Label>
+                            <Input
+                                id="add-amount"
+                                type="number"
+                                min="0.01"
+                                max={pendingBalance}
+                                step="0.01"
+                                value={addData.amount}
+                                onChange={e => setAddData('amount', e.target.value)}
+                                placeholder="0.00"
+                            />
+                            {addErrors.amount && <p className="text-sm text-destructive">{addErrors.amount}</p>}
+                        </div>
+
+                        <div className="space-y-1">
+                            <Label htmlFor="add-method">Método de pago</Label>
+                            <Select value={addData.payment_method} onValueChange={v => setAddData('payment_method', v)}>
+                                <SelectTrigger id="add-method">
+                                    <SelectValue placeholder="Seleccionar método" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {Object.entries(PAYMENT_METHODS).map(([value, label]) => (
+                                        <SelectItem key={value} value={value}>{label}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                            {addErrors.payment_method && <p className="text-sm text-destructive">{addErrors.payment_method}</p>}
+                        </div>
+
+                        <div className="space-y-1">
+                            <Label htmlFor="add-notes">Notas</Label>
+                            <Input
+                                id="add-notes"
+                                value={addData.notes}
+                                onChange={e => setAddData('notes', e.target.value)}
+                                placeholder="Opcional"
+                            />
+                            {addErrors.notes && <p className="text-sm text-destructive">{addErrors.notes}</p>}
+                        </div>
+
+                        <DialogFooter>
+                            <Button type="button" variant="outline" onClick={() => setShowAddAbono(false)}>Cancelar</Button>
+                            <Button type="submit" disabled={addProcessing}>
+                                {addProcessing ? 'Guardando...' : 'Registrar abono'}
+                            </Button>
+                        </DialogFooter>
+                    </form>
+                </DialogContent>
+            </Dialog>
+
+            {/* Modal editar abono */}
+            <Dialog open={!!editingTx} onOpenChange={closeEdit}>
+                <DialogContent className="max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>Editar Abono #{editingTx?.id}</DialogTitle>
+                    </DialogHeader>
+                    <form onSubmit={submitEdit} className="space-y-4">
+                        <div className="space-y-1">
+                            <Label htmlFor="amount">
+                                Monto{' '}
+                                <span className="text-xs text-muted-foreground">
+                                    (máx. ${maxAmount.toLocaleString('es-CO')})
+                                </span>
+                            </Label>
+                            <Input
+                                id="amount"
+                                type="number"
+                                min="0.01"
+                                max={maxAmount}
+                                step="0.01"
+                                value={data.amount}
+                                onChange={e => setData('amount', e.target.value)}
+                            />
+                            {errors.amount && <p className="text-sm text-destructive">{errors.amount}</p>}
+                        </div>
+
+                        <div className="space-y-1">
+                            <Label htmlFor="payment_method">Método de pago</Label>
+                            <Select value={data.payment_method} onValueChange={v => setData('payment_method', v)}>
+                                <SelectTrigger id="payment_method">
+                                    <SelectValue placeholder="Seleccionar método" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {Object.entries(PAYMENT_METHODS).map(([value, label]) => (
+                                        <SelectItem key={value} value={value}>{label}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                            {errors.payment_method && <p className="text-sm text-destructive">{errors.payment_method}</p>}
+                        </div>
+
+                        <div className="space-y-1">
+                            <Label htmlFor="notes">Notas</Label>
+                            <Input
+                                id="notes"
+                                value={data.notes}
+                                onChange={e => setData('notes', e.target.value)}
+                                placeholder="Opcional"
+                            />
+                            {errors.notes && <p className="text-sm text-destructive">{errors.notes}</p>}
+                        </div>
+
+                        <DialogFooter>
+                            <Button type="button" variant="outline" onClick={closeEdit}>Cancelar</Button>
+                            <Button type="submit" disabled={processing}>
+                                {processing ? 'Guardando...' : 'Guardar cambios'}
+                            </Button>
+                        </DialogFooter>
+                    </form>
+                </DialogContent>
+            </Dialog>
         </AppLayout>
     );
 }

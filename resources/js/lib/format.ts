@@ -142,6 +142,31 @@ export function formatCurrency(
 }
 
 /**
+ * Formatea una fecha retornando '—' si es nula o vacía (variante para tablas)
+ */
+export function formatDateOrDash(date: string | Date | null | undefined): string {
+    if (!date) return '—';
+    return formatDate(date);
+}
+
+/**
+ * Formatea fecha como DD/MM/YYYY retornando '—' si es nula (variante compacta para tablas)
+ */
+export function formatDateShort(date: string | null | undefined): string {
+    if (!date) return '—';
+    const plain = date.includes('T') ? date.split('T')[0] : date;
+    const [y, m, d] = plain.split('-');
+    return `${d}/${m}/${y}`;
+}
+
+/**
+ * Formatea pesos colombianos de forma compacta: $50.000
+ */
+export function formatCurrencyShort(value: number | null | undefined): string {
+    return '$' + (value ?? 0).toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+}
+
+/**
  * Convierte centavos a pesos y formatea
  * @param cents Cantidad en centavos
  * @param options Opciones de formato

@@ -1,10 +1,12 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { ContactDataFields } from '@/components/matricula/forms/ContactDataFields';
-import { DepartmentSelect } from '@/components/matricula/ui/DepartmentSelect';
+import InputError from '@/components/input-error';
 import type { Responsable, FormErrors } from '@/types/matricula';
-import { MapPin, Users } from 'lucide-react';
+import { MapPin } from 'lucide-react';
+import { COLOMBIAN_DEPARTMENTS } from '@/utils/matricula-constants';
 
 export interface Step2LocationFormProps {
     data: Responsable;
@@ -15,8 +17,7 @@ export interface Step2LocationFormProps {
 }
 
 /**
- * Paso 2: Formulario de ubicación y selección de tipo de matrícula
- * Incluye datos de contacto y la decisión si es para menor o adulto
+ * Paso 2: Formulario de localización y tipo de matrícula
  */
 export function Step2LocationForm({
     data,
@@ -26,87 +27,116 @@ export function Step2LocationForm({
     onIsMinorChange
 }: Step2LocationFormProps) {
     return (
-        <Card>
-            <CardHeader>
-                <CardTitle>Datos de Ubicación</CardTitle>
-                <CardDescription>
-                    Ingrese los datos de contacto y ubicación
+        <Card className="border-2 shadow-xl hover:shadow-2xl transition-shadow duration-300">
+            <CardHeader className="bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/30 border-b">
+                <div className="flex items-center gap-3 mb-2">
+                    <div className="p-2 bg-amber-100 dark:bg-amber-900/40 rounded-lg">
+                        <MapPin className="h-5 w-5 text-amber-700 dark:text-amber-400" />
+                    </div>
+                    <CardTitle className="text-xl sm:text-2xl">Datos de Localización</CardTitle>
+                </div>
+                <CardDescription className="text-sm sm:text-base">
+                    Ingrese la dirección de residencia del responsable
                 </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-6">
-                {/* Datos de Contacto - Usando componente reutilizable */}
-                <div>
-                    <div className="flex items-center gap-2 text-amber-700 dark:text-amber-300 mb-4">
-                        <MapPin className="h-5 w-5" />
-                        <h3 className="font-semibold">Información de Contacto</h3>
-                    </div>
+            <CardContent className="space-y-4 sm:space-y-5 pt-6">
 
-                    <ContactDataFields
-                        namePrefix="responsable"
-                        data={{
-                            address: data.address,
-                            neighborhood: data.neighborhood,
-                            mobile: data.mobile,
-                            city: data.city,
-                            department: data.department
-                        }}
-                        errors={{
-                            address: errors['responsable.address'],
-                            neighborhood: errors['responsable.neighborhood'],
-                            mobile: errors['responsable.mobile'],
-                            city: errors['responsable.city'],
-                            department: errors['responsable.department']
-                        }}
-                        onChange={(field, value) => onChange(field as keyof Responsable, value)}
-                    >
-                        {/* Custom department selector */}
-                        <DepartmentSelect
-                            department={data.department}
-                            city={data.city}
-                            onDepartmentChange={(value) => onChange('department', value)}
-                            onCityChange={(value) => onChange('city', value)}
-                            errors={{
-                                department: errors['responsable.department'],
-                                city: errors['responsable.city']
-                            }}
-                            namePrefix="responsable"
+                {/* Dirección + Barrio */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <Label htmlFor="responsable_address">Dirección *</Label>
+                        <Input
+                            id="responsable_address"
+                            value={data.address}
+                            onChange={(e) => onChange('address', e.target.value)}
+                            placeholder="Calle 123 #45-67"
                         />
-                    </ContactDataFields>
+                        <InputError message={errors['responsable.address']} />
+                    </div>
+                    <div>
+                        <Label htmlFor="responsable_neighborhood">Barrio</Label>
+                        <Input
+                            id="responsable_neighborhood"
+                            value={data.neighborhood}
+                            onChange={(e) => onChange('neighborhood', e.target.value)}
+                            placeholder="Nombre del barrio"
+                        />
+                        <InputError message={errors['responsable.neighborhood']} />
+                    </div>
                 </div>
 
-                {/* Separador */}
-                <div className="border-t pt-6">
-                    <div className="flex items-center gap-2 text-amber-700 dark:text-amber-300 mb-4">
-                        <Users className="h-5 w-5" />
-                        <h3 className="font-semibold">Tipo de Matrícula</h3>
+                {/* Ciudad + Departamento */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <Label htmlFor="responsable_city">Ciudad *</Label>
+                        <Input
+                            id="responsable_city"
+                            value={data.city}
+                            onChange={(e) => onChange('city', e.target.value)}
+                            placeholder="Ej: Ocaña, Cúcuta, Bogotá"
+                        />
+                        <InputError message={errors['responsable.city']} />
                     </div>
-
-                    {/* ¿Es menor de edad? */}
-                    <div className="space-y-2">
-                        <Label>¿La matrícula es para un menor de edad? *</Label>
-                        <RadioGroup
-                            value={isMinor ? 'yes' : 'no'}
-                            onValueChange={(value) => onIsMinorChange(value === 'yes')}
+                    <div>
+                        <Label htmlFor="responsable_department">Departamento *</Label>
+                        <Select
+                            value={data.department}
+                            onValueChange={(value) => onChange('department', value)}
                         >
-                            <div className="flex items-center space-x-2">
-                                <RadioGroupItem value="yes" id="is_minor_yes" />
-                                <Label htmlFor="is_minor_yes" className="font-normal cursor-pointer">
-                                    Sí, es para uno o más menores de edad
-                                </Label>
-                            </div>
-                            <div className="flex items-center space-x-2">
-                                <RadioGroupItem value="no" id="is_minor_no" />
-                                <Label htmlFor="is_minor_no" className="font-normal cursor-pointer">
-                                    No, la matrícula es para mí (adulto)
-                                </Label>
-                            </div>
-                        </RadioGroup>
-                        <p className="text-sm text-muted-foreground mt-2">
-                            {isMinor
-                                ? 'Usted se registrará como padre/madre/tutor y podrá agregar uno o más estudiantes.'
-                                : 'Usted se registrará como estudiante.'}
-                        </p>
+                            <SelectTrigger id="responsable_department">
+                                <SelectValue placeholder="Seleccione departamento" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {COLOMBIAN_DEPARTMENTS.map((dept) => (
+                                    <SelectItem key={dept} value={dept}>
+                                        {dept}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                        <InputError message={errors['responsable.department']} />
                     </div>
+                </div>
+
+                {/* Celular */}
+                <div>
+                    <Label htmlFor="responsable_mobile">Celular *</Label>
+                    <Input
+                        id="responsable_mobile"
+                        type="tel"
+                        value={data.mobile}
+                        onChange={(e) => onChange('mobile', e.target.value)}
+                        placeholder="300 123 4567"
+                    />
+                    <InputError message={errors['responsable.mobile']} />
+                </div>
+
+                {/* ¿Es menor de edad? */}
+                <div className="mt-6 pt-6 border-t">
+                    <Label className="text-lg font-semibold">¿La matrícula es para un menor de edad?</Label>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-2 mb-4">
+                        Si la matrícula es para uno o más menores de edad, deberá ingresar los datos de cada
+                        estudiante en el siguiente paso.
+                    </p>
+                    <RadioGroup
+                        value={isMinor ? 'yes' : 'no'}
+                        onValueChange={(value) => onIsMinorChange(value === 'yes')}
+                        className="flex gap-4"
+                    >
+                        <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="no" id="is_minor_no" />
+                            <Label htmlFor="is_minor_no" className="font-normal cursor-pointer">
+                                No, soy yo quien estudiará
+                            </Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="yes" id="is_minor_yes" />
+                            <Label htmlFor="is_minor_yes" className="font-normal cursor-pointer">
+                                Sí, es para uno o más menores
+                            </Label>
+                        </div>
+                    </RadioGroup>
+                    <InputError message={errors['is_minor']} />
                 </div>
             </CardContent>
         </Card>

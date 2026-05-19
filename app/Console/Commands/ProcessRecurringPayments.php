@@ -88,8 +88,6 @@ class ProcessRecurringPayments extends Command
                     $payment->next_charge_date = Carbon::now()->addDays(30);
                     $payment->save();
 
-                    // TODO: Enviar email de confirmación de cobro
-
                 } else {
                     $this->error("  ✗ Cobro fallido: {$result['error']}");
                     $failed++;
@@ -99,7 +97,6 @@ class ProcessRecurringPayments extends Command
 
                     if ($payment->failed_attempts >= 3) {
                         $this->warn("  ⚠ Máximo de intentos alcanzado. Se suspende cobro automático.");
-                        // TODO: Enviar email notificando que debe actualizar método de pago
                     }
 
                     $payment->save();

@@ -29,7 +29,6 @@ export default function WompiWidget({
     const validateEmail = (email: string): string => {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(email)) {
-            console.warn('⚠️ Email inválido detectado:', email);
             return 'noreply@academialinaje.com';
         }
         return email;
@@ -41,16 +40,6 @@ export default function WompiWidget({
     const isTestMode = publicKey.startsWith('pub_test_');
 
     useEffect(() => {
-         console.log('🔄 Datos actualizados:', {
-        publicKey,
-        amountInCents,
-        reference,
-        currency,
-        redirectUrl,
-        customerEmail,
-        customerName,
-        integritySignature,
-    });
     if (!formRef.current) return;
 
         /**
@@ -97,31 +86,18 @@ export default function WompiWidget({
         // En modo test es opcional y puede causar problemas si no está bien configurada
         if (integritySignature && !isTestMode) {
             script.setAttribute('data-signature:integrity', integritySignature);
-            console.log('🔐 Modo PRODUCCIÓN - Firma de integridad incluida');
-        } else if (isTestMode) {
-            console.log('🧪 Modo TEST - Sin firma de integridad (opcional en sandbox)');
         }
 
         formRef.current.appendChild(script);
 
         // Abrir automáticamente el widget después de que se renderice
         script.onload = () => {
-            console.log('✅ Script de Wompi cargado exitosamente');
-
-            // Esperar a que el botón se renderice y hacer click automático
             setTimeout(() => {
                 const wompiButton = formRef.current?.querySelector('button');
                 if (wompiButton) {
-                    console.log('🚀 Abriendo widget de pago automáticamente...');
                     wompiButton.click();
-                } else {
-                    console.warn('⚠️ No se encontró el botón de Wompi');
                 }
             }, 1000);
-        };
-
-        script.onerror = () => {
-            console.error('❌ Error al cargar el script de Wompi');
         };
 
         // Cleanup: remover el script cuando el componente se desmonte

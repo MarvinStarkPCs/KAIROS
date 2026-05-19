@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Http\Requests\StoreUserRequest;
+use App\Http\Requests\UpdateUserRequest;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rules\Password;
 use Illuminate\Support\Facades\Storage;
@@ -358,21 +360,9 @@ class UserController extends Controller
     /**
      * Guardar nuevo usuario
      */
-    public function store(Request $request)
+    public function store(StoreUserRequest $request)
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'last_name' => 'nullable|string|max:255',
-            'email' => 'required|email|unique:users',
-            'password' => ['required', 'confirmed', Password::defaults()],
-            'roles' => 'array',
-            // Datos personales opcionales
-            'document_type' => 'nullable|in:CC,TI,CE,Pasaporte',
-            'document_number' => 'nullable|string|max:50',
-            'birth_date' => 'nullable|date',
-            'gender' => 'nullable|in:M,F',
-            'mobile' => 'nullable|string|max:20',
-        ]);
+        $validated = $request->validated();
 
         $user = User::create([
             'name' => $validated['name'],
@@ -482,50 +472,9 @@ class UserController extends Controller
     /**
      * Actualizar usuario
      */
-    public function update(Request $request, User $user)
+    public function update(UpdateUserRequest $request, User $user)
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'last_name' => 'nullable|string|max:255',
-            'email' => 'required|email|unique:users,email,'.$user->id,
-            'password' => ['nullable', 'confirmed', Password::defaults()],
-            'roles' => 'array',
-            // Datos personales
-            'document_type' => 'nullable|in:CC,TI,CE,Pasaporte',
-            'document_number' => 'nullable|string|max:50',
-            'birth_date' => 'nullable|date',
-            'birth_place' => 'nullable|string|max:255',
-            'gender' => 'nullable|in:M,F',
-            // Contacto
-            'phone' => 'nullable|string|max:20',
-            'mobile' => 'nullable|string|max:20',
-            'address' => 'nullable|string|max:255',
-            'neighborhood' => 'nullable|string|max:255',
-            'city' => 'nullable|string|max:255',
-            'department' => 'nullable|string|max:255',
-            // Perfil de estudiante
-            'student_profile' => 'nullable|array',
-            'student_profile.modality' => 'nullable|in:Linaje Kids,Linaje Teens,Linaje Big',
-            'student_profile.desired_instrument' => 'nullable|string|max:255',
-            'student_profile.plays_instrument' => 'nullable|boolean',
-            'student_profile.instruments_played' => 'nullable|string',
-            'student_profile.has_music_studies' => 'nullable|boolean',
-            'student_profile.music_schools' => 'nullable|string',
-            'student_profile.current_level' => 'nullable|integer|min:1|max:10',
-            'student_profile.emergency_contact_name' => 'nullable|string|max:255',
-            'student_profile.emergency_contact_phone' => 'nullable|string|max:20',
-            'student_profile.medical_conditions' => 'nullable|string',
-            'student_profile.allergies' => 'nullable|string',
-            // Perfil de profesor
-            'teacher_profile' => 'nullable|array',
-            'teacher_profile.instruments_played' => 'nullable|string',
-            'teacher_profile.music_schools' => 'nullable|string',
-            'teacher_profile.experience_years' => 'nullable|integer|min:0|max:50',
-            'teacher_profile.bio' => 'nullable|string',
-            'teacher_profile.specialization' => 'nullable|string|max:255',
-            'teacher_profile.hourly_rate' => 'nullable|numeric|min:0',
-            'teacher_profile.is_active' => 'nullable|boolean',
-        ]);
+        $validated = $request->validated();
 
         // Actualizar datos básicos del usuario
         $user->update([

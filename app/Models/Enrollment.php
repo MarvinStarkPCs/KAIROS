@@ -61,6 +61,13 @@ class Enrollment extends Model
         return $this->belongsTo(AcademicProgram::class, 'program_id');
     }
 
+    // Scopes de estado
+    public function scopeActive($query) { return $query->where('status', 'active'); }
+    public function scopeWaiting($query) { return $query->where('status', 'waiting'); }
+    public function scopeSuspended($query) { return $query->where('status', 'suspended'); }
+    public function scopeWithdrawn($query) { return $query->where('status', 'withdrawn'); }
+    public function scopeActiveOrWaiting($query) { return $query->whereIn('status', ['active', 'waiting']); }
+
     // Verificar si la inscripción está activa
     public function isActive(): bool
     {

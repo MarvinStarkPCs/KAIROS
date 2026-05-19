@@ -27,10 +27,10 @@ class MatriculaController extends Controller
      */
     public function create()
     {
-        $programs = AcademicProgram::where('status', 'active')
+        $programs = AcademicProgram::active()
             ->where('is_demo', false)
             ->with(['schedules' => function ($query) {
-                $query->where('status', 'active')
+                $query->active()
                     ->with('professor:id,name')
                     ->withCount(['enrollments as enrolled_count' => function ($q) {
                         $q->where('status', 'enrolled');
@@ -76,14 +76,6 @@ class MatriculaController extends Controller
      */
     public function store(EnrollmentRequest $request)
     {
-        \Log::info('===== DATOS RAW RECIBIDOS =====');
-        \Log::info('is_minor (raw):', ['value' => $request->input('is_minor'), 'type' => gettype($request->input('is_minor'))]);
-        \Log::info('estudiantes (raw):', ['value' => $request->input('estudiantes'), 'exists' => $request->has('estudiantes')]);
-        \Log::info('All input:', $request->all());
-
-        \Log::info('===== DATOS VALIDADOS =====');
-        \Log::info('Datos de matrícula validados:', $request->validated());
-
         try {
             // Verificar si es una inscripción para clase demo
             $programId = $request->is_minor
@@ -272,7 +264,7 @@ class MatriculaController extends Controller
 
         $payments = Payment::with(['student', 'program', 'enrollment'])
             ->whereIn('id', $paymentIds)
-            ->where('status', 'pending')
+            ->pending()
             ->get();
 
         if ($payments->isEmpty()) {

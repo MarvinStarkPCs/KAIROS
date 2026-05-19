@@ -75,22 +75,18 @@ export default function Create({ programs, students }: Props) {
     useEffect(() => {
         if (data.program_id) {
             setLoadingSchedules(true);
-            console.log('Fetching schedules for program:', data.program_id);
 
             fetch(`/api/programas/${data.program_id}/horarios`)
                 .then((res) => {
-                    console.log('Response status:', res.status);
                     if (!res.ok) {
                         throw new Error(`HTTP error! status: ${res.status}`);
                     }
                     return res.json();
                 })
                 .then((schedules) => {
-                    console.log('Schedules loaded:', schedules);
                     setAvailableSchedules(schedules);
                 })
-                .catch((error) => {
-                    console.error('Error loading schedules:', error);
+                .catch(() => {
                     setAvailableSchedules([]);
                 })
                 .finally(() => {

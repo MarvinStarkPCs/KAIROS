@@ -29,15 +29,12 @@ export function MessageNotifications() {
         if (isInitialMount.current) {
             previousCountRef.current = unreadCount;
             isInitialMount.current = false;
-            console.log('Initial unread count:', unreadCount);
             return;
         }
 
         // Solo mostrar notificación si el contador aumentó
         if (previousCountRef.current !== null && unreadCount > previousCountRef.current) {
             const newMessages = unreadCount - previousCountRef.current;
-
-            console.log('New messages detected:', newMessages, 'Previous:', previousCountRef.current, 'Current:', unreadCount);
 
             toast.info(
                 newMessages === 1

@@ -1,4 +1,6 @@
 import { Head, Link, router } from '@inertiajs/react';
+import { formatCurrencyShort, formatDateShort } from '@/lib/format';
+import { ConfirmDeleteDialog } from '@/components/ConfirmDeleteDialog';
 import { Plus, Search, Filter, Eye, Edit, Trash2, DollarSign, CheckCircle, Clock, XCircle, CreditCard, List as ListIcon, RefreshCw, Settings, BarChart3, ChevronLeft, ChevronRight, LayoutGrid, Table2, Calendar, Banknote } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -6,16 +8,6 @@ import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/app-layout';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
-import {
-    AlertDialog,
-    AlertDialogAction,
-    AlertDialogCancel,
-    AlertDialogContent,
-    AlertDialogDescription,
-    AlertDialogFooter,
-    AlertDialogHeader,
-    AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
 
 interface Payment {
     id: number;
@@ -81,15 +73,6 @@ const STATUS_MAP = {
     cancelled: { label: 'Cancelado',  icon: XCircle,      bg: 'bg-muted',                             text: 'text-muted-foreground'                },
 };
 
-const formatCurrency = (value: number) =>
-    '$' + (value ?? 0).toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
-
-const formatDate = (date: string | null | undefined) => {
-    if (!date) return '—';
-    const plain = date.includes('T') ? date.split('T')[0] : date;
-    const [y, m, d] = plain.split('-');
-    return `${d}/${m}/${y}`;
-};
 
 export default function PaymentsList({ payments, programs, filters }: Props) {
     const [deleteDialog, setDeleteDialog] = useState<{ open: boolean; paymentId: number | null }>({
@@ -323,15 +306,15 @@ export default function PaymentsList({ payments, programs, filters }: Props) {
                                                 <div className="grid grid-cols-3 gap-2 text-center text-xs">
                                                     <div className="rounded-lg bg-muted p-2">
                                                         <p className="text-muted-foreground">Total</p>
-                                                        <p className="font-bold text-foreground">{formatCurrency(payment.amount)}</p>
+                                                        <p className="font-bold text-foreground">{formatCurrencyShort(payment.amount)}</p>
                                                     </div>
                                                     <div className="rounded-lg bg-green-50 dark:bg-green-900/20 p-2">
                                                         <p className="text-muted-foreground">Pagado</p>
-                                                        <p className="font-bold text-green-600">{formatCurrency(payment.paid_amount)}</p>
+                                                        <p className="font-bold text-green-600">{formatCurrencyShort(payment.paid_amount)}</p>
                                                     </div>
                                                     <div className="rounded-lg bg-orange-50 dark:bg-orange-900/20 p-2">
                                                         <p className="text-muted-foreground">Pendiente</p>
-                                                        <p className="font-bold text-orange-600">{formatCurrency(payment.pending_balance)}</p>
+                                                        <p className="font-bold text-orange-600">{formatCurrencyShort(payment.pending_balance)}</p>
                                                     </div>
                                                 </div>
 
@@ -355,7 +338,7 @@ export default function PaymentsList({ payments, programs, filters }: Props) {
                                                     {payment.due_date && (
                                                         <span className="flex items-center gap-1">
                                                             <Calendar className="h-3 w-3" />
-                                                            Vence: {formatDate(payment.due_date)}
+                                                            Vence: {formatDateShort(payment.due_date)}
                                                         </span>
                                                     )}
                                                     {payment.payment_method && (
@@ -550,7 +533,7 @@ export default function PaymentsList({ payments, programs, filters }: Props) {
                                                     )}
                                                 </td>
                                                 <td className="px-6 py-4 text-sm text-muted-foreground">
-                                                    {formatDate(payment.due_date)}
+                                                    {formatDateShort(payment.due_date)}
                                                 </td>
                                                 <td className="px-6 py-4">
                                                     <span
@@ -669,23 +652,12 @@ export default function PaymentsList({ payments, programs, filters }: Props) {
                 )}
             </div>
 
-            {/* Delete Dialog */}
-            <AlertDialog open={deleteDialog.open} onOpenChange={(open) => setDeleteDialog({ ...deleteDialog, open })}>
-                <AlertDialogContent>
-                    <AlertDialogHeader>
-                        <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                            Esta acción no se puede deshacer. El pago será eliminado permanentemente.
-                        </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                        <AlertDialogAction onClick={handleDelete} className="bg-red-600 hover:bg-red-700">
-                            Eliminar
-                        </AlertDialogAction>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog>
+            <ConfirmDeleteDialog
+                open={deleteDialog.open}
+                onOpenChange={(open) => setDeleteDialog({ ...deleteDialog, open })}
+                onConfirm={handleDelete}
+                description="Esta acción no se puede deshacer. El pago será eliminado permanentemente."
+            />
         </AppLayout>
     );
 }

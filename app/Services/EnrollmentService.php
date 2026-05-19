@@ -327,7 +327,11 @@ class EnrollmentService
             $parentGuardianName = $responsible->name.' '.$responsible->last_name;
 
             $payments = [];
-            $totalStudents = count($data['estudiantes']);
+
+            // Agrupar por primer apellido para calcular descuento familiar
+            $estudiantesPorApellido = collect($data['estudiantes'])->groupBy(function ($est) {
+                return strtolower(explode(' ', trim($est['last_name']))[0]);
+            });
 
             // 3. Procesar cada estudiante
             foreach ($data['estudiantes'] as $estudianteData) {
@@ -360,7 +364,10 @@ class EnrollmentService
                     $this->createScheduleEnrollment($student, $scheduleId);
                 }
 
-                // Crear pago (con descuento si aplica por múltiples estudiantes)
+                // Crear pago — descuento aplica solo si comparten primer apellido (hermanos)
+                $primerApellido = strtolower(explode(' ', trim($estudianteData['last_name']))[0]);
+                $hermanosCount = $estudiantesPorApellido->get($primerApellido, collect())->count();
+
                 $programName = \App\Models\AcademicProgram::find($estudianteData['program_id'])->name;
                 $modality = $datosMusicales['modality'] ?? 'Linaje Kids';
                 $payment = $this->createPayment(
@@ -370,7 +377,7 @@ class EnrollmentService
                     $programName,
                     $modality,
                     $scheduleId,
-                    $totalStudents
+                    $hermanosCount  // Solo cuenta hermanos (mismo primer apellido)
                 );
 
                 $payments[] = $payment;

@@ -1,1 +1,0 @@
-const a={CC:"Cédula de Ciudadanía",TI:"Tarjeta de Identidad",CE:"Cédula de Extranjería",Pasaporte:"Pasaporte"},e={M:"Masculino",F:"Femenino"},n={"":"Seleccione una modalidad","Linaje Kids":"Linaje Kids (6-11 años)","Linaje Teens":"Linaje Teens (12-17 años)","Linaje Big":"Linaje Big (18+ años)"},s=4;export{a as D,e as G,n as M,s as T};

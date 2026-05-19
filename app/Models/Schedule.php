@@ -98,6 +98,10 @@ class Schedule extends Model
             ->useLogName('schedules');
     }
 
+    // Scopes de estado
+    public function scopeActive($query) { return $query->where('status', 'active'); }
+    public function scopeInactive($query) { return $query->where('status', 'inactive'); }
+
     // Relación con el programa académico
     public function academicProgram(): BelongsTo
     {

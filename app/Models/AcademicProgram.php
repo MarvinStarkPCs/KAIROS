@@ -38,6 +38,11 @@ class AcademicProgram extends Model
             ->useLogName('academic_programs');
     }
 
+    // Scopes de estado
+    public function scopeActive($query) { return $query->where('status', 'active'); }
+    public function scopePublic($query) { return $query->where('status', 'active')->where('is_demo', false); }
+    public function scopeDemo($query) { return $query->where('is_demo', true); }
+
     // Relación con horarios del programa
     public function schedules(): HasMany
     {
