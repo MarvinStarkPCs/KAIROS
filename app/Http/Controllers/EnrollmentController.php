@@ -267,6 +267,7 @@ class EnrollmentController extends Controller
             'schedules'                  => $schedules,
             'currentScheduleEnrollment'  => $currentScheduleEnrollment,
             'authId'                     => auth()->id(),
+            'canGeneratePayment'         => auth()->user()->hasPermissionTo('generar_pago_mensual'),
             'allPrograms'                => $allPrograms,
         ]);
     }
@@ -446,7 +447,7 @@ class EnrollmentController extends Controller
      */
     public function generatePayment(Enrollment $enrollment)
     {
-        if (auth()->id() !== 1) {
+        if (!auth()->user()->hasPermissionTo('generar_pago_mensual')) {
             abort(403);
         }
 

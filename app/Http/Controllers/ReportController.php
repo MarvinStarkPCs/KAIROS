@@ -25,6 +25,17 @@ class ReportController extends Controller
         // Base query scoped by creation date
         $paymentsInRange = Payment::whereBetween('created_at', [$startDate, $endDate]);
 
+        // Vencidos = status 'overdue' O status 'pending' con due_date pasada
+        $today = Carbon::today();
+        $overdueCondition = function ($q) use ($today) {
+            $q->where('status', 'overdue')
+              ->orWhere(function ($q2) use ($today) {
+                  $q2->where('status', 'pending')
+                     ->whereNotNull('due_date')
+                     ->where('due_date', '<', $today);
+              });
+        };
+
         // === KPI SUMMARY ===
         $summary = [
             'total_recaudado' => (float) Payment::whereBetween('payment_date', [$startDate, $endDate])
@@ -34,10 +45,10 @@ class ReportController extends Controller
                 ->pending()
                 ->sum('remaining_amount'),
             'pagos_vencidos_count' => (clone $paymentsInRange)
-                ->overdue()
+                ->where($overdueCondition)
                 ->count(),
             'pagos_vencidos_amount' => (float) (clone $paymentsInRange)
-                ->overdue()
+                ->where($overdueCondition)
                 ->sum('remaining_amount'),
             'total_pagos' => (clone $paymentsInRange)->count(),
             'pagos_completados' => (clone $paymentsInRange)->completed()->count(),
@@ -58,18 +69,27 @@ class ReportController extends Controller
             ]);
 
         // === STATUS DISTRIBUTION (pie chart) ===
+        // Los pending con due_date pasada se clasifican como 'overdue' en el gráfico
         $statusDistribution = (clone $paymentsInRange)
-            ->selectRaw("status, COUNT(*) as count, SUM(amount) as total")
-            ->groupBy('status')
+            ->selectRaw("
+                CASE
+                    WHEN status = 'overdue' THEN 'overdue'
+                    WHEN status = 'pending' AND due_date IS NOT NULL AND due_date < CURDATE() THEN 'overdue'
+                    ELSE status
+                END as effective_status,
+                COUNT(*) as count,
+                SUM(amount) as total
+            ")
+            ->groupBy('effective_status')
             ->get()
             ->map(fn ($item) => [
-                'status' => $item->status,
-                'label' => match ($item->status) {
+                'status' => $item->effective_status,
+                'label' => match ($item->effective_status) {
                     'completed' => 'Completado',
                     'pending' => 'Pendiente',
                     'overdue' => 'Vencido',
                     'cancelled' => 'Cancelado',
-                    default => $item->status,
+                    default => $item->effective_status,
                 },
                 'count' => (int) $item->count,
                 'total' => (float) $item->total,
@@ -159,9 +179,10 @@ class ReportController extends Controller
             ->map($normalizePayment);
 
         // === OVERDUE PAYMENTS (table - always show all current overdue) ===
-        // Excluir pagos cuya matrícula asociada esté cancelada o retirada (deuda incobrable)
+        // Incluye: status 'overdue' + status 'pending' con due_date pasada
+        // Excluye pagos cuya matrícula esté cancelada o retirada (deuda incobrable)
         $overduePayments = Payment::with(['student', 'program'])
-            ->overdue()
+            ->where($overdueCondition)
             ->where(function ($q) {
                 $q->whereNull('enrollment_id')
                   ->orWhereHas('enrollment', fn($e) => $e->whereNotIn('status', ['cancelled', 'withdrawn']));

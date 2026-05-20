@@ -59,6 +59,7 @@ interface Props {
     schedules: Schedule[];
     currentScheduleEnrollment: ScheduleEnrollment | null;
     authId: number;
+    canGeneratePayment: boolean;
     allPrograms: Program[];
 }
 
@@ -82,7 +83,7 @@ function formatDays(days: string | string[]): string {
     }
 }
 
-export default function Edit({ enrollment, schedules, currentScheduleEnrollment, authId, allPrograms }: Props) {
+export default function Edit({ enrollment, schedules, currentScheduleEnrollment, authId, canGeneratePayment, allPrograms }: Props) {
     const { data, setData, put, processing, errors } = useForm({
         schedule_id: currentScheduleEnrollment?.schedule_id?.toString() ?? '',
     });
@@ -169,8 +170,8 @@ export default function Edit({ enrollment, schedules, currentScheduleEnrollment,
                     </Card>
                 )}
 
-                {/* Generar pago del mes — solo visible para usuario ID 1 */}
-                {authId === 1 && (
+                {/* Generar pago del mes — visible según permiso generar_pago_mensual */}
+                {canGeneratePayment && (
                     <Card>
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2 text-base">

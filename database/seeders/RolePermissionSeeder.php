@@ -79,6 +79,7 @@ class RolePermissionSeeder extends Seeder
             'eliminar_pago',
             'procesar_pago',
             'generar_factura',
+            'generar_pago_mensual',
 
             // Permisos de Roles
             'ver_roles',
