@@ -178,11 +178,12 @@ class ReportController extends Controller
             ->get()
             ->map($normalizePayment);
 
-        // === OVERDUE PAYMENTS (table - always show all current overdue) ===
+        // === OVERDUE PAYMENTS (table - filtrado por due_date dentro del rango) ===
         // Incluye: status 'overdue' + status 'pending' con due_date pasada
         // Excluye pagos cuya matrícula esté cancelada o retirada (deuda incobrable)
         $overduePayments = Payment::with(['student', 'program'])
             ->where($overdueCondition)
+            ->whereBetween('due_date', [$startDate, $endDate])
             ->where(function ($q) {
                 $q->whereNull('enrollment_id')
                   ->orWhereHas('enrollment', fn($e) => $e->whereNotIn('status', ['cancelled', 'withdrawn']));
