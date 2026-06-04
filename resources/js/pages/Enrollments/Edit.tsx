@@ -10,7 +10,8 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import { ArrowLeft, Save, Clock, MapPin, User as UserIcon, ShieldCheck, BookOpen, BadgeDollarSign } from 'lucide-react';
+import { ArrowLeft, Save, Clock, MapPin, User as UserIcon, ShieldCheck, BookOpen, BadgeDollarSign, AlertTriangle } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 import { FormEventHandler } from 'react';
 
 interface Schedule {
@@ -54,6 +55,11 @@ interface Program {
     schedules: ProgramSchedule[];
 }
 
+interface MissingMonth {
+    month: string;
+    label: string;
+}
+
 interface Props {
     enrollment: Enrollment;
     schedules: Schedule[];
@@ -61,6 +67,7 @@ interface Props {
     authId: number;
     canGeneratePayment: boolean;
     allPrograms: Program[];
+    missingMonths: MissingMonth[];
 }
 
 const STATUS_OPTIONS: { value: EnrollmentStatus; label: string }[] = [
@@ -83,7 +90,7 @@ function formatDays(days: string | string[]): string {
     }
 }
 
-export default function Edit({ enrollment, schedules, currentScheduleEnrollment, authId, canGeneratePayment, allPrograms }: Props) {
+export default function Edit({ enrollment, schedules, currentScheduleEnrollment, authId, canGeneratePayment, allPrograms, missingMonths }: Props) {
     const { data, setData, put, processing, errors } = useForm({
         schedule_id: currentScheduleEnrollment?.schedule_id?.toString() ?? '',
     });
@@ -115,6 +122,10 @@ export default function Edit({ enrollment, schedules, currentScheduleEnrollment,
 
     const handleGeneratePayment = () => {
         router.post(`/matriculas/${enrollment.id}/generate-payment`, {}, { preserveScroll: true });
+    };
+
+    const handleGenerateMonthPayment = (month: string) => {
+        router.post(`/matriculas/${enrollment.id}/generate-payment-month`, { month }, { preserveScroll: true });
     };
 
     return (
@@ -187,6 +198,38 @@ export default function Edit({ enrollment, schedules, currentScheduleEnrollment,
                                 <BadgeDollarSign className="mr-2 h-4 w-4" />
                                 Generar pago del mes
                             </Button>
+                        </CardContent>
+                    </Card>
+                )}
+
+                {/* Meses sin pago generado */}
+                {authId === 1 && missingMonths.length > 0 && (
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2 text-base">
+                                <AlertTriangle className="h-4 w-4 text-yellow-500" />
+                                Meses sin pago generado
+                                <Badge variant="destructive" className="ml-1">{missingMonths.length}</Badge>
+                            </CardTitle>
+                            <CardDescription>
+                                Los siguientes meses no tienen pago registrado para este estudiante.
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="flex flex-wrap gap-2">
+                                {missingMonths.map((m) => (
+                                    <Button
+                                        key={m.month}
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => handleGenerateMonthPayment(m.month)}
+                                        className="capitalize"
+                                    >
+                                        <BadgeDollarSign className="mr-1.5 h-3.5 w-3.5" />
+                                        {m.label}
+                                    </Button>
+                                ))}
+                            </div>
                         </CardContent>
                     </Card>
                 )}

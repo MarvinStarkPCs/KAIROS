@@ -222,6 +222,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/matriculas/{enrollment}/change-status', [EnrollmentController::class, 'changeStatus'])->name('inscripciones.change-status');
         Route::post('/matriculas/{enrollment}/change-program', [EnrollmentController::class, 'changeProgram'])->name('inscripciones.change-program');
         Route::post('/matriculas/{enrollment}/generate-payment', [EnrollmentController::class, 'generatePayment'])->name('inscripciones.generate-payment');
+        Route::post('/matriculas/{enrollment}/generate-payment-month', [EnrollmentController::class, 'generatePaymentForMonth'])->name('inscripciones.generate-payment-month');
     });
     Route::middleware(['permission:eliminar_inscripcion'])->group(function () {
         Route::delete('/matriculas/{enrollment}', [EnrollmentController::class, 'destroy'])->name('inscripciones.destroy');

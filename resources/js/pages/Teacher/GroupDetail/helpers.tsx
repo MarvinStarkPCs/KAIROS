@@ -20,7 +20,8 @@ export const getStatusBadge = (status: string) => {
 };
 
 export const formatDate = (dateStr: string): string => {
-    return new Date(dateStr).toLocaleDateString('es-ES', {
+    const [year, month, day] = dateStr.split('-').map(Number);
+    return new Date(year, month - 1, day).toLocaleDateString('es-ES', {
         day: '2-digit', month: 'short', year: 'numeric',
     });
 };
