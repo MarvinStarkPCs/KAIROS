@@ -191,6 +191,11 @@ class PaymentController extends Controller
      */
     public function update(Request $request, Payment $payment)
     {
+        if ($payment->wompi_transaction_id || $payment->wompi_reference) {
+            flash_error('Los pagos procesados por pasarela de pago no pueden modificarse.');
+            return redirect()->route('pagos.index');
+        }
+
         $validated = $request->validate([
             'concept'          => 'nullable|string|max:255',
             'amount'           => 'nullable|numeric|min:0',
@@ -263,6 +268,11 @@ class PaymentController extends Controller
      */
     public function destroy(Payment $payment)
     {
+        if ($payment->wompi_transaction_id || $payment->wompi_reference) {
+            flash_error('Los pagos procesados por pasarela de pago no pueden eliminarse.');
+            return redirect()->route('pagos.index');
+        }
+
         $payment->delete();
 
         flash_success('Pago eliminado exitosamente');

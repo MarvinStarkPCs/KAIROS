@@ -1,7 +1,7 @@
 import { Head, Link, router } from '@inertiajs/react';
 import { formatCurrencyShort, formatDateShort } from '@/lib/format';
 import { ConfirmDeleteDialog } from '@/components/ConfirmDeleteDialog';
-import { Plus, Search, Filter, Eye, Edit, Trash2, DollarSign, CheckCircle, Clock, XCircle, CreditCard, List as ListIcon, RefreshCw, Settings, BarChart3, ChevronLeft, ChevronRight, LayoutGrid, Table2, Calendar, Banknote } from 'lucide-react';
+import { Plus, Search, Filter, Eye, Edit, Trash2, DollarSign, CheckCircle, Clock, XCircle, CreditCard, List as ListIcon, RefreshCw, Settings, BarChart3, ChevronLeft, ChevronRight, LayoutGrid, Table2, Calendar, Banknote, ShieldCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -72,6 +72,8 @@ const STATUS_MAP = {
     overdue:   { label: 'Vencido',    icon: XCircle,      bg: 'bg-red-100 dark:bg-red-900/30',       text: 'text-red-700 dark:text-red-400'       },
     cancelled: { label: 'Cancelado',  icon: XCircle,      bg: 'bg-muted',                             text: 'text-muted-foreground'                },
 };
+
+const isGatewayPayment = (p: Payment) => !!(p.wompi_transaction_id || p.wompi_reference);
 
 
 export default function PaymentsList({ payments, programs, filters }: Props) {
@@ -359,16 +361,25 @@ export default function PaymentsList({ payments, programs, filters }: Props) {
                                                     <Link href={`/pagos/${payment.id}`}>
                                                         <Button variant="outline" size="sm"><Eye className="h-3.5 w-3.5" /></Button>
                                                     </Link>
-                                                    <Link href={`/pagos/${payment.id}/edit`}>
-                                                        <Button variant="outline" size="sm"><Edit className="h-3.5 w-3.5" /></Button>
-                                                    </Link>
-                                                    <Button
-                                                        variant="outline" size="sm"
-                                                        className="text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
-                                                        onClick={() => setDeleteDialog({ open: true, paymentId: payment.id })}
-                                                    >
-                                                        <Trash2 className="h-3.5 w-3.5" />
-                                                    </Button>
+                                                    {isGatewayPayment(payment) ? (
+                                                        <span className="inline-flex items-center gap-1 rounded-md border border-blue-200 dark:border-blue-700 bg-blue-50 dark:bg-blue-900/20 px-2 py-1 text-[11px] font-medium text-blue-600 dark:text-blue-400" title="Pago procesado por pasarela — no editable">
+                                                            <ShieldCheck className="h-3 w-3" />
+                                                            Pasarela
+                                                        </span>
+                                                    ) : (
+                                                        <>
+                                                            <Link href={`/pagos/${payment.id}/edit`}>
+                                                                <Button variant="outline" size="sm"><Edit className="h-3.5 w-3.5" /></Button>
+                                                            </Link>
+                                                            <Button
+                                                                variant="outline" size="sm"
+                                                                className="text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
+                                                                onClick={() => setDeleteDialog({ open: true, paymentId: payment.id })}
+                                                            >
+                                                                <Trash2 className="h-3.5 w-3.5" />
+                                                            </Button>
+                                                        </>
+                                                    )}
                                                 </div>
                                             </div>
                                         </div>
@@ -561,19 +572,28 @@ export default function PaymentsList({ payments, programs, filters }: Props) {
                                                                 <Eye className="h-4 w-4" />
                                                             </Button>
                                                         </Link>
-                                                        <Link href={`/pagos/${payment.id}/edit`}>
-                                                            <Button variant="outline" size="sm">
-                                                                <Edit className="h-4 w-4" />
-                                                            </Button>
-                                                        </Link>
-                                                        <Button
-                                                            variant="outline"
-                                                            size="sm"
-                                                            className="text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
-                                                            onClick={() => setDeleteDialog({ open: true, paymentId: payment.id })}
-                                                        >
-                                                            <Trash2 className="h-4 w-4" />
-                                                        </Button>
+                                                        {isGatewayPayment(payment) ? (
+                                                            <span className="inline-flex items-center gap-1 rounded-md border border-blue-200 dark:border-blue-700 bg-blue-50 dark:bg-blue-900/20 px-2 py-1 text-xs font-medium text-blue-600 dark:text-blue-400" title="Pago procesado por pasarela — no editable">
+                                                                <ShieldCheck className="h-3.5 w-3.5" />
+                                                                Pasarela
+                                                            </span>
+                                                        ) : (
+                                                            <>
+                                                                <Link href={`/pagos/${payment.id}/edit`}>
+                                                                    <Button variant="outline" size="sm">
+                                                                        <Edit className="h-4 w-4" />
+                                                                    </Button>
+                                                                </Link>
+                                                                <Button
+                                                                    variant="outline"
+                                                                    size="sm"
+                                                                    className="text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
+                                                                    onClick={() => setDeleteDialog({ open: true, paymentId: payment.id })}
+                                                                >
+                                                                    <Trash2 className="h-4 w-4" />
+                                                                </Button>
+                                                            </>
+                                                        )}
                                                     </div>
                                                 </td>
                                             </tr>

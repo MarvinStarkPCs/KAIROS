@@ -1,6 +1,6 @@
 import { Head, Link, useForm, router, usePage } from '@inertiajs/react';
 import type { SharedData } from '@/types';
-import { ArrowLeft, Save, Search, Check, Plus, DollarSign, Receipt, Pencil, Smartphone } from 'lucide-react';
+import { ArrowLeft, Save, Search, Check, Plus, DollarSign, Receipt, Pencil, Smartphone, ShieldCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -136,6 +136,7 @@ export default function PaymentForm({ payment, enrollments, canEditAbonos = fals
     });
 
     const isNequi = payment?.payment_method === 'nequi' || data.payment_method === 'nequi';
+    const isGatewayPayment = !!(payment?.wompi_transaction_id || payment?.wompi_reference);
 
     const handleEnrollmentSelect = (enrollment: Enrollment) => {
         setSelectedEnrollment(enrollment);
@@ -385,6 +386,20 @@ export default function PaymentForm({ payment, enrollments, canEditAbonos = fals
                         <p className="mt-1 text-sm text-green-700 dark:text-green-300">
                             Total pagado: ${paidAmount.toLocaleString('es-CO')} en {payment.transactions.length} abono(s)
                         </p>
+                    </div>
+                )}
+
+                {/* Aviso pasarela — no editable */}
+                {isEditing && isGatewayPayment && (
+                    <div className="flex items-start gap-3 rounded-xl border border-blue-200 dark:border-blue-700 bg-blue-50 dark:bg-blue-900/20 px-5 py-4 shadow-sm">
+                        <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-blue-500" />
+                        <div>
+                            <p className="font-semibold text-blue-800 dark:text-blue-200">Pago procesado por pasarela de pago</p>
+                            <p className="mt-0.5 text-sm text-blue-700 dark:text-blue-300">
+                                Este pago fue generado por Wompi / Nequi y no puede modificarse ni eliminarse.
+                                Solo se puede consultar.
+                            </p>
+                        </div>
                     </div>
                 )}
 
@@ -651,7 +666,7 @@ export default function PaymentForm({ payment, enrollments, canEditAbonos = fals
                                 Cancelar
                             </Button>
                         </Link>
-                        <Button type="submit" disabled={processing || (!isEditing && !selectedEnrollment)}>
+                        <Button type="submit" disabled={processing || (!isEditing && !selectedEnrollment) || isGatewayPayment}>
                             <Save className="mr-2 h-4 w-4" />
                             {processing ? 'Guardando...' : payment ? 'Actualizar Pago' : 'Registrar Pago'}
                         </Button>
