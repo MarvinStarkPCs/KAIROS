@@ -155,11 +155,11 @@ class ProcessRecurringPayments extends Command
             ->get();
 
         // Unificar en una colección de pagadores con sus student_ids
-        $payers = $parents->map(fn($p) => [
+        $payers = collect($parents->map(fn($p) => [
             'user'        => $p,
             'student_ids' => $p->dependents()->pluck('id'),
             'tipo'        => 'Responsable',
-        ])->merge($selfPayers->map(fn($s) => [
+        ]))->merge($selfPayers->map(fn($s) => [
             'user'        => $s,
             'student_ids' => collect([$s->id]),
             'tipo'        => 'Estudiante',
