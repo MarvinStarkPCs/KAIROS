@@ -1,6 +1,6 @@
 import { Head, Link, useForm, router, usePage } from '@inertiajs/react';
 import type { SharedData } from '@/types';
-import { ArrowLeft, Save, Search, Check, Plus, DollarSign, Receipt, Pencil } from 'lucide-react';
+import { ArrowLeft, Save, Search, Check, Plus, DollarSign, Receipt, Pencil, Smartphone } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -43,10 +43,15 @@ interface Payment {
     remaining_amount?: number;
     pending_balance?: number;
     due_date: string;
+    payment_date?: string | null;
     status: 'pending' | 'completed' | 'overdue' | 'cancelled';
-    payment_method?: string;
-    reference_number?: string;
-    notes?: string;
+    payment_method?: string | null;
+    reference_number?: string | null;
+    notes?: string | null;
+    // Campos Wompi / Nequi
+    wompi_transaction_id?: string | null;
+    wompi_reference?: string | null;
+    payment_source_id?: string | null;
     transactions?: PaymentTransaction[];
 }
 
@@ -119,10 +124,18 @@ export default function PaymentForm({ payment, enrollments, canEditAbonos = fals
         payment_type: payment?.payment_type || 'single',
         amount: payment?.amount || '',
         due_date: payment?.due_date || '',
+        payment_date: payment?.payment_date || '',
         status: payment?.status || 'pending',
+        payment_method: payment?.payment_method || '',
         reference_number: payment?.reference_number || '',
         notes: payment?.notes || '',
+        // Campos Wompi / Nequi
+        wompi_transaction_id: payment?.wompi_transaction_id || '',
+        wompi_reference: payment?.wompi_reference || '',
+        payment_source_id: payment?.payment_source_id || '',
     });
+
+    const isNequi = payment?.payment_method === 'nequi' || data.payment_method === 'nequi';
 
     const handleEnrollmentSelect = (enrollment: Enrollment) => {
         setSelectedEnrollment(enrollment);
@@ -557,7 +570,94 @@ export default function PaymentForm({ payment, enrollments, canEditAbonos = fals
                             />
                             <InputError message={errors.notes} />
                         </div>
+
+                        {/* Fecha de pago */}
+                        {isSuperAdmin && (
+                            <div>
+                                <Label htmlFor="payment_date">Fecha de pago</Label>
+                                <Input
+                                    id="payment_date"
+                                    type="date"
+                                    value={data.payment_date}
+                                    onChange={(e) => setData('payment_date', e.target.value)}
+                                />
+                            </div>
+                        )}
+
+                        {/* Método de pago */}
+                        {isSuperAdmin && (
+                            <div>
+                                <Label htmlFor="payment_method">Método de pago</Label>
+                                <select
+                                    id="payment_method"
+                                    value={data.payment_method}
+                                    onChange={(e) => setData('payment_method', e.target.value)}
+                                    className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground"
+                                >
+                                    <option value="">— Sin especificar —</option>
+                                    <option value="cash">Efectivo</option>
+                                    <option value="transfer">Transferencia</option>
+                                    <option value="credit_card">Tarjeta de crédito</option>
+                                    <option value="nequi">Nequi</option>
+                                    <option value="online">Pago en línea</option>
+                                </select>
+                            </div>
+                        )}
                     </div>
+
+                    {/* Sección Wompi / Nequi — solo admin y cuando aplica */}
+                    {isSuperAdmin && isEditing && (
+                        <div className="mt-6 rounded-lg border border-pink-200 dark:border-pink-800 bg-pink-50 dark:bg-pink-950/20 p-5 space-y-4">
+                            <h3 className="flex items-center gap-2 text-sm font-semibold text-pink-800 dark:text-pink-200">
+                                <Smartphone className="h-4 w-4" />
+                                Datos Wompi / Nequi
+                            </h3>
+
+                            <div className="grid gap-4 md:grid-cols-2">
+                                <div>
+                                    <Label htmlFor="wompi_transaction_id" className="text-xs text-muted-foreground">ID Transacción Wompi</Label>
+                                    <Input
+                                        id="wompi_transaction_id"
+                                        value={data.wompi_transaction_id}
+                                        onChange={(e) => setData('wompi_transaction_id', e.target.value)}
+                                        placeholder="Ej: 11998111-1784562231-10219"
+                                        className="font-mono text-xs"
+                                    />
+                                    <p className="mt-1 text-[11px] text-muted-foreground">
+                                        ID de la transacción en el panel de Wompi
+                                    </p>
+                                </div>
+
+                                <div>
+                                    <Label htmlFor="wompi_reference" className="text-xs text-muted-foreground">Referencia Wompi</Label>
+                                    <Input
+                                        id="wompi_reference"
+                                        value={data.wompi_reference}
+                                        onChange={(e) => setData('wompi_reference', e.target.value)}
+                                        placeholder="Ej: NQ-P134-202507-1234567890"
+                                        className="font-mono text-xs"
+                                    />
+                                    <p className="mt-1 text-[11px] text-muted-foreground">
+                                        Referencia enviada a Wompi al crear el cobro
+                                    </p>
+                                </div>
+
+                                <div className="md:col-span-2">
+                                    <Label htmlFor="payment_source_id" className="text-xs text-muted-foreground">Payment Source ID (débito automático)</Label>
+                                    <Input
+                                        id="payment_source_id"
+                                        value={data.payment_source_id}
+                                        onChange={(e) => setData('payment_source_id', e.target.value)}
+                                        placeholder="ID del payment source para cobros automáticos"
+                                        className="font-mono text-xs"
+                                    />
+                                    <p className="mt-1 text-[11px] text-muted-foreground">
+                                        Si está presente, los cobros siguientes son automáticos sin push
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    )}
 
                     {/* Actions */}
                     <div className="mt-6 flex items-center justify-end gap-3">

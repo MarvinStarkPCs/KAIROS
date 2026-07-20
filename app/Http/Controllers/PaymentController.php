@@ -174,7 +174,13 @@ class PaymentController extends Controller
             });
 
         return Inertia::render('Payments/Form', [
-            'payment'       => $payment,
+            'payment'       => array_merge($payment->toArray(), [
+                'wompi_transaction_id' => $payment->wompi_transaction_id,
+                'wompi_reference'      => $payment->wompi_reference,
+                'payment_method'       => $payment->payment_method,
+                'payment_source_id'    => $payment->payment_source_id,
+                'payment_date'         => $payment->payment_date?->format('Y-m-d'),
+            ]),
             'enrollments'   => $enrollments,
             'canEditAbonos' => auth()->id() === 1,
         ]);
@@ -186,26 +192,41 @@ class PaymentController extends Controller
     public function update(Request $request, Payment $payment)
     {
         $validated = $request->validate([
-            'concept' => 'nullable|string|max:255',
-            'amount' => 'nullable|numeric|min:0',
-            'due_date' => 'nullable|date',
+            'concept'          => 'nullable|string|max:255',
+            'amount'           => 'nullable|numeric|min:0',
+            'due_date'         => 'nullable|date',
             'reference_number' => 'nullable|string|max:100',
-            'notes' => 'nullable|string|max:500',
+            'notes'            => 'nullable|string|max:500',
         ], [
-            'concept.max' => 'El concepto no puede exceder 255 caracteres',
-            'amount.numeric' => 'El monto debe ser un número',
-            'amount.min' => 'El monto debe ser mayor o igual a 0',
-            'due_date.date' => 'La fecha debe ser válida',
-            'reference_number.max' => 'El número de referencia no puede exceder 100 caracteres',
-            'notes.max' => 'Las notas no pueden exceder 500 caracteres',
+            'concept.max'           => 'El concepto no puede exceder 255 caracteres',
+            'amount.numeric'        => 'El monto debe ser un número',
+            'amount.min'            => 'El monto debe ser mayor o igual a 0',
+            'due_date.date'         => 'La fecha debe ser válida',
+            'reference_number.max'  => 'El número de referencia no puede exceder 100 caracteres',
+            'notes.max'             => 'Las notas no pueden exceder 500 caracteres',
         ]);
 
-        // Solo el usuario ID 1 puede cambiar el estado
-        if (auth()->id() === 1 && $request->filled('status')) {
-            $request->validate(['status' => 'in:pending,completed,overdue,cancelled'], [
-                'status.in' => 'El estado debe ser: pendiente, completado, vencido o cancelado',
-            ]);
-            $validated['status'] = $request->status;
+        // Solo el usuario ID 1 puede cambiar estado y campos Nequi/Wompi
+        if (auth()->id() === 1) {
+            if ($request->filled('status')) {
+                $request->validate(['status' => 'in:pending,completed,overdue,cancelled']);
+                $validated['status'] = $request->status;
+            }
+            if ($request->filled('payment_method')) {
+                $validated['payment_method'] = $request->payment_method;
+            }
+            if ($request->has('wompi_transaction_id')) {
+                $validated['wompi_transaction_id'] = $request->wompi_transaction_id ?: null;
+            }
+            if ($request->has('wompi_reference')) {
+                $validated['wompi_reference'] = $request->wompi_reference ?: null;
+            }
+            if ($request->has('payment_source_id')) {
+                $validated['payment_source_id'] = $request->payment_source_id ?: null;
+            }
+            if ($request->filled('payment_date')) {
+                $validated['payment_date'] = $request->payment_date;
+            }
         }
 
         // Si se cambia el monto, recalcular remaining_amount basado en los abonos ya realizados
