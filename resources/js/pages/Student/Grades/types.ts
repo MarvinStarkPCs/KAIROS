@@ -113,6 +113,12 @@ export interface ProgramPayment {
     transactions: PaymentTransaction[];
 }
 
+export interface NequiInfo {
+    phone: string | null;
+    active: boolean;
+    payment_source_id: string | null;
+}
+
 export interface GradesProps {
     enrollments: Enrollment[];
     schedules: StudentSchedule[];
@@ -123,4 +129,5 @@ export interface GradesProps {
     attendanceStats: AttendanceStats;
     recentAttendances: RecentAttendance[];
     programPayments: ProgramPayment[];
+    nequi?: NequiInfo;
 }

@@ -72,7 +72,7 @@ interface Props {
         meta: { current_page: number; last_page: number; from: number; to: number; total: number };
     };
     summary: Summary;
-    nequi: NequiInfo;
+    nequi?: NequiInfo;
 }
 
 // ── Helpers ────────────────────────────────────────────────────────────────
@@ -93,7 +93,9 @@ const STATUS_MAP = {
 
 // ── Componente principal ───────────────────────────────────────────────────
 
-export default function StudentPayments({ payments, summary, nequi }: Props) {
+const DEFAULT_NEQUI: NequiInfo = { phone: null, active: false, payment_source_id: null };
+
+export default function StudentPayments({ payments, summary, nequi = DEFAULT_NEQUI }: Props) {
     const [expanded, setExpanded] = useState<number | null>(null);
     const { data, setData, post, processing, errors, reset } = useForm({ phone: nequi.phone ?? '' });
 

@@ -147,6 +147,11 @@ class StudentController extends Controller
         $attendanceData = $this->getStudentAttendance($student->id);
 
         return Inertia::render('Student/Grades', [
+            'nequi' => [
+                'phone'             => $student->nequi_phone,
+                'active'            => (bool) $student->nequi_subscription_active,
+                'payment_source_id' => $student->nequi_payment_source_id,
+            ],
             'enrollments' => $enrollments->map(fn($e) => [
                 'id' => $e->id,
                 'program_id' => $e->program_id,
