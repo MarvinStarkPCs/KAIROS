@@ -325,6 +325,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::middleware(['role:Estudiante|Administrador'])->group(function () {
             Route::get('/calificaciones/{programId?}', [StudentController::class, 'grades'])->name('estudiante.calificaciones');
             Route::get('/pagos', [StudentController::class, 'payments'])->name('estudiante.pagos');
+            Route::post('/nequi/vincular', [\App\Http\Controllers\NequiController::class, 'link'])->name('estudiante.nequi.vincular');
+            Route::delete('/nequi/desvincular', [\App\Http\Controllers\NequiController::class, 'unlink'])->name('estudiante.nequi.desvincular');
         });
     });
 

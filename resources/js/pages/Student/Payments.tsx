@@ -1,4 +1,5 @@
-import { Head, router } from '@inertiajs/react';
+import React from 'react';
+import { Head, router, useForm } from '@inertiajs/react';
 import { formatCurrencyShort, formatDateShort } from '@/lib/format';
 import AppLayout from '@/layouts/app-layout';
 import {
@@ -14,10 +15,16 @@ import {
     Banknote,
     ChevronLeft,
     ChevronRight,
+    Smartphone,
+    LinkIcon,
+    Unlink,
 } from 'lucide-react';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 // ── Tipos ──────────────────────────────────────────────────────────────────
 
@@ -53,12 +60,19 @@ interface Summary {
     pagos_vencidos: number;
 }
 
+interface NequiInfo {
+    phone: string | null;
+    active: boolean;
+    payment_source_id: string | null;
+}
+
 interface Props {
     payments: {
         data: Payment[];
         meta: { current_page: number; last_page: number; from: number; to: number; total: number };
     };
     summary: Summary;
+    nequi: NequiInfo;
 }
 
 // ── Helpers ────────────────────────────────────────────────────────────────
@@ -79,13 +93,23 @@ const STATUS_MAP = {
 
 // ── Componente principal ───────────────────────────────────────────────────
 
-export default function StudentPayments({ payments, summary }: Props) {
+export default function StudentPayments({ payments, summary, nequi }: Props) {
     const [expanded, setExpanded] = useState<number | null>(null);
+    const { data, setData, post, processing, errors, reset } = useForm({ phone: nequi.phone ?? '' });
 
     const toggle = (id: number) => setExpanded(prev => prev === id ? null : id);
 
     const goToPage = (page: number) => {
         router.get('/estudiante/pagos', { page }, { preserveState: true, preserveScroll: true });
+    };
+
+    const handleLink = (e: React.FormEvent) => {
+        e.preventDefault();
+        post('/estudiante/nequi/vincular', { preserveScroll: true, onSuccess: () => reset() });
+    };
+
+    const handleUnlink = () => {
+        router.delete('/estudiante/nequi/desvincular', { preserveScroll: true });
     };
 
     return (
@@ -98,6 +122,84 @@ export default function StudentPayments({ payments, summary }: Props) {
                     <h1 className="text-3xl font-bold text-foreground">Mis Pagos</h1>
                     <p className="mt-1 text-muted-foreground">Consulta el estado de tus mensualidades y abonos</p>
                 </div>
+
+                {/* Nequi automático */}
+                <Card>
+                    <CardHeader className="pb-3">
+                        <CardTitle className="flex items-center gap-2 text-base">
+                            <Smartphone className="h-4 w-4 text-pink-500" />
+                            Pagos automáticos con Nequi
+                        </CardTitle>
+                        <CardDescription>
+                            Vincula tu cuenta Nequi y autoriza solo una vez. Desde ese momento tus mensualidades
+                            se cobran automáticamente sin que tengas que hacer nada más.
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        {nequi.phone && nequi.active ? (
+                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                                <div className="flex items-center gap-3">
+                                    <div className="flex items-center justify-center w-9 h-9 rounded-full bg-green-100 dark:bg-green-900/30">
+                                        <CheckCircle className="h-5 w-5 text-green-600" />
+                                    </div>
+                                    <div>
+                                        <p className="font-medium text-sm">{nequi.phone}</p>
+                                        <p className="text-xs text-muted-foreground">
+                                            Cobros automáticos activos — se debitará sin necesidad de aprobar cada mes
+                                        </p>
+                                    </div>
+                                </div>
+                                <Button variant="outline" size="sm" className="text-destructive hover:text-destructive" onClick={handleUnlink}>
+                                    <Unlink className="mr-1.5 h-3.5 w-3.5" />
+                                    Desvincular
+                                </Button>
+                            </div>
+                        ) : nequi.phone && nequi.payment_source_id ? (
+                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                                <div className="flex items-center gap-3">
+                                    <div className="flex items-center justify-center w-9 h-9 rounded-full bg-yellow-100 dark:bg-yellow-900/30">
+                                        <Clock className="h-5 w-5 text-yellow-600" />
+                                    </div>
+                                    <div>
+                                        <p className="font-medium text-sm">{nequi.phone}</p>
+                                        <p className="text-xs text-muted-foreground">
+                                            Pendiente de autorización — abre tu app Nequi y acepta la notificación
+                                        </p>
+                                    </div>
+                                </div>
+                                <Button variant="outline" size="sm" className="text-destructive hover:text-destructive" onClick={handleUnlink}>
+                                    <Unlink className="mr-1.5 h-3.5 w-3.5" />
+                                    Cancelar
+                                </Button>
+                            </div>
+                        ) : (
+                            <form onSubmit={handleLink} className="flex flex-col sm:flex-row gap-3">
+                                <div className="flex-1 space-y-1">
+                                    <Label htmlFor="nequi-phone-student">Número Nequi (celular)</Label>
+                                    <Input
+                                        id="nequi-phone-student"
+                                        type="tel"
+                                        placeholder="3001234567"
+                                        value={data.phone}
+                                        onChange={(e) => setData('phone', e.target.value)}
+                                        maxLength={10}
+                                        className="max-w-xs"
+                                    />
+                                    {errors.phone && <p className="text-xs text-destructive">{errors.phone}</p>}
+                                    <p className="text-xs text-muted-foreground">
+                                        Solo autorizas una vez. Después los cobros mensuales son automáticos.
+                                    </p>
+                                </div>
+                                <div className="flex items-end">
+                                    <Button type="submit" disabled={processing} className="bg-pink-600 hover:bg-pink-700 text-white">
+                                        <LinkIcon className="mr-2 h-4 w-4" />
+                                        {processing ? 'Vinculando...' : 'Vincular Nequi'}
+                                    </Button>
+                                </div>
+                            </form>
+                        )}
+                    </CardContent>
+                </Card>
 
                 {/* Resumen */}
                 <div className="grid gap-4 sm:grid-cols-3">

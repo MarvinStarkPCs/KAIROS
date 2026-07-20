@@ -311,6 +311,11 @@ class StudentController extends Controller
         return Inertia::render('Student/Payments', [
             'payments' => $paginated,
             'summary'  => $summary,
+            'nequi'    => [
+                'phone'             => $student->nequi_phone,
+                'active'            => (bool) $student->nequi_subscription_active,
+                'payment_source_id' => $student->nequi_payment_source_id,
+            ],
         ]);
     }
 }
