@@ -13,9 +13,9 @@ class NequiController extends Controller
     public function __construct(private WompiService $wompiService) {}
 
     /**
-     * Vincular Nequi creando un payment source para débito automático.
-     * El usuario recibe UNA sola notificación para autorizar; los cobros futuros
-     * son automáticos sin necesidad de aprobar cada mes.
+     * Vincular número Nequi para cobros automáticos.
+     * El primer mes se envía push para aprobar; una vez aprobado Wompi devuelve
+     * un payment_source_id que queda guardado para cobros automáticos siguientes.
      */
     public function link(Request $request)
     {
@@ -26,26 +26,13 @@ class NequiController extends Controller
             'phone.regex' => 'El número debe ser un celular colombiano (10 dígitos, empezando por 3).',
         ]);
 
-        $user = Auth::user();
+        Auth::user()->update([
+            'nequi_phone'              => $request->phone,
+            'nequi_payment_source_id'  => null,
+            'nequi_subscription_active' => true,
+        ]);
 
-        try {
-            $sourceId = $this->wompiService->createNequiPaymentSource(
-                phone: $request->phone,
-                customerEmail: $user->email,
-                merchantCustomerId: 'KAIROS-U' . $user->id,
-            );
-
-            $user->update([
-                'nequi_phone' => $request->phone,
-                'nequi_payment_source_id' => (string) $sourceId,
-                'nequi_subscription_active' => false, // Se activa cuando Wompi confirme via webhook
-            ]);
-
-            flash_success('¡Listo! Abre tu app Nequi y acepta la notificación de autorización. Después de eso, los pagos mensuales se cobrarán automáticamente sin que tengas que hacer nada más.');
-        } catch (\Exception $e) {
-            Log::error('NequiController::link error', ['user_id' => $user->id, 'message' => $e->getMessage()]);
-            flash_error('No se pudo conectar con Nequi: ' . $e->getMessage());
-        }
+        flash_success('Número Nequi registrado. El primer cobro mensual te llegará como notificación a tu app Nequi para aprobar. A partir de ahí los siguientes meses se cobrarán automáticamente.');
 
         return back();
     }

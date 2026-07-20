@@ -228,7 +228,9 @@ class WompiService
 
         $payload = [
             'type' => 'NEQUI',
-            'phone_number' => $phone,
+            'token' => [
+                'phone_number' => $phone,
+            ],
             'acceptance_token' => $acceptanceToken,
             'customer_email' => $customerEmail,
             'merchant_customer_id' => $merchantCustomerId,

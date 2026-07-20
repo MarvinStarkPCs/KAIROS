@@ -136,8 +136,8 @@ class ProcessRecurringPayments extends Command
     {
         $today = Carbon::today();
 
-        // Responsables que pagan por sus hijos
-        $parents = User::whereNotNull('nequi_payment_source_id')
+        // Responsables con Nequi activo (con o sin payment_source_id)
+        $parents = User::whereNotNull('nequi_phone')
             ->where('nequi_subscription_active', true)
             ->role('Padre/Madre')
             ->get();
@@ -148,7 +148,7 @@ class ProcessRecurringPayments extends Command
             ->unique();
 
         // Estudiantes adultos con Nequi propio (excluye los que ya paga su responsable)
-        $selfPayers = User::whereNotNull('nequi_payment_source_id')
+        $selfPayers = User::whereNotNull('nequi_phone')
             ->where('nequi_subscription_active', true)
             ->role('Estudiante')
             ->whereNotIn('id', $coveredStudentIds)
@@ -195,20 +195,33 @@ class ProcessRecurringPayments extends Command
                 $studentName = $payment->student->name . ' ' . ($payment->student->last_name ?? '');
                 $this->line("  [{$tipo}] + {$studentName} — {$payment->program?->name} — \${$payment->amount}");
             }
-            $this->line("  → Cobro automático (source #{$payer->nequi_payment_source_id}): \${$totalAmount} ({$pending->count()} pagos)");
+            $modoLabel = !empty($payer->nequi_payment_source_id) ? "automático (source #{$payer->nequi_payment_source_id})" : "push → {$payer->nequi_phone}";
+            $this->line("  → Cobro {$modoLabel}: \${$totalAmount} ({$pending->count()} pagos)");
+
+            $hasSource = !empty($payer->nequi_payment_source_id);
+            $modo = $hasSource ? 'automático (sin push)' : 'push al celular';
 
             if ($dryRun) {
-                $this->info("  [DRY-RUN] Débito automático \${$totalAmount} (sin push)");
+                $this->info("  [DRY-RUN] Cobro {$modo} por \${$totalAmount}");
                 continue;
             }
 
             try {
-                $transaction = $this->wompiService->chargeWithPaymentSource(
-                    paymentSourceId: (int) $payer->nequi_payment_source_id,
-                    amountInCents: $totalCents,
-                    reference: $reference,
-                    customerEmail: $payer->email,
-                );
+                if ($hasSource) {
+                    $transaction = $this->wompiService->chargeWithPaymentSource(
+                        paymentSourceId: (int) $payer->nequi_payment_source_id,
+                        amountInCents: $totalCents,
+                        reference: $reference,
+                        customerEmail: $payer->email,
+                    );
+                } else {
+                    $transaction = $this->wompiService->chargeNequi(
+                        phone: $payer->nequi_phone,
+                        amountInCents: $totalCents,
+                        reference: $reference,
+                        customerEmail: $payer->email,
+                    );
+                }
 
                 $txStatus = $transaction['status'] ?? 'PENDING';
                 $txId     = $transaction['id'] ?? null;

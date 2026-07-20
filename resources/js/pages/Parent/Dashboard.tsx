@@ -165,8 +165,8 @@ export default function Dashboard({ children, nequi }: Props) {
                             Pagos automáticos con Nequi
                         </CardTitle>
                         <CardDescription>
-                            Vincula tu cuenta Nequi y autoriza solo una vez. Desde ese momento los pagos
-                            mensuales de tus hijos se cobran automáticamente sin que debas aprobar cada mes.
+                            Vincula tu Nequi para cobros automáticos. El primer mes recibirás una notificación
+                            para aprobar; a partir de ahí los cobros son automáticos sin que debas hacer nada.
                         </CardDescription>
                     </CardHeader>
                     <CardContent>

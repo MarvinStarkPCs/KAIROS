@@ -719,6 +719,25 @@ class PaymentController extends Controller
                 }
             }
 
+            // Si es pago Nequi aprobado, guardar payment_source_id para cobros automáticos futuros
+            if (($transactionData['payment_method_type'] ?? '') === 'NEQUI') {
+                $sourceId = $transactionData['payment_source_id'] ?? null;
+                if ($sourceId) {
+                    // Identificar al responsable por el wompi_reference del pago
+                    $studentId = $payment->student_id;
+                    $student   = User::find($studentId);
+                    // El pagador puede ser el estudiante mismo o su responsable
+                    $payer = $student?->parent ?? $student;
+                    if ($payer && !$payer->nequi_payment_source_id) {
+                        $payer->update(['nequi_payment_source_id' => (string) $sourceId]);
+                        \Log::info('Nequi payment_source_id guardado para cobros automáticos', [
+                            'payer_id'  => $payer->id,
+                            'source_id' => $sourceId,
+                        ]);
+                    }
+                }
+            }
+
             \Log::info('Pagos aprobados:', ['payment_ids' => $payments->pluck('id'), 'transaction_id' => $transactionData['id']]);
 
             // Email al padre del primer pago
