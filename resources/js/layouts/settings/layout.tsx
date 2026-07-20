@@ -2,82 +2,37 @@ import Heading from '@/components/heading';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
-import { edit as editAppearance } from '@/routes/appearance';
-import { edit as editPassword } from '@/routes/password';
-import { edit } from '@/routes/profile';
-import { edit as editSmtp } from '@/routes/smtp';
-import { edit as editWompi } from '@/routes/wompi';
-import { show } from '@/routes/two-factor';
-import { show as showManual } from '@/routes/manual';
-import { type NavItem, type SharedData } from '@/types';
+import { type SharedData } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
 import { type PropsWithChildren, useMemo } from 'react';
 
-interface SettingsNavItem extends NavItem {
+interface SettingsNavItem {
+    title: string;
+    href: string;
     adminOnly?: boolean;
 }
-
-const allSidebarNavItems: SettingsNavItem[] = [
-    {
-        title: 'Perfil',
-        href: edit(),
-        icon: null,
-    },
-    {
-        title: 'Contraseña',
-        href: editPassword(),
-        icon: null,
-    },
-    {
-        title: 'Autenticación 2FA',
-        href: show(),
-        icon: null,
-        adminOnly: true,
-    },
-    {
-        title: 'Apariencia',
-        href: editAppearance(),
-        icon: null,
-        adminOnly: true,
-    },
-    {
-        title: 'Servidor SMTP',
-        href: editSmtp(),
-        icon: null,
-        adminOnly: true,
-    },
-    {
-        title: 'Pasarela Wompi',
-        href: editWompi(),
-        icon: null,
-        adminOnly: true,
-    },
-    {
-        title: 'Manual',
-        href: showManual(),
-        icon: null,
-        adminOnly: true,
-    },
-];
 
 export default function SettingsLayout({ children }: PropsWithChildren) {
     const { auth } = usePage<SharedData>().props;
 
-    // When server-side rendering, we only render the layout on the client...
     if (typeof window === 'undefined') {
         return null;
     }
 
     const currentPath = window.location.pathname;
-
-    // Filtrar items del menú según el rol del usuario
     const isAdmin = auth.roles.includes('Administrador');
-    const sidebarNavItems = useMemo(() => {
-        if (isAdmin) {
-            return allSidebarNavItems;
-        }
-        // Para Profesor y Estudiante, solo mostrar Perfil y Contraseña
-        return allSidebarNavItems.filter(item => !item.adminOnly);
+
+    const sidebarNavItems = useMemo((): SettingsNavItem[] => {
+        const all: SettingsNavItem[] = [
+            { title: 'Perfil',            href: '/settings/profile' },
+            { title: 'Contraseña',        href: '/settings/password' },
+            { title: 'Autenticación 2FA', href: '/settings/two-factor', adminOnly: true },
+            { title: 'Apariencia',        href: '/settings/appearance', adminOnly: true },
+            { title: 'Servidor SMTP',     href: '/settings/smtp',       adminOnly: true },
+            { title: 'Pasarela Wompi',    href: '/settings/wompi',      adminOnly: true },
+            { title: 'Manual',            href: '/settings/manual',     adminOnly: true },
+        ];
+        return isAdmin ? all : all.filter(item => !item.adminOnly);
     }, [isAdmin]);
 
     return (
@@ -90,24 +45,17 @@ export default function SettingsLayout({ children }: PropsWithChildren) {
             <div className="flex flex-col lg:flex-row lg:space-x-12">
                 <aside className="w-full max-w-xl lg:w-48">
                     <nav className="flex flex-col space-y-1 space-x-0">
-                        {sidebarNavItems.map((item, index) => (
+                        {sidebarNavItems.map((item) => (
                             <Button
-                                key={`${typeof item.href === 'string' ? item.href : item.href.url}-${index}`}
+                                key={item.href}
                                 size="sm"
                                 variant="ghost"
                                 asChild
                                 className={cn('w-full justify-start', {
-                                    'bg-muted':
-                                        currentPath ===
-                                        (typeof item.href === 'string'
-                                            ? item.href
-                                            : item.href.url),
+                                    'bg-muted': currentPath === item.href,
                                 })}
                             >
                                 <Link href={item.href}>
-                                    {item.icon && (
-                                        <item.icon className="h-4 w-4" />
-                                    )}
                                     {item.title}
                                 </Link>
                             </Button>

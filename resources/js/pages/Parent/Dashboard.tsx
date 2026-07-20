@@ -1,9 +1,18 @@
-import { Head, router } from '@inertiajs/react';
+import React, { useState } from 'react';
+import { Head, router, useForm } from '@inertiajs/react';
 import AppLayout from '@/layouts/app-layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog';
 import {
     Users,
     GraduationCap,
@@ -17,7 +26,26 @@ import {
     Eye,
     ClipboardCheck,
     User,
+    Smartphone,
+    LinkIcon,
+    Unlink,
 } from 'lucide-react';
+
+interface Payment {
+    id: number;
+    concept: string;
+    amount: number;
+    status: string;
+    due_date: string | null;
+    paid_at: string | null;
+    program_name: string | null;
+    program_color: string;
+    payment_method: string | null;
+}
+
+function formatCOP(amount: number) {
+    return new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(amount);
+}
 
 interface AttendanceStats {
     total_classes: number;
@@ -57,13 +85,32 @@ interface Child {
     enrollments: ChildEnrollment[];
     attendance: AttendanceStats;
     pending_payments: number;
+    payments: Payment[];
+}
+
+interface NequiInfo {
+    phone: string | null;
+    active: boolean;
+    payment_source_id: string | null;
 }
 
 interface Props {
     children: Child[];
+    nequi: NequiInfo;
 }
 
-export default function Dashboard({ children }: Props) {
+export default function Dashboard({ children, nequi }: Props) {
+    const { data, setData, post, processing, errors, reset } = useForm({ phone: nequi.phone ?? '' });
+    const [paymentsModal, setPaymentsModal] = useState<Child | null>(null);
+
+    const handleLink = (e: React.FormEvent) => {
+        e.preventDefault();
+        post('/padre/nequi/vincular', { preserveScroll: true, onSuccess: () => reset() });
+    };
+
+    const handleUnlink = () => {
+        router.delete('/padre/nequi/desvincular', { preserveScroll: true });
+    };
     const getScoreColor = (score: number | null) => {
         if (score === null) return 'text-muted-foreground';
         if (score >= 80) return 'text-green-600';
@@ -110,6 +157,99 @@ export default function Dashboard({ children }: Props) {
                     </p>
                 </div>
 
+                {/* Nequi automático */}
+                <Card>
+                    <CardHeader className="pb-3">
+                        <CardTitle className="flex items-center gap-2 text-base">
+                            <Smartphone className="h-4 w-4 text-pink-500" />
+                            Pagos automáticos con Nequi
+                        </CardTitle>
+                        <CardDescription>
+                            Vincula tu cuenta Nequi y autoriza solo una vez. Desde ese momento los pagos
+                            mensuales de tus hijos se cobran automáticamente sin que debas aprobar cada mes.
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        {nequi.phone && nequi.active ? (
+                            /* Activo: débito automático sin push */
+                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                                <div className="flex items-center gap-3">
+                                    <div className="flex items-center justify-center w-9 h-9 rounded-full bg-green-100 dark:bg-green-900/30">
+                                        <CheckCircle className="h-5 w-5 text-green-600" />
+                                    </div>
+                                    <div>
+                                        <p className="font-medium text-sm">{nequi.phone}</p>
+                                        <p className="text-xs text-muted-foreground">
+                                            Cobros automáticos activos — se debitará sin necesidad de aprobar cada mes
+                                        </p>
+                                    </div>
+                                </div>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="text-destructive hover:text-destructive"
+                                    onClick={handleUnlink}
+                                >
+                                    <Unlink className="mr-1.5 h-3.5 w-3.5" />
+                                    Desvincular
+                                </Button>
+                            </div>
+                        ) : nequi.phone && nequi.payment_source_id ? (
+                            /* Vinculado pero pendiente de autorización */
+                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                                <div className="flex items-center gap-3">
+                                    <div className="flex items-center justify-center w-9 h-9 rounded-full bg-yellow-100 dark:bg-yellow-900/30">
+                                        <Clock className="h-5 w-5 text-yellow-600" />
+                                    </div>
+                                    <div>
+                                        <p className="font-medium text-sm">{nequi.phone}</p>
+                                        <p className="text-xs text-muted-foreground">
+                                            Pendiente de autorización — abre tu app Nequi y acepta la notificación
+                                        </p>
+                                    </div>
+                                </div>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="text-destructive hover:text-destructive"
+                                    onClick={handleUnlink}
+                                >
+                                    <Unlink className="mr-1.5 h-3.5 w-3.5" />
+                                    Cancelar
+                                </Button>
+                            </div>
+                        ) : (
+                            /* Sin vincular */
+                            <form onSubmit={handleLink} className="flex flex-col sm:flex-row gap-3">
+                                <div className="flex-1 space-y-1">
+                                    <Label htmlFor="nequi-phone">Número Nequi (celular)</Label>
+                                    <Input
+                                        id="nequi-phone"
+                                        type="tel"
+                                        placeholder="3001234567"
+                                        value={data.phone}
+                                        onChange={(e) => setData('phone', e.target.value)}
+                                        maxLength={10}
+                                        className="max-w-xs"
+                                    />
+                                    {errors.phone && (
+                                        <p className="text-xs text-destructive">{errors.phone}</p>
+                                    )}
+                                    <p className="text-xs text-muted-foreground">
+                                        Solo autorizas una vez. Después los cobros mensuales son automáticos.
+                                    </p>
+                                </div>
+                                <div className="flex items-end">
+                                    <Button type="submit" disabled={processing} className="bg-pink-600 hover:bg-pink-700 text-white">
+                                        <LinkIcon className="mr-2 h-4 w-4" />
+                                        {processing ? 'Vinculando...' : 'Vincular Nequi'}
+                                    </Button>
+                                </div>
+                            </form>
+                        )}
+                    </CardContent>
+                </Card>
+
                 {children.length === 0 ? (
                     <Card>
                         <CardContent className="py-8 sm:py-12 text-center">
@@ -144,13 +284,22 @@ export default function Dashboard({ children }: Props) {
                                                 </CardDescription>
                                             </div>
                                         </div>
-                                        <div className="flex items-center gap-2">
+                                        <div className="flex items-center gap-2 flex-wrap">
                                             {child.pending_payments > 0 && (
                                                 <Badge variant="destructive" className="flex items-center gap-1">
                                                     <CreditCard className="h-3 w-3" />
                                                     {child.pending_payments} pago{child.pending_payments > 1 ? 's' : ''} pendiente{child.pending_payments > 1 ? 's' : ''}
                                                 </Badge>
                                             )}
+                                            <Button
+                                                size="sm"
+                                                variant="outline"
+                                                onClick={() => setPaymentsModal(child)}
+                                                className="text-xs h-7"
+                                            >
+                                                <CreditCard className="h-3.5 w-3.5 mr-1" />
+                                                Ver pagos
+                                            </Button>
                                         </div>
                                     </div>
                                 </CardHeader>
@@ -317,6 +466,84 @@ export default function Dashboard({ children }: Props) {
                     </div>
                 )}
             </div>
+
+            {/* Modal de pagos */}
+            <Dialog open={!!paymentsModal} onOpenChange={(open) => !open && setPaymentsModal(null)}>
+                <DialogContent className="w-[95vw] max-w-md">
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2 text-base">
+                            <CreditCard className="h-4 w-4 shrink-0" />
+                            {paymentsModal?.name} {paymentsModal?.last_name ?? ''}
+                        </DialogTitle>
+                    </DialogHeader>
+
+                    {paymentsModal && (() => {
+                        const pending = paymentsModal.payments.filter(p => p.status === 'pending' || p.status === 'overdue');
+                        const paid    = paymentsModal.payments.filter(p => p.status === 'completed' || p.status === 'approved');
+
+                        return (
+                            <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-1">
+                                {pending.length === 0 && paid.length === 0 && (
+                                    <div className="py-8 text-center text-muted-foreground text-sm">
+                                        <CheckCircle className="h-8 w-8 mx-auto mb-2 text-green-500" />
+                                        Sin registros de pago
+                                    </div>
+                                )}
+
+                                {pending.length > 0 && (
+                                    <div className="space-y-2">
+                                        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                                            Pendientes ({pending.length})
+                                        </p>
+                                        {pending.map(p => (
+                                            <div key={p.id} className="rounded-lg border p-3 space-y-1">
+                                                <div className="flex items-start justify-between gap-2">
+                                                    <p className="text-sm font-medium leading-tight">{p.concept}</p>
+                                                    <Badge variant={p.status === 'overdue' ? 'destructive' : 'secondary'} className="text-xs shrink-0">
+                                                        {p.status === 'overdue' ? 'Vencido' : 'Pendiente'}
+                                                    </Badge>
+                                                </div>
+                                                <div className="flex items-center justify-between">
+                                                    <p className="text-xs text-muted-foreground">
+                                                        {p.program_name}
+                                                        {p.due_date && ` · Vence ${new Date(p.due_date + 'T12:00:00').toLocaleDateString('es-CO', { day: 'numeric', month: 'short' })}`}
+                                                    </p>
+                                                    <p className="text-sm font-bold">{formatCOP(p.amount)}</p>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+
+                                {paid.length > 0 && (
+                                    <div className="space-y-2">
+                                        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                                            Historial ({paid.length})
+                                        </p>
+                                        {paid.map(p => (
+                                            <div key={p.id} className="rounded-lg border p-3 space-y-1 opacity-70">
+                                                <div className="flex items-start justify-between gap-2">
+                                                    <p className="text-sm font-medium leading-tight">{p.concept}</p>
+                                                    <Badge variant="outline" className="text-xs text-green-600 border-green-300 shrink-0">
+                                                        Pagado
+                                                    </Badge>
+                                                </div>
+                                                <div className="flex items-center justify-between">
+                                                    <p className="text-xs text-muted-foreground">
+                                                        {p.paid_at && new Date(p.paid_at + 'T12:00:00').toLocaleDateString('es-CO', { day: 'numeric', month: 'short', year: 'numeric' })}
+                                                        {p.payment_method === 'nequi' && <span className="ml-1 text-pink-500">· Nequi</span>}
+                                                    </p>
+                                                    <p className="text-sm font-bold">{formatCOP(p.amount)}</p>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        );
+                    })()}
+                </DialogContent>
+            </Dialog>
         </AppLayout>
     );
 }

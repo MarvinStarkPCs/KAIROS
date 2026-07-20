@@ -17,13 +17,6 @@ interface TwoFactorProps {
     twoFactorEnabled?: boolean;
 }
 
-const breadcrumbs: BreadcrumbItem[] = [
-    {
-        title: 'Autenticación de Dos Factores',
-        href: show.url(),
-    },
-];
-
 export default function TwoFactor({
     requiresConfirmation = false,
     twoFactorEnabled = false,
@@ -39,6 +32,13 @@ export default function TwoFactor({
         errors,
     } = useTwoFactorAuth();
     const [showSetupModal, setShowSetupModal] = useState<boolean>(false);
+
+    const breadcrumbs: BreadcrumbItem[] = [
+        {
+            title: 'Autenticación de Dos Factores',
+            href: '/settings/two-factor',
+        },
+    ];
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>

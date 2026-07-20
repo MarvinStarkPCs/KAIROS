@@ -45,12 +45,70 @@ class ParentController extends Controller
                         'stats' => $this->getProgramStats($child->id, $e->program),
                     ]),
                     'attendance' => $this->getChildAttendanceStats($child->id),
-                    'pending_payments' => $child->payments()->where('status', 'pending')->count(),
+                    'pending_payments' => $child->payments()->whereIn('status', ['pending', 'overdue'])->count(),
+                    'payments' => $child->payments()->with('program')
+                        ->orderByRaw("FIELD(status, 'pending', 'overdue', 'approved', 'completed')")
+                        ->orderBy('due_date', 'asc')
+                        ->get()
+                        ->map(fn ($p) => [
+                            'id'             => $p->id,
+                            'concept'        => $p->concept,
+                            'amount'         => $p->amount,
+                            'status'         => $p->status,
+                            'due_date'       => $p->due_date?->format('Y-m-d'),
+                            'paid_at'        => $p->payment_date?->format('Y-m-d'),
+                            'program_name'   => $p->program?->name,
+                            'program_color'  => $p->program?->color ?? '#6b5544',
+                            'payment_method' => $p->payment_method,
+                        ]),
                 ];
             });
 
         return Inertia::render('Parent/Dashboard', [
             'children' => $children,
+            'nequi' => [
+                'phone' => $user->nequi_phone,
+                'active' => (bool) $user->nequi_subscription_active,
+                'payment_source_id' => $user->nequi_payment_source_id,
+            ],
+        ]);
+    }
+
+    /**
+     * Ver pagos pendientes y pagados de un hijo
+     */
+    public function childPayments(User $child)
+    {
+        $parent = Auth::user();
+
+        if ($child->parent_id !== $parent->id) {
+            abort(403, 'No tienes permiso para ver este estudiante');
+        }
+
+        $payments = $child->payments()
+            ->with('program')
+            ->orderByRaw("FIELD(status, 'pending', 'overdue', 'approved', 'completed') ASC")
+            ->orderBy('due_date', 'asc')
+            ->get()
+            ->map(fn ($p) => [
+                'id'           => $p->id,
+                'concept'      => $p->concept,
+                'amount'       => $p->amount,
+                'status'       => $p->status,
+                'due_date'     => $p->due_date?->format('Y-m-d'),
+                'paid_at'      => $p->payment_date?->format('Y-m-d'),
+                'program_name' => $p->program?->name,
+                'program_color'=> $p->program?->color ?? '#6b5544',
+                'payment_method' => $p->payment_method,
+            ]);
+
+        return Inertia::render('Parent/ChildPayments', [
+            'child' => [
+                'id'   => $child->id,
+                'name' => $child->name . ' ' . ($child->last_name ?? ''),
+            ],
+            'payments'       => $payments,
+            'nequi_active'   => (bool) $parent->nequi_subscription_active,
         ]);
     }
 

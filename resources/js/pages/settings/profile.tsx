@@ -1,4 +1,3 @@
-import { send } from '@/routes/verification';
 import { type BreadcrumbItem, type SharedData } from '@/types';
 import { Transition } from '@headlessui/react';
 import { useForm, Head, Link, usePage, router } from '@inertiajs/react';
@@ -20,12 +19,11 @@ import {
 } from '@/components/ui/select';
 import AppLayout from '@/layouts/app-layout';
 import SettingsLayout from '@/layouts/settings/layout';
-import { edit } from '@/routes/profile';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
         title: 'Configuración de Perfil',
-        href: edit().url,
+        href: '/settings/profile',
     },
 ];
 
@@ -227,7 +225,8 @@ export default function Profile({
                                 <p className="text-sm text-yellow-800 dark:text-yellow-200">
                                     Tu dirección de correo electrónico no está verificada.{' '}
                                     <Link
-                                        href={send()}
+                                        href="/email/verification-notification"
+                                        method="post"
                                         as="button"
                                         className="font-medium underline hover:no-underline"
                                     >

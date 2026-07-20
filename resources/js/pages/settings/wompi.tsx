@@ -18,12 +18,11 @@ import {
 import { Switch } from '@/components/ui/switch';
 import AppLayout from '@/layouts/app-layout';
 import SettingsLayout from '@/layouts/settings/layout';
-import { edit } from '@/routes/wompi';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
         title: 'Configuración Wompi',
-        href: edit().url,
+        href: '/settings/wompi',
     },
 ];
 

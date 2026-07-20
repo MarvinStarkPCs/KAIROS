@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Models\Payment;
 use App\Models\AcademicProgram;
+use App\Models\User;
 use App\Services\WompiService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Http;
@@ -56,15 +57,14 @@ class ProcessRecurringPayments extends Command
             ->where('failed_attempts', '<', 3) // Máximo 3 intentos fallidos
             ->get();
 
-        if ($payments->isEmpty()) {
-            $this->info('No hay pagos recurrentes pendientes de procesar');
-            return Command::SUCCESS;
-        }
-
-        $this->info("Encontrados {$payments->count()} pagos para procesar");
-
         $successful = 0;
         $failed = 0;
+
+        if ($payments->isEmpty()) {
+            $this->info('No hay pagos recurrentes por tarjeta pendientes de procesar');
+        } else {
+            $this->info("Encontrados {$payments->count()} pagos por tarjeta para procesar");
+        }
 
         foreach ($payments as $payment) {
             $studentName = $payment->student->name . ' ' . $payment->student->last_name;
@@ -112,12 +112,120 @@ class ProcessRecurringPayments extends Command
             }
         }
 
+        // --- Cobros Nequi ---
+        $this->newLine();
+        $this->info('Procesando cobros automáticos por Nequi...');
+        [$nequiOk, $nequiFail] = $this->processNequiPayments($dryRun);
+        $successful += $nequiOk;
+        $failed += $nequiFail;
+
         $this->newLine();
         $this->info("Procesamiento completado:");
         $this->info("  Exitosos: {$successful}");
         $this->info("  Fallidos: {$failed}");
 
         return Command::SUCCESS;
+    }
+
+    /**
+     * Cobrar los pagos pendientes a responsables con Nequi activo.
+     * Solo procesa pagos del mes actual (mensualidades pendientes).
+     */
+    private function processNequiPayments(bool $dryRun): array
+    {
+        $today = Carbon::today();
+
+        // Responsables con Nequi autorizado (payment source activo = débito automático sin push)
+        $parents = User::whereNotNull('nequi_payment_source_id')
+            ->where('nequi_subscription_active', true)
+            ->get();
+
+        if ($parents->isEmpty()) {
+            $this->line('  No hay responsables con Nequi activo.');
+            return [0, 0];
+        }
+
+        $successful = 0;
+        $failed = 0;
+
+        foreach ($parents as $parent) {
+            // Hijos de este responsable
+            $childIds = $parent->dependents()->pluck('id');
+
+            if ($childIds->isEmpty()) {
+                continue;
+            }
+
+            // Todos los pagos pendientes del mes para los hijos
+            $pending = Payment::whereIn('student_id', $childIds)
+                ->where('status', 'pending')
+                ->whereMonth('due_date', $today->month)
+                ->whereYear('due_date', $today->year)
+                ->whereNull('wompi_transaction_id')
+                ->with(['student', 'program'])
+                ->get();
+
+            if ($pending->isEmpty()) {
+                continue;
+            }
+
+            // Sumar todos los pagos en un solo cobro
+            $totalAmount = $pending->sum('amount');
+            $totalCents  = (int) ($totalAmount * 100);
+            $reference   = 'NQ-P' . $parent->id . '-' . $today->format('Ym') . '-' . time();
+            $paymentIds  = $pending->pluck('id')->join(', ');
+
+            foreach ($pending as $payment) {
+                $studentName = $payment->student->name . ' ' . ($payment->student->last_name ?? '');
+                $this->line("  + {$studentName} — {$payment->program?->name} — \${$payment->amount}");
+            }
+            $this->line("  → Cobro automático Nequi (source #{$parent->nequi_payment_source_id}): \${$totalAmount} ({$pending->count()} pagos)");
+
+            if ($dryRun) {
+                $this->info("  [DRY-RUN] Se realizaría débito automático por \${$totalAmount} (sin push)");
+                continue;
+            }
+
+            try {
+                $transaction = $this->wompiService->chargeWithPaymentSource(
+                    paymentSourceId: (int) $parent->nequi_payment_source_id,
+                    amountInCents: $totalCents,
+                    reference: $reference,
+                    customerEmail: $parent->email,
+                );
+
+                $txStatus = $transaction['status'] ?? 'PENDING';
+                $txId     = $transaction['id'] ?? null;
+
+                // Guardar la misma referencia en todos los pagos
+                Payment::whereIn('id', $pending->pluck('id'))->update([
+                    'wompi_transaction_id' => $txId,
+                    'wompi_reference'      => $reference,
+                    'payment_method'       => 'nequi',
+                ]);
+
+                if ($txStatus === 'APPROVED') {
+                    Payment::whereIn('id', $pending->pluck('id'))->update([
+                        'status'       => 'completed',
+                        'paid_amount'  => \DB::raw('amount'),
+                        'payment_date' => now(),
+                    ]);
+                }
+
+                $this->info("  ✓ Notificación enviada (tx: {$txId}, estado: {$txStatus})");
+                $successful++;
+            } catch (\Exception $e) {
+                $this->error("  ✗ Error: {$e->getMessage()}");
+                Log::error('ProcessRecurringPayments Nequi error', [
+                    'payment_ids' => $paymentIds,
+                    'parent_id'   => $parent->id,
+                    'error'       => $e->getMessage(),
+                ]);
+                $failed++;
+            }
+        }
+
+        return [$successful, $failed];
     }
 
     /**

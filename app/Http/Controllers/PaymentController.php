@@ -634,23 +634,39 @@ class PaymentController extends Controller
         }
 
         $event = $eventData['event'];
-        $transactionData = $eventData['data']['transaction'];
 
-        // Solo procesar eventos de transacciones aprobadas o rechazadas
+        // Manejar activación de payment source Nequi (autorización inicial única)
+        if ($event === 'nequi_token.updated') {
+            $tokenData = $eventData['data']['nequi_token'] ?? [];
+            if (($tokenData['status'] ?? '') === 'AVAILABLE') {
+                $sourceId = (string) ($tokenData['id'] ?? '');
+                if ($sourceId) {
+                    User::where('nequi_payment_source_id', $sourceId)
+                        ->update(['nequi_subscription_active' => true]);
+                    \Log::info('Nequi payment source activado', ['source_id' => $sourceId]);
+                }
+            }
+            return response()->json(['message' => 'Nequi token procesado'], 200);
+        }
+
+        // Solo procesar eventos de transacciones
         if ($event !== 'transaction.updated') {
             return response()->json(['message' => 'Evento ignorado'], 200);
         }
 
-        // Buscar el pago por la referencia
-        $payment = Payment::where('wompi_reference', $transactionData['reference'])->first();
+        $transactionData = $eventData['data']['transaction'];
 
-        if (!$payment) {
+        // Buscar todos los pagos con esa referencia (puede ser cobro combinado Nequi)
+        $payments = Payment::where('wompi_reference', $transactionData['reference'])->get();
+
+        if ($payments->isEmpty()) {
             \Log::error('Pago no encontrado para referencia: ' . $transactionData['reference']);
             return response()->json(['error' => 'Pago no encontrado'], 404);
         }
 
-        // IDEMPOTENCY CHECK: Verificar si este webhook ya fue procesado
-        // Si el payment ya tiene este transaction_id y está completed/cancelled, ignorar
+        $payment = $payments->first();
+
+        // IDEMPOTENCY CHECK
         if ($payment->wompi_transaction_id === $transactionData['id'] &&
             in_array($payment->status, ['completed', 'cancelled'])) {
             \Log::info('Webhook duplicado ignorado (ya procesado):', [
@@ -661,13 +677,20 @@ class PaymentController extends Controller
             return response()->json(['message' => 'Webhook ya procesado'], 200);
         }
 
-        // Actualizar el pago según el estado de la transacción
         $status = $transactionData['status'];
 
-        $payment->wompi_transaction_id = $transactionData['id'];
-        $payment->payment_method = $transactionData['payment_method_type'];
+        // Actualizar todos los pagos de esta referencia
+        foreach ($payments as $p) {
+            $p->wompi_transaction_id = $transactionData['id'];
+            $p->payment_method = $transactionData['payment_method_type'] ?? 'nequi';
+        }
 
         if ($status === 'APPROVED') {
+            foreach ($payments as $p) {
+                $p->status = 'completed';
+                $p->payment_date = now();
+                $p->paid_amount = $p->amount;
+            }
             $payment->status = 'completed';
             $payment->payment_date = now();
             $payment->paid_amount = $payment->amount;
@@ -696,37 +719,29 @@ class PaymentController extends Controller
                 }
             }
 
-            \Log::info('Pago aprobado:', ['payment_id' => $payment->id, 'transaction_id' => $transactionData['id']]);
+            \Log::info('Pagos aprobados:', ['payment_ids' => $payments->pluck('id'), 'transaction_id' => $transactionData['id']]);
 
-            // Enviar email de confirmación al responsable o estudiante
+            // Email al padre del primer pago
             try {
                 $recipient = $payment->student;
-
-                // Si el estudiante tiene padre/guardian, enviar el email al padre
-                if ($recipient->parent_id) {
-                    $parent = User::find($recipient->parent_id);
-                    if ($parent && $parent->email) {
-                        Mail::to($parent->email)->send(new PaymentConfirmed($payment));
-                        \Log::info('Email enviado al padre/guardian:', ['email' => $parent->email]);
-                    }
-                }
-
-                // También enviar al estudiante si tiene email
-                if ($recipient->email) {
-                    Mail::to($recipient->email)->send(new PaymentConfirmed($payment));
-                    \Log::info('Email enviado al estudiante:', ['email' => $recipient->email]);
+                $parent = $recipient->parent_id ? User::find($recipient->parent_id) : null;
+                if ($parent?->email) {
+                    Mail::to($parent->email)->send(new PaymentConfirmed($payment));
                 }
             } catch (\Exception $e) {
                 \Log::error('Error enviando email de confirmación: ' . $e->getMessage());
             }
 
         } elseif ($status === 'DECLINED' || $status === 'ERROR') {
-            $payment->status = 'cancelled';
-
-            \Log::warning('Pago rechazado:', ['payment_id' => $payment->id, 'transaction_id' => $transactionData['id']]);
+            foreach ($payments as $p) {
+                $p->status = 'cancelled';
+            }
+            \Log::warning('Pagos rechazados:', ['payment_ids' => $payments->pluck('id'), 'transaction_id' => $transactionData['id']]);
         }
 
-        $payment->save();
+        foreach ($payments as $p) {
+            $p->save();
+        }
 
         return response()->json(['message' => 'Webhook procesado exitosamente'], 200);
     }

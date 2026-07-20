@@ -18,12 +18,11 @@ import {
 import { Switch } from '@/components/ui/switch';
 import AppLayout from '@/layouts/app-layout';
 import SettingsLayout from '@/layouts/settings/layout';
-import { edit } from '@/routes/smtp';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
         title: 'Configuración SMTP',
-        href: edit().url,
+        href: '/settings/smtp',
     },
 ];
 

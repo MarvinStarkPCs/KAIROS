@@ -45,6 +45,10 @@ class User extends Authenticatable implements MustVerifyEmail
         'mobile',
         'city',
         'department',
+        // NEQUI
+        'nequi_phone',
+        'nequi_payment_source_id',
+        'nequi_subscription_active',
     ];
 
     /**

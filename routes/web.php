@@ -332,6 +332,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::prefix('padre')->middleware(['role:Padre/Madre|Administrador'])->group(function () {
         Route::get('/dashboard', [ParentController::class, 'dashboard'])->name('padre.dashboard');
         Route::get('/hijo/{child}/calificaciones/{programId?}', [ParentController::class, 'childGrades'])->name('padre.hijo.calificaciones');
+        // Nequi
+        Route::post('/nequi/vincular', [\App\Http\Controllers\NequiController::class, 'link'])->name('padre.nequi.link');
+        Route::delete('/nequi/desvincular', [\App\Http\Controllers\NequiController::class, 'unlink'])->name('padre.nequi.unlink');
     });
 
     // === GESTIÓN DE DEPENDIENTES (para Padre/Madre) ===

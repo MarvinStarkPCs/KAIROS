@@ -16,6 +16,7 @@ import AttendanceController from './AttendanceController'
 import TeacherController from './TeacherController'
 import StudentController from './StudentController'
 import ParentController from './ParentController'
+import NequiController from './NequiController'
 import DependentController from './DependentController'
 import CommunicationController from './CommunicationController'
 import ReportController from './ReportController'
@@ -39,6 +40,7 @@ AttendanceController: Object.assign(AttendanceController, AttendanceController),
 TeacherController: Object.assign(TeacherController, TeacherController),
 StudentController: Object.assign(StudentController, StudentController),
 ParentController: Object.assign(ParentController, ParentController),
+NequiController: Object.assign(NequiController, NequiController),
 DependentController: Object.assign(DependentController, DependentController),
 CommunicationController: Object.assign(CommunicationController, CommunicationController),
 ReportController: Object.assign(ReportController, ReportController),

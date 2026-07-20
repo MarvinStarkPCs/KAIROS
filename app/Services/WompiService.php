@@ -193,6 +193,180 @@ class WompiService
     }
 
     /**
+     * Obtener acceptance token requerido para crear payment sources
+     */
+    public function getAcceptanceToken(): string
+    {
+        $config = $this->getActiveConfig();
+        $response = Http::get($config['api_url'] . '/merchants/' . $config['public_key']);
+
+        if (!$response->successful()) {
+            throw new \Exception('No se pudo obtener el acceptance token de Wompi');
+        }
+
+        $token = $response->json('data.presigned_acceptance.acceptance_token');
+
+        if (!$token) {
+            throw new \Exception('Wompi no devolvió un acceptance token válido');
+        }
+
+        return $token;
+    }
+
+    /**
+     * Crear un payment source de Nequi para autorización única.
+     * El usuario recibe UN solo push para autorizar; después los cobros son automáticos sin push.
+     * Returns: int payment_source_id (status PENDING hasta que el usuario acepte)
+     */
+    public function createNequiPaymentSource(
+        string $phone,
+        string $customerEmail,
+        string $merchantCustomerId
+    ): int {
+        $config = $this->getActiveConfig();
+        $acceptanceToken = $this->getAcceptanceToken();
+
+        $payload = [
+            'type' => 'NEQUI',
+            'phone_number' => $phone,
+            'acceptance_token' => $acceptanceToken,
+            'customer_email' => $customerEmail,
+            'merchant_customer_id' => $merchantCustomerId,
+        ];
+
+        Log::info('Wompi: Creando Nequi payment source', ['phone' => $phone, 'customer' => $merchantCustomerId]);
+
+        $response = Http::withHeaders([
+            'Authorization' => 'Bearer ' . $config['private_key'],
+            'Content-Type' => 'application/json',
+        ])->post($config['api_url'] . '/payment_sources', $payload);
+
+        if (!$response->successful()) {
+            Log::error('Wompi: Error creando Nequi payment source', [
+                'status' => $response->status(),
+                'body' => $response->body(),
+            ]);
+            throw new \Exception('Error al crear la fuente de pago Nequi: ' . $response->body());
+        }
+
+        $sourceId = $response->json('data.id');
+        if (!$sourceId) {
+            throw new \Exception('Wompi no devolvió un ID de payment source');
+        }
+
+        Log::info('Wompi: Nequi payment source creado (PENDING)', ['source_id' => $sourceId, 'phone' => $phone]);
+
+        return (int) $sourceId;
+    }
+
+    /**
+     * Cobrar usando un payment source de Nequi previamente autorizado.
+     * No envía push notification — débito directo y automático.
+     */
+    public function chargeWithPaymentSource(
+        int $paymentSourceId,
+        int $amountInCents,
+        string $reference,
+        string $customerEmail
+    ): array {
+        $config = $this->getActiveConfig();
+        $acceptanceToken = $this->getAcceptanceToken();
+
+        $payload = [
+            'acceptance_token' => $acceptanceToken,
+            'amount_in_cents' => $amountInCents,
+            'currency' => 'COP',
+            'reference' => $reference,
+            'payment_source_id' => $paymentSourceId,
+            'customer_email' => $customerEmail,
+        ];
+
+        if (!empty($config['integrity_secret'])) {
+            $payload['signature'] = hash('sha256', $reference . $amountInCents . 'COP' . $config['integrity_secret']);
+        }
+
+        Log::info('Wompi: Cobro automático via payment source (sin push)', [
+            'source_id' => $paymentSourceId,
+            'amount_in_cents' => $amountInCents,
+            'reference' => $reference,
+        ]);
+
+        $response = Http::withHeaders([
+            'Authorization' => 'Bearer ' . $config['private_key'],
+            'Content-Type' => 'application/json',
+            'Idempotency-Key' => $reference,
+        ])->post($config['api_url'] . '/transactions', $payload);
+
+        if (!$response->successful()) {
+            Log::error('Wompi: Error en cobro por payment source', [
+                'status' => $response->status(),
+                'body' => $response->body(),
+            ]);
+            throw new \Exception('Error al cobrar via payment source Nequi: ' . $response->body());
+        }
+
+        $data = $response->json('data');
+        Log::info('Wompi: Transacción automática creada', ['id' => $data['id'] ?? null, 'status' => $data['status'] ?? null]);
+
+        return $data;
+    }
+
+    /**
+     * Cobrar via Nequi enviando push notification al número registrado.
+     * El usuario debe aceptar el cobro en su app Nequi.
+     */
+    public function chargeNequi(
+        string $phone,
+        int $amountInCents,
+        string $reference,
+        string $customerEmail
+    ): array {
+        $config = $this->getActiveConfig();
+        $acceptanceToken = $this->getAcceptanceToken();
+
+        $payload = [
+            'acceptance_token' => $acceptanceToken,
+            'amount_in_cents' => $amountInCents,
+            'currency' => 'COP',
+            'customer_email' => $customerEmail,
+            'reference' => $reference,
+            'payment_method' => [
+                'type' => 'NEQUI',
+                'phone_number' => $phone,
+            ],
+        ];
+
+        if (!empty($config['integrity_secret'])) {
+            $payload['signature'] = hash('sha256', $reference . $amountInCents . 'COP' . $config['integrity_secret']);
+        }
+
+        Log::info('Wompi Nequi: Enviando cobro', [
+            'phone' => $phone,
+            'amount_in_cents' => $amountInCents,
+            'reference' => $reference,
+        ]);
+
+        $response = Http::withHeaders([
+            'Authorization' => 'Bearer ' . $config['private_key'],
+            'Content-Type' => 'application/json',
+            'Idempotency-Key' => $reference,
+        ])->post($config['api_url'] . '/transactions', $payload);
+
+        if (!$response->successful()) {
+            Log::error('Wompi Nequi: Error al cobrar', [
+                'status' => $response->status(),
+                'body' => $response->body(),
+            ]);
+            throw new \Exception('Error al cobrar via Nequi: ' . $response->body());
+        }
+
+        $data = $response->json('data');
+        Log::info('Wompi Nequi: Transacción creada', ['id' => $data['id'] ?? null, 'status' => $data['status'] ?? null]);
+
+        return $data;
+    }
+
+    /**
      * Generar firma de integridad para validar webhooks
      */
     public function generateIntegritySignature(
