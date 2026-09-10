@@ -124,8 +124,8 @@ export const GENDERS: Record<Gender, string> = {
 
 export const MODALITIES: Record<StudyModality, string> = {
     '': 'Seleccione una modalidad',
-    'Linaje Kids': 'Linaje Kids (6-11 años)',
-    'Linaje Teens': 'Linaje Teens (12-17 años)',
+    'Linaje Kids': 'Linaje Kids (4-9 años)',
+    'Linaje Teens': 'Linaje Teens (10-17 años)',
     'Linaje Big': 'Linaje Big (18+ años)'
 };
 

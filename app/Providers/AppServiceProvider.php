@@ -24,6 +24,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Mantiene la modalidad del estudiante alineada con su fecha de nacimiento.
+        \App\Models\User::observe(\App\Observers\UserObserver::class);
+
         Inertia::share([
             'flash' => function () {
                 return [

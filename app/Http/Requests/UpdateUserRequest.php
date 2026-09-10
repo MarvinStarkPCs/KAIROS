@@ -20,7 +20,7 @@ class UpdateUserRequest extends FormRequest
         return [
             'name'            => 'required|string|max:255',
             'last_name'       => 'nullable|string|max:255',
-            'email'           => ['required', 'email', Rule::unique('users')->ignore($userId)],
+            'email'           => ['nullable', 'email', Rule::unique('users')->ignore($userId)],
             'password'        => ['nullable', 'confirmed', Password::defaults()],
             'roles'           => 'array',
             'document_type'   => 'nullable|in:CC,TI,CE,Pasaporte',

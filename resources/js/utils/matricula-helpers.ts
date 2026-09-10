@@ -30,6 +30,22 @@ export function formatStudentName(student: Student | { name: string; last_name: 
 }
 
 /**
+ * Determina la modalidad que corresponde a una fecha de nacimiento.
+ * La modalidad no se elige a mano: se deduce de la edad usando AGE_RANGES,
+ * que son los mismos rangos que aparecen en la configuracion de pagos.
+ * Devuelve '' si la fecha esta vacia o la edad no cae en ningun rango.
+ */
+export function getModalityForBirthDate(birthDate: string): StudyModality {
+    if (!birthDate) return '';
+
+    const age = calculateAge(birthDate);
+    const match = (Object.entries(AGE_RANGES) as [StudyModality, { min: number; max: number }][])
+        .find(([, range]) => age >= range.min && age <= range.max);
+
+    return match ? match[0] : '';
+}
+
+/**
  * Obtiene el rango de edad en formato legible para una modalidad
  */
 export function getModalityAgeRange(modality: StudyModality): string {

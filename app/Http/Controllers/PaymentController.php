@@ -191,7 +191,10 @@ class PaymentController extends Controller
      */
     public function update(Request $request, Payment $payment)
     {
-        if ($payment->wompi_transaction_id || $payment->wompi_reference) {
+        // Solo bloquea cuando existe una transaccion real de la pasarela.
+        // wompi_reference se reserva al crear la matricula, antes de cualquier
+        // cobro, asi que no prueba que el pago haya sido procesado.
+        if ($payment->wompi_transaction_id) {
             flash_error('Los pagos procesados por pasarela de pago no pueden modificarse.');
             return redirect()->route('pagos.index');
         }
@@ -268,7 +271,8 @@ class PaymentController extends Controller
      */
     public function destroy(Payment $payment)
     {
-        if ($payment->wompi_transaction_id || $payment->wompi_reference) {
+        // Ver la nota en update(): solo una transaccion real bloquea el pago.
+        if ($payment->wompi_transaction_id) {
             flash_error('Los pagos procesados por pasarela de pago no pueden eliminarse.');
             return redirect()->route('pagos.index');
         }

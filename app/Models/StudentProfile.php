@@ -79,8 +79,8 @@ class StudentProfile extends Model
     public function getModalityDisplayAttribute(): string
     {
         return match ($this->modality) {
-            'Linaje Kids' => 'Kids (5-11 años)',
-            'Linaje Teens' => 'Teens (12-17 años)',
+            'Linaje Kids' => 'Kids (4-9 años)',
+            'Linaje Teens' => 'Teens (10-17 años)',
             'Linaje Big' => 'Big (18+ años)',
             default => 'No definida',
         };

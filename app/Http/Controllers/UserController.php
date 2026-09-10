@@ -10,6 +10,8 @@ use Illuminate\Validation\Rules\Password;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Spatie\Permission\Models\Role;
+use App\Services\EnrollmentService;
+use Carbon\Carbon;
 
 class UserController extends Controller
 {
@@ -367,7 +369,7 @@ class UserController extends Controller
         $user = User::create([
             'name' => $validated['name'],
             'last_name' => $validated['last_name'] ?? null,
-            'email' => $validated['email'],
+            'email' => ($validated['email'] ?? null) ?: null,
             'password' => bcrypt($validated['password']),
             'document_type' => $validated['document_type'] ?? null,
             'document_number' => $validated['document_number'] ?? null,
@@ -472,7 +474,7 @@ class UserController extends Controller
     /**
      * Actualizar usuario
      */
-    public function update(UpdateUserRequest $request, User $user)
+    public function update(UpdateUserRequest $request, User $user, EnrollmentService $enrollmentService)
     {
         $validated = $request->validated();
 
@@ -480,7 +482,7 @@ class UserController extends Controller
         $user->update([
             'name' => $validated['name'],
             'last_name' => $validated['last_name'] ?? null,
-            'email' => $validated['email'],
+            'email' => ($validated['email'] ?? null) ?: null,
             'document_type' => $validated['document_type'] ?? null,
             'document_number' => $validated['document_number'] ?? null,
             'birth_date' => $validated['birth_date'] ?? null,
@@ -506,12 +508,38 @@ class UserController extends Controller
             $user->syncRoles($validated['roles']);
         }
 
-        // Actualizar perfil de estudiante
+        // Actualizar perfil de estudiante.
+        // La modalidad no se toma del formulario: manda la fecha de nacimiento.
+        // Asi, corregir una fecha mal capturada reasigna la modalidad y, con
+        // ella, el valor de las siguientes mensualidades.
         if (isset($validated['student_profile']) && $user->hasRole('Estudiante')) {
+            $profileData = $validated['student_profile'];
+            $previousModality = $user->studentProfile?->modality;
+
+            if ($user->birth_date) {
+                $profileData['modality'] = $enrollmentService->resolveModality(
+                    $user->birth_date instanceof Carbon
+                        ? $user->birth_date->toDateString()
+                        : (string) $user->birth_date,
+                    $previousModality
+                );
+            }
+
             $user->studentProfile()->updateOrCreate(
                 ['user_id' => $user->id],
-                $validated['student_profile']
+                $profileData
             );
+
+            $newModality = $profileData['modality'] ?? $previousModality;
+
+            if ($user->birth_date && $newModality && $newModality !== $previousModality) {
+                $enrollmentService->logModalityChange(
+                    $user->fresh('studentProfile'),
+                    $previousModality,
+                    $newModality,
+                    Carbon::parse($user->birth_date)->age
+                );
+            }
         }
 
         // Actualizar perfil de profesor

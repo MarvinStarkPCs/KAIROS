@@ -227,10 +227,35 @@ class EnrollmentController extends Controller
             ->latest()
             ->get();
 
+        // Historial de cambios de modalidad por edad, para dejar constancia
+        // de por que cambio el valor de la mensualidad.
+        $modalityHistory = [];
+        $profile = $enrollment->student->studentProfile;
+
+        if ($profile) {
+            $modalityHistory = \Spatie\Activitylog\Models\Activity::query()
+                ->where('log_name', 'student_modality')
+                ->where('subject_type', $profile->getMorphClass())
+                ->where('subject_id', $profile->id)
+                ->latest()
+                ->get()
+                ->map(fn ($activity) => [
+                    'id' => $activity->id,
+                    'description' => $activity->description,
+                    'from' => $activity->properties['from'] ?? null,
+                    'to' => $activity->properties['to'] ?? null,
+                    'age' => $activity->properties['age'] ?? null,
+                    'date' => $activity->created_at?->toDateTimeString(),
+                ])
+                ->all();
+        }
+
         return Inertia::render('Enrollments/Show', [
             'enrollment' => $enrollment,
             'studentSchedules' => $studentSchedules,
             'payments' => $payments,
+            'currentModality' => $profile?->modality,
+            'modalityHistory' => $modalityHistory,
         ]);
     }
 

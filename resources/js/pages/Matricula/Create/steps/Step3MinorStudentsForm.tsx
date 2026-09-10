@@ -17,6 +17,7 @@ export interface Step3MinorStudentsFormProps {
     onAddStudent: () => void;
     onRemoveStudent: (index: number) => void;
     onUpdateStudent: (index: number, field: string, value: any) => void;
+    getModalityPrice?: (modality: string) => number | null;
 }
 
 /**
@@ -31,7 +32,8 @@ export function Step3MinorStudentsForm({
     onCurrentIndexChange,
     onAddStudent,
     onRemoveStudent,
-    onUpdateStudent
+    onUpdateStudent,
+    getModalityPrice
 }: Step3MinorStudentsFormProps) {
     const currentStudent = students[currentIndex];
 
@@ -125,6 +127,7 @@ export function Step3MinorStudentsForm({
                             }}
                             birthDate={currentStudent.birth_date}
                             isMinor
+                            getModalityPrice={getModalityPrice}
                         />
                     </div>
 

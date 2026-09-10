@@ -42,8 +42,8 @@ export type ColombianDepartment = typeof COLOMBIAN_DEPARTMENTS[number];
 
 // Rangos de edad para modalidades
 export const AGE_RANGES = {
-    'Linaje Kids': { min: 6, max: 11 },
-    'Linaje Teens': { min: 12, max: 17 },
+    'Linaje Kids': { min: 4, max: 9 },
+    'Linaje Teens': { min: 10, max: 17 },
     'Linaje Big': { min: 18, max: 999 }
 } as const;
 

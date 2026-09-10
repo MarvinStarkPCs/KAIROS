@@ -258,6 +258,7 @@ export default function Create({ programs, paymentMethods, modalityPrices, disco
                         onAddStudent={handleAddStudent}
                         onRemoveStudent={handleRemoveStudent}
                         onUpdateStudent={handleUpdateStudent}
+                        getModalityPrice={getModalityPrice}
                     />
                 );
 

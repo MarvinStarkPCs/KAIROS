@@ -17,7 +17,7 @@ class StoreUserRequest extends FormRequest
         return [
             'name'            => 'required|string|max:255',
             'last_name'       => 'nullable|string|max:255',
-            'email'           => 'required|email|unique:users',
+            'email'           => 'nullable|email|unique:users',
             'password'        => ['required', 'confirmed', Password::defaults()],
             'roles'           => 'array',
             'document_type'   => 'nullable|in:CC,TI,CE,Pasaporte',

@@ -85,7 +85,7 @@ export default function UsersCreate({ roles }: CreateProps) {
                             </div>
 
                             <div>
-                                <Label htmlFor="email">Email *</Label>
+                                <Label htmlFor="email">Email</Label>
                                 <Input
                                     id="email"
                                     type="email"

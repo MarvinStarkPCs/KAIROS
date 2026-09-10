@@ -65,8 +65,28 @@ class GenerateMonthlyPayments extends Command
                 continue;
             }
 
-            // Calcular monto según modalidad o fallback al monthly_fee del programa
-            $modality          = $student->studentProfile?->modality;
+            // Calcular monto según modalidad o fallback al monthly_fee del programa.
+            // La modalidad se recalcula con la edad actual: un estudiante que
+            // cumple años cambia de rango y debe facturarse con la tarifa nueva.
+            $profile = $student->studentProfile;
+            $modality = $profile?->modality;
+
+            if ($profile && $student->birth_date) {
+                $resolved = $enrollmentService->resolveModality(
+                    $student->birth_date instanceof Carbon
+                        ? $student->birth_date->toDateString()
+                        : (string) $student->birth_date,
+                    $modality
+                );
+
+                if ($resolved !== $modality) {
+                    $age = Carbon::parse($student->birth_date)->age;
+                    $this->line("  ↗️  {$student->name} — cambia de {$modality} a {$resolved} por edad.");
+                    $profile->update(['modality' => $resolved]);
+                    $enrollmentService->logModalityChange($student, $modality, $resolved, $age);
+                    $modality = $resolved;
+                }
+            }
             $finalAmount       = null;
             $originalAmount    = null;
             $discountPct       = null;

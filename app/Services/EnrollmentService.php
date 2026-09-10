@@ -16,6 +16,73 @@ use Illuminate\Support\Str;
 class EnrollmentService
 {
     /**
+     * Rangos de edad de cada modalidad. Son los mismos que muestra la
+     * configuracion de pagos y los que usa el formulario de matricula.
+     */
+    public const MODALITY_AGE_RANGES = [
+        'Linaje Kids' => ['min' => 4, 'max' => 9],
+        'Linaje Teens' => ['min' => 10, 'max' => 17],
+        'Linaje Big' => ['min' => 18, 'max' => 200],
+    ];
+
+    /**
+     * Deduce la modalidad a partir de la fecha de nacimiento.
+     *
+     * La modalidad determina el valor de la matricula, asi que no se toma del
+     * navegador: se recalcula aqui. El valor recibido solo se usa como respaldo
+     * cuando no hay fecha de nacimiento o la edad queda fuera de todo rango.
+     */
+    public function resolveModality(?string $birthDate, ?string $fallback = null): string
+    {
+        if ($birthDate) {
+            try {
+                $age = Carbon::parse($birthDate)->age;
+
+                foreach (self::MODALITY_AGE_RANGES as $modality => $range) {
+                    if ($age >= $range['min'] && $age <= $range['max']) {
+                        return $modality;
+                    }
+                }
+
+                // Por debajo del rango mas bajo (por ejemplo 3 anios) se cobra
+                // la modalidad infantil, nunca la de adulto.
+                if ($age >= 0 && $age < self::MODALITY_AGE_RANGES['Linaje Kids']['min']) {
+                    return 'Linaje Kids';
+                }
+            } catch (\Throwable) {
+                // Fecha invalida: se usa el respaldo.
+            }
+        }
+
+        return $fallback ?: 'Linaje Big';
+    }
+
+    /**
+     * Deja constancia de un cambio de modalidad motivado por la edad.
+     *
+     * Se guarda en el log de actividad con nombre propio para poder mostrarlo
+     * en el detalle de la matricula sin mezclarlo con el resto de cambios.
+     */
+    public function logModalityChange(User $student, ?string $from, string $to, int $age): void
+    {
+        $profile = $student->studentProfile;
+
+        if (! $profile) {
+            return;
+        }
+
+        activity('student_modality')
+            ->performedOn($profile)
+            ->withProperties([
+                'student_id' => $student->id,
+                'from' => $from,
+                'to' => $to,
+                'age' => $age,
+            ])
+            ->log("Pasó de {$from} a {$to} al cumplir {$age} años");
+    }
+
+    /**
      * Crear usuario responsable
      */
     public function createResponsible(array $data, bool $isStudent = false): User
@@ -48,7 +115,7 @@ class EnrollmentService
                 'has_music_studies' => $data['has_music_studies'] ?? false,
                 'music_schools' => $data['music_schools'] ?? null,
                 'desired_instrument' => $data['desired_instrument'] ?? null,
-                'modality' => $data['modality'] ?? 'Linaje Big',
+                'modality' => $this->resolveModality($data['birth_date'] ?? null, $data['modality'] ?? null),
                 'current_level' => $data['current_level'] ?? 1,
             ]);
         }
@@ -78,7 +145,7 @@ class EnrollmentService
         // Crear perfil de estudiante con datos musicales
         $datosMusicales = $data['datos_musicales'] ?? [];
         $student->studentProfile()->create([
-            'modality' => $datosMusicales['modality'] ?? 'Linaje Kids',
+            'modality' => $this->resolveModality($data['birth_date'] ?? null, $datosMusicales['modality'] ?? null),
             'desired_instrument' => $datosMusicales['desired_instrument'] ?? null,
             'plays_instrument' => $datosMusicales['plays_instrument'] ?? false,
             'instruments_played' => $datosMusicales['instruments_played'] ?? null,
@@ -270,7 +337,10 @@ class EnrollmentService
             $this->assignRole($responsible, 'Estudiante');
 
             // 3. Crear inscripción con autorizaciones
-            $modality = $data['responsable']['modality'] ?? 'Linaje Big';
+            $modality = $this->resolveModality(
+                $data['responsable']['birth_date'] ?? null,
+                $data['responsable']['modality'] ?? null
+            );
             $currentLevel = $data['responsable']['current_level'] ?? 1;
 
             $enrollment = $this->createEnrollment(
@@ -369,7 +439,10 @@ class EnrollmentService
                 $hermanosCount = $estudiantesPorApellido->get($primerApellido, collect())->count();
 
                 $programName = \App\Models\AcademicProgram::find($estudianteData['program_id'])->name;
-                $modality = $datosMusicales['modality'] ?? 'Linaje Kids';
+                $modality = $this->resolveModality(
+                    $estudianteData['birth_date'] ?? null,
+                    $datosMusicales['modality'] ?? null
+                );
                 $payment = $this->createPayment(
                     $student,
                     $estudianteData['program_id'],

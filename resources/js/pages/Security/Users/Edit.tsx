@@ -1,4 +1,6 @@
 import { useForm, Link, Head, router } from '@inertiajs/react';
+import { toast } from 'sonner';
+import { calculateAge, getModalityForBirthDate } from '@/utils/matricula-helpers';
 import { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -144,9 +146,18 @@ export default function UsersEdit({ user, roles, hasStudentRole, hasTeacherRole 
         } : null,
     });
 
+    // La modalidad la manda la fecha de nacimiento, no un selector.
+    const autoModality = getModalityForBirthDate(data.birth_date);
+
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        put(route('usuarios.update', user.id));
+        put(route('usuarios.update', user.id), {
+            // Sin esto el guardado fallido no daba ninguna senal visible.
+            onError: (validationErrors) => {
+                const first = Object.values(validationErrors)[0];
+                toast.error(first ?? 'No se pudo guardar. Revisa los campos marcados.');
+            },
+        });
     };
 
     const toggleRole = (id: number) => {
@@ -269,7 +280,7 @@ export default function UsersEdit({ user, roles, hasStudentRole, hasTeacherRole 
                                 </div>
 
                                 <div>
-                                    <Label htmlFor="email">Email *</Label>
+                                    <Label htmlFor="email">Email</Label>
                                     <Input
                                         id="email"
                                         type="email"
@@ -457,19 +468,32 @@ export default function UsersEdit({ user, roles, hasStudentRole, hasTeacherRole 
                                     <div className="grid grid-cols-2 gap-4">
                                         <div>
                                             <Label>Modalidad</Label>
-                                            <Select
-                                                value={data.student_profile.modality || ''}
-                                                onValueChange={(v) => setData('student_profile', { ...data.student_profile!, modality: v })}
-                                            >
-                                                <SelectTrigger>
-                                                    <SelectValue placeholder="Seleccionar" />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                    <SelectItem value="Linaje Kids">Linaje Kids</SelectItem>
-                                                    <SelectItem value="Linaje Teens">Linaje Teens</SelectItem>
-                                                    <SelectItem value="Linaje Big">Linaje Big</SelectItem>
-                                                </SelectContent>
-                                            </Select>
+                                            {/* Se deriva de la fecha de nacimiento: corregir la fecha
+                                                reasigna la modalidad y el valor de la mensualidad. */}
+                                            <div className="mt-1 rounded-md border border-border bg-muted/40 px-3 py-2">
+                                                {autoModality ? (
+                                                    <>
+                                                        <p className="font-medium">{autoModality}</p>
+                                                        <p className="text-xs text-muted-foreground">
+                                                            Según la edad registrada ({calculateAge(data.birth_date)} años)
+                                                        </p>
+                                                    </>
+                                                ) : (
+                                                    <p className="text-sm text-muted-foreground">
+                                                        {data.birth_date
+                                                            ? 'La edad registrada no corresponde a ninguna modalidad'
+                                                            : 'Indica la fecha de nacimiento para asignarla'}
+                                                    </p>
+                                                )}
+                                            </div>
+                                            {data.student_profile.modality &&
+                                                autoModality &&
+                                                data.student_profile.modality !== autoModality && (
+                                                    <p className="mt-1 text-xs text-amber-600 dark:text-amber-400">
+                                                        Actualmente guardada como {data.student_profile.modality}. Se
+                                                        corregirá al guardar.
+                                                    </p>
+                                                )}
                                         </div>
                                         <div>
                                             <Label>Nivel Actual</Label>

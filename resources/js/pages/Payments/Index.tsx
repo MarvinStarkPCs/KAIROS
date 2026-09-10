@@ -73,7 +73,9 @@ const STATUS_MAP = {
     cancelled: { label: 'Cancelado',  icon: XCircle,      bg: 'bg-muted',                             text: 'text-muted-foreground'                },
 };
 
-const isGatewayPayment = (p: Payment) => !!(p.wompi_transaction_id || p.wompi_reference);
+// Solo una transaccion real de la pasarela bloquea el pago; wompi_reference
+// se reserva al crear la matricula, antes de que exista cobro alguno.
+const isGatewayPayment = (p: Payment) => !!p.wompi_transaction_id;
 
 
 export default function PaymentsList({ payments, programs, filters }: Props) {

@@ -38,6 +38,11 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withSchedule(function (\Illuminate\Console\Scheduling\Schedule $schedule) {
+        // Reasignar la modalidad de quienes cumplieron años.
+        // Corre a diario para que la ficha del estudiante y el valor a cobrar
+        // no queden desfasados entre una mensualidad y la siguiente.
+        $schedule->command('students:sync-modality')->dailyAt('05:00');
+
         // Generar mensualidades el día 1 de cada mes a las 00:00 AM
         $schedule->command('payments:generate-monthly')->monthlyOn(1, '00:00');
 

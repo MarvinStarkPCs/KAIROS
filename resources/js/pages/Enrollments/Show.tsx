@@ -11,7 +11,7 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
-import { ArrowLeft, Edit, DollarSign, Calendar, Users } from 'lucide-react';
+import { ArrowLeft, Edit, DollarSign, Calendar, Users, TrendingUp } from 'lucide-react';
 
 type EnrollmentStatus = 'active' | 'waiting' | 'withdrawn';
 
@@ -63,13 +63,30 @@ interface Enrollment {
     };
 }
 
+interface ModalityChange {
+    id: number;
+    description: string;
+    from: string | null;
+    to: string | null;
+    age: number | null;
+    date: string | null;
+}
+
 interface Props {
     enrollment: Enrollment;
     studentSchedules: Array<{ schedule: Schedule }>;
     payments: Payment[];
+    currentModality?: string | null;
+    modalityHistory?: ModalityChange[];
 }
 
-export default function Show({ enrollment, studentSchedules, payments }: Props) {
+export default function Show({
+    enrollment,
+    studentSchedules,
+    payments,
+    currentModality = null,
+    modalityHistory = [],
+}: Props) {
     const getStatusBadge = (status: EnrollmentStatus) => {
         const badges = {
             active: <Badge className="bg-green-500">Activo</Badge>,
@@ -179,6 +196,58 @@ export default function Show({ enrollment, studentSchedules, payments }: Props) 
                         </CardContent>
                     </Card>
                 )}
+
+                {/* Modalidad y su historial de cambios por edad */}
+                <Card>
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                            <TrendingUp className="h-5 w-5" />
+                            Modalidad
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        <div className="flex items-center gap-2">
+                            <span className="text-muted-foreground">Modalidad actual:</span>
+                            {currentModality ? (
+                                <Badge variant="secondary">{currentModality}</Badge>
+                            ) : (
+                                <span className="text-muted-foreground">Sin asignar</span>
+                            )}
+                        </div>
+
+                        {modalityHistory.length === 0 ? (
+                            <p className="text-sm text-muted-foreground">
+                                La modalidad no ha cambiado desde la matrícula.
+                            </p>
+                        ) : (
+                            <div className="space-y-2">
+                                <p className="text-sm font-medium">Cambios registrados</p>
+                                {modalityHistory.map((change) => (
+                                    <div
+                                        key={change.id}
+                                        className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-border p-3"
+                                    >
+                                        <div className="text-sm">
+                                            <p className="font-medium">{change.description}</p>
+                                            <p className="text-muted-foreground">
+                                                Cambio automático por superar el rango de edad de la modalidad anterior.
+                                            </p>
+                                        </div>
+                                        {change.date && (
+                                            <span className="text-xs text-muted-foreground">
+                                                {new Date(change.date).toLocaleDateString('es-CO', {
+                                                    day: '2-digit',
+                                                    month: 'short',
+                                                    year: 'numeric',
+                                                })}
+                                            </span>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </CardContent>
+                </Card>
 
                 {/* Horarios del Estudiante */}
                 <Card>

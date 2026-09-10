@@ -136,7 +136,9 @@ export default function PaymentForm({ payment, enrollments, canEditAbonos = fals
     });
 
     const isNequi = payment?.payment_method === 'nequi' || data.payment_method === 'nequi';
-    const isGatewayPayment = !!(payment?.wompi_transaction_id || payment?.wompi_reference);
+    // Solo una transaccion real de la pasarela bloquea el pago; wompi_reference
+    // se reserva al crear la matricula, antes de que exista cobro alguno.
+    const isGatewayPayment = !!payment?.wompi_transaction_id;
 
     const handleEnrollmentSelect = (enrollment: Enrollment) => {
         setSelectedEnrollment(enrollment);
