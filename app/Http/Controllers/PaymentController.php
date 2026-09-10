@@ -2,28 +2,27 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Payment;
-use App\Models\User;
-use App\Models\AcademicProgram;
-use App\Models\Enrollment;
-use App\Models\PaymentSetting;
+use App\Http\Requests\AddTransactionRequest;
+use App\Http\Requests\StoreInstallmentsRequest;
+use App\Http\Requests\StorePaymentRequest;
 use App\Mail\AbonoRegistrado;
 use App\Mail\PaymentConfirmed;
-use App\Http\Requests\StorePaymentRequest;
-use App\Http\Requests\StoreInstallmentsRequest;
-use App\Http\Requests\AddTransactionRequest;
+use App\Models\AcademicProgram;
+use App\Models\Enrollment;
+use App\Models\Payment;
+use App\Models\PaymentSetting;
+use App\Models\User;
 use App\Services\WompiService;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\Http;
-use Inertia\Inertia;
 use Carbon\Carbon;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Mail;
+use Inertia\Inertia;
 
 class PaymentController extends Controller
 {
-    public function __construct(protected WompiService $wompiService)
-    {
-    }
+    public function __construct(protected WompiService $wompiService) {}
+
     /**
      * Display payments index/list
      */
@@ -40,8 +39,8 @@ class PaymentController extends Controller
             $search = $request->search;
             $query->whereHas('student', function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('last_name', 'like', "%{$search}%")
-                  ->orWhere('document_number', 'like', "%{$search}%");
+                    ->orWhere('last_name', 'like', "%{$search}%")
+                    ->orWhere('document_number', 'like', "%{$search}%");
             });
         }
 
@@ -71,6 +70,7 @@ class PaymentController extends Controller
         $payments->getCollection()->transform(function ($payment) {
             $payment->has_transactions = $payment->transactions->isNotEmpty();
             $payment->pending_balance = $payment->getPendingBalance();
+
             return $payment;
         });
 
@@ -133,6 +133,7 @@ class PaymentController extends Controller
         $payment = Payment::create($validated);
 
         flash_success('Pago registrado exitosamente');
+
         return redirect()->route('pagos.index');
     }
 
@@ -141,13 +142,79 @@ class PaymentController extends Controller
      */
     public function show(Payment $payment)
     {
-        $payment->load(['student', 'program', 'enrollment', 'recordedBy', 'transactions.recordedBy']);
+        $payment->load([
+            'student.parent',
+            'student.parentGuardians',
+            'program',
+            'enrollment',
+            'recordedBy',
+            'transactions.recordedBy',
+        ]);
         $payment->pending_balance = $payment->getPendingBalance();
 
         return Inertia::render('Payments/Show', [
-            'payment'     => $payment,
+            'payment' => $payment,
+            'contact' => $this->contactInfo($payment->student),
             'canEditAbonos' => auth()->id() === 1,
         ]);
+    }
+
+    /**
+     * Datos de contacto del estudiante y de su acudiente, para poder gestionar
+     * el cobro sin salir de la vista del pago.
+     *
+     * El acudiente se resuelve primero desde la cuenta vinculada (parent_id),
+     * que es la que tiene correo y direccion. Si no existe, se cae a la ficha
+     * de acudiente capturada en la matricula, que al menos trae nombre,
+     * parentesco y telefono.
+     */
+    private function contactInfo(?User $student): ?array
+    {
+        if (! $student) {
+            return null;
+        }
+
+        $guardianRecord = $student->parentGuardians->first();
+        $guardianUser = $student->parent;
+
+        $guardian = null;
+
+        if ($guardianUser || $guardianRecord) {
+            $guardian = [
+                'name' => $guardianUser
+                    ? trim($guardianUser->name.' '.($guardianUser->last_name ?? ''))
+                    : $guardianRecord?->name,
+                'relationship' => $guardianRecord?->relationship_type,
+                'document_type' => $guardianUser?->document_type,
+                'document_number' => $guardianUser?->document_number,
+                'email' => $guardianUser?->email,
+                'phone' => $guardianUser?->phone ?: $guardianRecord?->phone,
+                'mobile' => $guardianUser?->mobile,
+                'address' => $guardianUser?->address ?: $guardianRecord?->address,
+                'neighborhood' => $guardianUser?->neighborhood,
+                'city' => $guardianUser?->city,
+                'department' => $guardianUser?->department,
+                'user_id' => $guardianUser?->id,
+                'has_account' => (bool) $guardianUser,
+            ];
+        }
+
+        return [
+            'student' => [
+                'id' => $student->id,
+                'name' => trim($student->name.' '.($student->last_name ?? '')),
+                'document_type' => $student->document_type,
+                'document_number' => $student->document_number,
+                'email' => $student->email,
+                'phone' => $student->phone,
+                'mobile' => $student->mobile,
+                'address' => $student->address,
+                'neighborhood' => $student->neighborhood,
+                'city' => $student->city,
+                'department' => $student->department,
+            ],
+            'guardian' => $guardian,
+        ];
     }
 
     /**
@@ -174,14 +241,14 @@ class PaymentController extends Controller
             });
 
         return Inertia::render('Payments/Form', [
-            'payment'       => array_merge($payment->toArray(), [
+            'payment' => array_merge($payment->toArray(), [
                 'wompi_transaction_id' => $payment->wompi_transaction_id,
-                'wompi_reference'      => $payment->wompi_reference,
-                'payment_method'       => $payment->payment_method,
-                'payment_source_id'    => $payment->payment_source_id,
-                'payment_date'         => $payment->payment_date?->format('Y-m-d'),
+                'wompi_reference' => $payment->wompi_reference,
+                'payment_method' => $payment->payment_method,
+                'payment_source_id' => $payment->payment_source_id,
+                'payment_date' => $payment->payment_date?->format('Y-m-d'),
             ]),
-            'enrollments'   => $enrollments,
+            'enrollments' => $enrollments,
             'canEditAbonos' => auth()->id() === 1,
         ]);
     }
@@ -196,22 +263,23 @@ class PaymentController extends Controller
         // cobro, asi que no prueba que el pago haya sido procesado.
         if ($payment->wompi_transaction_id) {
             flash_error('Los pagos procesados por pasarela de pago no pueden modificarse.');
+
             return redirect()->route('pagos.index');
         }
 
         $validated = $request->validate([
-            'concept'          => 'nullable|string|max:255',
-            'amount'           => 'nullable|numeric|min:0',
-            'due_date'         => 'nullable|date',
+            'concept' => 'nullable|string|max:255',
+            'amount' => 'nullable|numeric|min:0',
+            'due_date' => 'nullable|date',
             'reference_number' => 'nullable|string|max:100',
-            'notes'            => 'nullable|string|max:500',
+            'notes' => 'nullable|string|max:500',
         ], [
-            'concept.max'           => 'El concepto no puede exceder 255 caracteres',
-            'amount.numeric'        => 'El monto debe ser un número',
-            'amount.min'            => 'El monto debe ser mayor o igual a 0',
-            'due_date.date'         => 'La fecha debe ser válida',
-            'reference_number.max'  => 'El número de referencia no puede exceder 100 caracteres',
-            'notes.max'             => 'Las notas no pueden exceder 500 caracteres',
+            'concept.max' => 'El concepto no puede exceder 255 caracteres',
+            'amount.numeric' => 'El monto debe ser un número',
+            'amount.min' => 'El monto debe ser mayor o igual a 0',
+            'due_date.date' => 'La fecha debe ser válida',
+            'reference_number.max' => 'El número de referencia no puede exceder 100 caracteres',
+            'notes.max' => 'Las notas no pueden exceder 500 caracteres',
         ]);
 
         // Solo el usuario ID 1 puede cambiar estado y campos Nequi/Wompi
@@ -249,20 +317,21 @@ class PaymentController extends Controller
             if ($newRemaining <= 0 && $paidAmount > 0) {
                 $validated['status'] = 'completed';
                 $validated['remaining_amount'] = 0;
-                if (!$payment->payment_date) {
+                if (! $payment->payment_date) {
                     $validated['payment_date'] = now();
                 }
             }
         }
 
         // If changing to completed and no payment_date, set it to now
-        if (isset($validated['status']) && $validated['status'] === 'completed' && !$payment->payment_date) {
+        if (isset($validated['status']) && $validated['status'] === 'completed' && ! $payment->payment_date) {
             $validated['payment_date'] = now();
         }
 
         $payment->update($validated);
 
         flash_success('Pago actualizado exitosamente');
+
         return redirect()->route('pagos.index');
     }
 
@@ -274,12 +343,14 @@ class PaymentController extends Controller
         // Ver la nota en update(): solo una transaccion real bloquea el pago.
         if ($payment->wompi_transaction_id) {
             flash_error('Los pagos procesados por pasarela de pago no pueden eliminarse.');
+
             return redirect()->route('pagos.index');
         }
 
         $payment->delete();
 
         flash_success('Pago eliminado exitosamente');
+
         return redirect()->route('pagos.index');
     }
 
@@ -303,6 +374,7 @@ class PaymentController extends Controller
         );
 
         flash_success('Pago marcado como pagado exitosamente');
+
         return redirect()->back();
     }
 
@@ -351,7 +423,7 @@ class PaymentController extends Controller
             $validated['student_id'],
             $validated['program_id'],
             $validated['enrollment_id'],
-            $validated['concept'] . ($discountPercentage ? " - Descuento {$discountPercentage}%" : ''),
+            $validated['concept'].($discountPercentage ? " - Descuento {$discountPercentage}%" : ''),
             $finalAmount,
             $validated['number_of_installments'],
             $validated['start_date'],
@@ -367,6 +439,7 @@ class PaymentController extends Controller
         }
 
         flash_success($message);
+
         return redirect()->route('pagos.index');
     }
 
@@ -380,13 +453,14 @@ class PaymentController extends Controller
         // Validar que el monto no exceda el saldo pendiente
         $pendingBalance = $payment->getPendingBalance();
         if ($validated['amount'] > $pendingBalance) {
-            flash_error('El monto del abono no puede exceder el saldo pendiente de $' . number_format($pendingBalance, 2));
+            flash_error('El monto del abono no puede exceder el saldo pendiente de $'.number_format($pendingBalance, 2));
+
             return redirect()->back();
         }
 
         // Generar número de referencia automático: ABN-{payment_id}-{número secuencial}-{timestamp}
         $transactionCount = $payment->transactions()->count() + 1;
-        $referenceNumber = 'ABN-' . $payment->id . '-' . str_pad($transactionCount, 3, '0', STR_PAD_LEFT) . '-' . now()->format('YmdHis');
+        $referenceNumber = 'ABN-'.$payment->id.'-'.str_pad($transactionCount, 3, '0', STR_PAD_LEFT).'-'.now()->format('YmdHis');
 
         $transaction = $payment->addTransaction(
             $validated['amount'],
@@ -398,7 +472,7 @@ class PaymentController extends Controller
         // Recargar el pago para tener los montos actualizados
         $payment->refresh()->load(['student', 'program']);
         $student = $payment->student;
-        $studentName = trim($student->name . ' ' . ($student->last_name ?? ''));
+        $studentName = trim($student->name.' '.($student->last_name ?? ''));
 
         // Enviar correo de abono al estudiante y/o responsable
         try {
@@ -409,7 +483,7 @@ class PaymentController extends Controller
                 if ($parent?->email) {
                     $recipients[] = [
                         'email' => $parent->email,
-                        'name'  => trim($parent->name . ' ' . ($parent->last_name ?? '')),
+                        'name' => trim($parent->name.' '.($parent->last_name ?? '')),
                     ];
                 }
             }
@@ -417,7 +491,7 @@ class PaymentController extends Controller
             if ($student->email) {
                 $recipients[] = [
                     'email' => $student->email,
-                    'name'  => $studentName,
+                    'name' => $studentName,
                 ];
             }
 
@@ -431,6 +505,7 @@ class PaymentController extends Controller
         }
 
         flash_success('Abono registrado exitosamente');
+
         return redirect()->back();
     }
 
@@ -441,6 +516,7 @@ class PaymentController extends Controller
     {
         if (auth()->id() !== 1) {
             flash_error('No tienes permiso para editar abonos.');
+
             return redirect()->back();
         }
 
@@ -455,25 +531,25 @@ class PaymentController extends Controller
         $maxAllowed = (float) $payment->amount - (float) $otherTransactionsTotal;
 
         $validated = $request->validate([
-            'amount'         => ['required', 'numeric', 'min:0.01', "max:{$maxAllowed}"],
+            'amount' => ['required', 'numeric', 'min:0.01', "max:{$maxAllowed}"],
             'payment_method' => ['required', 'string', 'in:cash,transfer,credit_card,manual'],
-            'notes'          => ['nullable', 'string', 'max:500'],
+            'notes' => ['nullable', 'string', 'max:500'],
         ], [
-            'amount.required'         => 'El monto es obligatorio.',
-            'amount.min'              => 'El monto debe ser mayor a cero.',
-            'amount.max'              => 'El monto no puede superar el valor total del pago ($' . number_format($maxAllowed, 2) . ').',
+            'amount.required' => 'El monto es obligatorio.',
+            'amount.min' => 'El monto debe ser mayor a cero.',
+            'amount.max' => 'El monto no puede superar el valor total del pago ($'.number_format($maxAllowed, 2).').',
             'payment_method.required' => 'El método de pago es obligatorio.',
-            'payment_method.in'       => 'Método de pago no válido.',
+            'payment_method.in' => 'Método de pago no válido.',
         ]);
 
         $paymentTransaction->update($validated);
 
         // Recalcular paid_amount y remaining_amount en el pago padre
-        $totalPaid                 = $payment->transactions()->sum('amount');
-        $payment->paid_amount      = $totalPaid;
+        $totalPaid = $payment->transactions()->sum('amount');
+        $payment->paid_amount = $totalPaid;
         $payment->remaining_amount = max(0, $payment->amount - $totalPaid);
         if ($payment->remaining_amount <= 0) {
-            $payment->status       = 'completed';
+            $payment->status = 'completed';
             $payment->payment_date = $payment->payment_date ?? now()->toDateString();
         } else {
             $payment->status = $payment->due_date < now()->toDateString() ? 'overdue' : 'pending';
@@ -481,6 +557,7 @@ class PaymentController extends Controller
         $payment->save();
 
         flash_success('Abono actualizado correctamente.');
+
         return redirect()->back();
     }
 
@@ -542,8 +619,9 @@ class PaymentController extends Controller
         ]);
 
         // Al menos un método de pago debe estar habilitado
-        if (!$validated['enable_online_payment'] && !$validated['enable_manual_payment']) {
+        if (! $validated['enable_online_payment'] && ! $validated['enable_manual_payment']) {
             flash_error('Debe haber al menos un método de pago habilitado.');
+
             return redirect()->back();
         }
 
@@ -566,8 +644,9 @@ class PaymentController extends Controller
     public function checkWompiStatus(Payment $payment)
     {
         // Verificar que el pago tenga un wompi_transaction_id o wompi_reference
-        if (!$payment->wompi_transaction_id && !$payment->wompi_reference) {
+        if (! $payment->wompi_transaction_id && ! $payment->wompi_reference) {
             flash_error('Este pago no tiene información de Wompi para consultar.');
+
             return redirect()->back();
         }
 
@@ -575,8 +654,9 @@ class PaymentController extends Controller
             $transactionId = $payment->wompi_transaction_id;
 
             // Si no tiene transaction_id pero tiene reference, buscar por reference
-            if (!$transactionId && $payment->wompi_reference) {
+            if (! $transactionId && $payment->wompi_reference) {
                 flash_info('Este pago aún no tiene un ID de transacción registrado. Espere a que Wompi procese el pago.');
+
                 return redirect()->back();
             }
 
@@ -585,13 +665,14 @@ class PaymentController extends Controller
             // Consultar transacción en Wompi
             $response = Http::get("{$config['api_url']}/transactions/{$transactionId}");
 
-            if (!$response->successful()) {
+            if (! $response->successful()) {
                 \Log::error('Error consultando transacción en Wompi', [
                     'payment_id' => $payment->id,
                     'transaction_id' => $transactionId,
-                    'response' => $response->body()
+                    'response' => $response->body(),
                 ]);
                 flash_error('No se pudo consultar el estado en Wompi. Verifique que el ID de transacción sea correcto.');
+
                 return redirect()->back();
             }
 
@@ -614,7 +695,7 @@ class PaymentController extends Controller
                     'payment_id' => $payment->id,
                     'transaction_id' => $transactionId,
                     'old_status' => $originalStatus,
-                    'new_status' => 'completed'
+                    'new_status' => 'completed',
                 ]);
 
                 flash_success('¡Pago verificado y actualizado! Estado en Wompi: APROBADO');
@@ -625,25 +706,26 @@ class PaymentController extends Controller
 
                     \Log::info('Pago rechazado verificado desde Wompi', [
                         'payment_id' => $payment->id,
-                        'transaction_id' => $transactionId
+                        'transaction_id' => $transactionId,
                     ]);
                 }
 
-                flash_warning('El pago fue rechazado en Wompi. Estado: ' . $status);
+                flash_warning('El pago fue rechazado en Wompi. Estado: '.$status);
             } elseif ($status === 'PENDING') {
                 flash_info('El pago está pendiente en Wompi. Estado: PENDIENTE');
             } else {
-                flash_info('Estado del pago en Wompi: ' . $status);
+                flash_info('Estado del pago en Wompi: '.$status);
             }
 
             return redirect()->back();
 
         } catch (\Exception $e) {
-            \Log::error('Error verificando estado en Wompi: ' . $e->getMessage(), [
+            \Log::error('Error verificando estado en Wompi: '.$e->getMessage(), [
                 'payment_id' => $payment->id,
-                'exception' => $e->getTraceAsString()
+                'exception' => $e->getTraceAsString(),
             ]);
-            flash_error('Ocurrió un error al consultar el estado en Wompi: ' . $e->getMessage());
+            flash_error('Ocurrió un error al consultar el estado en Wompi: '.$e->getMessage());
+
             return redirect()->back();
         }
     }
@@ -661,10 +743,11 @@ class PaymentController extends Controller
         $signature = $request->header('X-Event-Checksum');
         $eventData = $request->all();
 
-        $expectedSignature = hash('sha256', json_encode($eventData['data']) . $config['events_secret']);
+        $expectedSignature = hash('sha256', json_encode($eventData['data']).$config['events_secret']);
 
         if ($signature !== $expectedSignature) {
             \Log::error('Firma de webhook inválida');
+
             return response()->json(['error' => 'Firma inválida'], 401);
         }
 
@@ -681,6 +764,7 @@ class PaymentController extends Controller
                     \Log::info('Nequi payment source activado', ['source_id' => $sourceId]);
                 }
             }
+
             return response()->json(['message' => 'Nequi token procesado'], 200);
         }
 
@@ -695,7 +779,8 @@ class PaymentController extends Controller
         $payments = Payment::where('wompi_reference', $transactionData['reference'])->get();
 
         if ($payments->isEmpty()) {
-            \Log::error('Pago no encontrado para referencia: ' . $transactionData['reference']);
+            \Log::error('Pago no encontrado para referencia: '.$transactionData['reference']);
+
             return response()->json(['error' => 'Pago no encontrado'], 404);
         }
 
@@ -707,8 +792,9 @@ class PaymentController extends Controller
             \Log::info('Webhook duplicado ignorado (ya procesado):', [
                 'payment_id' => $payment->id,
                 'transaction_id' => $transactionData['id'],
-                'status' => $payment->status
+                'status' => $payment->status,
             ]);
+
             return response()->json(['message' => 'Webhook ya procesado'], 200);
         }
 
@@ -760,13 +846,13 @@ class PaymentController extends Controller
                 if ($sourceId) {
                     // Identificar al responsable por el wompi_reference del pago
                     $studentId = $payment->student_id;
-                    $student   = User::find($studentId);
+                    $student = User::find($studentId);
                     // El pagador puede ser el estudiante mismo o su responsable
                     $payer = $student?->parent ?? $student;
-                    if ($payer && !$payer->nequi_payment_source_id) {
+                    if ($payer && ! $payer->nequi_payment_source_id) {
                         $payer->update(['nequi_payment_source_id' => (string) $sourceId]);
                         \Log::info('Nequi payment_source_id guardado para cobros automáticos', [
-                            'payer_id'  => $payer->id,
+                            'payer_id' => $payer->id,
                             'source_id' => $sourceId,
                         ]);
                     }
@@ -783,7 +869,7 @@ class PaymentController extends Controller
                     Mail::to($parent->email)->send(new PaymentConfirmed($payment));
                 }
             } catch (\Exception $e) {
-                \Log::error('Error enviando email de confirmación: ' . $e->getMessage());
+                \Log::error('Error enviando email de confirmación: '.$e->getMessage());
             }
 
         } elseif ($status === 'DECLINED' || $status === 'ERROR') {

@@ -1,5 +1,5 @@
 import { Head, Link, useForm } from '@inertiajs/react';
-import { ArrowLeft, Edit, DollarSign, Receipt, CheckCircle, Clock, XCircle, User, BookOpen, Calendar, FileText, Pencil, Plus } from 'lucide-react';
+import { ArrowLeft, Edit, DollarSign, Receipt, CheckCircle, Clock, XCircle, User, Users, BookOpen, Calendar, FileText, Pencil, Plus, Mail, Phone, MapPin, Smartphone, IdCard } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -43,9 +43,64 @@ interface Payment {
     created_at: string;
 }
 
+interface ContactPerson {
+    id?: number;
+    name: string | null;
+    relationship?: string | null;
+    document_type?: string | null;
+    document_number?: string | null;
+    email?: string | null;
+    phone?: string | null;
+    mobile?: string | null;
+    address?: string | null;
+    neighborhood?: string | null;
+    city?: string | null;
+    department?: string | null;
+    user_id?: number | null;
+    has_account?: boolean;
+}
+
+interface ContactInfo {
+    student: ContactPerson;
+    guardian: ContactPerson | null;
+}
+
 interface Props {
     payment: Payment;
+    contact: ContactInfo | null;
     canEditAbonos: boolean;
+}
+
+const RELATIONSHIP_LABELS: Record<string, string> = {
+    padre: 'Padre',
+    madre: 'Madre',
+    tutor: 'Tutor',
+    abuelo: 'Abuelo',
+    abuela: 'Abuela',
+    tio: 'Tío',
+    tia: 'Tía',
+    hermano: 'Hermano',
+    hermana: 'Hermana',
+    otro: 'Otro',
+};
+
+/** Documento con su tipo delante, cuando el tipo está registrado. */
+function formatDocument(person: ContactPerson | null, fallback?: string | null): string | null {
+    const number = person?.document_number ?? fallback ?? null;
+    if (!number) return null;
+
+    const type = (person?.document_type ?? '').trim();
+
+    return type !== '' ? `${type.toUpperCase()} ${number}` : String(number);
+}
+
+/** Une las partes de una dirección omitiendo las que están vacías. */
+function joinLocation(person: ContactPerson): string | null {
+    const parts = [person.address, person.neighborhood, person.city, person.department]
+        .map((part) => (part ?? '').trim())
+        .filter((part) => part !== '');
+
+    return parts.length > 0 ? parts.join(', ') : null;
 }
 
 const PAYMENT_METHODS: Record<string, string> = {
@@ -68,13 +123,26 @@ const PAYMENT_TYPE_MAP: Record<string, string> = {
     installment: 'Cuotas',
 };
 
-export default function PaymentShow({ payment, canEditAbonos }: Props) {
+export default function PaymentShow({ payment, contact, canEditAbonos }: Props) {
     const totalAmount    = payment.original_amount ?? payment.amount ?? 0;
     const paidAmount     = payment.paid_amount ?? 0;
     const pendingBalance = payment.pending_balance ?? (payment.remaining_amount ?? totalAmount) ?? 0;
     const progressPercent = totalAmount > 0 ? Math.min((paidAmount / totalAmount) * 100, 100) : 0;
     const statusInfo     = STATUS_MAP[payment.status] ?? STATUS_MAP.pending;
     const StatusIcon     = statusInfo.icon;
+
+    // Contacto del estudiante y del acudiente, con respaldo en los datos que
+    // ya venían embebidos en el pago por si `contact` no llega.
+    const student = contact?.student ?? null;
+    const guardian = contact?.guardian ?? null;
+    const studentEmail = student?.email ?? payment.student.email ?? null;
+    const studentDocument = formatDocument(student, payment.student.document_number);
+    const guardianDocument = formatDocument(guardian);
+    const studentLocation = student ? joinLocation(student) : null;
+    const guardianLocation = guardian ? joinLocation(guardian) : null;
+    const guardianRelationship = guardian?.relationship
+        ? (RELATIONSHIP_LABELS[guardian.relationship.toLowerCase()] ?? guardian.relationship)
+        : null;
 
     const [editingTx, setEditingTx]   = useState<PaymentTransaction | null>(null);
     const [maxAmount, setMaxAmount]   = useState<number>(0);
@@ -224,22 +292,151 @@ export default function PaymentShow({ payment, canEditAbonos }: Props) {
                         <div className="mt-4 space-y-3">
                             <div>
                                 <div className="text-sm text-muted-foreground">Nombre</div>
-                                <div className="font-medium text-foreground">{payment.student.name} {payment.student.last_name ?? ''}</div>
+                                <div className="font-medium text-foreground">
+                                    <Link href={`/usuarios/${payment.student.id}`} className="hover:underline">
+                                        {student?.name ?? `${payment.student.name} ${payment.student.last_name ?? ''}`}
+                                    </Link>
+                                </div>
                             </div>
-                            {payment.student.document_number && (
+                            {studentDocument && (
                                 <div>
-                                    <div className="text-sm text-muted-foreground">Documento</div>
-                                    <div className="font-medium text-foreground">{payment.student.document_number}</div>
+                                    <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                                        <IdCard className="h-3.5 w-3.5" />
+                                        Documento
+                                    </div>
+                                    <div className="font-medium text-foreground">{studentDocument}</div>
                                 </div>
                             )}
-                            {payment.student.email && (
+                            {studentEmail && (
                                 <div>
-                                    <div className="text-sm text-muted-foreground">Email</div>
-                                    <div className="font-medium text-foreground">{payment.student.email}</div>
+                                    <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                                        <Mail className="h-3.5 w-3.5" />
+                                        Correo
+                                    </div>
+                                    <a href={`mailto:${studentEmail}`} className="font-medium text-foreground hover:underline">
+                                        {studentEmail}
+                                    </a>
                                 </div>
+                            )}
+                            {student?.mobile && (
+                                <div>
+                                    <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                                        <Smartphone className="h-3.5 w-3.5" />
+                                        Celular
+                                    </div>
+                                    <a href={`tel:${student.mobile}`} className="font-medium text-foreground hover:underline">
+                                        {student.mobile}
+                                    </a>
+                                </div>
+                            )}
+                            {student?.phone && (
+                                <div>
+                                    <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                                        <Phone className="h-3.5 w-3.5" />
+                                        Teléfono
+                                    </div>
+                                    <a href={`tel:${student.phone}`} className="font-medium text-foreground hover:underline">
+                                        {student.phone}
+                                    </a>
+                                </div>
+                            )}
+                            {studentLocation && (
+                                <div>
+                                    <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                                        <MapPin className="h-3.5 w-3.5" />
+                                        Dirección
+                                    </div>
+                                    <div className="font-medium text-foreground">{studentLocation}</div>
+                                </div>
+                            )}
+                            {!studentEmail && !student?.mobile && !student?.phone && (
+                                <p className="text-sm text-muted-foreground">
+                                    El estudiante no tiene datos de contacto registrados.
+                                </p>
                             )}
                         </div>
                     </div>
+
+                    {guardian && (
+                        <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
+                            <h3 className="flex items-center gap-2 text-sm font-semibold uppercase text-muted-foreground">
+                                <Users className="h-4 w-4" />
+                                Acudiente
+                            </h3>
+                            <div className="mt-4 space-y-3">
+                                <div>
+                                    <div className="text-sm text-muted-foreground">
+                                        {guardianRelationship ?? 'Responsable'}
+                                    </div>
+                                    <div className="font-medium text-foreground">
+                                        {guardian.user_id ? (
+                                            <Link href={`/usuarios/${guardian.user_id}`} className="hover:underline">
+                                                {guardian.name}
+                                            </Link>
+                                        ) : (
+                                            guardian.name
+                                        )}
+                                    </div>
+                                </div>
+                                {guardianDocument && (
+                                    <div>
+                                        <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                                            <IdCard className="h-3.5 w-3.5" />
+                                            Documento
+                                        </div>
+                                        <div className="font-medium text-foreground">{guardianDocument}</div>
+                                    </div>
+                                )}
+                                {guardian.email && (
+                                    <div>
+                                        <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                                            <Mail className="h-3.5 w-3.5" />
+                                            Correo
+                                        </div>
+                                        <a href={`mailto:${guardian.email}`} className="font-medium text-foreground hover:underline">
+                                            {guardian.email}
+                                        </a>
+                                    </div>
+                                )}
+                                {guardian.mobile && (
+                                    <div>
+                                        <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                                            <Smartphone className="h-3.5 w-3.5" />
+                                            Celular
+                                        </div>
+                                        <a href={`tel:${guardian.mobile}`} className="font-medium text-foreground hover:underline">
+                                            {guardian.mobile}
+                                        </a>
+                                    </div>
+                                )}
+                                {guardian.phone && (
+                                    <div>
+                                        <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                                            <Phone className="h-3.5 w-3.5" />
+                                            Teléfono
+                                        </div>
+                                        <a href={`tel:${guardian.phone}`} className="font-medium text-foreground hover:underline">
+                                            {guardian.phone}
+                                        </a>
+                                    </div>
+                                )}
+                                {guardianLocation && (
+                                    <div>
+                                        <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                                            <MapPin className="h-3.5 w-3.5" />
+                                            Dirección
+                                        </div>
+                                        <div className="font-medium text-foreground">{guardianLocation}</div>
+                                    </div>
+                                )}
+                                {!guardian.has_account && (
+                                    <p className="text-xs text-muted-foreground">
+                                        Datos tomados de la ficha de matrícula. El acudiente no tiene cuenta en la plataforma.
+                                    </p>
+                                )}
+                            </div>
+                        </div>
+                    )}
 
                     <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
                         <h3 className="flex items-center gap-2 text-sm font-semibold uppercase text-muted-foreground">
