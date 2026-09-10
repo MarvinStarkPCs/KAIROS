@@ -270,7 +270,7 @@ export default function Index({ programs, stats, filters }: Props) {
     const clearFilters = () => {
         setSearch('');
         setStatusFilter('');
-        router.get(ProgramAcademyController.index().url);
+        router.get(ProgramAcademyController.index().url, { reset: 1 });
     };
 
     const goToPage = (url: string | null) => {

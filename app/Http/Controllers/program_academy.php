@@ -2,18 +2,25 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\RemembersListFilters;
 use App\Models\AcademicProgram;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class program_academy extends Controller
 {
+    use RemembersListFilters;
+
+    /** Filtros del listado que se recuerdan entre visitas. */
+    private const FILTER_KEYS = ['search', 'status', 'per_page'];
+
     public function index(Request $request)
     {
-        // Obtener parámetros de búsqueda y filtros
-        $search = $request->input('search', '');
-        $status = $request->input('status', '');
-        $perPage = $request->input('per_page', 9);
+        // Obtener parámetros de búsqueda y filtros, recordando la última selección
+        $filters = $this->rememberedFilters($request, 'programas', self::FILTER_KEYS, ['per_page' => 9]);
+        $search = $filters['search'] ?? '';
+        $status = $filters['status'] ?? '';
+        $perPage = (int) $filters['per_page'];
 
         // Query base con contadores
         $query = AcademicProgram::withCount(['activeStudents', 'schedules', 'activeSchedules']);
@@ -22,7 +29,7 @@ class program_academy extends Controller
         if ($search) {
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('description', 'like', "%{$search}%");
+                    ->orWhere('description', 'like', "%{$search}%");
             });
         }
 
@@ -66,10 +73,10 @@ class program_academy extends Controller
         $stats = [
             'total_programs' => AcademicProgram::count(),
             'active_programs' => AcademicProgram::active()->count(),
-            'total_students' => \App\Models\User::whereHas('roles', function($q) {
+            'total_students' => \App\Models\User::whereHas('roles', function ($q) {
                 $q->where('name', 'Estudiante');
             })->count(),
-            'total_professors' => \App\Models\User::whereHas('roles', function($q) {
+            'total_professors' => \App\Models\User::whereHas('roles', function ($q) {
                 $q->where('name', 'Profesor');
             })->count(),
         ];
@@ -77,17 +84,14 @@ class program_academy extends Controller
         return Inertia::render('ProgramAcademy/Index', [
             'programs' => $programs,
             'stats' => $stats,
-            'filters' => [
-                'search' => $search,
-                'status' => $status,
-            ],
+            'filters' => $filters,
         ]);
     }
 
     public function show(AcademicProgram $program)
     {
         $program->load([
-            'studyPlans.activities.evaluationCriteria'
+            'studyPlans.activities.evaluationCriteria',
         ]);
 
         $studyPlans = $program->studyPlans->map(function ($studyPlan) {
@@ -163,6 +167,7 @@ class program_academy extends Controller
         AcademicProgram::create($validated);
 
         flash_success('Programa académico creado exitosamente.');
+
         return redirect()->route('programas_academicos.index');
     }
 
@@ -203,6 +208,7 @@ class program_academy extends Controller
         $program->update($validated);
 
         flash_success('Programa académico actualizado exitosamente.');
+
         return redirect()->route('programas_academicos.index');
     }
 
@@ -212,7 +218,7 @@ class program_academy extends Controller
         if ($program->activeStudents()->count() > 0) {
             return back()->with('error', 'No se puede eliminar el programa porque tiene estudiantes activos.');
         }
-        
+
         if ($program->schedules()->count() > 0) {
             return back()->with('error', 'No se puede eliminar el programa porque tiene horarios asociados.');
         }

@@ -2,7 +2,6 @@ import AttendanceController from '@/actions/App/Http/Controllers/AttendanceContr
 import EnrollmentController from '@/actions/App/Http/Controllers/EnrollmentController';
 import PaymentController from '@/actions/App/Http/Controllers/PaymentController';
 import ProgramAcademyController from '@/actions/App/Http/Controllers/program_academy';
-import ReportController from '@/actions/App/Http/Controllers/ReportController';
 import ScheduleController from '@/actions/App/Http/Controllers/ScheduleController';
 import StudentController from '@/actions/App/Http/Controllers/StudentController';
 import TeacherController from '@/actions/App/Http/Controllers/TeacherController';
@@ -22,7 +21,6 @@ import { type NavItem, type SharedData } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
 import {
     Award,
-    BarChart,
     BookOpen,
     Calendar,
     CheckSquare,
@@ -99,12 +97,6 @@ const allNavItems: NavItem[] = [
         href: { url: '/academico', method: 'get' },
         icon: LineChart,
         permission: 'ver_panel_academico',
-    },
-    {
-        title: 'Reportes',
-        href: ReportController.payments(),
-        icon: BarChart,
-        permission: 'ver_reportes',
     },
 ];
 

@@ -2,46 +2,54 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\RemembersListFilters;
+use App\Http\Requests\StoreEnrollmentRequest;
 use App\Mail\EnrollmentWelcome;
-use App\Models\Enrollment;
 use App\Models\AcademicProgram;
+use App\Models\Enrollment;
+use App\Models\Payment;
 use App\Models\Schedule;
 use App\Models\ScheduleEnrollment;
 use App\Models\User;
-use App\Models\Payment;
-use App\Http\Requests\StoreEnrollmentRequest;
 use App\Services\EnrollmentService;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
-use Carbon\Carbon;
 
 class EnrollmentController extends Controller
 {
+    use RemembersListFilters;
+
+    /** Filtros del listado que se recuerdan entre visitas. */
+    private const FILTER_KEYS = ['program_id', 'status', 'search'];
+
     public function __construct(protected EnrollmentService $enrollmentService) {}
 
     public function index(Request $request)
     {
+        $filters = $this->rememberedFilters($request, 'matriculas', self::FILTER_KEYS);
+
         $query = Enrollment::with(['student', 'program'])
             ->latest();
 
         // Filtros opcionales
-        if ($request->filled('program_id')) {
-            $query->where('program_id', $request->program_id);
+        if ($filters['program_id']) {
+            $query->where('program_id', $filters['program_id']);
         }
 
-        if ($request->filled('status')) {
-            $query->where('status', $request->status);
+        if ($filters['status']) {
+            $query->where('status', $filters['status']);
         }
 
-        if ($request->filled('search')) {
-            $search = $request->search;
+        if ($filters['search']) {
+            $search = $filters['search'];
             $query->whereHas('student', function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('last_name', 'like', "%{$search}%")
-                  ->orWhere('document_number', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%");
+                    ->orWhere('last_name', 'like', "%{$search}%")
+                    ->orWhere('document_number', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%");
             });
         }
 
@@ -71,7 +79,7 @@ class EnrollmentController extends Controller
             'stats' => $stats,
             'programs' => $programs,
             'students' => $students,
-            'filters' => $request->only(['program_id', 'status', 'search']),
+            'filters' => $filters,
         ]);
     }
 
@@ -87,6 +95,7 @@ class EnrollmentController extends Controller
         $programs->transform(function ($program) {
             $program->has_capacity = true; // Si quitamos max_slots, siempre hay capacidad
             $program->remaining_slots = null;
+
             return $program;
         });
 
@@ -112,11 +121,12 @@ class EnrollmentController extends Controller
 
         if ($existingEnrollment) {
             flash_error('El estudiante ya está inscrito en este programa');
+
             return redirect()->back()->withInput();
         }
 
         // Si no se proporciona fecha, usar hoy
-        if (!isset($validated['enrollment_date'])) {
+        if (! isset($validated['enrollment_date'])) {
             $validated['enrollment_date'] = Carbon::today();
         }
 
@@ -162,14 +172,16 @@ class EnrollmentController extends Controller
             $schedule = \App\Models\Schedule::findOrFail($scheduleId);
 
             // Verificar que haya cupos disponibles
-            if (!$schedule->hasAvailableSlots()) {
+            if (! $schedule->hasAvailableSlots()) {
                 flash_warning('Inscripción al programa creada, pero el horario seleccionado no tiene cupos disponibles');
+
                 return redirect()->route('inscripciones.index');
             }
 
             // Verificar que el horario pertenezca al programa
             if ($schedule->academic_program_id != $validated['program_id']) {
                 flash_warning('Inscripción al programa creada, pero el horario seleccionado no pertenece a este programa');
+
                 return redirect()->route('inscripciones.index');
             }
 
@@ -179,7 +191,7 @@ class EnrollmentController extends Controller
                 ->where('status', 'enrolled')
                 ->exists();
 
-            if (!$existingScheduleEnrollment) {
+            if (! $existingScheduleEnrollment) {
                 \App\Models\ScheduleEnrollment::create([
                     'student_id' => $validated['student_id'],
                     'schedule_id' => $scheduleId,
@@ -211,7 +223,7 @@ class EnrollmentController extends Controller
             'program.schedules' => function ($query) {
                 $query->where('status', 'active')
                     ->with(['professor', 'enrollments']);
-            }
+            },
         ]);
 
         // Obtener horarios en los que el estudiante está inscrito
@@ -269,7 +281,7 @@ class EnrollmentController extends Controller
             ->get(['id', 'name', 'days_of_week', 'start_time', 'end_time', 'classroom', 'professor_id']);
 
         $currentScheduleEnrollment = ScheduleEnrollment::where('student_id', $enrollment->student_id)
-            ->whereHas('schedule', fn($q) => $q->where('academic_program_id', $enrollment->program_id))
+            ->whereHas('schedule', fn ($q) => $q->where('academic_program_id', $enrollment->program_id))
             ->where('status', 'enrolled')
             ->with('schedule:id,name,days_of_week,start_time,end_time,classroom')
             ->first();
@@ -278,7 +290,7 @@ class EnrollmentController extends Controller
         $allPrograms = auth()->id() === 1
             ? AcademicProgram::active()
                 ->where('is_demo', false)
-                ->with(['schedules' => fn($q) => $q->active()->with('professor:id,name')->select('id', 'academic_program_id', 'name', 'days_of_week', 'start_time', 'end_time', 'classroom', 'professor_id')])
+                ->with(['schedules' => fn ($q) => $q->active()->with('professor:id,name')->select('id', 'academic_program_id', 'name', 'days_of_week', 'start_time', 'end_time', 'classroom', 'professor_id')])
                 ->get(['id', 'name'])
             : collect();
 
@@ -289,17 +301,17 @@ class EnrollmentController extends Controller
 
         return Inertia::render('Enrollments/Edit', [
             'enrollment' => [
-                'id'      => $enrollment->id,
-                'status'  => $enrollment->status,
+                'id' => $enrollment->id,
+                'status' => $enrollment->status,
                 'student' => ['id' => $enrollment->student->id, 'name' => $enrollment->student->name, 'email' => $enrollment->student->email],
                 'program' => ['id' => $enrollment->program->id, 'name' => $enrollment->program->name],
             ],
-            'schedules'                  => $schedules,
-            'currentScheduleEnrollment'  => $currentScheduleEnrollment,
-            'authId'                     => auth()->id(),
-            'canGeneratePayment'         => auth()->user()->hasPermissionTo('generar_pago_mensual'),
-            'allPrograms'                => $allPrograms,
-            'missingMonths'              => $missingMonths,
+            'schedules' => $schedules,
+            'currentScheduleEnrollment' => $currentScheduleEnrollment,
+            'authId' => auth()->id(),
+            'canGeneratePayment' => auth()->user()->hasPermissionTo('generar_pago_mensual'),
+            'allPrograms' => $allPrograms,
+            'missingMonths' => $missingMonths,
         ]);
     }
 
@@ -312,7 +324,7 @@ class EnrollmentController extends Controller
         ]);
 
         $currentScheduleEnrollment = ScheduleEnrollment::where('student_id', $enrollment->student_id)
-            ->whereHas('schedule', fn($q) => $q->where('academic_program_id', $enrollment->program_id))
+            ->whereHas('schedule', fn ($q) => $q->where('academic_program_id', $enrollment->program_id))
             ->where('status', 'enrolled')
             ->first();
 
@@ -345,6 +357,7 @@ class EnrollmentController extends Controller
 
         if ($hasPayments) {
             flash_error('No se puede eliminar la inscripción porque tiene pagos asociados. Considere marcarla como retirada en su lugar.');
+
             return redirect()->back();
         }
 
@@ -373,6 +386,7 @@ class EnrollmentController extends Controller
 
         if ($existingEnrollment) {
             flash_error('El estudiante ya está inscrito en este programa');
+
             return redirect()->back();
         }
 
@@ -412,8 +426,8 @@ class EnrollmentController extends Controller
         }
 
         $statusMessages = [
-            'active'    => 'Inscripción activada exitosamente',
-            'waiting'   => 'Inscripción movida a lista de espera',
+            'active' => 'Inscripción activada exitosamente',
+            'waiting' => 'Inscripción movida a lista de espera',
             'suspended' => 'Inscripción suspendida',
             'withdrawn' => 'Inscripción marcada como retirada',
             'cancelled' => 'Inscripción cancelada',
@@ -434,28 +448,29 @@ class EnrollmentController extends Controller
         }
 
         $validated = $request->validate([
-            'program_id'  => ['required', 'exists:academic_programs,id', 'different:' . $enrollment->program_id],
+            'program_id' => ['required', 'exists:academic_programs,id', 'different:'.$enrollment->program_id],
             'schedule_id' => ['required', 'exists:schedules,id'],
         ], [
-            'program_id.required'  => 'Debes seleccionar un programa',
-            'program_id.exists'    => 'El programa seleccionado no existe',
+            'program_id.required' => 'Debes seleccionar un programa',
+            'program_id.exists' => 'El programa seleccionado no existe',
             'program_id.different' => 'El programa seleccionado es el mismo que el actual',
             'schedule_id.required' => 'Debes seleccionar un horario del nuevo programa',
-            'schedule_id.exists'   => 'El horario seleccionado no existe',
+            'schedule_id.exists' => 'El horario seleccionado no existe',
         ]);
 
-        $newProgram  = AcademicProgram::findOrFail($validated['program_id']);
+        $newProgram = AcademicProgram::findOrFail($validated['program_id']);
         $newSchedule = Schedule::findOrFail($validated['schedule_id']);
 
         // Verificar que el horario pertenezca al nuevo programa
         if ($newSchedule->academic_program_id !== $newProgram->id) {
             flash_error('El horario seleccionado no pertenece al programa elegido.');
+
             return redirect()->back();
         }
 
         // Retirar al estudiante del horario actual del programa viejo
         ScheduleEnrollment::where('student_id', $enrollment->student_id)
-            ->whereHas('schedule', fn($q) => $q->where('academic_program_id', $enrollment->program_id))
+            ->whereHas('schedule', fn ($q) => $q->where('academic_program_id', $enrollment->program_id))
             ->where('status', 'enrolled')
             ->update(['status' => 'dropped']);
 
@@ -478,7 +493,7 @@ class EnrollmentController extends Controller
      */
     public function generatePayment(Enrollment $enrollment)
     {
-        if (!auth()->user()->hasPermissionTo('generar_pago_mensual')) {
+        if (! auth()->user()->hasPermissionTo('generar_pago_mensual')) {
             abort(403);
         }
 
@@ -499,7 +514,7 @@ class EnrollmentController extends Controller
      */
     public function generatePaymentForMonth(Request $request, Enrollment $enrollment)
     {
-        if (!auth()->user()->hasPermissionTo('generar_pago_mensual')) {
+        if (! auth()->user()->hasPermissionTo('generar_pago_mensual')) {
             abort(403);
         }
 
@@ -512,7 +527,7 @@ class EnrollmentController extends Controller
         $payment = $this->generateMonthlyPaymentForDate($enrollment, $targetMonth);
 
         if ($payment) {
-            flash_success('Pago generado para ' . $targetMonth->locale('es')->isoFormat('MMMM YYYY') . '.');
+            flash_success('Pago generado para '.$targetMonth->locale('es')->isoFormat('MMMM YYYY').'.');
         } else {
             flash_info('Ya existe un pago para ese mes.');
         }
@@ -533,7 +548,7 @@ class EnrollmentController extends Controller
         $paidMonths = Payment::where('enrollment_id', $enrollment->id)
             ->whereIn('status', ['pending', 'paid', 'partial'])
             ->get(['due_date'])
-            ->map(fn($p) => Carbon::parse($p->due_date)->format('Y-m'))
+            ->map(fn ($p) => Carbon::parse($p->due_date)->format('Y-m'))
             ->unique()
             ->values()
             ->toArray();
@@ -542,10 +557,10 @@ class EnrollmentController extends Controller
         $current = $start->copy();
         while ($current->lte($today)) {
             $key = $current->format('Y-m');
-            if (!in_array($key, $paidMonths)) {
+            if (! in_array($key, $paidMonths)) {
                 $missing[] = [
-                    'month'  => $key,
-                    'label'  => $current->locale('es')->isoFormat('MMMM YYYY'),
+                    'month' => $key,
+                    'label' => $current->locale('es')->isoFormat('MMMM YYYY'),
                 ];
             }
             $current->addMonth();
@@ -587,26 +602,26 @@ class EnrollmentController extends Controller
             $siblingsCount = 1;
             if ($student->parent_id) {
                 $siblingsCount = User::where('parent_id', $student->parent_id)
-                    ->whereHas('programEnrollments', fn($q) => $q->whereIn('status', ['active', 'waiting']))
+                    ->whereHas('programEnrollments', fn ($q) => $q->whereIn('status', ['active', 'waiting']))
                     ->count();
             }
-            $paymentInfo    = $this->enrollmentService->getPaymentAmount($modality, $siblingsCount);
-            $amount         = $paymentInfo['amount'];
+            $paymentInfo = $this->enrollmentService->getPaymentAmount($modality, $siblingsCount);
+            $amount = $paymentInfo['amount'];
             $originalAmount = $paymentInfo['original_amount'];
-            $discountPct    = $paymentInfo['discount_percentage'] > 0 ? $paymentInfo['discount_percentage'] : null;
+            $discountPct = $paymentInfo['discount_percentage'] > 0 ? $paymentInfo['discount_percentage'] : null;
             $discountAmount = $paymentInfo['discount_amount'] > 0 ? $paymentInfo['discount_amount'] : null;
         } else {
-            if (!$program->monthly_fee || $program->monthly_fee <= 0) {
+            if (! $program->monthly_fee || $program->monthly_fee <= 0) {
                 return null;
             }
-            $amount         = (float) $program->monthly_fee;
+            $amount = (float) $program->monthly_fee;
             $originalAmount = $amount;
-            $discountPct    = null;
+            $discountPct = null;
             $discountAmount = null;
         }
 
         // Siempre el mes actual: vencimiento el día 5 del mes en curso
-        $today   = Carbon::today();
+        $today = Carbon::today();
         $dueDate = $today->copy()->day(5);
 
         // Verificar si ya existe un pago pendiente para el mes actual
@@ -621,7 +636,7 @@ class EnrollmentController extends Controller
             return null;
         }
 
-        $concept = "Mensualidad {$program->name} — " . $dueDate->locale('es')->isoFormat('MMMM YYYY');
+        $concept = "Mensualidad {$program->name} — ".$dueDate->locale('es')->isoFormat('MMMM YYYY');
         if ($modality) {
             $concept .= " ({$modality})";
         }
@@ -630,21 +645,21 @@ class EnrollmentController extends Controller
         }
 
         return Payment::create([
-            'student_id'          => $enrollment->student_id,
-            'program_id'          => $program->id,
-            'enrollment_id'       => $enrollment->id,
-            'concept'             => $concept,
-            'payment_type'        => 'single',
-            'modality'            => $modality,
-            'amount'              => $amount,
-            'original_amount'     => $originalAmount,
+            'student_id' => $enrollment->student_id,
+            'program_id' => $program->id,
+            'enrollment_id' => $enrollment->id,
+            'concept' => $concept,
+            'payment_type' => 'single',
+            'modality' => $modality,
+            'amount' => $amount,
+            'original_amount' => $originalAmount,
             'discount_percentage' => $discountPct,
-            'discount_amount'     => $discountAmount,
-            'paid_amount'         => 0,
-            'remaining_amount'    => $amount,
-            'due_date'            => $dueDate,
-            'status'              => 'pending',
-            'recorded_by'         => auth()->id(),
+            'discount_amount' => $discountAmount,
+            'paid_amount' => 0,
+            'remaining_amount' => $amount,
+            'due_date' => $dueDate,
+            'status' => 'pending',
+            'recorded_by' => auth()->id(),
         ]);
     }
 
@@ -661,21 +676,21 @@ class EnrollmentController extends Controller
             $siblingsCount = 1;
             if ($student->parent_id) {
                 $siblingsCount = User::where('parent_id', $student->parent_id)
-                    ->whereHas('programEnrollments', fn($q) => $q->whereIn('status', ['active', 'waiting']))
+                    ->whereHas('programEnrollments', fn ($q) => $q->whereIn('status', ['active', 'waiting']))
                     ->count();
             }
-            $paymentInfo    = $this->enrollmentService->getPaymentAmount($modality, $siblingsCount);
-            $amount         = $paymentInfo['amount'];
+            $paymentInfo = $this->enrollmentService->getPaymentAmount($modality, $siblingsCount);
+            $amount = $paymentInfo['amount'];
             $originalAmount = $paymentInfo['original_amount'];
-            $discountPct    = $paymentInfo['discount_percentage'] > 0 ? $paymentInfo['discount_percentage'] : null;
+            $discountPct = $paymentInfo['discount_percentage'] > 0 ? $paymentInfo['discount_percentage'] : null;
             $discountAmount = $paymentInfo['discount_amount'] > 0 ? $paymentInfo['discount_amount'] : null;
         } else {
-            if (!$program->monthly_fee || $program->monthly_fee <= 0) {
+            if (! $program->monthly_fee || $program->monthly_fee <= 0) {
                 return null;
             }
-            $amount         = (float) $program->monthly_fee;
+            $amount = (float) $program->monthly_fee;
             $originalAmount = $amount;
-            $discountPct    = null;
+            $discountPct = null;
             $discountAmount = null;
         }
 
@@ -693,7 +708,7 @@ class EnrollmentController extends Controller
             return null;
         }
 
-        $concept = "Mensualidad {$program->name} — " . $targetMonth->locale('es')->isoFormat('MMMM YYYY');
+        $concept = "Mensualidad {$program->name} — ".$targetMonth->locale('es')->isoFormat('MMMM YYYY');
         if ($modality) {
             $concept .= " ({$modality})";
         }
@@ -702,21 +717,21 @@ class EnrollmentController extends Controller
         }
 
         return Payment::create([
-            'student_id'          => $enrollment->student_id,
-            'program_id'          => $program->id,
-            'enrollment_id'       => $enrollment->id,
-            'concept'             => $concept,
-            'payment_type'        => 'single',
-            'modality'            => $modality,
-            'amount'              => $amount,
-            'original_amount'     => $originalAmount,
+            'student_id' => $enrollment->student_id,
+            'program_id' => $program->id,
+            'enrollment_id' => $enrollment->id,
+            'concept' => $concept,
+            'payment_type' => 'single',
+            'modality' => $modality,
+            'amount' => $amount,
+            'original_amount' => $originalAmount,
             'discount_percentage' => $discountPct,
-            'discount_amount'     => $discountAmount,
-            'paid_amount'         => 0,
-            'remaining_amount'    => $amount,
-            'due_date'            => $dueDate,
-            'status'              => 'pending',
-            'recorded_by'         => auth()->id(),
+            'discount_amount' => $discountAmount,
+            'paid_amount' => 0,
+            'remaining_amount' => $amount,
+            'due_date' => $dueDate,
+            'status' => 'pending',
+            'recorded_by' => auth()->id(),
         ]);
     }
 }

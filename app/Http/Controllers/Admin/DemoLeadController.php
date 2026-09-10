@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Concerns\RemembersListFilters;
 use App\Http\Controllers\Controller;
 use App\Models\DemoLead;
 use Illuminate\Http\Request;
@@ -9,21 +10,31 @@ use Inertia\Inertia;
 
 class DemoLeadController extends Controller
 {
+    use RemembersListFilters;
+
+    /** Filtros del listado que se recuerdan entre visitas. */
+    private const FILTER_KEYS = ['status', 'search', 'sort', 'direction'];
+
     /**
      * Mostrar lista de leads
      */
     public function index(Request $request)
     {
+        $filters = $this->rememberedFilters($request, 'demo_leads', self::FILTER_KEYS, [
+            'sort' => 'created_at',
+            'direction' => 'desc',
+        ]);
+
         $query = DemoLead::query();
 
         // Filtro por estado
-        if ($request->filled('status')) {
-            $query->where('status', $request->status);
+        if ($filters['status']) {
+            $query->where('status', $filters['status']);
         }
 
         // Búsqueda
-        if ($request->filled('search')) {
-            $search = $request->search;
+        if ($filters['search']) {
+            $search = $filters['search'];
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
                     ->orWhere('email', 'like', "%{$search}%")
@@ -34,8 +45,8 @@ class DemoLeadController extends Controller
         }
 
         // Ordenamiento
-        $sortField = $request->get('sort', 'created_at');
-        $sortDirection = $request->get('direction', 'desc');
+        $sortField = $filters['sort'];
+        $sortDirection = $filters['direction'];
         $query->orderBy($sortField, $sortDirection);
 
         $leads = $query->paginate(15)->withQueryString();
@@ -52,12 +63,7 @@ class DemoLeadController extends Controller
         return Inertia::render('Admin/DemoLeads/Index', [
             'leads' => $leads,
             'stats' => $stats,
-            'filters' => [
-                'status' => $request->status,
-                'search' => $request->search,
-                'sort' => $sortField,
-                'direction' => $sortDirection,
-            ],
+            'filters' => $filters,
         ]);
     }
 
@@ -83,7 +89,7 @@ class DemoLeadController extends Controller
         $oldStatus = $lead->status;
         $lead->update(['status' => $validated['status']]);
 
-        flash_success('Estado actualizado exitosamente de "' . $lead->getStatusLabelAttribute() . '" a "' . $lead->fresh()->status_label . '"');
+        flash_success('Estado actualizado exitosamente de "'.$lead->getStatusLabelAttribute().'" a "'.$lead->fresh()->status_label.'"');
 
         return redirect()->back();
     }
@@ -114,7 +120,7 @@ class DemoLeadController extends Controller
         $leadName = $lead->name;
         $lead->delete();
 
-        flash_success('Lead "' . $leadName . '" eliminado exitosamente');
+        flash_success('Lead "'.$leadName.'" eliminado exitosamente');
 
         return redirect()->route('admin.demo-leads.index');
     }

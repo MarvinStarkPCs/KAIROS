@@ -97,7 +97,7 @@ export default function Index({ enrollments, stats, programs, students, filters 
         setSearch('');
         setProgramFilter('all');
         setStatusFilter('all');
-        router.get('/matriculas');
+        router.get('/matriculas', { reset: 1 });
     };
 
     const handleDelete = (id: number) => {

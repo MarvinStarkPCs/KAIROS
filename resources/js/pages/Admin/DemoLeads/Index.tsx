@@ -78,7 +78,7 @@ export default function Index({ leads, stats, filters }: Props) {
     const handleClearFilters = () => {
         setSearch('');
         setStatus('all');
-        router.get('/admin/demo-leads');
+        router.get('/admin/demo-leads', { reset: 1 });
     };
 
     const handleDelete = (lead: DemoLead) => {

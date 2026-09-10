@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\RemembersListFilters;
 use App\Http\Requests\AddTransactionRequest;
 use App\Http\Requests\StoreInstallmentsRequest;
 use App\Http\Requests\StorePaymentRequest;
@@ -21,6 +22,19 @@ use Inertia\Inertia;
 
 class PaymentController extends Controller
 {
+    use RemembersListFilters;
+
+    /** Filtros del listado que se recuerdan entre visitas. */
+    private const FILTER_KEYS = [
+        'status',
+        'search',
+        'program_id',
+        'payment_type',
+        'date_from',
+        'date_to',
+        'per_page',
+    ];
+
     public function __construct(protected WompiService $wompiService) {}
 
     /**
@@ -28,15 +42,17 @@ class PaymentController extends Controller
      */
     public function index(Request $request)
     {
+        $filters = $this->rememberedFilters($request, 'pagos', self::FILTER_KEYS);
+
         $query = Payment::with(['student', 'program', 'enrollment', 'transactions']);
 
         // Filtros
-        if ($request->filled('status')) {
-            $query->where('status', $request->status);
+        if ($filters['status']) {
+            $query->where('status', $filters['status']);
         }
 
-        if ($request->filled('search')) {
-            $search = $request->search;
+        if ($filters['search']) {
+            $search = $filters['search'];
             $query->whereHas('student', function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
                     ->orWhere('last_name', 'like', "%{$search}%")
@@ -44,26 +60,26 @@ class PaymentController extends Controller
             });
         }
 
-        if ($request->filled('program_id')) {
-            $query->where('program_id', $request->program_id);
+        if ($filters['program_id']) {
+            $query->where('program_id', $filters['program_id']);
         }
 
-        if ($request->filled('payment_type')) {
-            $query->where('payment_type', $request->payment_type);
+        if ($filters['payment_type']) {
+            $query->where('payment_type', $filters['payment_type']);
         }
 
-        if ($request->filled('date_from')) {
-            $query->whereDate('due_date', '>=', $request->date_from);
+        if ($filters['date_from']) {
+            $query->whereDate('due_date', '>=', $filters['date_from']);
         }
 
-        if ($request->filled('date_to')) {
-            $query->whereDate('due_date', '<=', $request->date_to);
+        if ($filters['date_to']) {
+            $query->whereDate('due_date', '<=', $filters['date_to']);
         }
 
         // Solo mostrar pagos principales (no cuotas hijas)
         $query->whereNull('parent_payment_id');
 
-        $perPage = in_array((int) $request->per_page, [10, 20, 30, 100]) ? (int) $request->per_page : 20;
+        $perPage = in_array((int) $filters['per_page'], [10, 20, 30, 100]) ? (int) $filters['per_page'] : 20;
         $payments = $query->orderBy('created_at', 'desc')->paginate($perPage)->withQueryString();
 
         // Agregar información calculada a cada pago
@@ -79,7 +95,7 @@ class PaymentController extends Controller
         return Inertia::render('Payments/Index', [
             'payments' => $payments,
             'programs' => $programs,
-            'filters' => $request->only(['status', 'search', 'program_id', 'payment_type', 'date_from', 'date_to', 'per_page']),
+            'filters' => $filters,
         ]);
     }
 

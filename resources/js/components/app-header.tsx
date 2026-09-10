@@ -169,12 +169,6 @@ const allNavItems: NavItem[] = [
         ],
     },
     {
-        title: 'Reportes',
-        href: '/reportes',
-        icon: FileText,
-        permission: 'ver_reportes',
-    },
-    {
         title: 'Seguridad',
         href: '/seguridad',
         icon: Shield,

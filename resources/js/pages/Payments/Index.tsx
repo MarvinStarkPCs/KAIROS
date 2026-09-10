@@ -104,8 +104,8 @@ export default function PaymentsList({ payments, programs, filters }: Props) {
     };
 
     const handleClearFilters = () => {
-        setLocalFilters({ status: '', search: '', program_id: '', date_from: '', date_to: '' });
-        router.get('/pagos');
+        setLocalFilters({ status: '', search: '', program_id: '', date_from: '', date_to: '', per_page: 20 });
+        router.get('/pagos', { reset: 1 });
     };
 
     const handlePageChange = (page: number) => {

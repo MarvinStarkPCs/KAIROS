@@ -111,7 +111,7 @@ export default function UsersIndex({ users, filters }: IndexProps) {
     const clearFilters = () => {
         setSearch('');
         setTypeFilter('');
-        router.get(route('usuarios.index'));
+        router.get(route('usuarios.index'), { reset: 1 });
     };
 
     const formatDate = (date: string) => {

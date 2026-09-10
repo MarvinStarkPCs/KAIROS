@@ -2,19 +2,24 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\User;
+use App\Http\Controllers\Concerns\RemembersListFilters;
 use App\Http\Requests\StoreUserRequest;
 use App\Http\Requests\UpdateUserRequest;
+use App\Models\User;
+use App\Services\EnrollmentService;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rules\Password;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Spatie\Permission\Models\Role;
-use App\Services\EnrollmentService;
-use Carbon\Carbon;
 
 class UserController extends Controller
 {
+    use RemembersListFilters;
+
+    /** Filtros del listado que se recuerdan entre visitas. */
+    private const FILTER_KEYS = ['type', 'search'];
+
     /**
      * Búsqueda rápida de usuarios (JSON) para la barra del header
      */
@@ -52,11 +57,13 @@ class UserController extends Controller
      */
     public function index(Request $request)
     {
+        $filters = $this->rememberedFilters($request, 'usuarios', self::FILTER_KEYS);
+
         $query = User::with(['roles', 'studentProfile', 'teacherProfile']);
 
         // Filtrar por tipo de usuario
-        if ($request->filled('type')) {
-            $type = $request->input('type');
+        if ($filters['type']) {
+            $type = $filters['type'];
             if ($type === 'student') {
                 $query->role('Estudiante');
             } elseif ($type === 'teacher') {
@@ -69,8 +76,8 @@ class UserController extends Controller
         }
 
         // Buscar por nombre o email
-        if ($request->filled('search')) {
-            $search = $request->input('search');
+        if ($filters['search']) {
+            $search = $filters['search'];
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
                     ->orWhere('last_name', 'like', "%{$search}%")
@@ -102,10 +109,7 @@ class UserController extends Controller
                 'modality' => $user->studentProfile?->modality,
                 'created_at' => $user->created_at->toIso8601String(),
             ]),
-            'filters' => [
-                'type' => $request->input('type', ''),
-                'search' => $request->input('search', ''),
-            ],
+            'filters' => $filters,
         ]);
     }
 
@@ -564,8 +568,8 @@ class UserController extends Controller
             'avatar' => ['required', 'image', 'max:2048'],
         ], [
             'avatar.required' => 'Selecciona una imagen',
-            'avatar.image'    => 'El archivo debe ser una imagen',
-            'avatar.max'      => 'La imagen no puede superar 2MB',
+            'avatar.image' => 'El archivo debe ser una imagen',
+            'avatar.max' => 'La imagen no puede superar 2MB',
         ]);
 
         if ($user->avatar && Storage::disk('public')->exists($user->avatar)) {
