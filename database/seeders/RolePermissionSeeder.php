@@ -106,6 +106,9 @@ class RolePermissionSeeder extends Seeder
             'ver_comunicacion',
             'ver_reportes',
 
+            // Permisos del Panel Académico
+            'ver_panel_academico',
+
             // Permisos de Demo Leads
             'ver_demo_leads',
             'gestionar_demo_leads',

@@ -1,3 +1,11 @@
+import AttendanceController from '@/actions/App/Http/Controllers/AttendanceController';
+import EnrollmentController from '@/actions/App/Http/Controllers/EnrollmentController';
+import PaymentController from '@/actions/App/Http/Controllers/PaymentController';
+import ProgramAcademyController from '@/actions/App/Http/Controllers/program_academy';
+import ReportController from '@/actions/App/Http/Controllers/ReportController';
+import ScheduleController from '@/actions/App/Http/Controllers/ScheduleController';
+import StudentController from '@/actions/App/Http/Controllers/StudentController';
+import TeacherController from '@/actions/App/Http/Controllers/TeacherController';
 import { NavFooter } from '@/components/nav-footer';
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
@@ -13,28 +21,19 @@ import {
 import { type NavItem, type SharedData } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
 import {
+    Award,
+    BarChart,
     BookOpen,
-    Folder,
-    Users,
-    UserPlus,
-    CreditCard,
     Calendar,
     CheckSquare,
-    MessageSquare,
-    BarChart,
+    CreditCard,
+    Folder,
     GraduationCap,
-    Award,
-    User,
+    LineChart,
+    UserPlus,
+    Users,
 } from 'lucide-react';
 import AppLogo from './app-logo';
-import ProgramAcademyController from '@/actions/App/Http/Controllers/program_academy';
-import EnrollmentController from '@/actions/App/Http/Controllers/EnrollmentController';
-import ScheduleController from '@/actions/App/Http/Controllers/ScheduleController';
-import AttendanceController from '@/actions/App/Http/Controllers/AttendanceController';
-import PaymentController from '@/actions/App/Http/Controllers/PaymentController';
-import ReportController from '@/actions/App/Http/Controllers/ReportController';
-import TeacherController from '@/actions/App/Http/Controllers/TeacherController';
-import StudentController from '@/actions/App/Http/Controllers/StudentController';
 
 const allNavItems: NavItem[] = [
     // Portal de Estudiantes
@@ -96,6 +95,12 @@ const allNavItems: NavItem[] = [
         permission: 'ver_pagos',
     },
     {
+        title: 'Panel Académico',
+        href: { url: '/academico', method: 'get' },
+        icon: LineChart,
+        permission: 'ver_panel_academico',
+    },
+    {
         title: 'Reportes',
         href: ReportController.payments(),
         icon: BarChart,
@@ -122,7 +127,7 @@ export function AppSidebar() {
     const userRoles = auth?.roles || [];
 
     // Filter navigation items based on user permissions and roles
-    const visibleNavItems = allNavItems.filter(item => {
+    const visibleNavItems = allNavItems.filter((item) => {
         // Check role if specified
         if (item.role && !userRoles.includes(item.role)) {
             return false;
@@ -137,8 +142,10 @@ export function AppSidebar() {
 
     // Determinar URL del logo según el rol del usuario
     const getHomeUrl = () => {
-        if (userRoles.includes('Estudiante')) return StudentController.grades().url;
-        if (userRoles.includes('Profesor')) return TeacherController.myGroups().url;
+        if (userRoles.includes('Estudiante'))
+            return StudentController.grades().url;
+        if (userRoles.includes('Profesor'))
+            return TeacherController.myGroups().url;
         if (userRoles.includes('Padre/Madre')) return '/padre/dashboard';
         return ProgramAcademyController.index().url;
     };

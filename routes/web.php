@@ -22,6 +22,7 @@ use App\Http\Controllers\ReportController;
 use App\Http\Controllers\DependentController;
 use App\Http\Controllers\TeacherRegistrationController;
 use App\Http\Controllers\LogViewerController;
+use App\Http\Controllers\AcademicController;
 
 // Demo Lead desde Welcome (sin autenticación, con rate limiting)
 Route::middleware(['throttle:5,1'])->group(function () {
@@ -381,6 +382,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::prefix('reportes')->middleware(['permission:ver_reportes'])->group(function () {
         Route::get('/pagos', [ReportController::class, 'payments'])->name('reportes.pagos');
         Route::get('/pagos/export', [ReportController::class, 'exportPayments'])->name('reportes.pagos.export');
+    });
+
+    // === MÓDULO ACADÉMICO (progreso de estudiantes y avance de profesores) ===
+    Route::prefix('academico')->middleware(['permission:ver_panel_academico'])->group(function () {
+        Route::get('/', [AcademicController::class, 'overview'])->name('academico.overview');
+        Route::get('/estudiantes', [AcademicController::class, 'students'])->name('academico.estudiantes');
+        Route::get('/estudiantes/export', [AcademicController::class, 'exportStudents'])->name('academico.estudiantes.export');
+        Route::get('/estudiantes/{student}', [AcademicController::class, 'studentDetail'])->name('academico.estudiante.detalle');
+        Route::get('/profesores', [AcademicController::class, 'teachers'])->name('academico.profesores');
     });
 
     // === RUTAS COMPARTIDAS (APIs y recursos de solo lectura) ===

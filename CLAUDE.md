@@ -240,7 +240,30 @@ The system integrates with Wompi payment gateway:
 Key service classes for business logic:
 - `EnrollmentService` - Handles enrollment validation and processing
 - `WompiService` - Manages payment gateway integration
+- `MailService` - Sends transactional email using the SMTP settings stored in the database
+- `AcademicAnalyticsService` - Computes all academic metrics (student progress, teacher grading coverage, overview)
 - Payment-related services in `app/Services/`
+
+### Academic Module (Panel Académico)
+
+Read-only analytics over the existing academic data. Guarded by the `ver_panel_academico`
+permission, granted to `Administrador` by `RolePermissionSeeder`.
+
+Routes, all under the `/academico` prefix:
+- `/academico` - Overview: KPIs, grade distribution, evaluation trend, per-program table, at-risk and pending lists
+- `/academico/estudiantes` - One row per enrollment with progress, average, attendance; filters by program, status, search and performance
+- `/academico/estudiantes/{student}` - Module-by-module detail with per-criteria scores and teacher feedback
+- `/academico/profesores` - Grading coverage per teacher, expandable to each group
+- `/academico/estudiantes/export` - CSV of the filtered student table
+
+How the metrics are defined:
+- **Progress**: distinct evaluated activities divided by active activities in the program
+- **Average**: per activity, points earned over the sum of its criteria max points, then averaged across evaluated activities. Activities without criteria are excluded rather than counted as zero
+- **Teacher coverage**: evaluated (student, activity) pairs divided by students enrolled in the group times active activities in the program
+- **At risk**: average below 60
+
+All queries in `AcademicAnalyticsService` are aggregated and joined in memory to avoid N+1.
+Add filters there rather than in the controller.
 
 ## Running Migrations and Seeds
 
