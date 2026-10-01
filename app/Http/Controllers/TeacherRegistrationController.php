@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules\Password;
 use Inertia\Inertia;
@@ -72,41 +73,54 @@ class TeacherRegistrationController extends Controller
         ]);
 
         try {
-            // Crear el usuario profesor (solo datos básicos)
-            $teacher = User::create([
-                'name' => $validated['name'],
-                'last_name' => $validated['last_name'],
-                'email' => $validated['email'],
-                'password' => Hash::make($validated['password']),
-                'document_type' => $validated['document_type'],
-                'document_number' => $validated['document_number'],
-                'birth_date' => $validated['birth_date'],
-                'gender' => $validated['gender'],
-                'phone' => $validated['phone'],
-                'mobile' => $validated['mobile'],
-                'address' => $validated['address'],
-                'neighborhood' => $validated['neighborhood'],
-                'city' => $validated['city'],
-                'department' => $validated['department'],
-            ]);
+            $teacher = DB::transaction(function () use ($validated) {
+                // Crear el usuario profesor (solo datos básicos)
+                $teacher = User::create([
+                    'name' => $validated['name'],
+                    'last_name' => $validated['last_name'],
+                    'email' => $validated['email'],
+                    'password' => Hash::make($validated['password']),
+                    'document_type' => $validated['document_type'],
+                    'document_number' => $validated['document_number'],
+                    'birth_date' => $validated['birth_date'],
+                    'gender' => $validated['gender'],
+                    'phone' => $validated['phone'] ?? null,
+                    'mobile' => $validated['mobile'],
+                    'address' => $validated['address'],
+                    'neighborhood' => $validated['neighborhood'] ?? null,
+                    'city' => $validated['city'],
+                    'department' => $validated['department'],
+                ]);
 
-            // Asignar rol de Profesor
-            $profesorRole = Role::where('name', 'Profesor')->first();
-            if ($profesorRole) {
-                $teacher->assignRole($profesorRole);
+                // Asignar rol de Profesor
+                $profesorRole = Role::where('name', 'Profesor')->first();
+                if ($profesorRole) {
+                    $teacher->assignRole($profesorRole);
+                }
+
+                // Crear el perfil de profesor con la información musical
+                $teacher->teacherProfile()->create([
+                    'instruments_played' => $validated['instruments_played'],
+                    'music_schools' => $validated['music_schools'] ?? null,
+                    'experience_years' => $validated['experience_years'] ?? null,
+                    'bio' => $validated['bio'] ?? null,
+                    'is_active' => true,
+                ]);
+
+                return $teacher;
+            });
+
+            // El correo de verificación no debe tumbar el registro: si el SMTP falla,
+            // el profesor ya quedó creado y solo se registra la advertencia.
+            try {
+                $teacher->sendEmailVerificationNotification();
+            } catch (\Throwable $e) {
+                \Log::warning('No se pudo enviar el correo de verificación al profesor', [
+                    'teacher_id' => $teacher->id,
+                    'email' => $teacher->email,
+                    'message' => $e->getMessage(),
+                ]);
             }
-
-            // Crear el perfil de profesor con la información musical
-            $teacher->teacherProfile()->create([
-                'instruments_played' => $validated['instruments_played'],
-                'music_schools' => $validated['music_schools'] ?? null,
-                'experience_years' => $validated['experience_years'] ?? null,
-                'bio' => $validated['bio'] ?? null,
-                'is_active' => true,
-            ]);
-
-            // Enviar correo de verificación de correo
-            $teacher->sendEmailVerificationNotification();
 
             \Log::info('Nuevo profesor registrado', [
                 'teacher_id' => $teacher->id,

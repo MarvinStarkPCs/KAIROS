@@ -53,10 +53,10 @@ class HandleInertiaRequests extends Middleware
             : [];
 
         // Log para debugging
-        if (!empty($errors)) {
+        if (! empty($errors)) {
             \Log::info('Errores compartidos con Inertia', [
                 'errors' => $errors,
-                'url' => $request->url()
+                'url' => $request->url(),
             ]);
         }
 
@@ -69,6 +69,8 @@ class HandleInertiaRequests extends Middleware
                 'permissions' => $request->user() ? $request->user()->getAllPermissions()->pluck('name')->toArray() : [],
                 'roles' => $request->user() ? $request->user()->getRoleNames()->toArray() : [],
                 'unreadMessages' => $unreadMessagesCount,
+                // Solo la cuenta configurada (Admin Dev) ve los resultados del cuestionario.
+                'canViewSurveyResults' => $request->user()?->email === config('survey.results_email'),
             ],
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
             'status' => $request->session()->get('status'),

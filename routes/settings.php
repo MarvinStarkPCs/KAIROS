@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Settings\AcademySurveyController;
 use App\Http\Controllers\Settings\PasswordController;
 use App\Http\Controllers\Settings\ProfileController;
 use App\Http\Controllers\Settings\SmtpController;
@@ -29,6 +30,10 @@ Route::middleware('auth')->group(function () {
     Route::get('settings/manual', function () {
         return Inertia::render('settings/manual');
     })->name('manual.show');
+
+    Route::get('settings/cuestionario', [AcademySurveyController::class, 'edit'])->name('academy-survey.show');
+    Route::get('settings/cuestionario/resultados', [AcademySurveyController::class, 'results'])->name('academy-survey.results');
+    Route::patch('settings/cuestionario', [AcademySurveyController::class, 'update'])->name('academy-survey.update');
 
     Route::get('settings/two-factor', [TwoFactorAuthenticationController::class, 'show'])
         ->name('two-factor.show');

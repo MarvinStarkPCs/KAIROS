@@ -265,6 +265,23 @@ How the metrics are defined:
 All queries in `AcademicAnalyticsService` are aggregated and joined in memory to avoid N+1.
 Add filters there rather than in the controller.
 
+### Cuestionario de la Academia (Configuración → Cuestionario)
+
+Encuesta interna para el análisis pedagógico de la academia, en `/settings/cuestionario`.
+
+- Cada profesor o administrador responde **su propio** cuestionario: una fila por usuario en
+  `academy_surveys` (`user_id` único, respuestas en una columna `answers` JSON).
+- El contenido de las preguntas vive en `resources/js/pages/settings/cuestionario/questions.ts`;
+  el cálculo de progreso y la exportación a Markdown, en `cuestionario/helpers.ts`.
+- La página autoguarda con `PATCH /settings/cuestionario` (`silent: true` evita el toast).
+- `AcademySurveyController::prefill()` sugiere respuestas con datos que Kairos ya tiene (nombre y cargo
+  del usuario, nº de profesores, alumnos activos por modalidad, instrumentos deducidos de los programas,
+  duración de clase más frecuente por modalidad, niveles). Lo respondido por el usuario siempre manda.
+- `config/survey.php` define quién responde (`roles`) y qué cuenta ve los resultados consolidados
+  (`results_email`, por defecto Admin Dev, configurable con `SURVEY_RESULTS_EMAIL`).
+- Resultados de todos los participantes: `/settings/cuestionario/resultados`, solo para esa cuenta.
+  El enlace se muestra con la prop compartida `auth.canViewSurveyResults`.
+
 ## Running Migrations and Seeds
 
 ```bash

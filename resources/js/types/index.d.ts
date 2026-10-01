@@ -6,6 +6,7 @@ export interface Auth {
     permissions: string[];
     roles: string[];
     unreadMessages?: number;
+    canViewSurveyResults?: boolean;
 }
 
 export interface BreadcrumbItem {
