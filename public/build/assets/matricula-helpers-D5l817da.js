@@ -1,0 +1,1 @@
+import{A as r}from"./matricula-constants-D-oIxrih.js";function c(n){if(!n)return 0;const t=new Date(n),e=new Date,o=e.getFullYear()-t.getFullYear(),a=e.getMonth()-t.getMonth();return a<0||a===0&&e.getDate()<t.getDate()?o-1:o}function i(n){if(!n)return"";const t=c(n),e=Object.entries(r).find(([,o])=>t>=o.min&&t<=o.max);return e?e[0]:""}export{c,i as g};
