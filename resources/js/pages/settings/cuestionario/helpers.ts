@@ -1,7 +1,6 @@
 import {
     MODES,
     NOTES_SECTION,
-    OBSERVATION_QUESTIONS,
     SECTIONS,
     type Question,
     type Section,
@@ -9,17 +8,6 @@ import {
 
 export type Answers = Record<string, unknown>;
 
-export interface TimelineRow {
-    min: number;
-    momento: string;
-    material: string;
-    quien: string;
-}
-
-export interface Observation {
-    answers: Answers;
-    timeline: TimelineRow[];
-}
 
 export const OTHER_SUFFIX = '__otro';
 
@@ -33,10 +21,6 @@ export function getText(answers: Answers, key: string): string {
     return typeof value === 'string' ? value : '';
 }
 
-export function getObservations(answers: Answers): Observation[] {
-    const value = answers.obs;
-    return Array.isArray(value) ? (value as Observation[]) : [];
-}
 
 /** Claves que guardan la respuesta de una pregunta (sin contar el campo "Otro"). */
 export function questionKeys(question: Question): string[] {
@@ -88,15 +72,6 @@ export function overallProgress(answers: Answers): {
         const progress = sectionProgress(answers, section);
         answered += progress.answered;
         total += progress.total;
-    }
-
-    for (const observation of getObservations(answers)) {
-        for (const question of OBSERVATION_QUESTIONS) {
-            total += 1;
-            if (isAnswered(observation.answers, question)) {
-                answered += 1;
-            }
-        }
     }
 
     return {
@@ -175,28 +150,6 @@ export function summarize(answers: Answers): SummarySection[] {
             summary.push({ title: section.title, lines });
         }
     }
-
-    getObservations(answers).forEach((observation, index) => {
-        const lines = observation.timeline
-            .filter((row) => row.momento || row.material || row.quien)
-            .map(
-                (row) =>
-                    `min ${row.min} — ${[row.momento, row.material, row.quien].filter(Boolean).join(' · ')}`,
-            );
-
-        lines.push(
-            ...OBSERVATION_QUESTIONS.flatMap((question) =>
-                formatQuestion(observation.answers, question),
-            ),
-        );
-
-        if (lines.length > 0) {
-            summary.push({
-                title: `Ficha de observación — Clase ${index + 1}`,
-                lines,
-            });
-        }
-    });
 
     return summary;
 }

@@ -99,7 +99,7 @@ Route::get('/', function () {
     ]);
 })->name('home');
 
-Route::middleware(['auth', 'verified'])->group(function () {
+Route::middleware(['auth', 'verified', 'survey.required'])->group(function () {
     // === RUTAS ADMINISTRATIVAS ===
 
     // Roles (requiere permisos específicos)

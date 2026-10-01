@@ -14,10 +14,13 @@ class AcademySurvey extends Model
     protected $fillable = [
         'user_id',
         'answers',
+        'submitted_at',
+        'progress_percent',
     ];
 
     protected $casts = [
-        'answers' => 'array',
+        'answers'      => 'array',
+        'submitted_at' => 'datetime',
     ];
 
     // Solo se audita quién llena el cuestionario: el JSON de respuestas cambia en cada

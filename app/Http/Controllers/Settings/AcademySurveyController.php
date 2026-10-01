@@ -24,9 +24,12 @@ class AcademySurveyController extends Controller
         $survey = AcademySurvey::firstWhere('user_id', $request->user()->id);
 
         return Inertia::render('settings/cuestionario', [
-            'answers' => $survey?->answers ?? (object) [],
-            'prefill' => $this->prefill($request->user()),
-            'updatedAt' => $survey?->updated_at?->toIso8601String(),
+            'answers'         => $survey?->answers ?? (object) [],
+            'prefill'         => $this->prefill($request->user()),
+            'updatedAt'       => $survey?->updated_at?->toIso8601String(),
+            'submittedAt'     => $survey?->submitted_at?->toIso8601String(),
+            'progressPercent' => $survey?->progress_percent ?? 0,
+            'isProfesor'      => $request->user()->hasRole('Profesor'),
         ]);
     }
 
@@ -35,10 +38,11 @@ class AcademySurveyController extends Controller
         $this->authorizeParticipant($request);
 
         $validated = $request->validate([
-            'answers' => ['present', 'array'],
+            'answers'          => ['present', 'array'],
+            'progress_percent' => ['sometimes', 'integer', 'min:0', 'max:100'],
         ], [
             'answers.present' => 'No se recibieron las respuestas',
-            'answers.array' => 'El formato de las respuestas no es válido',
+            'answers.array'   => 'El formato de las respuestas no es válido',
         ]);
 
         // Tope de tamaño: el cuestionario completo pesa unos pocos KB.
@@ -46,9 +50,24 @@ class AcademySurveyController extends Controller
             return back()->withErrors(['answers' => 'Las respuestas son demasiado largas']);
         }
 
+        $percent = $validated['progress_percent'] ?? 0;
+
+        $payload = [
+            'answers'          => $validated['answers'],
+            'progress_percent' => $percent,
+        ];
+
+        // Marcar submitted_at la primera vez que se llega al 100%.
+        if ($percent >= 100) {
+            $existing = AcademySurvey::where('user_id', $request->user()->id)->value('submitted_at');
+            if (! $existing) {
+                $payload['submitted_at'] = now();
+            }
+        }
+
         AcademySurvey::updateOrCreate(
             ['user_id' => $request->user()->id],
-            ['answers' => $validated['answers']],
+            $payload,
         );
 
         // El autoguardado no muestra notificación para no interrumpir mientras se llena.
@@ -107,13 +126,8 @@ class AcademySurveyController extends Controller
             'a0__fecha' => Carbon::now()->format('Y-m-d'),
             'a0__responde' => trim($user->name.' '.$user->last_name),
             'a0__cargo' => implode(' · ', $cargo),
-            'a1__profes' => (string) User::role('Profesor')->count(),
             'a3' => $this->programInstruments(),
         ];
-
-        foreach ($this->activeStudentsByModality() as $key => $total) {
-            $prefill["a2__{$key}"] = (string) $total;
-        }
 
         foreach ($this->classLengthByModality() as $key => $label) {
             $prefill["c1__{$key}"] = $label;
@@ -132,27 +146,6 @@ class AcademySurveyController extends Controller
         'Linaje Teens' => 'teens',
         'Linaje Big' => 'big',
     ];
-
-    /** Alumnos con matrícula activa, contados por modalidad. */
-    private function activeStudentsByModality(): array
-    {
-        $rows = DB::table('student_profiles')
-            ->join('enrollments', 'enrollments.student_id', '=', 'student_profiles.user_id')
-            ->where('enrollments.status', 'active')
-            ->whereNotNull('student_profiles.modality')
-            ->selectRaw('student_profiles.modality, COUNT(DISTINCT student_profiles.user_id) as total')
-            ->groupBy('student_profiles.modality')
-            ->pluck('total', 'modality');
-
-        $counts = [];
-        foreach (self::MODALITIES as $modality => $key) {
-            if ($rows->has($modality)) {
-                $counts[$key] = (int) $rows[$modality];
-            }
-        }
-
-        return $counts;
-    }
 
     /** Duración de clase más frecuente en cada modalidad, según los horarios. */
     private function classLengthByModality(): array
