@@ -36,6 +36,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'permission'         => \Spatie\Permission\Middleware\PermissionMiddleware::class,
             'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
             'survey.required'    => \App\Http\Middleware\RequireSurveyCompleted::class,
+            'system.access'      => \App\Http\Middleware\BlockSystemAccess::class,
         ]);
     })
     ->withSchedule(function (\Illuminate\Console\Scheduling\Schedule $schedule) {

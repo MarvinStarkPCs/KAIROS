@@ -57,6 +57,11 @@ export default function SettingsLayout({ children }: PropsWithChildren) {
                 href: '/settings/cuestionario/resultados',
                 visible: auth.canViewSurveyResults === true,
             },
+            {
+                title: 'Acceso al sistema',
+                href: '/settings/acceso',
+                visible: auth.user.id === 1,
+            },
         ];
 
         return all.filter((item) => {

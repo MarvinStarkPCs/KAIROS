@@ -55,6 +55,11 @@ Route::middleware(['throttle:10,1'])->group(function () {
 });
 
 
+// Página de sistema bloqueado (pública, sin auth)
+Route::get('/sistema-bloqueado', function () {
+    return \Inertia\Inertia::render('sistema-bloqueado');
+})->name('sistema-bloqueado');
+
 Route::get('/', function () {
     $demoPrograms = \App\Models\AcademicProgram::where('is_demo', true)
         ->where('status', 'active')
@@ -99,7 +104,7 @@ Route::get('/', function () {
     ]);
 })->name('home');
 
-Route::middleware(['auth', 'verified', 'survey.required'])->group(function () {
+Route::middleware(['auth', 'verified', 'system.access', 'survey.required'])->group(function () {
     // === RUTAS ADMINISTRATIVAS ===
 
     // Roles (requiere permisos específicos)

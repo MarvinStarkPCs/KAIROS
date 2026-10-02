@@ -4,6 +4,7 @@ use App\Http\Controllers\Settings\AcademySurveyController;
 use App\Http\Controllers\Settings\PasswordController;
 use App\Http\Controllers\Settings\ProfileController;
 use App\Http\Controllers\Settings\SmtpController;
+use App\Http\Controllers\Settings\SystemAccessController;
 use App\Http\Controllers\Settings\TwoFactorAuthenticationController;
 use App\Http\Controllers\Settings\WompiController;
 use Illuminate\Support\Facades\Route;
@@ -44,4 +45,8 @@ Route::middleware('auth')->group(function () {
 
     Route::get('settings/wompi', [WompiController::class, 'edit'])->name('wompi.edit');
     Route::patch('settings/wompi', [WompiController::class, 'update'])->name('wompi.update');
+
+    Route::get('settings/acceso', [SystemAccessController::class, 'edit'])->name('system-access.edit');
+    Route::post('settings/acceso/bloquear', [SystemAccessController::class, 'lock'])->name('system-access.lock');
+    Route::post('settings/acceso/desbloquear', [SystemAccessController::class, 'unlock'])->name('system-access.unlock');
 });
