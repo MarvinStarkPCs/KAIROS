@@ -1,5 +1,5 @@
 import { Head, useForm } from '@inertiajs/react';
-import { FormEventHandler, useState } from 'react';
+import { FormEventHandler, useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -7,7 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { ChevronLeft, ChevronRight, User, MapPin, Music2, Lock, CheckCircle, GraduationCap, Eye, EyeOff } from 'lucide-react';
+import { AlertCircle, ChevronLeft, ChevronRight, User, MapPin, Music2, Lock, CheckCircle, GraduationCap, Eye, EyeOff } from 'lucide-react';
 import InputError from '@/components/input-error';
 import { cn } from '@/lib/utils';
 import { Toaster } from '@/components/toaster';
@@ -91,6 +91,25 @@ export default function Create() {
         password: '',
         password_confirmation: '',
     });
+
+    // Cuando el servidor devuelve errores, ir al paso que los contiene.
+    useEffect(() => {
+        if (Object.keys(errors).length === 0) return;
+
+        const step1Fields = ['name', 'last_name', 'email', 'document_type', 'document_number', 'birth_date', 'gender', 'phone', 'mobile'];
+        const step2Fields = ['address', 'neighborhood', 'city', 'department'];
+        const step3Fields = ['instruments_played', 'music_schools', 'experience_years', 'bio'];
+
+        if (step1Fields.some((f) => f in errors)) {
+            setStep(1);
+        } else if (step2Fields.some((f) => f in errors)) {
+            setStep(2);
+        } else if (step3Fields.some((f) => f in errors)) {
+            setStep(3);
+        } else {
+            setStep(4);
+        }
+    }, [errors]);
 
     const handleSubmit: FormEventHandler = (e) => {
         e.preventDefault();
@@ -233,6 +252,23 @@ export default function Create() {
                             </CardHeader>
 
                             <CardContent className="p-6">
+                                {/* Banner de errores de servidor */}
+                                {Object.keys(errors).length > 0 && (
+                                    <div className="mb-6 flex items-start gap-3 rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-800 dark:bg-red-950/30">
+                                        <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-red-600 dark:text-red-400" />
+                                        <div>
+                                            <p className="font-medium text-red-700 dark:text-red-400">
+                                                Revisa los campos marcados en rojo
+                                            </p>
+                                            <ul className="mt-1 space-y-0.5 text-sm text-red-600 dark:text-red-400">
+                                                {Object.values(errors).map((msg, i) => (
+                                                    <li key={i}>{msg as string}</li>
+                                                ))}
+                                            </ul>
+                                        </div>
+                                    </div>
+                                )}
+
                                 {/* Step 1: Datos Personales */}
                                 {step === 1 && (
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -476,10 +512,16 @@ export default function Create() {
                                                 placeholder="Cuentanos un poco sobre ti, tu experiencia como musico y como profesor..."
                                                 rows={4}
                                                 className={errors.bio ? 'border-red-500' : ''}
+                                                maxLength={1000}
                                             />
-                                            <p className="text-sm text-muted-foreground mt-1">
-                                                Esta informacion puede ser visible para los estudiantes (opcional)
-                                            </p>
+                                            <div className="mt-1 flex items-center justify-between">
+                                                <p className="text-sm text-muted-foreground">
+                                                    Esta informacion puede ser visible para los estudiantes (opcional)
+                                                </p>
+                                                <span className={`text-xs tabular-nums ${data.bio.length >= 950 ? 'text-amber-600 font-medium' : 'text-muted-foreground'}`}>
+                                                    {data.bio.length}/1000
+                                                </span>
+                                            </div>
                                             <InputError message={errors.bio} />
                                         </div>
                                     </div>
