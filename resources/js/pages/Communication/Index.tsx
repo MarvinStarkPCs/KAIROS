@@ -97,15 +97,16 @@ export default function Index({ conversations, availableUsers }: Props) {
         }
     };
 
-    // Polling: Auto-refresh conversations every 5 seconds
+    // Sondeo solo con la pestaña visible: cada recarga arranca Laravel en el servidor.
     useEffect(() => {
         const interval = setInterval(() => {
+            if (document.visibilityState !== 'visible') return;
             router.reload({
                 only: ['conversations'],
                 preserveScroll: true,
                 preserveState: true,
             });
-        }, 5000); // Poll every 5 seconds
+        }, 15000);
 
         return () => clearInterval(interval);
     }, []);

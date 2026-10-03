@@ -50,25 +50,28 @@ class AttendanceController extends Controller
             ->where('days_of_week', 'like', '%' . $todayDayName . '%')
             ->get();
 
-        // Get today's attendance records for stats
-        $todayAttendances = Attendance::whereDate('class_date', $today)->get();
+        // Conteos agregados en SQL en lugar de traer los registros a memoria.
+        $todayCounts = Attendance::where('class_date', $today->toDateString())
+            ->selectRaw('status, COUNT(*) as total')
+            ->groupBy('status')
+            ->pluck('total', 'status');
 
-        // Calculate today's stats
         $totalStudentsToday = $todaySchedules->sum(fn($schedule) => $schedule->enrollments->count());
-        $presentToday = $todayAttendances->where('status', 'present')->count();
-        $absentToday = $todayAttendances->where('status', 'absent')->count();
-        $lateToday = $todayAttendances->where('status', 'late')->count();
+        $presentToday = (int) ($todayCounts['present'] ?? 0);
+        $absentToday = (int) ($todayCounts['absent'] ?? 0);
+        $lateToday = (int) ($todayCounts['late'] ?? 0);
 
         $percentageToday = $totalStudentsToday > 0
             ? round(($presentToday / $totalStudentsToday) * 100, 1) . '%'
             : '0%';
 
         // Calculate monthly average
-        $monthlyAttendances = Attendance::whereBetween('class_date', [$startOfMonth, $endOfMonth])
-            ->get();
+        $monthly = Attendance::whereBetween('class_date', [$startOfMonth->toDateString(), $endOfMonth->toDateString()])
+            ->selectRaw("COUNT(*) as total, SUM(CASE WHEN status IN ('present', 'late') THEN 1 ELSE 0 END) as present")
+            ->first();
 
-        $monthlyTotal = $monthlyAttendances->count();
-        $monthlyPresent = $monthlyAttendances->whereIn('status', ['present', 'late'])->count();
+        $monthlyTotal = (int) $monthly->total;
+        $monthlyPresent = (int) $monthly->present;
         $monthlyAverage = $monthlyTotal > 0
             ? round(($monthlyPresent / $monthlyTotal) * 100, 1) . '%'
             : '0%';

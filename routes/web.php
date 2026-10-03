@@ -23,6 +23,7 @@ use App\Http\Controllers\DependentController;
 use App\Http\Controllers\TeacherRegistrationController;
 use App\Http\Controllers\LogViewerController;
 use App\Http\Controllers\AcademicController;
+use App\Http\Controllers\HomeController;
 
 // Demo Lead desde Welcome (sin autenticación, con rate limiting)
 Route::middleware(['throttle:5,1'])->group(function () {
@@ -56,53 +57,9 @@ Route::middleware(['throttle:10,1'])->group(function () {
 
 
 // Página de sistema bloqueado (pública, sin auth)
-Route::get('/sistema-bloqueado', function () {
-    return \Inertia\Inertia::render('sistema-bloqueado');
-})->name('sistema-bloqueado');
+Route::inertia('/sistema-bloqueado', 'sistema-bloqueado')->name('sistema-bloqueado');
 
-Route::get('/', function () {
-    $demoPrograms = \App\Models\AcademicProgram::where('is_demo', true)
-        ->where('status', 'active')
-        ->with(['schedules' => function ($query) {
-            $query->where('status', 'active')
-                ->with('professor:id,name')
-                ->withCount(['enrollments as enrolled_count' => function ($q) {
-                    $q->where('status', 'enrolled');
-                }])
-                ->select('id', 'academic_program_id', 'days_of_week', 'start_time', 'end_time', 'professor_id', 'max_students', 'status');
-        }])
-        ->select('id', 'name', 'description')
-        ->orderBy('name')
-        ->get();
-
-    // Agregar información de cupos disponibles
-    $demoPrograms->each(function ($program) {
-        $program->schedules->each(function ($schedule) {
-            $schedule->available_slots = $schedule->max_students - $schedule->enrolled_count;
-            $schedule->has_capacity = $schedule->available_slots > 0;
-        });
-    });
-
-    // Filtrar solo programas que tienen horarios con capacidad disponible
-    $demoPrograms = $demoPrograms->filter(function($program) {
-        return $program->schedules->where('has_capacity', true)->count() > 0;
-    })->values();
-
-    // Programas académicos normales (no demo) para mostrar en la sección de programas
-    // Agrupamos por nombre para evitar duplicados (pueden existir varios registros del mismo programa)
-    $academicPrograms = \App\Models\AcademicProgram::where('is_demo', false)
-        ->where('status', 'active')
-        ->select('id', 'name', 'description', 'monthly_fee', 'icon', 'color')
-        ->orderBy('name')
-        ->get()
-        ->unique('name')
-        ->values();
-
-    return Inertia::render('welcome', [
-        'demoPrograms' => $demoPrograms,
-        'academicPrograms' => $academicPrograms,
-    ]);
-})->name('home');
+Route::get('/', [HomeController::class, 'welcome'])->name('home');
 
 Route::middleware(['auth', 'verified', 'system.access', 'survey.required'])->group(function () {
     // === RUTAS ADMINISTRATIVAS ===
@@ -357,24 +314,11 @@ Route::middleware(['auth', 'verified', 'system.access', 'survey.required'])->gro
     });
 
     // === RUTA DASHBOARD (redirect por rol - para Fortify two-factor y otros redirects) ===
-    Route::get('/dashboard', function () {
-        $user = auth()->user();
-        if ($user->hasRole('Administrador')) {
-            return redirect()->route('programas_academicos.index');
-        }
-        if ($user->hasRole('Estudiante')) {
-            return redirect()->route('estudiante.calificaciones');
-        }
-        if ($user->hasRole('Profesor')) {
-            return redirect()->route('profesor.mis-grupos');
-        }
-        if ($user->hasRole('Padre/Madre')) {
-            return redirect()->route('padre.dashboard');
-        }
-        return redirect()->route('programas_academicos.index');
-    })->name('dashboard');
+    Route::get('/dashboard', [HomeController::class, 'dashboard'])->name('dashboard');
 
     // Comunicaciones
+    Route::get('/api/comunicacion/no-leidos', [CommunicationController::class, 'unreadCount'])->name('comunicacion.unread');
+
     Route::middleware(['permission:ver_comunicacion'])->group(function () {
         Route::get('/comunicacion', [CommunicationController::class, 'index'])->name('comunicacion.index');
         Route::get('/comunicacion/{conversation}', [CommunicationController::class, 'show'])->name('comunicacion.show');

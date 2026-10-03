@@ -18,7 +18,25 @@ class CommunicationController extends Controller
     {
         $user = auth()->user();
 
-        $conversations = $user->conversations()
+        // Closures: el polling de la página pide solo 'conversations' y no recalcula lo demás.
+        return Inertia::render('Communication/Index', [
+            'conversations' => fn () => $this->conversationsFor($user),
+            'availableUsers' => fn () => User::where('id', '!=', $user->id)
+                ->whereDoesntHave('conversations', function ($query) use ($user) {
+                    $query->whereHas('users', function ($q) use ($user) {
+                        $q->where('users.id', $user->id);
+                    });
+                })
+                ->select('id', 'name', 'email')
+                ->get(),
+        ]);
+    }
+
+    private function conversationsFor(User $user)
+    {
+        $unread = Conversation::unreadCountsFor($user->id);
+
+        return $user->conversations()
             ->with([
                 'users' => function ($query) use ($user) {
                     $query->where('users.id', '!=', $user->id);
@@ -26,7 +44,7 @@ class CommunicationController extends Controller
                 'latestMessage.user',
             ])
             ->get()
-            ->map(function ($conversation) use ($user) {
+            ->map(function ($conversation) use ($user, $unread) {
                 $otherUser = $conversation->users->first();
 
                 return [
@@ -44,24 +62,9 @@ class CommunicationController extends Controller
                         'name' => $otherUser->name,
                         'email' => $otherUser->email,
                     ] : null,
-                    'unread_count' => $conversation->unreadMessagesCount($user->id),
+                    'unread_count' => $unread->get($conversation->id, 0),
                 ];
             });
-
-        // Obtener lista de usuarios disponibles para iniciar conversaciones
-        $availableUsers = User::where('id', '!=', $user->id)
-            ->whereDoesntHave('conversations', function ($query) use ($user) {
-                $query->whereHas('users', function ($q) use ($user) {
-                    $q->where('users.id', $user->id);
-                });
-            })
-            ->select('id', 'name', 'email')
-            ->get();
-
-        return Inertia::render('Communication/Index', [
-            'conversations' => $conversations,
-            'availableUsers' => $availableUsers,
-        ]);
     }
 
     /**
@@ -76,13 +79,30 @@ class CommunicationController extends Controller
             abort(403, 'No tienes acceso a esta conversación');
         }
 
-        // Obtener mensajes de la conversación
-        $messages = $conversation->messages()
-            ->with('user:id,name')
-            ->orderBy('created_at', 'asc')
-            ->get()
-            ->map(function ($message) use ($user) {
+        // Marcar conversación como leída
+        $conversation->users()->updateExistingPivot($user->id, [
+            'last_read_at' => now(),
+        ]);
+
+        // Closures: el polling del chat pide solo 'messages'.
+        return Inertia::render('Communication/Show', [
+            'conversation' => function () use ($conversation, $user) {
+                $otherUser = $conversation->users->firstWhere('id', '!=', $user->id);
+
                 return [
+                    'id' => $conversation->id,
+                    'other_user' => [
+                        'id' => $otherUser->id,
+                        'name' => $otherUser->name,
+                        'email' => $otherUser->email,
+                    ],
+                ];
+            },
+            'messages' => fn () => $conversation->messages()
+                ->with('user:id,name')
+                ->orderBy('created_at', 'asc')
+                ->get()
+                ->map(fn ($message) => [
                     'id' => $message->id,
                     'body' => $message->body,
                     'created_at' => $message->created_at,
@@ -91,27 +111,7 @@ class CommunicationController extends Controller
                         'id' => $message->user->id,
                         'name' => $message->user->name,
                     ],
-                ];
-            });
-
-        // Obtener el otro usuario en la conversación
-        $otherUser = $conversation->getOtherUser($user->id);
-
-        // Marcar conversación como leída
-        $conversation->users()->updateExistingPivot($user->id, [
-            'last_read_at' => now(),
-        ]);
-
-        return Inertia::render('Communication/Show', [
-            'conversation' => [
-                'id' => $conversation->id,
-                'other_user' => [
-                    'id' => $otherUser->id,
-                    'name' => $otherUser->name,
-                    'email' => $otherUser->email,
-                ],
-            ],
-            'messages' => $messages,
+                ]),
         ]);
     }
 
@@ -179,7 +179,7 @@ class CommunicationController extends Controller
         ]);
 
         // Crear el mensaje
-        $message = $conversation->messages()->create([
+        $conversation->messages()->create([
             'user_id' => $user->id,
             'body' => $validated['body'],
         ]);
@@ -189,13 +189,17 @@ class CommunicationController extends Controller
             'last_message_at' => now(),
         ]);
 
-        // Cargar relación de usuario para el broadcast
-        $message->load('user');
-
-        // Disparar evento de broadcasting
-        broadcast(new MessageSent($message))->toOthers();
-
         return back();
+    }
+
+    /**
+     * Total de mensajes no leídos; lo consulta el header periódicamente.
+     */
+    public function unreadCount(Request $request)
+    {
+        return response()->json([
+            'unread' => Conversation::unreadCountsFor($request->user()->id)->sum(),
+        ]);
     }
 
     /**

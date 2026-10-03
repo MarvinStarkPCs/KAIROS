@@ -1,0 +1,1 @@
+import{j as e}from"./app-Bx2rGg6F.js";function r({title:t,description:s}){return e.jsxs("div",{className:"mb-8 space-y-0.5",children:[e.jsx("h2",{className:"text-xl font-semibold tracking-tight",children:t}),s&&e.jsx("p",{className:"text-sm text-muted-foreground",children:s})]})}export{r as H};

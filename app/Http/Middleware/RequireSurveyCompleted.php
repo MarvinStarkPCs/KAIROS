@@ -25,11 +25,18 @@ class RequireSurveyCompleted
             return $next($request);
         }
 
+        // Se consulta una vez por sesión: evita una query en cada petición del profesor.
+        if ($request->session()->get('survey_completed')) {
+            return $next($request);
+        }
+
         $completed = AcademySurvey::where('user_id', $user->id)
             ->where('progress_percent', '>=', 100)
             ->exists();
 
-        if (! $completed) {
+        if ($completed) {
+            $request->session()->put('survey_completed', true);
+        } else {
             flash_warning('Debes completar el cuestionario institucional al 100% antes de continuar.');
 
             return redirect()->route('academy-survey.show');

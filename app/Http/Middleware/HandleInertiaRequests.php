@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\Conversation;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
@@ -38,26 +39,19 @@ class HandleInertiaRequests extends Middleware
     {
         [$message, $author] = str(Inspiring::quotes()->random())->explode('-');
 
-        // Calcular mensajes no leídos
-        $unreadMessagesCount = 0;
-        if ($request->user()) {
-            $conversations = $request->user()->conversations()->get();
-            foreach ($conversations as $conversation) {
-                $unreadMessagesCount += $conversation->unreadMessagesCount($request->user()->id);
-            }
-        }
+        $user = $request->user();
 
         return [
             ...parent::share($request),
             'name' => config('app.name'),
             'quote' => ['message' => trim($message), 'author' => trim($author)],
             'auth' => [
-                'user' => $request->user(),
-                'permissions' => $request->user() ? $request->user()->getAllPermissions()->pluck('name')->toArray() : [],
-                'roles' => $request->user() ? $request->user()->getRoleNames()->toArray() : [],
-                'unreadMessages' => $unreadMessagesCount,
+                'user' => $user,
+                'permissions' => $user ? $user->getAllPermissions()->pluck('name')->toArray() : [],
+                'roles' => $user ? $user->getRoleNames()->toArray() : [],
+                'unreadMessages' => $user ? Conversation::unreadCountsFor($user->id)->sum() : 0,
                 // Solo la cuenta configurada (Admin Dev) ve los resultados del cuestionario.
-                'canViewSurveyResults' => $request->user()?->email === config('survey.results_email'),
+                'canViewSurveyResults' => $user?->email === config('survey.results_email'),
             ],
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
             'status' => $request->session()->get('status'),

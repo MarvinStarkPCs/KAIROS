@@ -64,16 +64,16 @@ export default function Show({ conversation, messages: initialMessages }: Props)
         setTimeout(() => scrollToBottom(false), 200);
     }, []);
 
-    // Polling: Auto-refresh messages every 3 seconds
+    // Sondeo solo con la pestaña visible: cada recarga arranca Laravel en el servidor.
     useEffect(() => {
         const interval = setInterval(() => {
-            // Reload only messages without full page refresh
+            if (document.visibilityState !== 'visible') return;
             router.reload({
                 only: ['messages'],
                 preserveScroll: true,
                 preserveState: true,
             });
-        }, 3000); // Poll every 3 seconds
+        }, 5000);
 
         return () => clearInterval(interval);
     }, []);

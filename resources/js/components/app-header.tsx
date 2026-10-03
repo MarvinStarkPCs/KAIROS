@@ -21,6 +21,7 @@ import {
 } from '@/components/ui/sheet';
 import { UserMenuContent } from '@/components/user-menu-content';
 import { useInitials } from '@/hooks/use-initials';
+import { useUnreadMessages } from '@/hooks/use-unread-messages';
 import { cn } from '@/lib/utils';
 import * as asistencias from '@/routes/asistencias';
 import * as audit from '@/routes/audit';
@@ -292,8 +293,7 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
         return avatar.startsWith('http') ? avatar : `/storage/${avatar}`;
     };
 
-    // Mensajes no leídos desde el servidor
-    const unreadMessagesCount = auth.unreadMessages || 0;
+    const unreadMessagesCount = useUnreadMessages();
 
     // Filtrar items del menú según permisos y roles del usuario
     const userPermissions = auth?.permissions || [];

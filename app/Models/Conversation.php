@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\DB;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
 
@@ -45,28 +46,26 @@ class Conversation extends Model
         return $this->hasOne(Message::class)->latestOfMany();
     }
 
-    public function getOtherUser(int $currentUserId): ?User
+    /**
+     * Mensajes no leídos por conversación para un usuario, en una sola consulta.
+     *
+     * @return \Illuminate\Support\Collection<int, int> conversation_id => total
+     */
+    public static function unreadCountsFor(int $userId): \Illuminate\Support\Collection
     {
-        return $this->users()->where('users.id', '!=', $currentUserId)->first();
-    }
-
-    public function unreadMessagesCount(int $userId): int
-    {
-        $lastRead = $this->users()
-            ->where('users.id', $userId)
-            ->first()
-            ?->pivot
-            ?->last_read_at;
-
-        if (!$lastRead) {
-            return $this->messages()
-                ->where('user_id', '!=', $userId)
-                ->count();
-        }
-
-        return $this->messages()
-            ->where('user_id', '!=', $userId)
-            ->where('created_at', '>', $lastRead)
-            ->count();
+        return DB::table('messages')
+            ->join('conversation_user as cu', function ($join) use ($userId) {
+                $join->on('cu.conversation_id', '=', 'messages.conversation_id')
+                    ->where('cu.user_id', '=', $userId);
+            })
+            ->where('messages.user_id', '!=', $userId)
+            ->where(function ($query) {
+                $query->whereNull('cu.last_read_at')
+                    ->orWhereColumn('messages.created_at', '>', 'cu.last_read_at');
+            })
+            ->groupBy('messages.conversation_id')
+            ->selectRaw('messages.conversation_id, COUNT(*) as total')
+            ->pluck('total', 'conversation_id')
+            ->map(fn ($total) => (int) $total);
     }
 }

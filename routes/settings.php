@@ -8,7 +8,6 @@ use App\Http\Controllers\Settings\SystemAccessController;
 use App\Http\Controllers\Settings\TwoFactorAuthenticationController;
 use App\Http\Controllers\Settings\WompiController;
 use Illuminate\Support\Facades\Route;
-use Inertia\Inertia;
 
 Route::middleware('auth')->group(function () {
     Route::redirect('settings', '/settings/profile');
@@ -24,13 +23,9 @@ Route::middleware('auth')->group(function () {
         ->middleware('throttle:6,1')
         ->name('password.save');
 
-    Route::get('settings/appearance', function () {
-        return Inertia::render('settings/appearance');
-    })->name('appearance.edit');
+    Route::inertia('settings/appearance', 'settings/appearance')->name('appearance.edit');
 
-    Route::get('settings/manual', function () {
-        return Inertia::render('settings/manual');
-    })->name('manual.show');
+    Route::inertia('settings/manual', 'settings/manual')->name('manual.show');
 
     Route::get('settings/cuestionario', [AcademySurveyController::class, 'edit'])->name('academy-survey.show');
     Route::get('settings/cuestionario/resultados', [AcademySurveyController::class, 'results'])->name('academy-survey.results');

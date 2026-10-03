@@ -1,28 +1,13 @@
-import { usePage, router } from '@inertiajs/react';
+import { useUnreadMessages } from '@/hooks/use-unread-messages';
+import { router } from '@inertiajs/react';
+import { MessageSquare } from 'lucide-react';
 import { useEffect, useRef } from 'react';
 import { toast } from 'sonner';
-import { MessageSquare } from 'lucide-react';
-import { type SharedData } from '@/types';
 
 export function MessageNotifications() {
-    const page = usePage<SharedData>();
-    const { auth } = page.props;
-    const unreadCount = auth.unreadMessages || 0;
+    const unreadCount = useUnreadMessages();
     const previousCountRef = useRef<number | null>(null);
     const isInitialMount = useRef(true);
-
-    // Polling: Auto-refresh unread count every 5 seconds
-    useEffect(() => {
-        const interval = setInterval(() => {
-            router.reload({
-                only: ['auth'],
-                preserveScroll: true,
-                preserveState: true,
-            });
-        }, 5000); // Poll every 5 seconds
-
-        return () => clearInterval(interval);
-    }, []);
 
     useEffect(() => {
         // En el primer montaje, solo guardar el valor actual sin mostrar notificación

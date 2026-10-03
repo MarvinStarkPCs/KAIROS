@@ -3,6 +3,7 @@ import DemoLeadController from './DemoLeadController'
 import MatriculaController from './MatriculaController'
 import PaymentController from './PaymentController'
 import TeacherRegistrationController from './TeacherRegistrationController'
+import HomeController from './HomeController'
 import RoleController from './RoleController'
 import UserController from './UserController'
 import AuditController from './AuditController'
@@ -28,6 +29,7 @@ DemoLeadController: Object.assign(DemoLeadController, DemoLeadController),
 MatriculaController: Object.assign(MatriculaController, MatriculaController),
 PaymentController: Object.assign(PaymentController, PaymentController),
 TeacherRegistrationController: Object.assign(TeacherRegistrationController, TeacherRegistrationController),
+HomeController: Object.assign(HomeController, HomeController),
 RoleController: Object.assign(RoleController, RoleController),
 UserController: Object.assign(UserController, UserController),
 AuditController: Object.assign(AuditController, AuditController),

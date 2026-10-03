@@ -56,12 +56,16 @@ class EnrollmentController extends Controller
         $enrollments = $query->paginate(15);
 
         // Estadísticas
+        $byStatus = Enrollment::selectRaw('status, COUNT(*) as total')
+            ->groupBy('status')
+            ->pluck('total', 'status');
+
         $stats = [
-            'total_enrollments' => Enrollment::count(),
-            'active_enrollments' => Enrollment::active()->count(),
-            'waiting_list' => Enrollment::waiting()->count(),
-            'suspended' => Enrollment::suspended()->count(),
-            'withdrawn' => Enrollment::withdrawn()->count(),
+            'total_enrollments' => (int) $byStatus->sum(),
+            'active_enrollments' => (int) ($byStatus['active'] ?? 0),
+            'waiting_list' => (int) ($byStatus['waiting'] ?? 0),
+            'suspended' => (int) ($byStatus['suspended'] ?? 0),
+            'withdrawn' => (int) ($byStatus['withdrawn'] ?? 0),
         ];
 
         // Listas para filtros (excluyendo programas demo)
