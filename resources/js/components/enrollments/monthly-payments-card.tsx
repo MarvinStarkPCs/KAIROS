@@ -11,6 +11,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -68,6 +69,7 @@ const PAYMENT_METHODS: Record<string, string> = {
 
 export function MonthlyPaymentsCard({ enrollmentId, year, years, months, canRevert, canRegister }: Props) {
     const [busyMonth, setBusyMonth] = useState<string | null>(null);
+    const [notify, setNotify] = useState(true);
     const [toRevert, setToRevert] = useState<{ payment: MonthPayment; label: string } | null>(null);
 
     const [toPay, setToPay] = useState<{ payment: MonthPayment; label: string } | null>(null);
@@ -102,7 +104,7 @@ export function MonthlyPaymentsCard({ enrollmentId, year, years, months, canReve
         setBusyMonth(month);
         router.post(
             `/matriculas/${enrollmentId}/generate-payment-month`,
-            { month },
+            { month, notify },
             { preserveScroll: true, onFinish: () => setBusyMonth(null) },
         );
     };
@@ -132,18 +134,24 @@ export function MonthlyPaymentsCard({ enrollmentId, year, years, months, canReve
                         Genera el cobro de cualquier mes, registra su pago o revierte uno generado que aún no tenga pagos.
                     </CardDescription>
                 </div>
-                <Select value={String(year)} onValueChange={changeYear}>
-                    <SelectTrigger className="w-28" aria-label="Año">
-                        <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                        {years.map((y) => (
-                            <SelectItem key={y} value={String(y)}>
-                                {y}
-                            </SelectItem>
-                        ))}
-                    </SelectContent>
-                </Select>
+                <div className="flex flex-wrap items-center gap-4">
+                    <label htmlFor="notify-charge" className="flex cursor-pointer items-center gap-2 text-sm">
+                        <Checkbox id="notify-charge" checked={notify} onCheckedChange={(v) => setNotify(v === true)} />
+                        Avisar por correo al generar
+                    </label>
+                    <Select value={String(year)} onValueChange={changeYear}>
+                        <SelectTrigger className="w-28" aria-label="Año">
+                            <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {years.map((y) => (
+                                <SelectItem key={y} value={String(y)}>
+                                    {y}
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                </div>
             </CardHeader>
             <CardContent>
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">

@@ -2,11 +2,14 @@
 
 namespace App\Services;
 
+use App\Mail\CobroGenerado;
 use App\Models\Enrollment;
 use App\Models\Payment;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 /**
  * Mensualidades de una matrícula: qué meses tienen cobro, generarlas y revertirlas.
@@ -118,6 +121,37 @@ class MonthlyPaymentService
     public function revert(Payment $payment): void
     {
         $payment->delete();
+    }
+
+    /**
+     * Avisa por correo del nuevo cobro al responsable y al estudiante (mismos destinatarios
+     * que los recordatorios). Un fallo de SMTP no deshace el cobro. Devuelve los correos enviados.
+     */
+    public function notifyNewCharge(Payment $payment): int
+    {
+        $payment->loadMissing(['student', 'program']);
+        $student = $payment->student;
+        $studentName = trim($student->name.' '.($student->last_name ?? ''));
+
+        $recipients = [];
+        if ($student->parent_id && ($parent = User::find($student->parent_id)) && $parent->email) {
+            $recipients[$parent->email] = trim($parent->name.' '.($parent->last_name ?? ''));
+        }
+        if ($student->email) {
+            $recipients[$student->email] ??= $studentName;
+        }
+
+        $sent = 0;
+        foreach ($recipients as $email => $name) {
+            try {
+                Mail::to($email)->send(new CobroGenerado($payment, $name, $studentName));
+                $sent++;
+            } catch (\Throwable $e) {
+                Log::warning("No se pudo enviar el aviso de cobro #{$payment->id} a {$email}: {$e->getMessage()}");
+            }
+        }
+
+        return $sent;
     }
 
     /**

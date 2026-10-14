@@ -536,6 +536,7 @@ class EnrollmentController extends Controller
 
         $validated = $request->validate([
             'month' => ['required', 'date_format:Y-m'],
+            'notify' => ['sometimes', 'boolean'],
         ], [
             'month.required' => 'Debes indicar el mes',
             'month.date_format' => 'El mes no es válido',
@@ -557,9 +558,19 @@ class EnrollmentController extends Controller
         }
 
         $payment = $this->monthlyPayments->generate($enrollment, $month);
-        $payment
-            ? flash_success("Pago generado para {$label}.")
-            : flash_error('No se pudo calcular el monto: el estudiante no tiene modalidad y el programa no tiene mensualidad.');
+        if (! $payment) {
+            flash_error('No se pudo calcular el monto: el estudiante no tiene modalidad y el programa no tiene mensualidad.');
+
+            return redirect()->back();
+        }
+
+        if (! ($validated['notify'] ?? true)) {
+            flash_success("Pago generado para {$label}, sin aviso por correo.");
+        } elseif ($sent = $this->monthlyPayments->notifyNewCharge($payment)) {
+            flash_success("Pago generado para {$label}. Se envió el aviso a {$sent} correo(s).");
+        } else {
+            flash_warning("Pago generado para {$label}, pero no se pudo enviar el aviso: no hay correo registrado o falló el envío.");
+        }
 
         return redirect()->back();
     }
