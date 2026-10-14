@@ -12,6 +12,7 @@ use App\Models\Schedule;
 use App\Models\ScheduleEnrollment;
 use App\Models\User;
 use App\Services\EnrollmentService;
+use App\Services\MonthlyPaymentService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
@@ -25,7 +26,10 @@ class EnrollmentController extends Controller
     /** Filtros del listado que se recuerdan entre visitas. */
     private const FILTER_KEYS = ['program_id', 'status', 'search'];
 
-    public function __construct(protected EnrollmentService $enrollmentService) {}
+    public function __construct(
+        protected EnrollmentService $enrollmentService,
+        protected MonthlyPaymentService $monthlyPayments,
+    ) {}
 
     public function index(Request $request)
     {
@@ -150,7 +154,7 @@ class EnrollmentController extends Controller
         // Generar el pago pendiente para que el admin pueda registrarlo
         $payment = null;
         if ($requestedActive) {
-            $payment = $this->generateMonthlyPayment($enrollment);
+            $payment = $this->generateCurrentMonthPayment($enrollment);
         }
 
         // Enviar correo de bienvenida si se generó el pago
@@ -275,7 +279,7 @@ class EnrollmentController extends Controller
         ]);
     }
 
-    public function edit(Enrollment $enrollment)
+    public function edit(Request $request, Enrollment $enrollment)
     {
         $enrollment->load('student', 'program');
 
@@ -298,9 +302,12 @@ class EnrollmentController extends Controller
                 ->get(['id', 'name'])
             : collect();
 
-        $missingMonths = [];
-        if (auth()->id() === 1) {
-            $missingMonths = $this->getMissingPaymentMonths($enrollment);
+        $user = auth()->user();
+        $canManageMonths = $user->hasPermissionTo('generar_pago_mensual');
+        $paymentYears = $this->paymentYearRange($enrollment);
+        $paymentYear = (int) $request->integer('anio', (int) now()->year);
+        if (! in_array($paymentYear, $paymentYears, true)) {
+            $paymentYear = (int) now()->year;
         }
 
         return Inertia::render('Enrollments/Edit', [
@@ -313,9 +320,15 @@ class EnrollmentController extends Controller
             'schedules' => $schedules,
             'currentScheduleEnrollment' => $currentScheduleEnrollment,
             'authId' => auth()->id(),
-            'canGeneratePayment' => auth()->user()->hasPermissionTo('generar_pago_mensual'),
+            'canGeneratePayment' => $canManageMonths,
             'allPrograms' => $allPrograms,
-            'missingMonths' => $missingMonths,
+            'canRevertPayments' => $canManageMonths && $user->hasPermissionTo('eliminar_pago'),
+            'canRegisterPayments' => $user->hasPermissionTo('procesar_pago'),
+            'paymentYear' => $paymentYear,
+            'paymentYears' => $paymentYears,
+            'paymentMonths' => fn () => $canManageMonths
+                ? $this->monthlyPayments->yearOverview($enrollment, $paymentYear)
+                : [],
         ]);
     }
 
@@ -426,7 +439,7 @@ class EnrollmentController extends Controller
 
         // Si la inscripción se activa desde otro estado, generar el pago mensual
         if ($validated['status'] === 'active' && $previousStatus !== 'active') {
-            $this->generateMonthlyPayment($enrollment);
+            $this->generateCurrentMonthPayment($enrollment);
         }
 
         $statusMessages = [
@@ -493,84 +506,104 @@ class EnrollmentController extends Controller
     }
 
     /**
-     * Generar pago del mes actual si no existe (solo usuario ID 1)
+     * Generar el pago del mes actual si el mes aún no tiene cobro.
      */
     public function generatePayment(Enrollment $enrollment)
     {
-        if (! auth()->user()->hasPermissionTo('generar_pago_mensual')) {
-            abort(403);
+        abort_unless(auth()->user()->hasPermissionTo('generar_pago_mensual'), 403);
+
+        $month = Carbon::today()->startOfMonth();
+        if ($this->monthlyPayments->monthHasPayment($enrollment, $month)) {
+            flash_info('Este mes ya tiene un cobro generado.');
+
+            return redirect()->back();
         }
 
-        $enrollment->load('program');
-        $payment = $this->generateMonthlyPayment($enrollment);
-
-        if ($payment) {
-            flash_success('Pago del mes generado exitosamente.');
-        } else {
-            flash_info('Ya existe un pago pendiente para este mes.');
-        }
+        $payment = $this->monthlyPayments->generate($enrollment, $month);
+        $payment
+            ? flash_success('Pago del mes generado exitosamente.')
+            : flash_error('No se pudo calcular el monto: el estudiante no tiene modalidad y el programa no tiene mensualidad.');
 
         return redirect()->back();
     }
 
     /**
-     * Generar pago para un mes específico (año-mes en formato YYYY-MM)
+     * Generar la mensualidad de cualquier mes (formato YYYY-MM).
      */
     public function generatePaymentForMonth(Request $request, Enrollment $enrollment)
     {
-        if (! auth()->user()->hasPermissionTo('generar_pago_mensual')) {
-            abort(403);
-        }
+        abort_unless(auth()->user()->hasPermissionTo('generar_pago_mensual'), 403);
 
         $validated = $request->validate([
             'month' => ['required', 'date_format:Y-m'],
+        ], [
+            'month.required' => 'Debes indicar el mes',
+            'month.date_format' => 'El mes no es válido',
         ]);
 
-        $enrollment->load('program');
-        $targetMonth = Carbon::createFromFormat('Y-m', $validated['month'])->startOfMonth();
-        $payment = $this->generateMonthlyPaymentForDate($enrollment, $targetMonth);
+        $month = Carbon::createFromFormat('Y-m', $validated['month'])->startOfMonth();
+        $label = $month->locale('es')->isoFormat('MMMM YYYY');
 
-        if ($payment) {
-            flash_success('Pago generado para '.$targetMonth->locale('es')->isoFormat('MMMM YYYY').'.');
-        } else {
-            flash_info('Ya existe un pago para ese mes.');
+        if (! in_array($month->year, $this->paymentYearRange($enrollment), true)) {
+            flash_error("No se pueden generar cobros para {$label}.");
+
+            return redirect()->back();
         }
+
+        if ($this->monthlyPayments->monthHasPayment($enrollment, $month)) {
+            flash_info("{$label} ya tiene un cobro generado.");
+
+            return redirect()->back();
+        }
+
+        $payment = $this->monthlyPayments->generate($enrollment, $month);
+        $payment
+            ? flash_success("Pago generado para {$label}.")
+            : flash_error('No se pudo calcular el monto: el estudiante no tiene modalidad y el programa no tiene mensualidad.');
 
         return redirect()->back();
     }
 
     /**
-     * Calcular meses sin pago desde la inscripción hasta el mes actual
+     * Revertir una mensualidad generada: se elimina y el mes queda sin cobro.
      */
-    private function getMissingPaymentMonths(Enrollment $enrollment): array
+    public function revertPayment(Enrollment $enrollment, Payment $payment)
     {
-        $enrollment->load('program');
-        $start = Carbon::parse($enrollment->enrollment_date ?? $enrollment->created_at)->startOfMonth();
-        $today = Carbon::today()->startOfMonth();
+        $user = auth()->user();
+        abort_unless($user->hasPermissionTo('generar_pago_mensual') && $user->hasPermissionTo('eliminar_pago'), 403);
+        abort_unless($payment->enrollment_id === $enrollment->id, 404);
 
-        // Obtener todos los pagos pendientes o pagados de esta inscripción
-        $paidMonths = Payment::where('enrollment_id', $enrollment->id)
-            ->whereIn('status', ['pending', 'paid', 'partial'])
-            ->get(['due_date'])
-            ->map(fn ($p) => Carbon::parse($p->due_date)->format('Y-m'))
-            ->unique()
-            ->values()
-            ->toArray();
+        if ($reason = $this->monthlyPayments->revertBlocker($payment)) {
+            flash_error("No se puede revertir: {$reason}");
 
-        $missing = [];
-        $current = $start->copy();
-        while ($current->lte($today)) {
-            $key = $current->format('Y-m');
-            if (! in_array($key, $paidMonths)) {
-                $missing[] = [
-                    'month' => $key,
-                    'label' => $current->locale('es')->isoFormat('MMMM YYYY'),
-                ];
-            }
-            $current->addMonth();
+            return redirect()->back();
         }
 
-        return $missing;
+        $label = Carbon::parse($payment->due_date)->locale('es')->isoFormat('MMMM YYYY');
+        $this->monthlyPayments->revert($payment);
+        flash_success("Se revirtió la mensualidad de {$label}.");
+
+        return redirect()->back();
+    }
+
+    /** Años disponibles en la cuadrícula: desde el año de la matrícula hasta el próximo. */
+    private function paymentYearRange(Enrollment $enrollment): array
+    {
+        $from = Carbon::parse($enrollment->enrollment_date ?? $enrollment->created_at)->year;
+        $to = (int) now()->year + 1;
+
+        return range(min($from, $to), $to);
+    }
+
+    /** Cobro del mes actual al activar una matrícula, si el mes aún no lo tiene. */
+    private function generateCurrentMonthPayment(Enrollment $enrollment): ?Payment
+    {
+        $month = Carbon::today()->startOfMonth();
+        if ($this->monthlyPayments->monthHasPayment($enrollment, $month)) {
+            return null;
+        }
+
+        return $this->monthlyPayments->generate($enrollment, $month);
     }
 
     /**
@@ -590,152 +623,5 @@ class EnrollmentController extends Controller
             ->get(['id', 'name', 'email']);
 
         return response()->json($availableStudents);
-    }
-
-    /**
-     * Generar pago mensual para una inscripción
-     */
-    private function generateMonthlyPayment(Enrollment $enrollment): ?Payment
-    {
-        $program = $enrollment->program;
-        $student = User::with('studentProfile')->find($enrollment->student_id);
-        $modality = $student->studentProfile?->modality;
-
-        // Determinar monto según modalidad o fallback a monthly_fee del programa
-        if ($modality) {
-            $siblingsCount = 1;
-            if ($student->parent_id) {
-                $siblingsCount = User::where('parent_id', $student->parent_id)
-                    ->whereHas('programEnrollments', fn ($q) => $q->whereIn('status', ['active', 'waiting']))
-                    ->count();
-            }
-            $paymentInfo = $this->enrollmentService->getPaymentAmount($modality, $siblingsCount);
-            $amount = $paymentInfo['amount'];
-            $originalAmount = $paymentInfo['original_amount'];
-            $discountPct = $paymentInfo['discount_percentage'] > 0 ? $paymentInfo['discount_percentage'] : null;
-            $discountAmount = $paymentInfo['discount_amount'] > 0 ? $paymentInfo['discount_amount'] : null;
-        } else {
-            if (! $program->monthly_fee || $program->monthly_fee <= 0) {
-                return null;
-            }
-            $amount = (float) $program->monthly_fee;
-            $originalAmount = $amount;
-            $discountPct = null;
-            $discountAmount = null;
-        }
-
-        // Siempre el mes actual: vencimiento el día 5 del mes en curso
-        $today = Carbon::today();
-        $dueDate = $today->copy()->day(5);
-
-        // Verificar si ya existe un pago pendiente para el mes actual
-        $existingPayment = Payment::where('student_id', $enrollment->student_id)
-            ->where('program_id', $program->id)
-            ->where('enrollment_id', $enrollment->id)
-            ->whereBetween('due_date', [$today->copy()->startOfMonth(), $today->copy()->endOfMonth()])
-            ->pending()
-            ->exists();
-
-        if ($existingPayment) {
-            return null;
-        }
-
-        $concept = "Mensualidad {$program->name} — ".$dueDate->locale('es')->isoFormat('MMMM YYYY');
-        if ($modality) {
-            $concept .= " ({$modality})";
-        }
-        if ($discountPct) {
-            $concept .= " — Descuento familiar {$discountPct}%";
-        }
-
-        return Payment::create([
-            'student_id' => $enrollment->student_id,
-            'program_id' => $program->id,
-            'enrollment_id' => $enrollment->id,
-            'concept' => $concept,
-            'payment_type' => 'single',
-            'modality' => $modality,
-            'amount' => $amount,
-            'original_amount' => $originalAmount,
-            'discount_percentage' => $discountPct,
-            'discount_amount' => $discountAmount,
-            'paid_amount' => 0,
-            'remaining_amount' => $amount,
-            'due_date' => $dueDate,
-            'status' => 'pending',
-            'recorded_by' => auth()->id(),
-        ]);
-    }
-
-    /**
-     * Generar pago mensual para una inscripción en un mes específico
-     */
-    private function generateMonthlyPaymentForDate(Enrollment $enrollment, Carbon $targetMonth): ?Payment
-    {
-        $program = $enrollment->program;
-        $student = User::with('studentProfile')->find($enrollment->student_id);
-        $modality = $student->studentProfile?->modality;
-
-        if ($modality) {
-            $siblingsCount = 1;
-            if ($student->parent_id) {
-                $siblingsCount = User::where('parent_id', $student->parent_id)
-                    ->whereHas('programEnrollments', fn ($q) => $q->whereIn('status', ['active', 'waiting']))
-                    ->count();
-            }
-            $paymentInfo = $this->enrollmentService->getPaymentAmount($modality, $siblingsCount);
-            $amount = $paymentInfo['amount'];
-            $originalAmount = $paymentInfo['original_amount'];
-            $discountPct = $paymentInfo['discount_percentage'] > 0 ? $paymentInfo['discount_percentage'] : null;
-            $discountAmount = $paymentInfo['discount_amount'] > 0 ? $paymentInfo['discount_amount'] : null;
-        } else {
-            if (! $program->monthly_fee || $program->monthly_fee <= 0) {
-                return null;
-            }
-            $amount = (float) $program->monthly_fee;
-            $originalAmount = $amount;
-            $discountPct = null;
-            $discountAmount = null;
-        }
-
-        $dueDate = $targetMonth->copy()->day(5);
-
-        // Verificar si ya existe pago para ese mes
-        $existingPayment = Payment::where('student_id', $enrollment->student_id)
-            ->where('program_id', $program->id)
-            ->where('enrollment_id', $enrollment->id)
-            ->whereBetween('due_date', [$targetMonth->copy()->startOfMonth(), $targetMonth->copy()->endOfMonth()])
-            ->whereIn('status', ['pending', 'paid', 'partial'])
-            ->exists();
-
-        if ($existingPayment) {
-            return null;
-        }
-
-        $concept = "Mensualidad {$program->name} — ".$targetMonth->locale('es')->isoFormat('MMMM YYYY');
-        if ($modality) {
-            $concept .= " ({$modality})";
-        }
-        if ($discountPct) {
-            $concept .= " — Descuento familiar {$discountPct}%";
-        }
-
-        return Payment::create([
-            'student_id' => $enrollment->student_id,
-            'program_id' => $program->id,
-            'enrollment_id' => $enrollment->id,
-            'concept' => $concept,
-            'payment_type' => 'single',
-            'modality' => $modality,
-            'amount' => $amount,
-            'original_amount' => $originalAmount,
-            'discount_percentage' => $discountPct,
-            'discount_amount' => $discountAmount,
-            'paid_amount' => 0,
-            'remaining_amount' => $amount,
-            'due_date' => $dueDate,
-            'status' => 'pending',
-            'recorded_by' => auth()->id(),
-        ]);
     }
 }

@@ -186,6 +186,7 @@ Route::middleware(['auth', 'verified', 'system.access', 'survey.required'])->gro
         Route::post('/matriculas/{enrollment}/change-program', [EnrollmentController::class, 'changeProgram'])->name('inscripciones.change-program');
         Route::post('/matriculas/{enrollment}/generate-payment', [EnrollmentController::class, 'generatePayment'])->name('inscripciones.generate-payment');
         Route::post('/matriculas/{enrollment}/generate-payment-month', [EnrollmentController::class, 'generatePaymentForMonth'])->name('inscripciones.generate-payment-month');
+        Route::delete('/matriculas/{enrollment}/pagos/{payment}', [EnrollmentController::class, 'revertPayment'])->name('inscripciones.revert-payment');
     });
     Route::middleware(['permission:eliminar_inscripcion'])->group(function () {
         Route::delete('/matriculas/{enrollment}', [EnrollmentController::class, 'destroy'])->name('inscripciones.destroy');
