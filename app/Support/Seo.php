@@ -2,6 +2,8 @@
 
 namespace App\Support;
 
+use App\Models\PaymentSetting;
+use App\Services\EnrollmentService;
 use Illuminate\Support\Str;
 
 /**
@@ -42,15 +44,15 @@ class Seo
             ],
         ];
 
-        if ($program['monthly_fee'] > 0) {
-            $course['offers'] = [
+        if ($modalities = self::modalities()) {
+            $course['offers'] = array_map(fn ($m) => [
                 '@type' => 'Offer',
+                'name' => "{$m['name']} ({$m['ages']})",
                 'category' => 'Mensualidad',
-                'price' => number_format($program['monthly_fee'], 0, '.', ''),
+                'price' => number_format($m['amount'], 0, '.', ''),
                 'priceCurrency' => 'COP',
-                'availability' => 'https://schema.org/InStock',
                 'url' => config('seo.url').'/matricula',
-            ];
+            ], $modalities);
         }
 
         return self::meta($title, self::programDescription($program), $path, [
@@ -64,44 +66,84 @@ class Seo
     public static function faq(): array
     {
         $b = config('seo.business');
-        $programs = PublicPrograms::all();
-        $labels = collect($programs)->pluck('label');
-        $minFee = collect($programs)->pluck('monthly_fee')->filter()->min();
+        $labels = collect(PublicPrograms::all())->pluck('label');
 
         $faq = [
             ['¿Dónde queda Academia Linaje?', "Estamos en la {$b['street']}, en {$b['locality']}, {$b['region']}. Puedes escribirnos por WhatsApp al 300 421 8146 para indicaciones."],
-            ['¿La primera clase es gratis?', 'Sí. Tu primera clase es una clase demo gratuita con uno de nuestros profesores, sin compromiso. Resérvala con el formulario de esta página o por WhatsApp.'],
+            ['¿La primera clase es gratis?', 'Sí. La primera clase es una clase demo gratuita, sin compromiso. Resérvala con el formulario de esta página o por WhatsApp.'],
         ];
 
         if ($labels->isNotEmpty()) {
-            $faq[] = ['¿Qué instrumentos puedo aprender en Ocaña con Academia Linaje?', 'Tenemos clases de '.self::humanList($labels->map(fn ($l) => Str::lower($l))->all()).'. Cada programa avanza por niveles, desde básico hasta avanzado.'];
+            $faq[] = ['¿Qué instrumentos puedo aprender en Ocaña con Academia Linaje?', 'Tenemos clases de '.self::humanList($labels->map(fn ($l) => Str::lower($l))->all()).'.'];
         }
 
-        if ($minFee) {
-            $faq[] = ['¿Cuánto cuestan las clases de música?', 'La mensualidad es desde $'.number_format($minFee, 0, ',', '.').' COP. La primera clase es gratis para que conozcas la metodología antes de matricularte.'];
-        }
-
-        return array_merge($faq, [
-            ['¿Las clases son para niños o para adultos?', 'Para ambos. Nuestros programas están pensados para niños, jóvenes y adultos, y el profesor adapta el ritmo al nivel de cada estudiante.'],
+        return array_merge($faq, self::modalityFaq(), [
             ['¿Cuál es el horario de atención?', 'Atendemos de lunes a sábado de 8:30 a. m. a 12:00 m. y de 2:00 p. m. a 6:00 p. m.'],
-            ['¿Cómo me matriculo?', 'Puedes matricularte en línea en academialinaje.com/matricula: eliges el programa y el horario y completas tus datos en pocos minutos.'],
+            ['¿Cómo me matriculo?', 'Puedes matricularte en línea en academialinaje.com/matricula: eliges el programa y el horario y completas los datos del estudiante.'],
         ]);
     }
 
     public static function programFaq(array $program): array
     {
         $label = Str::lower($program['label']);
-        $faq = [
+
+        return array_merge([
             ["¿Dónde puedo tomar clases de {$label} en Ocaña?", 'En Academia Linaje, '.config('seo.business.street').', Ocaña, Norte de Santander.'],
             ["¿La primera clase de {$label} es gratis?", 'Sí, la primera clase es gratuita y sin compromiso. Resérvala desde la página principal o por WhatsApp al 300 421 8146.'],
-            ["¿Las clases de {$label} son para niños y adultos?", 'Sí, recibimos niños, jóvenes y adultos, desde nivel inicial hasta avanzado.'],
-        ];
+        ], self::modalityFaq());
+    }
 
-        if ($program['monthly_fee'] > 0) {
-            $faq[] = ["¿Cuánto cuestan las clases de {$label}?", 'La mensualidad es de $'.number_format($program['monthly_fee'], 0, ',', '.').' COP.'];
+    /**
+     * Mensualidad por modalidad (edad del estudiante), tal como la cobra el sistema:
+     * PaymentSetting + EnrollmentService::MODALITY_AGE_RANGES. El monthly_fee del programa no se usa.
+     *
+     * @return array<int, array{name: string, ages: string, amount: float}>
+     */
+    public static function modalities(): array
+    {
+        $setting = PaymentSetting::where('is_active', true)->first();
+        if (! $setting) {
+            return [];
         }
 
-        return $faq;
+        return collect(EnrollmentService::MODALITY_AGE_RANGES)
+            ->map(fn (array $range, string $name) => [
+                'name' => $name,
+                'ages' => $range['max'] >= 100 ? "{$range['min']} años en adelante" : "{$range['min']} a {$range['max']} años",
+                'amount' => $setting->getAmountForModality($name),
+            ])
+            ->filter(fn (array $m) => $m['amount'] > 0)
+            ->values()
+            ->all();
+    }
+
+    /** @return array{min_students: int, percentage: float}|null */
+    public static function siblingDiscount(): ?array
+    {
+        $setting = PaymentSetting::where('is_active', true)->first();
+
+        return $setting && $setting->discount_percentage > 0
+            ? ['min_students' => (int) $setting->discount_min_students, 'percentage' => (float) $setting->discount_percentage]
+            : null;
+    }
+
+    private static function modalityFaq(): array
+    {
+        $modalities = self::modalities();
+        if (! $modalities) {
+            return [];
+        }
+
+        $ages = self::humanList(array_map(fn ($m) => "{$m['name']} ({$m['ages']})", $modalities));
+        $prices = implode('; ', array_map(fn ($m) => "{$m['name']}: $".number_format($m['amount'], 0, ',', '.'), $modalities));
+        $discount = self::siblingDiscount();
+
+        return [
+            ['¿Desde qué edad se puede estudiar?', "Las clases se organizan por edad en tres modalidades: {$ages}."],
+            ['¿Cuánto cuesta la mensualidad?', "La mensualidad depende de la modalidad. {$prices} COP."
+                .($discount ? " Si hay {$discount['min_students']} o más estudiantes de la misma familia, cada uno tiene ".rtrim(rtrim(number_format($discount['percentage'], 2, ',', ''), '0'), ',').' % de descuento.' : '')
+                .' La primera clase es gratis.'],
+        ];
     }
 
     private static function meta(string $title, string $description, string $path, array $graph): array
@@ -119,6 +161,10 @@ class Seo
 
     private static function programDescription(array $program): string
     {
+        if ($program['is_demo']) {
+            return "Clases de {$program['label']} en Ocaña para niños, jóvenes y adultos. Reserva tu primera clase gratis en Academia Linaje, barrio Las Llanadas.";
+        }
+
         $intro = "Clases de {$program['label']} en Ocaña para niños, jóvenes y adultos.";
         $outro = ' Primera clase gratis en Academia Linaje.';
 
@@ -156,7 +202,7 @@ class Seo
         $base = config('seo.url');
         $b = config('seo.business');
         $programs = collect(PublicPrograms::all());
-        $fees = $programs->pluck('monthly_fee')->filter();
+        $fees = collect(self::modalities())->pluck('amount');
 
         $org = [
             '@type' => $b['type'],

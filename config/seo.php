@@ -23,7 +23,7 @@ return [
         'matricula' => [
             'path' => '/matricula',
             'title' => 'Matrícula en línea | Academia de Música en Ocaña | Academia Linaje',
-            'description' => 'Inscríbete en Academia Linaje, academia de música en Ocaña: elige tu programa y horario y completa tu matrícula en línea en pocos minutos.',
+            'description' => 'Inscríbete en Academia Linaje, academia de música en Ocaña: elige tu programa y horario y completa tu matrícula en línea.',
         ],
     ],
 

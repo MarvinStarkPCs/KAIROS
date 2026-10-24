@@ -65,7 +65,6 @@ interface AcademicProgramData {
     description: string | null;
     slug: string;
     label: string;
-    monthly_fee: number;
     icon: string | null;
     color: string | null;
 }

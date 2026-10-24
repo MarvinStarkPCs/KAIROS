@@ -7,9 +7,10 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 
 /**
- * Programas regulares que se publican como páginas propias en /clases/{slug}.
- * Una página por instrumento le da a Google una URL para cada búsqueda
- * ("clases de piano en Ocaña", "clases de canto en Ocaña"...).
+ * Programas activos (regulares y demo) que se publican como páginas propias en /clases/{slug}.
+ * Si un instrumento tiene programa regular y demo, queda una sola página con los datos del regular;
+ * los que solo existen como demo (p. ej. guitarra eléctrica) también tienen su página.
+ * Una página por instrumento le da a Google una URL para cada búsqueda ("clases de piano en Ocaña"...).
  */
 class PublicPrograms
 {
@@ -18,14 +19,15 @@ class PublicPrograms
         'jueves' => 'Jueves', 'viernes' => 'Viernes', 'sabado' => 'Sábado', 'sábado' => 'Sábado', 'domingo' => 'Domingo',
     ];
 
-    /** @return array<int, array{id: int, slug: string, label: string, name: string, description: ?string, monthly_fee: float, icon: ?string, color: ?string, schedules: array<int, array{days: string, time: string}>}> */
+    /** @return array<int, array{id: int, slug: string, label: string, name: string, description: ?string, is_demo: bool, icon: ?string, color: ?string, schedules: array<int, array{days: string, time: string}>}> */
     public static function all(): array
     {
         return Cache::remember('public.programs', now()->addMinutes(5), function () {
-            return AcademicProgram::public()
+            return AcademicProgram::active()
                 ->with(['schedules' => fn ($q) => $q->where('status', 'active')->select('id', 'academic_program_id', 'days_of_week', 'start_time', 'end_time')])
+                ->orderBy('is_demo')
                 ->orderBy('name')
-                ->get(['id', 'name', 'description', 'monthly_fee', 'icon', 'color'])
+                ->get(['id', 'name', 'description', 'icon', 'color', 'is_demo'])
                 ->unique('name')
                 ->map(fn (AcademicProgram $p) => [
                     'id' => $p->id,
@@ -33,7 +35,7 @@ class PublicPrograms
                     'label' => self::label($p->name),
                     'name' => $p->name,
                     'description' => $p->description ? trim(preg_replace('/[ \t]+/', ' ', $p->description)) : null,
-                    'monthly_fee' => (float) $p->monthly_fee,
+                    'is_demo' => (bool) $p->is_demo,
                     'icon' => $p->icon,
                     'color' => $p->color,
                     'schedules' => $p->schedules->map(fn ($s) => [
@@ -43,7 +45,9 @@ class PublicPrograms
                         'time' => substr($s->start_time, 0, 5).' - '.substr($s->end_time, 0, 5),
                     ])->unique()->values()->all(),
                 ])
+                // Los regulares van primero, así que ganan cuando hay demo del mismo instrumento.
                 ->unique('slug')
+                ->sortBy('label')
                 ->values()
                 ->all();
         });
@@ -54,11 +58,11 @@ class PublicPrograms
         return collect(self::all())->firstWhere('slug', $slug);
     }
 
-    /** "Programa de Bateria" → "Batería": el nombre que la gente busca, sin el prefijo administrativo. */
+    /** "Programa de Bateria" / "Demo Bateria" → "Batería": el nombre que la gente busca, sin el prefijo administrativo. */
     public static function label(string $name): string
     {
-        $label = trim(preg_replace('/^programa\s+(de\s+)?/iu', '', trim($name)));
+        $label = trim(preg_replace('/^(programa|demo)\s+(de\s+)?/iu', '', trim($name)));
 
-        return strtr(Str::ucfirst($label), ['Bateria' => 'Batería', 'Violin' => 'Violín']);
+        return strtr(Str::ucfirst($label), ['Bateria' => 'Batería', 'Violin' => 'Violín', 'Electrica' => 'Eléctrica']);
     }
 }

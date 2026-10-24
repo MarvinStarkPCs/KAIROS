@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\AcademicProgram;
+use App\Models\PaymentSetting;
 use App\Support\PublicPrograms;
 
 beforeEach(function () {
@@ -14,8 +15,13 @@ it('limpia el nombre administrativo del programa para la URL', function () {
         ->and(PublicPrograms::label('Guitarra Popular'))->toBe('Guitarra Popular');
 });
 
-it('publica solo los programas regulares activos', function () {
-    expect(collect(PublicPrograms::all())->pluck('slug')->all())->toBe(['bateria']);
+it('publica los programas activos, regulares y demo, sin duplicar instrumentos', function () {
+    AcademicProgram::create(['name' => 'Demo Bateria', 'monthly_fee' => 0, 'status' => 'active', 'is_demo' => true, 'duration_months' => 1]);
+
+    $programs = collect(PublicPrograms::all());
+
+    expect($programs->pluck('slug')->all())->toBe(['bateria', 'piano'])
+        ->and($programs->firstWhere('slug', 'bateria')['is_demo'])->toBeFalse();
 });
 
 it('muestra la página del programa con su SEO', function () {
@@ -30,11 +36,21 @@ it('responde 404 para programas inexistentes, demo o inactivos', function (strin
     $this->get("/clases/{$slug}")->assertNotFound();
 })->with(['no-existe', 'demo-piano', 'arpa']);
 
+it('muestra los precios por modalidad y no la mensualidad del programa', function () {
+    PaymentSetting::create(['amount_linaje_kids' => 150000, 'amount_linaje_teens' => 160000, 'amount_linaje_big' => 170000, 'is_active' => true, 'discount_min_students' => 2, 'discount_percentage' => 10]);
+
+    $this->get('/clases/bateria')
+        ->assertSee('"name":"Linaje Kids (4 a 9 años)"', false)
+        ->assertSee('"price":"170000"', false)
+        ->assertDontSee('"price":"100000"', false);
+});
+
 it('incluye las páginas de programas en el sitemap', function () {
     $this->get('/sitemap.xml')
         ->assertOk()
         ->assertSee('<loc>https://academialinaje.com/clases/bateria</loc>', false)
-        ->assertDontSee('demo-piano');
+        ->assertSee('<loc>https://academialinaje.com/clases/piano</loc>', false)
+        ->assertDontSee('arpa');
 });
 
 it('marca la portada con la academia y sus preguntas frecuentes', function () {

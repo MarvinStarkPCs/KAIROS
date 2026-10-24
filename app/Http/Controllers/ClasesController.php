@@ -24,6 +24,8 @@ class ClasesController extends Controller
                 ->map(fn ($p) => ['slug' => $p['slug'], 'label' => $p['label'], 'icon' => $p['icon'], 'color' => $p['color']])
                 ->values(),
             'faq' => Seo::programFaq($program),
+            'modalities' => Seo::modalities(),
+            'discount' => Seo::siblingDiscount(),
             'pageTitle' => $seo['title'],
             'business' => collect(config('seo.business'))->only(['street', 'neighborhood', 'locality', 'region', 'whatsapp']),
         ])->withViewData(['seo' => $seo]);

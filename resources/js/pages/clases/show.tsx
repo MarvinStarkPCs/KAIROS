@@ -10,7 +10,7 @@ interface Program {
     slug: string;
     label: string;
     description: string | null;
-    monthly_fee: number;
+    is_demo: boolean;
     icon: string | null;
     color: string | null;
     schedules: { days: string; time: string }[];
@@ -20,13 +20,15 @@ interface Props {
     program: Program;
     otherPrograms: Pick<Program, 'slug' | 'label' | 'icon' | 'color'>[];
     faq: [string, string][];
+    modalities: { name: string; ages: string; amount: number }[];
+    discount: { min_students: number; percentage: number } | null;
     pageTitle: string;
     business: { street: string; neighborhood: string; locality: string; region: string; whatsapp: string };
 }
 
 const money = (value: number) => '$' + new Intl.NumberFormat('es-CO', { maximumFractionDigits: 0 }).format(value);
 
-export default function ClaseShow({ program, otherPrograms, faq, pageTitle, business }: Props) {
+export default function ClaseShow({ program, otherPrograms, faq, modalities, discount, pageTitle, business }: Props) {
     const Icon = ICONS[program.icon ?? ''] ?? Music;
     const color = program.color || '#d97706';
     const paragraphs = (program.description ?? '').split(/\n+/).filter(Boolean);
@@ -99,24 +101,39 @@ export default function ClaseShow({ program, otherPrograms, faq, pageTitle, busi
                     <section className="py-14">
                         <div className="mx-auto max-w-5xl px-4 sm:px-6 grid gap-10 lg:grid-cols-3">
                             <div className="lg:col-span-2 space-y-4">
-                                <h2 className="text-2xl sm:text-3xl font-bold text-foreground">Sobre el programa de {label}</h2>
+                                <h2 className="text-2xl sm:text-3xl font-bold text-foreground">
+                                    {program.is_demo ? `Tu primera clase de ${label}, gratis` : `Sobre el programa de ${label}`}
+                                </h2>
                                 {paragraphs.length > 0 ? (
                                     paragraphs.map((p, i) => (
                                         <p key={i} className="text-muted-foreground leading-relaxed">{p}</p>
                                     ))
                                 ) : (
                                     <p className="text-muted-foreground leading-relaxed">
-                                        Aprende {label} con profesores de la academia, desde nivel inicial hasta avanzado, con clases presenciales en Ocaña.
+                                        Aprende {label} con los profesores de Academia Linaje, en clases presenciales en Ocaña.
                                     </p>
                                 )}
                             </div>
 
                             <aside className="space-y-4">
-                                {program.monthly_fee > 0 && (
+                                {modalities.length > 0 && (
                                     <div className="rounded-2xl border-2 border-border p-6">
-                                        <div className="text-sm text-muted-foreground">Mensualidad</div>
-                                        <div className="text-3xl font-bold text-foreground">{money(program.monthly_fee)}</div>
-                                        <div className="text-sm text-muted-foreground">COP al mes · primera clase gratis</div>
+                                        <h3 className="mb-3 font-semibold text-foreground">Mensualidad según la edad</h3>
+                                        <ul className="space-y-3">
+                                            {modalities.map((m) => (
+                                                <li key={m.name} className="flex items-baseline justify-between gap-3">
+                                                    <span>
+                                                        <span className="block font-medium text-foreground">{m.name}</span>
+                                                        <span className="text-xs text-muted-foreground">{m.ages}</span>
+                                                    </span>
+                                                    <span className="font-bold text-foreground whitespace-nowrap">{money(m.amount)}</span>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                        <p className="mt-3 text-xs text-muted-foreground">
+                                            COP al mes · primera clase gratis
+                                            {discount && ` · ${discount.percentage}% de descuento desde ${discount.min_students} estudiantes de la misma familia`}
+                                        </p>
                                     </div>
                                 )}
 
@@ -124,7 +141,7 @@ export default function ClaseShow({ program, otherPrograms, faq, pageTitle, busi
                                     <div className="rounded-2xl border-2 border-border p-6">
                                         <h3 className="mb-3 flex items-center gap-2 font-semibold text-foreground">
                                             <Calendar className="h-5 w-5 text-amber-700 dark:text-amber-300" />
-                                            Horarios disponibles
+                                            {program.is_demo ? 'Horarios de la clase gratis' : 'Horarios disponibles'}
                                         </h3>
                                         <ul className="space-y-2 text-sm text-muted-foreground">
                                             {program.schedules.map((s, i) => (
