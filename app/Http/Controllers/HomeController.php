@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\AcademicProgram;
+use App\Support\Seo;
 use Illuminate\Support\Facades\Cache;
 use Inertia\Inertia;
 
@@ -19,7 +20,10 @@ class HomeController extends Controller
             'academicPrograms' => $this->academicPrograms(),
         ]);
 
-        return Inertia::render('welcome', $data);
+        $programNames = array_column($data['academicPrograms'], 'name');
+
+        return Inertia::render('welcome', $data)
+            ->withViewData(['seo' => Seo::forPage('home', $programNames)]);
     }
 
     /**

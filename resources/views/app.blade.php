@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" @class(['dark' => ($appearance ?? 'system') == 'dark'])>
+<html lang="es" @class(['dark' => ($appearance ?? 'system') == 'dark'])>
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -20,7 +20,8 @@
             html.dark { background-color: oklch(0.145 0 0); }
         </style>
 
-        <title inertia>Academia Linaje</title>
+        <title inertia>{{ $seo['title'] ?? 'Academia Linaje' }}</title>
+        @include('partials.seo')
 
         <link rel="icon" href="/favicon.ico" sizes="any">
         <link rel="icon" href="/favicon.svg" type="image/svg+xml">
@@ -37,6 +38,13 @@
         @inertiaHead
     </head>
     <body class="font-sans antialiased">
+        @if (! empty($seo))
+            <noscript>
+                <h1>{{ $seo['title'] }}</h1>
+                <p>{{ $seo['description'] }}</p>
+                <p>WhatsApp: {{ config('seo.business.telephone') }} · {{ config('seo.business.street') }}, {{ config('seo.business.locality') }}</p>
+            </noscript>
+        @endif
         @inertia
     </body>
 </html>

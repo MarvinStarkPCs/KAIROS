@@ -5,6 +5,18 @@
 
     RewriteEngine On
 
+    # Dirección canónica: https://academialinaje.com, con un solo 301.
+    # El webhook de Wompi queda fuera: una redirección rompe sus POST.
+    RewriteCond %{REQUEST_URI} !^/webhook/
+    RewriteCond %{HTTP_HOST} ^(www\.academialinaje\.com|(www\.)?academialinaje\.com\.northcloud\.com\.co)$ [NC]
+    RewriteRule ^ https://academialinaje.com%{REQUEST_URI} [L,R=301]
+
+    RewriteCond %{REQUEST_URI} !^/webhook/
+    RewriteCond %{HTTP_HOST} ^academialinaje\.com$ [NC]
+    RewriteCond %{HTTPS} off
+    RewriteCond %{HTTP:X-Forwarded-Proto} !https
+    RewriteRule ^ https://academialinaje.com%{REQUEST_URI} [L,R=301]
+
     # Handle Authorization Header
     RewriteCond %{HTTP:Authorization} .
     RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]

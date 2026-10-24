@@ -2,17 +2,18 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\AcademicProgram;
-use App\Models\Payment;
 use App\Http\Requests\EnrollmentRequest;
-use App\Services\EnrollmentService;
-use App\Services\WompiService;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Mail;
 use App\Mail\EnrollmentManualPayment;
 use App\Mail\EnrollmentWelcome;
-use App\Models\SmtpSetting;
+use App\Models\AcademicProgram;
+use App\Models\Payment;
 use App\Models\PaymentSetting;
+use App\Models\SmtpSetting;
+use App\Services\EnrollmentService;
+use App\Services\WompiService;
+use App\Support\Seo;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 use Inertia\Inertia;
 
 class MatriculaController extends Controller
@@ -49,7 +50,7 @@ class MatriculaController extends Controller
         });
 
         // Filtrar solo programas que tienen horarios
-        $programs = $programs->filter(fn($program) => $program->schedules->count() > 0)->values();
+        $programs = $programs->filter(fn ($program) => $program->schedules->count() > 0)->values();
 
         $paymentSetting = PaymentSetting::where('is_active', true)->first();
 
@@ -68,7 +69,7 @@ class MatriculaController extends Controller
                 'min_students' => $paymentSetting?->discount_min_students ?? 3,
                 'percentage' => (float) ($paymentSetting?->discount_percentage ?? 0),
             ],
-        ]);
+        ])->withViewData(['seo' => Seo::forPage('matricula')]);
     }
 
     /**
@@ -151,11 +152,11 @@ class MatriculaController extends Controller
                 'message' => $e->getMessage(),
                 'file' => $e->getFile(),
                 'line' => $e->getLine(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
 
             $errorMessage = config('app.debug')
-                ? 'Error: ' . $e->getMessage()
+                ? 'Error: '.$e->getMessage()
                 : 'Ocurrió un error al procesar la solicitud. Por favor intenta nuevamente.';
 
             return back()->with('error', $errorMessage)->withInput();
@@ -222,7 +223,7 @@ class MatriculaController extends Controller
         } catch (\Exception $e) {
             \Log::error('Error al guardar solicitud demo:', [
                 'message' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
             throw $e;
         }
@@ -238,6 +239,7 @@ class MatriculaController extends Controller
         }
 
         $paymentIds = collect($payments)->pluck('id')->implode(',');
+
         return redirect()->route('matricula.checkout.multiple', ['payments' => $paymentIds]);
     }
 
@@ -247,8 +249,9 @@ class MatriculaController extends Controller
     public function checkoutMultiple(Request $request)
     {
         // Validar que Wompi esté activo antes de permitir el pago
-        if (!$this->wompiService->isPaymentActive()) {
+        if (! $this->wompiService->isPaymentActive()) {
             flash_info('You are enrolled, but you must contact the administrator to continue the payment process.');
+
             return redirect()->route('home');
         }
 
@@ -259,6 +262,7 @@ class MatriculaController extends Controller
 
         if (empty($paymentIds)) {
             flash_error('No se encontraron pagos para procesar.');
+
             return redirect()->route('home');
         }
 
@@ -269,6 +273,7 @@ class MatriculaController extends Controller
 
         if ($payments->isEmpty()) {
             flash_error('No se encontraron pagos pendientes.');
+
             return redirect()->route('home');
         }
 
@@ -310,8 +315,9 @@ class MatriculaController extends Controller
             ->findOrFail($paymentId);
 
         // Validar que Wompi esté activo antes de permitir el pago
-        if (!$this->wompiService->isPaymentActive()) {
+        if (! $this->wompiService->isPaymentActive()) {
             flash_info('You are enrolled, but you must contact the administrator to continue the payment process.');
+
             return redirect()->route('home');
         }
 
@@ -322,6 +328,7 @@ class MatriculaController extends Controller
                 'status' => $payment->status,
             ]);
             flash_error('Este pago ya ha sido procesado.');
+
             return redirect()->route('home');
         }
 
@@ -333,6 +340,7 @@ class MatriculaController extends Controller
                 'hours_diff' => $payment->created_at->diffInHours(now()),
             ]);
             flash_error('Este enlace de pago ha expirado. Por favor, contacte al administrador.');
+
             return redirect()->route('home');
         }
 
@@ -378,8 +386,9 @@ class MatriculaController extends Controller
     public function createPaymentLink($paymentId)
     {
         // Validar que Wompi esté activo antes de crear payment link
-        if (!$this->wompiService->isPaymentActive()) {
+        if (! $this->wompiService->isPaymentActive()) {
             flash_info('You are enrolled, but you must contact the administrator to continue the payment process.');
+
             return redirect()->route('home');
         }
 
@@ -390,12 +399,13 @@ class MatriculaController extends Controller
             // Validar que el pago esté pendiente
             if ($payment->status !== 'pending') {
                 flash_error('Este pago ya ha sido procesado.');
+
                 return redirect()->route('home');
             }
 
             $customerEmail = $payment->student->email ?? 'noreply@academialinaje.com';
-            $customerName = trim($payment->student->name . ' ' . $payment->student->last_name);
-            $description = $payment->concept ?? 'Pago de matrícula - ' . $payment->program->name;
+            $customerName = trim($payment->student->name.' '.$payment->student->last_name);
+            $description = $payment->concept ?? 'Pago de matrícula - '.$payment->program->name;
 
             // Crear payment link en Wompi
             $paymentLink = $this->wompiService->createPaymentLink(
@@ -411,13 +421,13 @@ class MatriculaController extends Controller
                 'metadata' => array_merge($payment->metadata ?? [], [
                     'wompi_payment_link_id' => $paymentLink['id'],
                     'wompi_payment_link_url' => $paymentLink['url'] ?? null,
-                ])
+                ]),
             ]);
 
             \Log::info('Payment link creado, redirigiendo a Wompi', [
                 'payment_id' => $payment->id,
                 'wompi_url' => $paymentLink['url'] ?? null,
-                'wompi_id' => $paymentLink['id'] ?? null
+                'wompi_id' => $paymentLink['id'] ?? null,
             ]);
 
             // Validar que el URL existe antes de redirigir
@@ -428,17 +438,18 @@ class MatriculaController extends Controller
             // Retornar el URL como JSON para que el frontend haga el redirect
             // No podemos usar redirect()->away() porque es una petición de Inertia
             return response()->json([
-                'redirect_url' => $paymentLink['url']
+                'redirect_url' => $paymentLink['url'],
             ]);
 
         } catch (\Exception $e) {
             \Log::error('Error al crear payment link de Wompi', [
                 'payment_id' => $paymentId,
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
 
-            flash_error('Error al procesar el pago: ' . $e->getMessage());
+            flash_error('Error al procesar el pago: '.$e->getMessage());
+
             return back();
         }
     }
@@ -452,6 +463,7 @@ class MatriculaController extends Controller
 
         if ($payment->status !== 'pending') {
             flash_error('Este pago ya ha sido procesado.');
+
             return redirect()->route('home');
         }
 
@@ -486,7 +498,7 @@ class MatriculaController extends Controller
         $paymentId = $request->query('id');
 
         // Si no hay paymentId pero hay mensaje de éxito, es pago manual
-        if (!$paymentId && session('success')) {
+        if (! $paymentId && session('success')) {
             return Inertia::render('Matricula/Confirmation', [
                 'payment' => null,
                 'status' => 'MANUAL',
@@ -495,16 +507,18 @@ class MatriculaController extends Controller
             ]);
         }
 
-        if (!$paymentId) {
+        if (! $paymentId) {
             flash_error('No se encontró información del pago.');
+
             return redirect()->route('home');
         }
 
         $payment = Payment::with(['student', 'program'])
             ->find($paymentId);
 
-        if (!$payment) {
+        if (! $payment) {
             flash_error('No se encontró el pago especificado.');
+
             return redirect()->route('home');
         }
 

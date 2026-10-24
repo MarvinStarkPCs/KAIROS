@@ -6,8 +6,11 @@ import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { createRoot } from 'react-dom/client';
 import { initializeTheme } from './hooks/use-appearance';
 
+const appName = 'Academia Linaje';
+
 createInertiaApp({
-    title: () => 'Academia Linaje',
+    // Debe producir el mismo título que imprime el servidor (config/seo.php).
+    title: (title) => (!title ? appName : title.includes(appName) ? title : `${title} | ${appName}`),
     resolve: (name) =>
         resolvePageComponent(
             `./pages/${name}.tsx`,
