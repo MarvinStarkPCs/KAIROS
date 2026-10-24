@@ -269,7 +269,7 @@ export default function Welcome() {
                                         aria-label="Video promocional de Academia Linaje - Clases de música"
                                         title="Academia Linaje - Aprende música con nosotros"
                                     >
-                                        <source src="/linaje.mp4" type="video/mp4" />
+                                        <source src="/linaje-720.mp4" type="video/mp4" />
                                         Tu navegador no soporta el elemento de video.
                                     </video>
                                 </div>
