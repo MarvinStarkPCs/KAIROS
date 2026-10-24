@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\AcademicProgram;
+use App\Support\PublicPrograms;
 use App\Support\Seo;
 use Illuminate\Support\Facades\Cache;
 use Inertia\Inertia;
@@ -15,15 +16,11 @@ class HomeController extends Controller
      */
     public function welcome()
     {
-        $data = Cache::remember('home.programs', now()->addMinutes(5), fn () => [
-            'demoPrograms' => $this->demoPrograms(),
-            'academicPrograms' => $this->academicPrograms(),
-        ]);
-
-        $programNames = array_column($data['academicPrograms'], 'name');
-
-        return Inertia::render('welcome', $data)
-            ->withViewData(['seo' => Seo::forPage('home', $programNames)]);
+        return Inertia::render('welcome', [
+            'demoPrograms' => Cache::remember('home.demo_programs', now()->addMinutes(5), fn () => $this->demoPrograms()),
+            'academicPrograms' => PublicPrograms::all(),
+            'faq' => Seo::faq(),
+        ])->withViewData(['seo' => Seo::forPage('home')]);
     }
 
     /**
@@ -68,19 +65,6 @@ class HomeController extends Controller
 
         return $programs
             ->filter(fn ($program) => $program->schedules->where('has_capacity', true)->isNotEmpty())
-            ->values()
-            ->toArray();
-    }
-
-    /** Programas regulares; se agrupan por nombre porque puede haber registros repetidos. */
-    private function academicPrograms(): array
-    {
-        return AcademicProgram::where('is_demo', false)
-            ->where('status', 'active')
-            ->select('id', 'name', 'description', 'monthly_fee', 'icon', 'color')
-            ->orderBy('name')
-            ->get()
-            ->unique('name')
             ->values()
             ->toArray();
     }

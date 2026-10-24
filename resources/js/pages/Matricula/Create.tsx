@@ -432,7 +432,7 @@ export default function Create({ programs, paymentMethods, modalityPrices, disco
 
     return (
         <>
-            <Head title="Matrícula" />
+            <Head title="Matrícula en línea | Academia de Música en Ocaña" />
             <Toaster />
 
             <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-amber-100 dark:from-neutral-950 dark:via-neutral-900 dark:to-neutral-950 py-8 sm:py-12 px-3 sm:px-4 lg:px-6">

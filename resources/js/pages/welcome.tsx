@@ -63,18 +63,24 @@ interface AcademicProgramData {
     id: number;
     name: string;
     description: string | null;
-    monthly_fee: string;
+    slug: string;
+    label: string;
+    monthly_fee: number;
     icon: string | null;
     color: string | null;
 }
 
+/** [pregunta, respuesta] */
+type FaqItem = [string, string];
+
 interface WelcomeProps extends SharedData {
     demoPrograms: DemoProgram[];
     academicPrograms: AcademicProgramData[];
+    faq: FaqItem[];
 }
 
 export default function Welcome() {
-    const { auth, demoPrograms, academicPrograms } = usePage<WelcomeProps>().props;
+    const { auth, demoPrograms, academicPrograms, faq } = usePage<WelcomeProps>().props;
 
     const { data, setData, post, processing, errors, reset } = useForm({
         name: '',
@@ -115,7 +121,7 @@ export default function Welcome() {
     return (
         <>
             {/* Descripción, Open Graph y JSON-LD los imprime el servidor (resources/views/partials/seo.blade.php). */}
-            <Head title="Academia de música en Las Llanadas">
+            <Head title="Academia de Música en Ocaña | Piano, Guitarra y Canto">
                 <link rel="preconnect" href="https://fonts.bunny.net" />
                 <link
                     href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600,700"
@@ -131,7 +137,7 @@ export default function Welcome() {
                             <a href="/" className="flex items-center" aria-label="Academia Linaje - Inicio">
                                 <img
                                     src="/logo_academia_black.png"
-                                    alt="Academia Linaje - Escuela de Música en Las Llanadas"
+                                    alt="Academia Linaje - Escuela de Música en Ocaña"
                                     className="h-12 w-auto dark:hidden"
                                     width="150"
                                     height="48"
@@ -140,7 +146,7 @@ export default function Welcome() {
                                 />
                                 <img
                                     src="/logo_academia_white.png"
-                                    alt="Academia Linaje - Escuela de Música en Las Llanadas"
+                                    alt="Academia Linaje - Escuela de Música en Ocaña"
                                     className="h-12 w-auto hidden dark:block"
                                     width="150"
                                     height="48"
@@ -202,6 +208,9 @@ export default function Welcome() {
                         <div className="grid gap-12 lg:grid-cols-2 lg:gap-20 items-center">
                             <div className="space-y-8 text-center lg:text-left">
                                 <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold leading-tight text-foreground">
+                                    <span className="block mb-3 text-base sm:text-lg font-semibold uppercase tracking-wide text-amber-700 dark:text-amber-300">
+                                        Academia de música en Ocaña
+                                    </span>
                                     Despierta el
                                     <span className="block text-transparent bg-clip-text bg-gradient-to-r from-amber-600 to-orange-600">
                                         Músico que hay en ti
@@ -209,7 +218,7 @@ export default function Welcome() {
                                 </h1>
 
                                 <p className="text-lg sm:text-xl text-muted-foreground leading-relaxed max-w-xl mx-auto lg:mx-0">
-                                    Aprende piano, guitarra, canto y más con profesores certificados.
+                                    Aprende piano, guitarra, canto, batería y violín en Ocaña con profesores certificados.
                                     <span className="font-bold text-amber-800 dark:text-amber-200"> Tu primera clase es completamente gratis</span> para que
                                     conozcas nuestra metodología.
                                 </p>
@@ -316,7 +325,7 @@ export default function Welcome() {
                                 Nuestros Programas
                             </h2>
                             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-                                Encuentra el programa perfecto para ti
+                                Clases de música en Ocaña para niños, jóvenes y adultos
                             </p>
                         </div>
 
@@ -329,7 +338,7 @@ export default function Welcome() {
                                         return (
                                             <a
                                                 key={program.id}
-                                                href="/matricula"
+                                                href={`/clases/${program.slug}`}
                                                 className="group rounded-2xl border-2 border-border bg-card p-8 transition-all hover:shadow-2xl transform hover:-translate-y-2 block no-underline"
                                                 style={{ '--program-color': programColor } as React.CSSProperties}
                                             >
@@ -344,12 +353,12 @@ export default function Welcome() {
                                                         style={{ color: programColor }}
                                                     />
                                                 </div>
-                                                <h3 className="mb-2 text-xl font-bold text-foreground group-hover:text-amber-800 dark:hover:text-amber-200 transition-colors">{program.name}</h3>
+                                                <h3 className="mb-2 text-xl font-bold text-foreground group-hover:text-amber-800 dark:hover:text-amber-200 transition-colors">Clases de {program.label}</h3>
                                                 {program.description && (
                                                     <p className="text-sm text-muted-foreground mb-4 line-clamp-2">{program.description}</p>
                                                 )}
                                                 <div className="flex items-center font-semibold text-sm transition-transform group-hover:translate-x-1" style={{ color: programColor }}>
-                                                    Matricúlate <ArrowRight className="h-4 w-4 ml-1" />
+                                                    Ver programa <ArrowRight className="h-4 w-4 ml-1" />
                                                 </div>
                                             </a>
                                         );
@@ -388,6 +397,15 @@ export default function Welcome() {
                                         </button>
                                     </div>
                                 )}
+
+                                {/* Enlaces a todos los programas: el paginador solo muestra tres a la vez */}
+                                <nav aria-label="Todos los programas" className="mt-8 flex flex-wrap justify-center gap-x-4 gap-y-2 text-sm">
+                                    {academicPrograms.map((program) => (
+                                        <a key={program.slug} href={`/clases/${program.slug}`} className="text-amber-800 dark:text-amber-200 hover:underline">
+                                            Clases de {program.label} en Ocaña
+                                        </a>
+                                    ))}
+                                </nav>
                             </>
                         ) : (
                             <p className="text-center text-muted-foreground">Próximamente más programas disponibles.</p>
@@ -502,6 +520,28 @@ export default function Welcome() {
                     </div>
                 </section>
 
+                {/* Preguntas frecuentes: el mismo contenido va marcado como FAQPage en el JSON-LD del servidor */}
+                {faq.length > 0 && (
+                    <section id="preguntas" aria-label="Preguntas frecuentes" className="py-20 bg-card">
+                        <div className="mx-auto max-w-3xl px-4 sm:px-6">
+                            <h2 className="text-3xl sm:text-4xl font-bold text-foreground mb-10 text-center">
+                                Preguntas frecuentes
+                            </h2>
+                            <div className="space-y-3">
+                                {faq.map(([question, answer]) => (
+                                    <details key={question} className="group rounded-xl border-2 border-border bg-card p-5 open:shadow-md">
+                                        <summary className="flex cursor-pointer list-none items-center justify-between gap-4 font-semibold text-foreground">
+                                            <h3 className="text-base">{question}</h3>
+                                            <ChevronRight className="h-5 w-5 flex-shrink-0 text-amber-700 dark:text-amber-300 transition-transform group-open:rotate-90" />
+                                        </summary>
+                                        <p className="mt-3 text-muted-foreground">{answer}</p>
+                                    </details>
+                                ))}
+                            </div>
+                        </div>
+                    </section>
+                )}
+
                 {/* Contact Section */}
                 <section id="contacto" aria-label="Formulario de contacto y reserva de clase gratis" className="py-20 bg-gradient-to-br from-amber-50/50 to-orange-50/50 dark:from-amber-950/50 dark:to-orange-950/40">
                     <div className="mx-auto max-w-7xl px-4 sm:px-6">
@@ -518,7 +558,7 @@ export default function Welcome() {
                                         <MapPin className="h-6 w-6 text-amber-700 dark:text-amber-300 flex-shrink-0 mt-1" />
                                         <div>
                                             <div className="font-semibold text-foreground">Nuestra Ubicación</div>
-                                            <div className="text-muted-foreground">Calle 11 #25A - 15, Barrio Las Llanadas</div>
+                                            <div className="text-muted-foreground">Calle 11 #25A - 15, Barrio Las Llanadas, Ocaña, Norte de Santander</div>
                                         </div>
                                     </div>
                                     <div className="flex items-start space-x-4 p-4 rounded-xl bg-card shadow-sm">
@@ -891,7 +931,7 @@ export default function Welcome() {
                             <div className="flex items-center justify-center mb-6">
                                 <img
                                     src="/logo_academia_white.png"
-                                    alt="Academia Linaje - Escuela de Música"
+                                    alt="Academia Linaje - Escuela de Música en Ocaña"
                                     className="h-14 w-auto"
                                     width="175"
                                     height="56"
@@ -915,7 +955,7 @@ export default function Welcome() {
                                 </a>
                                 <span className="flex items-center gap-2">
                                     <MapPin className="h-4 w-4" />
-                                    Calle 11 #25A - 15, Las Llanadas
+                                    Calle 11 #25A - 15, Las Llanadas, Ocaña
                                 </span>
                             </div>
 
@@ -923,6 +963,17 @@ export default function Welcome() {
                                 <Gift className="h-4 w-4" />
                                 <span>Tu primera clase es GRATIS</span>
                             </div>
+                            {academicPrograms.length > 0 && (
+                                <nav aria-label="Clases de música en Ocaña" className="flex flex-wrap justify-center gap-x-5 gap-y-2 text-sm text-amber-200/70 mb-8">
+                                    {academicPrograms.map((program) => (
+                                        <a key={program.slug} href={`/clases/${program.slug}`} className="hover:text-amber-400 transition-colors">
+                                            Clases de {program.label}
+                                        </a>
+                                    ))}
+                                    <a href="/matricula" className="hover:text-amber-400 transition-colors">Matrícula</a>
+                                </nav>
+                            )}
+
                             <div className="text-sm text-amber-300/60 border-t border-amber-800/40 pt-8">
                                 © 2026 Academia Linaje. Todos los derechos reservados.
                             </div>

@@ -25,6 +25,7 @@ use App\Http\Controllers\LogViewerController;
 use App\Http\Controllers\AcademicController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\SeoController;
+use App\Http\Controllers\ClasesController;
 
 // Demo Lead desde Welcome (sin autenticación, con rate limiting)
 Route::middleware(['throttle:5,1'])->group(function () {
@@ -63,6 +64,7 @@ Route::inertia('/sistema-bloqueado', 'sistema-bloqueado')->name('sistema-bloquea
 Route::get('/', [HomeController::class, 'welcome'])->name('home');
 Route::get('/robots.txt', [SeoController::class, 'robots'])->name('seo.robots');
 Route::get('/sitemap.xml', [SeoController::class, 'sitemap'])->name('seo.sitemap');
+Route::get('/clases/{slug}', [ClasesController::class, 'show'])->where('slug', '[a-z0-9-]+')->name('clases.show');
 
 Route::middleware(['auth', 'verified', 'system.access', 'survey.required'])->group(function () {
     // === RUTAS ADMINISTRATIVAS ===
