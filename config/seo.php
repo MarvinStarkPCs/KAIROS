@@ -15,6 +15,10 @@ return [
     // ID de medición de Google Analytics 4 (G-XXXXXXX). Solo se carga en las páginas públicas indexables.
     'analytics_id' => env('GOOGLE_ANALYTICS_ID', 'G-XTRSC3578W'),
 
+    // Contenedor de Google Tag Manager (también verifica Search Console). No agregar ahí otra etiqueta
+    // de Analytics: GA4 ya se carga directo y las visitas se contarían doble.
+    'tag_manager_id' => env('GOOGLE_TAG_MANAGER_ID', 'GTM-NLC2CF6L'),
+
     // Páginas públicas indexables. El resto del sitio sale con noindex.
     // Las páginas de cada programa (/clases/{slug}) se generan desde la base de datos (App\Support\PublicPrograms).
     'pages' => [
