@@ -265,7 +265,7 @@ export default function Welcome() {
                                         loop
                                         playsInline
                                         preload="metadata"
-                                        poster=""
+                                        poster="/linaje-poster.jpg"
                                         aria-label="Video promocional de Academia Linaje - Clases de música"
                                         title="Academia Linaje - Aprende música con nosotros"
                                     >
