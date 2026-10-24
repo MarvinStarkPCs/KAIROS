@@ -22,6 +22,16 @@
         <meta name="twitter:description" content="{{ $seo['description'] }}">
         <meta name="twitter:image" content="{{ $seo['image'] }}">
 
+        @if (config('seo.analytics_id'))
+            <script async src="https://www.googletagmanager.com/gtag/js?id={{ config('seo.analytics_id') }}"></script>
+            <script>
+                window.dataLayer = window.dataLayer || [];
+                function gtag(){dataLayer.push(arguments);}
+                gtag('js', new Date());
+                gtag('config', @json(config('seo.analytics_id')));
+            </script>
+        @endif
+
         @if (! empty($seo['jsonld']))
             {{-- Se arma con json_encode: escrita a mano en Blade, la clave de contexto con arroba se toma como directiva. --}}
             <script type="application/ld+json">{!! json_encode($seo['jsonld'], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG) !!}</script>

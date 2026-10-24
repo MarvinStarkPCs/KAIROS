@@ -12,6 +12,9 @@ return [
     // Verificación de la propiedad academialinaje.com en Google Search Console (etiqueta HTML).
     'google_verification' => env('GOOGLE_SITE_VERIFICATION', '82a7lx0NyKAlc_9xtY0Taa9y7V9akOu_lEPgXfrIKy8'),
 
+    // ID de medición de Google Analytics 4 (G-XXXXXXX). Solo se carga en las páginas públicas indexables.
+    'analytics_id' => env('GOOGLE_ANALYTICS_ID', 'G-XTRSC3578W'),
+
     // Páginas públicas indexables. El resto del sitio sale con noindex.
     // Las páginas de cada programa (/clases/{slug}) se generan desde la base de datos (App\Support\PublicPrograms).
     'pages' => [
