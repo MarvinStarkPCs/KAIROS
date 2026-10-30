@@ -1,43 +1,18 @@
-import { login } from '@/routes';
-import * as programas_academicos from '@/routes/programas_academicos';
-import { type SharedData } from '@/types';
-import { Head, Link, usePage, useForm } from '@inertiajs/react';
 import {
-    Music, Music2, Music3, Music4, ListMusic, AudioLines, AudioWaveform, Waves,
-    Piano, Guitar, Drum, Mic, Mic2, MicVocal, Speaker, Megaphone,
-    Disc, Disc2, Disc3, DiscAlbum, PlayCircle, Headphones, Headset,
-    Volume2, Radio, GraduationCap, School, Library, BookOpen,
-    Award, Trophy, Medal, Crown, Users, Baby, PersonStanding,
-    Palette, Brush, Sparkles, Star, Heart, Zap, Flame,
-    Sun, Moon, Rainbow, Bell, BellRing, PartyPopper,
-    Gift, Cake, MapPin, Phone, Mail, Clock, CheckCircle, ArrowRight,
-    ChevronLeft, ChevronRight,
-    type LucideIcon,
-} from 'lucide-react';
-import { FormEventHandler, useState } from 'react';
-
-// Mapa de iconos para programas académicos
-const ICON_MAP: Record<string, LucideIcon> = {
-    music: Music, music2: Music2, music3: Music3, music4: Music4,
-    listMusic: ListMusic, audioLines: AudioLines, audioWaveform: AudioWaveform, waves: Waves,
-    piano: Piano, guitar: Guitar, drum: Drum,
-    mic: Mic, mic2: Mic2, micVocal: MicVocal, speaker: Speaker, megaphone: Megaphone,
-    disc: Disc, disc2: Disc2, disc3: Disc3, discAlbum: DiscAlbum, playCircle: PlayCircle,
-    headphones: Headphones, headset: Headset, volume2: Volume2, radio: Radio,
-    graduationCap: GraduationCap, school: School, library: Library, bookOpen: BookOpen,
-    award: Award, trophy: Trophy, medal: Medal, crown: Crown,
-    users: Users, baby: Baby, personStanding: PersonStanding,
-    palette: Palette, brush: Brush, sparkles: Sparkles, star: Star,
-    heart: Heart, zap: Zap, flame: Flame,
-    sun: Sun, moon: Moon, rainbow: Rainbow,
-    bell: Bell, bellRing: BellRing, partyPopper: PartyPopper,
-    gift: Gift, cake: Cake,
-};
-
-const getIconComponent = (iconName: string | undefined | null): LucideIcon => {
-    if (!iconName) return Music;
-    return ICON_MAP[iconName] || Music;
-};
+    formatDays,
+    formatTime,
+    SiteFonts,
+    SiteFooter,
+    SiteHeader,
+    SiteStyles,
+    useReveal,
+    WHATSAPP_URL,
+    WhatsAppButton,
+} from '@/components/public/linaje-site';
+import { type SharedData } from '@/types';
+import { Head, useForm, usePage } from '@inertiajs/react';
+import { ArrowRight, ChevronDown, Loader2 } from 'lucide-react';
+import { FormEventHandler, useEffect, useRef, useState } from 'react';
 
 interface Schedule {
     id: number;
@@ -78,8 +53,84 @@ interface WelcomeProps extends SharedData {
     faq: FaqItem[];
 }
 
+const benefits = [
+    'Profesores certificados con años de experiencia',
+    'Metodología personalizada según tu nivel',
+    'Instalaciones profesionales y equipadas',
+    'Horarios flexibles adaptados a ti',
+    'Recitales y presentaciones en vivo',
+    'Material de estudio incluido',
+];
+
+const stats = [
+    ['500+', 'estudiantes activos'],
+    ['15+', 'profesores'],
+    ['98%', 'de satisfacción'],
+    ['+10', 'años formando músicos'],
+];
+
+const testimonials = [
+    {
+        quote: 'Después de la primera clase gratis supe que este era el lugar perfecto para aprender. ¡Ya llevo 2 años!',
+        name: 'Carlos Rodríguez',
+        role: 'Estudiante de Guitarra',
+    },
+    {
+        quote: 'La clase gratis me convenció al instante. Los profesores son increíbles y las instalaciones de primera.',
+        name: 'María González',
+        role: 'Estudiante de Piano',
+    },
+    {
+        quote: 'La atención personalizada desde la primera clase gratuita hace toda la diferencia. Excelente metodología.',
+        name: 'Ana Martínez',
+        role: 'Estudiante de Canto',
+    },
+];
+
+/** "Violín" y "Demo Violin" deben coincidir: sin tildes, sin mayúsculas y sin el prefijo "Demo". */
+const normalize = (text: string) =>
+    text
+        .normalize('NFD')
+        .replace(/[̀-ͯ]/g, '')
+        .replace(/^demo\s+/i, '')
+        .trim()
+        .toLowerCase();
+
+const demoLabel = (name: string) => name.replace(/^demo\s+/i, '');
+
+/**
+ * Primera frase de la descripción, sin el "El Programa de Piano" con que empiezan casi todas
+ * (el nombre ya está encima). Las que abren una lista ("Que el estudiante:") no sirven de resumen.
+ */
+const summary = (program: AcademicProgramData) => {
+    const first = program.description
+        ?.split(/\n|(?<=\.)\s/)
+        .find((part) => part.trim())
+        ?.trim();
+    if (!first || first.endsWith(':')) return null;
+    const prefix = `el programa de ${program.label} `;
+    if (!normalize(first).startsWith(normalize(prefix))) return first;
+    const rest = first.slice(prefix.length);
+    return rest.charAt(0).toUpperCase() + rest.slice(1);
+};
+
+const scheduleValue = (schedule: Schedule) =>
+    `${schedule.days_of_week} ${schedule.start_time}-${schedule.end_time}`;
+
+/** Los mensajes del servidor traen emojis; en la página se muestran solo con texto. */
+const plain = (text: string) =>
+    text
+        .replace(/\p{Extended_Pictographic}️?/gu, '')
+        .replace(/\s{2,}/g, ' ')
+        .trim();
+
 export default function Welcome() {
-    const { auth, demoPrograms, academicPrograms, faq } = usePage<WelcomeProps>().props;
+    const { demoPrograms, academicPrograms, faq, flash } =
+        usePage<WelcomeProps>().props;
+    const rootRef = useReveal();
+    const nameInputRef = useRef<HTMLInputElement>(null);
+    const videoRef = useRef<HTMLVideoElement>(null);
+    const [flashDemo, setFlashDemo] = useState<string | null>(null);
 
     const { data, setData, post, processing, errors, reset } = useForm({
         name: '',
@@ -92,921 +143,981 @@ export default function Welcome() {
         message: '',
     });
 
+    // El aviso del envío aparece junto al formulario, así que la página no vuelve arriba.
     const submit: FormEventHandler = (e) => {
         e.preventDefault();
         post('/demo/solicitud', {
+            preserveScroll: true,
             onSuccess: () => reset(),
         });
     };
 
-    // Paginador de programas
-    const PROGRAMS_PER_PAGE = 3;
-    const [programPage, setProgramPage] = useState(0);
-    const totalProgramPages = Math.ceil(academicPrograms.length / PROGRAMS_PER_PAGE);
-    const paginatedPrograms = academicPrograms.slice(
-        programPage * PROGRAMS_PER_PAGE,
-        (programPage + 1) * PROGRAMS_PER_PAGE,
-    );
+    const selectDemo = (name: string) => {
+        if (data.instrument !== name) {
+            setData((current) => ({
+                ...current,
+                instrument: name,
+                preferred_schedule: '',
+            }));
+        }
+    };
 
-    const benefits = [
-        'Profesores certificados con años de experiencia',
-        'Metodología personalizada según tu nivel',
-        'Instalaciones profesionales y equipadas',
-        'Horarios flexibles adaptados a ti',
-        'Recitales y presentaciones en vivo',
-        'Material de estudio incluido'
-    ];
+    const demoFor = (program: AcademicProgramData) =>
+        demoPrograms.find(
+            (demo) => normalize(demo.name) === normalize(program.label),
+        );
+
+    /** Desde la lista de programas: deja elegida la clase demo, lleva al formulario y la señala. */
+    const bookDemo = (name: string) => {
+        selectDemo(name);
+        setFlashDemo(name);
+        window.setTimeout(() => setFlashDemo(null), 1600);
+        const reduceMotion = window.matchMedia(
+            '(prefers-reduced-motion: reduce)',
+        ).matches;
+        document
+            .getElementById('formulario-clase-gratis')
+            ?.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth' });
+        nameInputRef.current?.focus({ preventScroll: true });
+    };
+
+    // Las páginas /clases/{slug} enlazan con ?clase={slug}: la clase demo de ese instrumento llega elegida.
+    useEffect(() => {
+        const slug = new URLSearchParams(window.location.search).get('clase');
+        const program = academicPrograms.find((p) => p.slug === slug);
+        const demo = program && demoFor(program);
+        if (demo) selectDemo(demo.name);
+
+        // Al llegar desde otra página con un ancla (/#programas), el navegador la busca antes de que
+        // React pinte la portada; se repite el salto ya con la página dibujada.
+        if (window.location.hash) {
+            document
+                .getElementById(
+                    decodeURIComponent(window.location.hash.slice(1)),
+                )
+                ?.scrollIntoView();
+        }
+
+        // El video se reproduce siempre, sin sonido. React no siempre aplica "muted" antes del
+        // autoplay, y sin él el navegador bloquea la reproducción; se fuerza aquí.
+        const video = videoRef.current;
+        if (video) {
+            video.muted = true;
+            video.play().catch(() => {});
+        }
+        // Solo al cargar la página.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
+    const selectedDemo = demoPrograms.find((p) => p.name === data.instrument);
+    const availableSchedules =
+        selectedDemo?.schedules?.filter((s) => s.has_capacity) ?? [];
+    const notice = flash?.success
+        ? { kind: 'success', text: flash.success }
+        : flash?.warning
+          ? { kind: 'warning', text: flash.warning }
+          : flash?.error
+            ? { kind: 'error', text: flash.error }
+            : null;
 
     return (
         <>
             {/* Descripción, Open Graph y JSON-LD los imprime el servidor (resources/views/partials/seo.blade.php). */}
-            <Head title="Academia de Música en Ocaña | Piano, Guitarra y Canto">
-                <link rel="preconnect" href="https://fonts.bunny.net" />
-                <link
-                    href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600,700"
-                    rel="stylesheet"
-                />
-            </Head>
+            <Head title="Academia de Música en Ocaña | Piano, Guitarra y Canto" />
+            <SiteFonts />
 
-            <div className="min-h-screen bg-card">
-                {/* Header */}
-                <header role="banner" className="bg-card sticky top-0 z-50 shadow-md border-b-2 border-amber-600/40">
-                    <nav aria-label="Navegación principal" className="mx-auto max-w-7xl px-4 sm:px-6 py-3">
-                        <div className="flex items-center justify-between">
-                            <a href="/" className="flex items-center" aria-label="Academia Linaje - Inicio">
-                                <img
-                                    src="/logo_academia_black.png"
-                                    alt="Academia Linaje - Escuela de Música en Ocaña"
-                                    className="h-12 w-auto dark:hidden"
-                                    width="150"
-                                    height="48"
-                                    fetchPriority="high"
-                                    decoding="async"
-                                />
-                                <img
-                                    src="/logo_academia_white.png"
-                                    alt="Academia Linaje - Escuela de Música en Ocaña"
-                                    className="h-12 w-auto hidden dark:block"
-                                    width="150"
-                                    height="48"
-                                    fetchPriority="high"
-                                    decoding="async"
-                                />
-                            </a>
-                            <div className="flex items-center space-x-4">
-                                {auth.user ? (
-                                    <Link
-                                        href={programas_academicos.index().url}
-                                        className="rounded-lg bg-gradient-to-r from-amber-600 to-amber-700 px-6 py-2.5 text-sm font-semibold text-white shadow-md hover:from-amber-700 hover:to-amber-800 transition-all hover:shadow-lg"
-                                    >
-                                        Mi Portal
-                                    </Link>
-                                ) : (
-                                    <>
-                                        <Link
-                                            href={login()}
-                                            className="hidden sm:block text-sm font-medium text-amber-800 dark:text-amber-200 hover:text-amber-950 transition-colors"
-                                        >
-                                            Acceso
-                                        </Link>
-                                        <a
-                                            href="#formulario-clase-gratis"
-                                            className="rounded-lg bg-gradient-to-r from-amber-600 to-amber-700 px-6 py-2.5 text-sm font-semibold text-white shadow-md hover:shadow-lg transition-all hover:from-amber-700 hover:to-amber-800"
-                                        >
-                                            Clase Gratis
-                                        </a>
-                                    </>
-                                )}
-                            </div>
-                        </div>
-                    </nav>
-                </header>
+            <div
+                ref={rootRef}
+                className="linaje min-h-screen bg-[var(--ground)] text-[var(--ink)]"
+            >
+                <SiteHeader onHome />
 
-                <main>
-                {/* Hero Section with Free Class Highlight */}
-                <section aria-label="Bienvenida - Academia de Música" className="relative overflow-hidden bg-gradient-to-br from-amber-50 dark:from-amber-900/40 via-orange-50 dark:via-orange-900/40 to-amber-50 dark:to-amber-900/40 py-16 sm:py-24 lg:py-32">
-                    {/* Background decorative elements */}
-                    <div className="absolute inset-0 -z-10 opacity-10">
-                        <div className="absolute top-20 left-0 h-96 w-96 rounded-full bg-amber-500 blur-3xl animate-pulse"></div>
-                        <div className="absolute bottom-0 right-0 h-96 w-96 rounded-full bg-orange-500 blur-3xl animate-pulse delay-1000"></div>
-                    </div>
+                <main id="contenido">
+                    {/* Hero: el video de la academia ocupa la primera pantalla */}
+                    <section
+                        aria-labelledby="hero-title"
+                        className="relative isolate flex min-h-[calc(100svh-4.5rem)] items-end overflow-hidden bg-[var(--night)] text-[var(--on-night)]"
+                    >
+                        <video
+                            ref={videoRef}
+                            className="hero-media absolute inset-0 -z-20 h-full w-full object-cover"
+                            src="/linaje-720.mp4"
+                            autoPlay
+                            muted
+                            loop
+                            playsInline
+                            preload="auto"
+                            poster="/linaje-poster.jpg"
+                            aria-label="Video promocional de Academia Linaje - Clases de música"
+                            title="Academia Linaje - Aprende música con nosotros"
+                        />
+                        {/* Velo neutro para que el texto se lea sobre el video */}
+                        <div
+                            aria-hidden
+                            className="absolute inset-0 -z-10 bg-[linear-gradient(to_top,rgb(12_11_9/0.9)_0%,rgb(12_11_9/0.55)_45%,rgb(12_11_9/0.1)_100%)]"
+                        />
 
-                    <div className="mx-auto max-w-7xl px-4 sm:px-6">
-                        {/* Free Class Badge → lleva al formulario */}
-                        <div className="flex justify-center mb-8">
-                            <a
-                                href="#formulario-clase-gratis"
-                                className="inline-flex items-center space-x-2 rounded-full bg-gradient-to-r from-amber-600 to-orange-600 px-6 py-3 text-white shadow-xl animate-bounce-slow hover:from-amber-700 hover:to-orange-700 hover:shadow-2xl transition-all cursor-pointer no-underline"
+                        <div className="mx-auto w-full max-w-7xl px-5 pt-32 pb-14 sm:px-8 sm:pb-20">
+                            <h1
+                                id="hero-title"
+                                className="t-display hero-line max-w-[11em]"
                             >
-                                <Gift className="h-5 w-5" />
-                                <span className="text-sm font-bold uppercase tracking-wide">¡Primera Clase Totalmente GRATIS!</span>
-                                <ArrowRight className="h-4 w-4" />
-                            </a>
-                        </div>
-
-                        <div className="grid gap-12 lg:grid-cols-2 lg:gap-20 items-center">
-                            <div className="space-y-8 text-center lg:text-left">
-                                <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold leading-tight text-foreground">
-                                    <span className="block mb-3 text-base sm:text-lg font-semibold uppercase tracking-wide text-amber-700 dark:text-amber-300">
-                                        Academia de música en Ocaña
-                                    </span>
-                                    Despierta el
-                                    <span className="block text-transparent bg-clip-text bg-gradient-to-r from-amber-600 to-orange-600">
-                                        Músico que hay en ti
-                                    </span>
-                                </h1>
-
-                                <p className="text-lg sm:text-xl text-muted-foreground leading-relaxed max-w-xl mx-auto lg:mx-0">
-                                    Aprende piano, guitarra, canto, batería y violín en Ocaña con profesores certificados.
-                                    <span className="font-bold text-amber-800 dark:text-amber-200"> Tu primera clase es completamente gratis</span> para que
-                                    conozcas nuestra metodología.
-                                </p>
-
-                                <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-                                    <a
-                                        href="#formulario-clase-gratis"
-                                        className="group flex items-center justify-center rounded-xl bg-gradient-to-r from-amber-600 to-amber-700 px-8 py-4 text-base font-bold text-white shadow-xl hover:shadow-2xl transition-all hover:from-amber-700 hover:to-amber-800 transform hover:-translate-y-1"
-                                    >
-                                        Reserva tu Clase Gratis
-                                        <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
-                                    </a>
-                                    <a
-                                        href="#programas"
-                                        className="flex items-center justify-center rounded-xl border-2 border-amber-700 bg-card px-8 py-4 text-base font-semibold text-amber-900 dark:text-amber-100 hover:bg-amber-50 dark:hover:bg-amber-800/40 transition-all transform hover:-translate-y-1"
-                                    >
-                                        Ver Programas
-                                    </a>
-                                </div>
-
-                                {/* Stats */}
-                                <div className="grid grid-cols-3 gap-6 pt-8 border-t border-amber-200 dark:border-amber-700">
-                                    <div>
-                                        <div className="text-3xl sm:text-4xl font-bold text-amber-800 dark:text-amber-200">500+</div>
-                                        <div className="text-sm text-muted-foreground">Estudiantes Activos</div>
-                                    </div>
-                                    <div>
-                                        <div className="text-3xl sm:text-4xl font-bold text-amber-800 dark:text-amber-200">15+</div>
-                                        <div className="text-sm text-muted-foreground">Profesores</div>
-                                    </div>
-                                    <div>
-                                        <div className="text-3xl sm:text-4xl font-bold text-amber-800 dark:text-amber-200">98%</div>
-                                        <div className="text-sm text-muted-foreground">Satisfacción</div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Hero Video */}
-                            <div className="relative">
-                                <div className="relative aspect-video rounded-3xl bg-gradient-to-br from-amber-300 to-orange-300 shadow-2xl overflow-hidden">
-                                    <video
-                                        className="absolute inset-0 w-full h-full object-cover"
-                                        autoPlay
-                                        muted
-                                        loop
-                                        playsInline
-                                        preload="metadata"
-                                        poster="/linaje-poster.jpg"
-                                        aria-label="Video promocional de Academia Linaje - Clases de música"
-                                        title="Academia Linaje - Aprende música con nosotros"
-                                    >
-                                        <source src="/linaje-720.mp4" type="video/mp4" />
-                                        Tu navegador no soporta el elemento de video.
-                                    </video>
-                                </div>
-                                {/* Floating card */}
-                                <div className="absolute -bottom-4 -right-4 sm:-bottom-6 sm:-right-6 rounded-xl sm:rounded-2xl bg-card p-3 sm:p-6 shadow-2xl">
-                                    <div className="flex items-center space-x-2 sm:space-x-3">
-                                        <div className="flex h-9 w-9 sm:h-14 sm:w-14 items-center justify-center rounded-lg sm:rounded-xl bg-gradient-to-br from-amber-100 dark:from-amber-800/50 to-orange-100 dark:to-orange-800/50">
-                                            <Award className="h-5 w-5 sm:h-8 sm:w-8 text-amber-700 dark:text-amber-300" />
-                                        </div>
-                                        <div>
-                                            <div className="text-xs sm:text-sm font-semibold text-foreground">+10 años</div>
-                                            <div className="text-[10px] sm:text-xs text-muted-foreground">Formando músicos profesionales</div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-
-                {/* Benefits Section */}
-                <section aria-label="Beneficios de Academia Linaje" className="py-20 bg-card">
-                    <div className="mx-auto max-w-7xl px-4 sm:px-6">
-                        <div className="text-center mb-16">
-                            <h2 className="text-3xl sm:text-4xl font-bold text-foreground mb-4">
-                                ¿Por qué elegir Academia Linaje?
-                            </h2>
-                            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-                                Más que una academia, somos tu comunidad musical
+                                Despierta el músico que hay en ti
+                                <span className="hero-line-2 mt-5 block text-2xl leading-tight font-medium tracking-[-0.01em] text-[var(--on-night-2)]">
+                                    Academia de música en Ocaña
+                                </span>
+                            </h1>
+                            <p className="hero-line hero-line-3 mt-6 max-w-xl text-lg leading-relaxed text-[var(--on-night)]">
+                                Piano, guitarra, canto, batería y violín con
+                                profesores certificados, para niños, jóvenes y
+                                adultos.{' '}
+                                <strong className="font-semibold">
+                                    Tu primera clase es gratis.
+                                </strong>
                             </p>
-                        </div>
-
-                        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                            {benefits.map((benefit, index) => (
-                                <div
-                                    key={index}
-                                    className="flex items-start space-x-4 p-6 rounded-xl bg-gradient-to-br from-amber-50 dark:from-amber-900/40 to-orange-50 dark:to-orange-900/40 hover:shadow-lg transition-all"
+                            <div className="hero-line hero-line-4 mt-9 flex flex-wrap items-center gap-x-7 gap-y-4">
+                                <a
+                                    href="#formulario-clase-gratis"
+                                    className="btn btn-gold btn-lg group"
                                 >
-                                    <CheckCircle className="h-6 w-6 text-amber-700 dark:text-amber-300 flex-shrink-0 mt-1" />
-                                    <span className="text-foreground font-medium">{benefit}</span>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                </section>
-
-                {/* Programs Section */}
-                <section id="programas" aria-label="Programas musicales disponibles" className="py-20 bg-gradient-to-br from-amber-50/50 to-orange-50/50 dark:from-amber-950/50 dark:to-orange-950/40">
-                    <div className="mx-auto max-w-7xl px-4 sm:px-6">
-                        <div className="text-center mb-16">
-                            <h2 className="text-3xl sm:text-4xl font-bold text-foreground mb-4">
-                                Nuestros Programas
-                            </h2>
-                            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-                                Clases de música en Ocaña para niños, jóvenes y adultos
+                                    Reserva tu clase gratis
+                                    <ArrowRight
+                                        className="btn-arrow h-5 w-5"
+                                        aria-hidden
+                                    />
+                                </a>
+                                <a
+                                    href="#programas"
+                                    className="text-link text-base font-medium text-[var(--on-night)]"
+                                >
+                                    Ver programas
+                                </a>
+                            </div>
+                            <p className="hero-line hero-line-4 mt-8 text-base text-[var(--on-night-2)]">
+                                Más de 500 estudiantes activos y 10 años
+                                formando músicos en Ocaña.
                             </p>
-                        </div>
-
-                        {academicPrograms.length > 0 ? (
-                            <>
-                                <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-                                    {paginatedPrograms.map((program) => {
-                                        const IconComponent = getIconComponent(program.icon);
-                                        const programColor = program.color || '#d97706';
-                                        return (
-                                            <a
-                                                key={program.id}
-                                                href={`/clases/${program.slug}`}
-                                                className="group rounded-2xl border-2 border-border bg-card p-8 transition-all hover:shadow-2xl transform hover:-translate-y-2 block no-underline"
-                                                style={{ '--program-color': programColor } as React.CSSProperties}
-                                            >
-                                                <div
-                                                    className="mb-5 flex h-16 w-16 items-center justify-center rounded-xl transition-all"
-                                                    style={{
-                                                        backgroundColor: `${programColor}15`,
-                                                    }}
-                                                >
-                                                    <IconComponent
-                                                        className="h-8 w-8 transition-all"
-                                                        style={{ color: programColor }}
-                                                    />
-                                                </div>
-                                                <h3 className="mb-2 text-xl font-bold text-foreground group-hover:text-amber-800 dark:hover:text-amber-200 transition-colors">Clases de {program.label}</h3>
-                                                {program.description && (
-                                                    <p className="text-sm text-muted-foreground mb-4 line-clamp-2">{program.description}</p>
-                                                )}
-                                                <div className="flex items-center font-semibold text-sm transition-transform group-hover:translate-x-1" style={{ color: programColor }}>
-                                                    Ver programa <ArrowRight className="h-4 w-4 ml-1" />
-                                                </div>
-                                            </a>
-                                        );
-                                    })}
-                                </div>
-
-                                {/* Paginador */}
-                                {totalProgramPages > 1 && (
-                                    <div className="flex items-center justify-center gap-4 mt-10">
-                                        <button
-                                            onClick={() => setProgramPage((p) => Math.max(0, p - 1))}
-                                            disabled={programPage === 0}
-                                            className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-amber-300 dark:border-amber-700 bg-card text-amber-700 dark:text-amber-300 hover:bg-amber-50 dark:hover:bg-amber-800/40 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
-                                        >
-                                            <ChevronLeft className="h-5 w-5" />
-                                        </button>
-                                        <div className="flex items-center gap-2">
-                                            {Array.from({ length: totalProgramPages }).map((_, i) => (
-                                                <button
-                                                    key={i}
-                                                    onClick={() => setProgramPage(i)}
-                                                    className={`h-3 w-3 rounded-full transition-all ${
-                                                        i === programPage
-                                                            ? 'bg-amber-600 scale-125'
-                                                            : 'bg-amber-200 hover:bg-amber-400'
-                                                    }`}
-                                                />
-                                            ))}
-                                        </div>
-                                        <button
-                                            onClick={() => setProgramPage((p) => Math.min(totalProgramPages - 1, p + 1))}
-                                            disabled={programPage === totalProgramPages - 1}
-                                            className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-amber-300 dark:border-amber-700 bg-card text-amber-700 dark:text-amber-300 hover:bg-amber-50 dark:hover:bg-amber-800/40 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
-                                        >
-                                            <ChevronRight className="h-5 w-5" />
-                                        </button>
-                                    </div>
-                                )}
-
-                                {/* Enlaces a todos los programas: el paginador solo muestra tres a la vez */}
-                                <nav aria-label="Todos los programas" className="mt-8 flex flex-wrap justify-center gap-x-4 gap-y-2 text-sm">
-                                    {academicPrograms.map((program) => (
-                                        <a key={program.slug} href={`/clases/${program.slug}`} className="text-amber-800 dark:text-amber-200 hover:underline">
-                                            Clases de {program.label} en Ocaña
-                                        </a>
-                                    ))}
-                                </nav>
-                            </>
-                        ) : (
-                            <p className="text-center text-muted-foreground">Próximamente más programas disponibles.</p>
-                        )}
-                    </div>
-                </section>
-
-                {/* Free Class CTA Section */}
-                <section id="clase-gratis" aria-label="Clase gratis de música" className="py-20 bg-gradient-to-r from-amber-600 to-orange-600 text-white">
-                    <div className="mx-auto max-w-5xl px-4 sm:px-6 text-center">
-                        <div className="inline-flex items-center space-x-2 rounded-full bg-white/20 px-6 py-2 text-sm font-semibold mb-6">
-                            <Gift className="h-5 w-5" />
-                            <span>OFERTA ESPECIAL</span>
-                        </div>
-
-                        <h2 className="text-3xl sm:text-5xl font-bold mb-6">
-                            Empieza GRATIS Tu Viaje Musical
-                        </h2>
-                        <p className="text-xl mb-8 text-amber-50 max-w-3xl mx-auto">
-                            Regístrate ahora y recibe tu primera clase completamente gratis.
-                            Sin compromisos, sin cargos ocultos. Solo tú, tu instrumento y nuestros profesores expertos.
-                        </p>
-
-                        <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
-                            <a
-                                href="#formulario-clase-gratis"
-                                className="group rounded-xl bg-card px-8 py-4 text-lg font-bold text-amber-700 dark:text-amber-300 shadow-xl hover:shadow-2xl transition-all transform hover:-translate-y-1"
-                            >
-                                Reservar Clase Gratis Ahora
-                                <ArrowRight className="inline-block ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
-                            </a>
-                        </div>
-
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 pt-8 border-t border-white/30">
-                            <div>
-                                <div className="text-3xl font-bold mb-2">✓ Sin Compromiso</div>
-                                <div className="text-amber-100">Prueba sin obligación</div>
-                            </div>
-                            <div>
-                                <div className="text-3xl font-bold mb-2">✓ Totalmente Gratis</div>
-                                <div className="text-amber-100">Cero costo inicial</div>
-                            </div>
-                            <div>
-                                <div className="text-3xl font-bold mb-2">✓ Profesional</div>
-                                <div className="text-amber-100">Con profesor certificado</div>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-
-                {/* Testimonials */}
-                <section aria-label="Testimonios de estudiantes" className="py-20 bg-card">
-                    <div className="mx-auto max-w-7xl px-4 sm:px-6">
-                        <div className="text-center mb-16">
-                            <h2 className="text-3xl sm:text-4xl font-bold text-foreground mb-4">
-                                Historias de Éxito
-                            </h2>
-                            <p className="text-lg text-muted-foreground">
-                                Lo que dicen nuestros estudiantes
-                            </p>
-                        </div>
-
-                        <div className="grid gap-8 md:grid-cols-3">
-                            <div className="rounded-2xl bg-gradient-to-br from-amber-50 dark:from-amber-900/40 to-orange-50 dark:to-orange-900/40 p-8 shadow-lg hover:shadow-xl transition-all">
-                                <div className="flex items-center space-x-1 mb-4">
-                                    {[...Array(5)].map((_, i) => (
-                                        <Star key={i} className="h-5 w-5 fill-amber-500 text-amber-500" />
-                                    ))}
-                                </div>
-                                <p className="text-muted-foreground mb-6 italic">"La clase gratis me convenció al instante. Los profesores son increíbles y las instalaciones de primera."</p>
-                                <div className="flex items-center space-x-3">
-                                    <div className="h-12 w-12 rounded-full bg-gradient-to-br from-amber-400 to-orange-400"></div>
-                                    <div>
-                                        <div className="font-bold text-foreground">María González</div>
-                                        <div className="text-sm text-muted-foreground">Estudiante de Piano</div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="rounded-2xl bg-gradient-to-br from-amber-50 dark:from-amber-900/40 to-orange-50 dark:to-orange-900/40 p-8 shadow-lg hover:shadow-xl transition-all">
-                                <div className="flex items-center space-x-1 mb-4">
-                                    {[...Array(5)].map((_, i) => (
-                                        <Star key={i} className="h-5 w-5 fill-amber-500 text-amber-500" />
-                                    ))}
-                                </div>
-                                <p className="text-muted-foreground mb-6 italic">"Después de la primera clase gratis supe que este era el lugar perfecto para aprender. ¡Ya llevo 2 años!"</p>
-                                <div className="flex items-center space-x-3">
-                                    <div className="h-12 w-12 rounded-full bg-gradient-to-br from-amber-400 to-orange-400"></div>
-                                    <div>
-                                        <div className="font-bold text-foreground">Carlos Rodríguez</div>
-                                        <div className="text-sm text-muted-foreground">Estudiante de Guitarra</div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="rounded-2xl bg-gradient-to-br from-amber-50 dark:from-amber-900/40 to-orange-50 dark:to-orange-900/40 p-8 shadow-lg hover:shadow-xl transition-all">
-                                <div className="flex items-center space-x-1 mb-4">
-                                    {[...Array(5)].map((_, i) => (
-                                        <Star key={i} className="h-5 w-5 fill-amber-500 text-amber-500" />
-                                    ))}
-                                </div>
-                                <p className="text-muted-foreground mb-6 italic">"La atención personalizada desde la primera clase gratuita hace toda la diferencia. Excelente metodología."</p>
-                                <div className="flex items-center space-x-3">
-                                    <div className="h-12 w-12 rounded-full bg-gradient-to-br from-amber-400 to-orange-400"></div>
-                                    <div>
-                                        <div className="font-bold text-foreground">Ana Martínez</div>
-                                        <div className="text-sm text-muted-foreground">Estudiante de Canto</div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-
-                {/* Preguntas frecuentes: el mismo contenido va marcado como FAQPage en el JSON-LD del servidor */}
-                {faq.length > 0 && (
-                    <section id="preguntas" aria-label="Preguntas frecuentes" className="py-20 bg-card">
-                        <div className="mx-auto max-w-3xl px-4 sm:px-6">
-                            <h2 className="text-3xl sm:text-4xl font-bold text-foreground mb-10 text-center">
-                                Preguntas frecuentes
-                            </h2>
-                            <div className="space-y-3">
-                                {faq.map(([question, answer]) => (
-                                    <details key={question} className="group rounded-xl border-2 border-border bg-card p-5 open:shadow-md">
-                                        <summary className="flex cursor-pointer list-none items-center justify-between gap-4 font-semibold text-foreground">
-                                            <h3 className="text-base">{question}</h3>
-                                            <ChevronRight className="h-5 w-5 flex-shrink-0 text-amber-700 dark:text-amber-300 transition-transform group-open:rotate-90" />
-                                        </summary>
-                                        <p className="mt-3 text-muted-foreground">{answer}</p>
-                                    </details>
-                                ))}
-                            </div>
                         </div>
                     </section>
-                )}
 
-                {/* Contact Section */}
-                <section id="contacto" aria-label="Formulario de contacto y reserva de clase gratis" className="py-20 bg-gradient-to-br from-amber-50/50 to-orange-50/50 dark:from-amber-950/50 dark:to-orange-950/40">
-                    <div className="mx-auto max-w-7xl px-4 sm:px-6">
-                        <div className="grid gap-12 lg:grid-cols-2 items-start">
-                            <div>
-                                <h2 className="text-3xl sm:text-4xl font-bold text-foreground mb-6">
-                                    Reserva Tu Clase Gratis
+                    {/* Programas: cada instrumento lleva a su página o deja lista la clase de prueba */}
+                    <section
+                        id="programas"
+                        aria-labelledby="programas-title"
+                        className="scroll-mt-18 py-24 sm:py-36"
+                    >
+                        <div className="mx-auto grid max-w-7xl gap-12 px-5 sm:px-8 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-20">
+                            <div className="lg:sticky lg:top-32 lg:self-start">
+                                <h2
+                                    id="programas-title"
+                                    data-reveal
+                                    className="section-title"
+                                >
+                                    ¿Qué quieres tocar?
                                 </h2>
-                                <p className="text-lg text-muted-foreground mb-8">
-                                    Completa el formulario y nos pondremos en contacto contigo para agendar tu primera clase gratuita
+                                <p
+                                    data-reveal
+                                    className="mt-6 max-w-md text-lg leading-relaxed"
+                                >
+                                    Clases de música en Ocaña para niños,
+                                    jóvenes y adultos. Abre un programa para
+                                    conocerlo o reserva directamente tu clase de
+                                    prueba gratis.
                                 </p>
-                                <div className="space-y-6">
-                                    <div className="flex items-start space-x-4 p-4 rounded-xl bg-card shadow-sm">
-                                        <MapPin className="h-6 w-6 text-amber-700 dark:text-amber-300 flex-shrink-0 mt-1" />
-                                        <div>
-                                            <div className="font-semibold text-foreground">Nuestra Ubicación</div>
-                                            <div className="text-muted-foreground">Calle 11 #25A - 15, Barrio Las Llanadas, Ocaña, Norte de Santander</div>
-                                        </div>
-                                    </div>
-                                    <div className="flex items-start space-x-4 p-4 rounded-xl bg-card shadow-sm">
-                                        <Phone className="h-6 w-6 text-amber-700 dark:text-amber-300 flex-shrink-0 mt-1" />
-                                        <div>
-                                            <div className="font-semibold text-foreground">WhatsApp</div>
-                                            <a href="https://wa.me/573004218146" target="_blank" rel="noopener noreferrer" className="text-amber-700 dark:text-amber-300 hover:underline">300 421 8146</a>
-                                        </div>
-                                    </div>
-                                    <div className="flex items-start space-x-4 p-4 rounded-xl bg-card shadow-sm">
-                                        <Mail className="h-6 w-6 text-amber-700 dark:text-amber-300 flex-shrink-0 mt-1" />
-                                        <div>
-                                            <div className="font-semibold text-foreground">Correo</div>
-                                            <a href="mailto:Linajeacademia@gmail.com" className="text-amber-700 dark:text-amber-300 hover:underline">Linajeacademia@gmail.com</a>
-                                        </div>
-                                    </div>
-                                    <div className="flex items-start space-x-4 p-4 rounded-xl bg-card shadow-sm">
-                                        <Clock className="h-6 w-6 text-amber-700 dark:text-amber-300 flex-shrink-0 mt-1" />
-                                        <div>
-                                            <div className="font-semibold text-foreground">Horario de Atención</div>
-                                            <div className="text-muted-foreground">Lunes a Sábado</div>
-                                            <div className="text-muted-foreground text-sm">8:30 AM - 12:00 PM / 2:00 PM - 6:00 PM</div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div id="formulario-clase-gratis" className="rounded-2xl bg-card p-8 shadow-xl scroll-mt-6">
-                                <div className="mb-6 p-4 rounded-xl bg-gradient-to-r from-amber-100 dark:from-amber-800/50 to-orange-100 dark:to-orange-800/50 border-2 border-amber-300 dark:border-amber-700">
-                                    <div className="flex items-center space-x-2 text-amber-900 dark:text-amber-100 mb-2">
-                                        <Gift className="h-5 w-5" />
-                                        <span className="font-bold">¡Clase Gratuita Incluida!</span>
-                                    </div>
-                                    <p className="text-sm text-amber-800 dark:text-amber-200">
-                                        Reserva ahora y recibe tu primera clase sin ningún costo
-                                    </p>
-                                </div>
-
-                                <form onSubmit={submit} className="space-y-4">
-                                    {/* ¿Para quién es la clase? */}
-                                    <div>
-                                        <label className="block text-sm font-medium text-muted-foreground mb-3">
-                                            ¿Para quién es la clase demo? *
-                                        </label>
-                                        <div className="grid grid-cols-2 gap-3">
-                                            <div
-                                                onClick={() => setData('is_for_child', false)}
-                                                className={`relative cursor-pointer rounded-xl border-2 p-4 transition-all hover:shadow-md ${
-                                                    !data.is_for_child
-                                                        ? 'border-amber-500 bg-amber-50 dark:bg-amber-900/40 shadow-md'
-                                                        : 'border-border bg-card hover:border-amber-300 dark:hover:border-amber-700'
-                                                }`}
-                                            >
-                                                {!data.is_for_child && (
-                                                    <div className="absolute -top-2 -right-2 flex h-6 w-6 items-center justify-center rounded-full bg-amber-600 text-white">
-                                                        <CheckCircle className="h-4 w-4" />
-                                                    </div>
-                                                )}
-                                                <div className="text-center">
-                                                    <Users className="h-8 w-8 mx-auto mb-2 text-amber-700 dark:text-amber-300" />
-                                                    <p className="font-semibold text-foreground">Para mí</p>
-                                                    <p className="text-xs text-muted-foreground mt-1">Quiero aprender</p>
-                                                </div>
-                                            </div>
-                                            <div
-                                                onClick={() => setData('is_for_child', true)}
-                                                className={`relative cursor-pointer rounded-xl border-2 p-4 transition-all hover:shadow-md ${
-                                                    data.is_for_child
-                                                        ? 'border-amber-500 bg-amber-50 dark:bg-amber-900/40 shadow-md'
-                                                        : 'border-border bg-card hover:border-amber-300 dark:hover:border-amber-700'
-                                                }`}
-                                            >
-                                                {data.is_for_child && (
-                                                    <div className="absolute -top-2 -right-2 flex h-6 w-6 items-center justify-center rounded-full bg-amber-600 text-white">
-                                                        <CheckCircle className="h-4 w-4" />
-                                                    </div>
-                                                )}
-                                                <div className="text-center">
-                                                    <Users className="h-8 w-8 mx-auto mb-2 text-amber-700 dark:text-amber-300" />
-                                                    <p className="font-semibold text-foreground">Para mi hijo/a</p>
-                                                    <p className="text-xs text-muted-foreground mt-1">Para un menor</p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        {errors.is_for_child && <p className="mt-2 text-sm text-red-600">{errors.is_for_child}</p>}
-                                    </div>
-
-                                    {/* Nombre del niño/a si es para su hijo */}
-                                    {data.is_for_child && (
-                                        <div className="rounded-lg bg-blue-50 dark:bg-blue-900/40 border border-blue-200 dark:border-blue-700 p-4">
-                                            <label className="block text-sm font-medium text-muted-foreground mb-2">
-                                                Nombre del niño/a *
-                                            </label>
-                                            <input
-                                                type="text"
-                                                value={data.child_name}
-                                                onChange={(e) => setData('child_name', e.target.value)}
-                                                placeholder="Nombre completo del niño/a"
-                                                required={data.is_for_child}
-                                                className="w-full rounded-lg border-2 border-border px-4 py-3 focus:border-amber-500 focus:outline-none focus:ring-4 focus:ring-amber-100 dark:focus:ring-amber-800/50 transition-all"
-                                            />
-                                            {errors.child_name && <p className="mt-1 text-sm text-red-600">{errors.child_name}</p>}
-                                        </div>
-                                    )}
-
-                                    <div>
-                                        <label className="block text-sm font-medium text-muted-foreground mb-2">
-                                            {data.is_for_child ? 'Tu nombre (padre/madre/tutor) *' : 'Nombre completo *'}
-                                        </label>
-                                        <input
-                                            type="text"
-                                            value={data.name}
-                                            onChange={(e) => setData('name', e.target.value)}
-                                            placeholder={data.is_for_child ? 'Tu nombre' : 'Tu nombre completo'}
-                                            required
-                                            className="w-full rounded-lg border-2 border-border px-4 py-3 focus:border-amber-500 focus:outline-none focus:ring-4 focus:ring-amber-100 dark:focus:ring-amber-800/50 transition-all"
-                                        />
-                                        {errors.name && <p className="mt-1 text-sm text-red-600">{errors.name}</p>}
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-medium text-muted-foreground mb-2">
-                                            Email *
-                                        </label>
-                                        <input
-                                            type="email"
-                                            value={data.email}
-                                            onChange={(e) => setData('email', e.target.value)}
-                                            placeholder="tu@email.com"
-                                            required
-                                            className="w-full rounded-lg border-2 border-border px-4 py-3 focus:border-amber-500 focus:outline-none focus:ring-4 focus:ring-amber-100 dark:focus:ring-amber-800/50 transition-all"
-                                        />
-                                        {errors.email && <p className="mt-1 text-sm text-red-600">{errors.email}</p>}
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-medium text-muted-foreground mb-2">
-                                            Teléfono *
-                                        </label>
-                                        <input
-                                            type="tel"
-                                            value={data.phone}
-                                            onChange={(e) => setData('phone', e.target.value)}
-                                            placeholder="+57 123 456 7890"
-                                            required
-                                            className="w-full rounded-lg border-2 border-border px-4 py-3 focus:border-amber-500 focus:outline-none focus:ring-4 focus:ring-amber-100 dark:focus:ring-amber-800/50 transition-all"
-                                        />
-                                        {errors.phone && <p className="mt-1 text-sm text-red-600">{errors.phone}</p>}
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-medium text-muted-foreground mb-3">
-                                            ¿Qué clase demo te interesa? *
-                                        </label>
-                                        {demoPrograms.length > 0 ? (
-                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                                {demoPrograms.map((program) => (
-                                                    <div
-                                                        key={program.id}
-                                                        onClick={() => {
-                                                            setData('instrument', program.name);
-                                                            // Limpiar horario cuando se cambia de programa
-                                                            if (data.instrument !== program.name) {
-                                                                setData('preferred_schedule', '');
-                                                            }
-                                                        }}
-                                                        className={`relative cursor-pointer rounded-xl border-2 p-4 transition-all hover:shadow-md ${
-                                                            data.instrument === program.name
-                                                                ? 'border-amber-500 bg-amber-50 dark:bg-amber-900/40 shadow-md'
-                                                                : 'border-border bg-card hover:border-amber-300 dark:hover:border-amber-700'
-                                                        }`}
-                                                    >
-                                                        {data.instrument === program.name && (
-                                                            <div className="absolute -top-2 -right-2 flex h-6 w-6 items-center justify-center rounded-full bg-amber-600 text-white">
-                                                                <CheckCircle className="h-4 w-4" />
-                                                            </div>
-                                                        )}
-                                                        <div className="flex items-start space-x-3">
-                                                            <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-amber-100 dark:from-amber-800/50 to-orange-100 dark:to-orange-800/50">
-                                                                <Music className="h-5 w-5 text-amber-700 dark:text-amber-300" />
-                                                            </div>
-                                                            <div className="flex-1 min-w-0">
-                                                                <h4 className="font-semibold text-foreground truncate">{program.name}</h4>
-                                                                {program.description && (
-                                                                    <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
-                                                                        {program.description}
-                                                                    </p>
-                                                                )}
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        ) : (
-                                            <div className="rounded-lg border-2 border-amber-200 dark:border-amber-700 bg-amber-50 dark:bg-amber-900/40 p-4 text-center">
-                                                <p className="text-sm text-amber-800 dark:text-amber-200">
-                                                    No hay clases demo disponibles en este momento
-                                                </p>
-                                            </div>
-                                        )}
-                                        {/* Hidden input para validación HTML requerida */}
-                                        <input
-                                            type="hidden"
-                                            value={data.instrument}
-                                            required
-                                        />
-                                        {errors.instrument && <p className="mt-2 text-sm text-red-600">{errors.instrument}</p>}
-
-                                        {/* Selector de horarios - Solo mostrar si hay horarios disponibles */}
-                                        {data.instrument && (() => {
-                                            const selectedProgram = demoPrograms.find(p => p.name === data.instrument);
-                                            const availableSchedules = selectedProgram?.schedules?.filter(s => s.has_capacity) || [];
-
-                                            return availableSchedules.length > 0 && (
-                                                <div className="mt-4 rounded-lg border-2 border-blue-200 dark:border-blue-700 bg-blue-50 dark:bg-blue-900/40 p-4">
-                                                    <h5 className="font-semibold text-blue-900 dark:text-blue-100 mb-2 flex items-center">
-                                                        <Clock className="h-4 w-4 mr-2" />
-                                                        Horarios Disponibles (Opcional)
-                                                    </h5>
-                                                    <p className="text-xs text-blue-700 dark:text-blue-300 mb-3">
-                                                        Selecciona un horario de tu preferencia o déjanos tu disponibilidad en el mensaje
-                                                    </p>
-                                                    <div className="space-y-2">
-                                                        {availableSchedules.map((schedule) => (
-                                                            <div
-                                                                key={schedule.id}
-                                                                onClick={() => setData('preferred_schedule', `${schedule.days_of_week} ${schedule.start_time}-${schedule.end_time}`)}
-                                                                className={`cursor-pointer rounded-lg border-2 p-3 transition-all hover:shadow-sm ${
-                                                                    data.preferred_schedule === `${schedule.days_of_week} ${schedule.start_time}-${schedule.end_time}`
-                                                                        ? 'border-blue-500 bg-card shadow-sm'
-                                                                        : 'border-blue-200 dark:border-blue-700 bg-white/50 hover:border-blue-300 dark:hover:border-blue-700'
-                                                                }`}
-                                                            >
-                                                                <div className="flex items-center justify-between">
-                                                                    <div className="flex-1">
-                                                                        <p className="text-sm font-semibold text-foreground">
-                                                                            {schedule.days_of_week}
-                                                                        </p>
-                                                                        <p className="text-xs text-muted-foreground">
-                                                                            {schedule.start_time} - {schedule.end_time}
-                                                                        </p>
-                                                                        <p className="text-xs text-muted-foreground mt-1">
-                                                                            Prof. {schedule.professor?.name ?? 'Sin asignar'}
-                                                                        </p>
-                                                                    </div>
-                                                                    <div className="flex items-center gap-2">
-                                                                        <span className="text-xs font-medium text-green-700 dark:text-green-300 bg-green-100 dark:bg-green-900/30 px-2 py-1 rounded">
-                                                                            {schedule.available_slots} {schedule.available_slots === 1 ? 'cupo' : 'cupos'}
-                                                                        </span>
-                                                                        {data.preferred_schedule === `${schedule.days_of_week} ${schedule.start_time}-${schedule.end_time}` && (
-                                                                            <CheckCircle className="h-5 w-5 text-blue-600" />
-                                                                        )}
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                        ))}
-                                                    </div>
-                                                </div>
-                                            );
-                                        })()}
-
-                                        {/* Info adicional sobre la clase demo */}
-                                        <div className="mt-4 rounded-lg bg-gradient-to-r from-blue-50 dark:from-blue-900/40 to-indigo-50 dark:to-indigo-900/40 border border-blue-200 dark:border-blue-700 p-4">
-                                            <h5 className="font-semibold text-blue-900 dark:text-blue-100 mb-2 flex items-center">
-                                                <CheckCircle className="h-4 w-4 mr-2" />
-                                                ¿Qué incluye tu clase demo gratuita?
-                                            </h5>
-                                            <ul className="space-y-1 text-xs text-blue-800 dark:text-blue-200">
-                                                <li className="flex items-start">
-                                                    <span className="mr-2">•</span>
-                                                    <span>Sesión individual de 45-60 minutos con un profesor certificado</span>
-                                                </li>
-                                                <li className="flex items-start">
-                                                    <span className="mr-2">•</span>
-                                                    <span>Evaluación personalizada de tu nivel actual</span>
-                                                </li>
-                                                <li className="flex items-start">
-                                                    <span className="mr-2">•</span>
-                                                    <span>Plan de estudio recomendado según tus objetivos</span>
-                                                </li>
-                                                <li className="flex items-start">
-                                                    <span className="mr-2">•</span>
-                                                    <span>Sin compromiso y totalmente gratis</span>
-                                                </li>
-                                            </ul>
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-medium text-muted-foreground mb-2">
-                                            Cuéntanos más sobre ti (opcional)
-                                        </label>
-                                        <textarea
-                                            value={data.message}
-                                            onChange={(e) => setData('message', e.target.value)}
-                                            placeholder="Ejemplo: Nunca he tocado un instrumento pero siempre quise aprender... / Toqué piano hace años y quiero retomar... / Tengo un nivel intermedio y busco perfeccionar mi técnica..."
-                                            rows={4}
-                                            className="w-full rounded-lg border-2 border-border px-4 py-3 focus:border-amber-500 focus:outline-none focus:ring-4 focus:ring-amber-100 dark:focus:ring-amber-800/50 transition-all"
-                                        ></textarea>
-                                        {errors.message && <p className="mt-1 text-sm text-red-600">{errors.message}</p>}
-                                        <p className="mt-1 text-xs text-muted-foreground">
-                                            Comparte tu nivel actual, objetivos o cualquier pregunta que tengas
-                                        </p>
-                                    </div>
-
-                                    {/* Qué pasa después */}
-                                    <div className="rounded-lg bg-gradient-to-r from-green-50 dark:from-green-900/40 to-emerald-50 dark:to-emerald-900/40 border border-green-200 dark:border-green-800 p-4">
-                                        <h5 className="font-semibold text-green-900 dark:text-green-100 mb-2 flex items-center">
-                                            <Clock className="h-4 w-4 mr-2" />
-                                            ¿Qué pasa después de enviar?
-                                        </h5>
-                                        <ol className="space-y-2 text-xs text-green-800 dark:text-green-200">
-                                            <li className="flex items-start">
-                                                <span className="font-bold mr-2 text-green-600">1.</span>
-                                                <span>Nuestro equipo revisará tu solicitud en las próximas 24 horas</span>
-                                            </li>
-                                            <li className="flex items-start">
-                                                <span className="font-bold mr-2 text-green-600">2.</span>
-                                                <span>Te contactaremos por WhatsApp o correo para coordinar fecha y hora</span>
-                                            </li>
-                                            <li className="flex items-start">
-                                                <span className="font-bold mr-2 text-green-600">3.</span>
-                                                <span>Recibirás la confirmación con todos los detalles de tu clase demo</span>
-                                            </li>
-                                            <li className="flex items-start">
-                                                <span className="font-bold mr-2 text-green-600">4.</span>
-                                                <span>¡Disfruta tu primera clase completamente gratis!</span>
-                                            </li>
-                                        </ol>
-                                    </div>
-                                    <button
-                                        type="submit"
-                                        disabled={processing || !data.instrument}
-                                        className="group w-full rounded-xl bg-gradient-to-r from-amber-600 to-amber-700 px-6 py-4 font-bold text-white shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1 hover:from-amber-700 hover:to-amber-800 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
-                                    >
-                                        <span className="flex items-center justify-center">
-                                            {processing ? (
-                                                <>
-                                                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                                    </svg>
-                                                    Enviando tu solicitud...
-                                                </>
-                                            ) : (
-                                                <>
-                                                    <Gift className="mr-2 h-5 w-5" />
-                                                    Reservar Mi Clase Gratis
-                                                    <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
-                                                </>
-                                            )}
-                                        </span>
-                                    </button>
-                                    {!data.instrument && (
-                                        <p className="text-xs text-center text-amber-700 dark:text-amber-300 mt-2">
-                                            Por favor selecciona una clase demo para continuar
-                                        </p>
-                                    )}
-                                    <p className="text-xs text-center text-muted-foreground">
-                                        Al enviar, aceptas nuestros términos y condiciones
-                                    </p>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-
-                </main>
-
-                {/* Footer */}
-                <footer role="contentinfo" className="border-t border-amber-900/50 bg-gradient-to-br from-amber-950 via-orange-950 to-amber-950 text-white py-12">
-                    <div className="mx-auto max-w-7xl px-4 sm:px-6">
-                        <div className="text-center">
-                            <div className="flex items-center justify-center mb-6">
                                 <img
-                                    src="/logo_academia_white.png"
-                                    alt="Academia Linaje - Escuela de Música en Ocaña"
-                                    className="h-14 w-auto"
-                                    width="175"
-                                    height="56"
+                                    data-reveal
+                                    src="/linaje-instrumentos.webp"
+                                    alt="Guitarra acústica, violín y baquetas sobre una mesa de madera junto a una ventana"
+                                    className="mt-10 aspect-[4/3] w-full rounded-2xl object-cover"
+                                    width="1376"
+                                    height="768"
                                     loading="lazy"
                                     decoding="async"
                                 />
                             </div>
-                            <p className="text-amber-200/80 mb-6 text-lg">
-                                Formando músicos con excelencia y pasión desde hace más de 10 años
-                            </p>
 
-                            {/* Datos de contacto en footer para SEO */}
-                            <div className="flex flex-wrap justify-center gap-6 text-sm text-amber-200/70 mb-6">
-                                <a href="https://wa.me/573004218146" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 hover:text-amber-400 transition-colors">
-                                    <Phone className="h-4 w-4" />
-                                    300 421 8146
-                                </a>
-                                <a href="mailto:Linajeacademia@gmail.com" className="flex items-center gap-2 hover:text-amber-400 transition-colors">
-                                    <Mail className="h-4 w-4" />
-                                    Linajeacademia@gmail.com
-                                </a>
-                                <span className="flex items-center gap-2">
-                                    <MapPin className="h-4 w-4" />
-                                    Calle 11 #25A - 15, Las Llanadas, Ocaña
-                                </span>
-                            </div>
-
-                            <div className="inline-flex items-center space-x-2 rounded-full bg-amber-600 px-6 py-3 text-sm font-semibold mb-8">
-                                <Gift className="h-4 w-4" />
-                                <span>Tu primera clase es GRATIS</span>
-                            </div>
-                            {academicPrograms.length > 0 && (
-                                <nav aria-label="Clases de música en Ocaña" className="flex flex-wrap justify-center gap-x-5 gap-y-2 text-sm text-amber-200/70 mb-8">
-                                    {academicPrograms.map((program) => (
-                                        <a key={program.slug} href={`/clases/${program.slug}`} className="hover:text-amber-400 transition-colors">
-                                            Clases de {program.label}
-                                        </a>
-                                    ))}
-                                    <a href="/matricula" className="hover:text-amber-400 transition-colors">Matrícula</a>
-                                </nav>
+                            {academicPrograms.length > 0 ? (
+                                <ul className="flex flex-col gap-2">
+                                    {academicPrograms.map((program) => {
+                                        const demo = demoFor(program);
+                                        const text = summary(program);
+                                        return (
+                                            <li
+                                                key={program.id}
+                                                data-reveal
+                                                className="program-row group rounded-2xl px-5 py-6 sm:px-7"
+                                            >
+                                                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between sm:gap-8">
+                                                    <div className="min-w-0">
+                                                        <h3 className="t-h3">
+                                                            <a
+                                                                href={`/clases/${program.slug}`}
+                                                                className="program-link"
+                                                                aria-label={`Clases de ${program.label} en Ocaña`}
+                                                            >
+                                                                {program.label}
+                                                            </a>
+                                                        </h3>
+                                                        {text && (
+                                                            <p className="mt-3 line-clamp-2 max-w-prose text-base leading-relaxed">
+                                                                {text}
+                                                            </p>
+                                                        )}
+                                                    </div>
+                                                    <div className="flex shrink-0 items-center gap-5">
+                                                        {demo ? (
+                                                            <button
+                                                                type="button"
+                                                                onClick={() =>
+                                                                    bookDemo(
+                                                                        demo.name,
+                                                                    )
+                                                                }
+                                                                className="btn btn-ink"
+                                                            >
+                                                                Probar gratis
+                                                            </button>
+                                                        ) : (
+                                                            <a
+                                                                href={`/clases/${program.slug}`}
+                                                                className="text-link text-base font-medium"
+                                                            >
+                                                                Ver programa
+                                                            </a>
+                                                        )}
+                                                        <a
+                                                            href={`/clases/${program.slug}`}
+                                                            className="row-arrow"
+                                                            aria-label={`Ver el programa de ${program.label}`}
+                                                        >
+                                                            <ArrowRight
+                                                                className="h-5 w-5"
+                                                                aria-hidden
+                                                            />
+                                                        </a>
+                                                    </div>
+                                                </div>
+                                            </li>
+                                        );
+                                    })}
+                                </ul>
+                            ) : (
+                                <p className="text-lg">
+                                    Próximamente más programas disponibles.
+                                </p>
                             )}
+                        </div>
+                    </section>
 
-                            <div className="text-sm text-amber-300/60 border-t border-amber-800/40 pt-8">
-                                © 2026 Academia Linaje. Todos los derechos reservados.
+                    {/* Por qué Linaje */}
+                    <section
+                        aria-labelledby="porque-title"
+                        className="bg-[var(--paper)] py-24 sm:py-36"
+                    >
+                        <div className="mx-auto grid max-w-7xl gap-16 px-5 sm:px-8 lg:grid-cols-2 lg:gap-24">
+                            <div>
+                                <h2
+                                    id="porque-title"
+                                    data-reveal
+                                    className="section-title max-w-[12ch]"
+                                >
+                                    ¿Por qué elegir Academia Linaje?
+                                </h2>
+                                <p
+                                    data-reveal
+                                    className="mt-6 max-w-md text-lg leading-relaxed"
+                                >
+                                    Más que una academia, somos tu comunidad
+                                    musical.
+                                </p>
+                                <ul
+                                    data-reveal
+                                    className="mt-12 grid gap-x-10 gap-y-5 text-lg leading-snug sm:grid-cols-2"
+                                >
+                                    {benefits.map((benefit) => (
+                                        <li
+                                            key={benefit}
+                                            className="flex gap-3"
+                                        >
+                                            <span
+                                                aria-hidden
+                                                className="mt-[0.45em] h-2 w-2 shrink-0 rounded-full bg-[var(--gold)]"
+                                            />
+                                            {benefit}
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+
+                            <dl className="grid grid-cols-2 gap-x-8 gap-y-14 self-center">
+                                {stats.map(([value, label]) => (
+                                    <div
+                                        key={label}
+                                        data-reveal
+                                        className="flex flex-col-reverse"
+                                    >
+                                        <dt className="mt-2 text-base text-[var(--ink-2)]">
+                                            {label}
+                                        </dt>
+                                        <dd className="section-title tabular-nums">
+                                            {value}
+                                        </dd>
+                                    </div>
+                                ))}
+                            </dl>
+                        </div>
+                    </section>
+
+                    {/* Testimonios */}
+                    <section
+                        aria-labelledby="testimonios-title"
+                        className="bg-[var(--night)] py-24 text-[var(--on-night)] sm:py-36"
+                    >
+                        <div className="mx-auto max-w-7xl px-5 sm:px-8">
+                            <h2
+                                id="testimonios-title"
+                                data-reveal
+                                className="section-title"
+                            >
+                                Historias de éxito
+                            </h2>
+                            <figure data-reveal className="mt-14 max-w-4xl">
+                                <blockquote className="t-h3 font-medium">
+                                    <p>“{testimonials[0].quote}”</p>
+                                </blockquote>
+                                <figcaption className="mt-6 text-base text-[var(--on-night-2)]">
+                                    <span className="font-semibold text-[var(--on-night)]">
+                                        {testimonials[0].name}
+                                    </span>{' '}
+                                    · {testimonials[0].role}
+                                </figcaption>
+                            </figure>
+                            <div className="mt-16 grid gap-12 md:grid-cols-2 md:gap-16">
+                                {testimonials.slice(1).map((t) => (
+                                    <figure key={t.name} data-reveal>
+                                        <blockquote className="text-lg leading-relaxed">
+                                            <p>“{t.quote}”</p>
+                                        </blockquote>
+                                        <figcaption className="mt-4 text-base text-[var(--on-night-2)]">
+                                            <span className="font-semibold text-[var(--on-night)]">
+                                                {t.name}
+                                            </span>{' '}
+                                            · {t.role}
+                                        </figcaption>
+                                    </figure>
+                                ))}
                             </div>
                         </div>
-                    </div>
-                </footer>
+                    </section>
 
-                {/* Botón flotante de WhatsApp */}
-                <a
-                    href="https://wa.me/573004218146"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-green-500 text-white shadow-lg hover:bg-green-600 hover:shadow-xl transition-all transform hover:scale-110"
-                    aria-label="Contactar por WhatsApp"
-                >
-                    <svg viewBox="0 0 24 24" className="h-7 w-7 fill-current">
-                        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
-                    </svg>
-                </a>
+                    {/* Preguntas frecuentes: el mismo contenido va marcado como FAQPage en el JSON-LD del servidor */}
+                    {faq.length > 0 && (
+                        <section
+                            id="preguntas"
+                            aria-labelledby="preguntas-title"
+                            className="scroll-mt-18 py-24 sm:py-36"
+                        >
+                            <div className="mx-auto grid max-w-7xl gap-12 px-5 sm:px-8 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-20">
+                                <div className="lg:sticky lg:top-32 lg:self-start">
+                                    <h2
+                                        id="preguntas-title"
+                                        data-reveal
+                                        className="section-title"
+                                    >
+                                        Preguntas frecuentes
+                                    </h2>
+                                    <p
+                                        data-reveal
+                                        className="mt-6 max-w-md text-lg leading-relaxed"
+                                    >
+                                        ¿No encuentras tu respuesta? Escríbenos
+                                        por{' '}
+                                        <a
+                                            href={WHATSAPP_URL}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="text-link font-medium"
+                                        >
+                                            WhatsApp
+                                        </a>
+                                        .
+                                    </p>
+                                </div>
+                                <div className="flex flex-col gap-2">
+                                    {faq.map(([question, answer]) => (
+                                        <details
+                                            key={question}
+                                            data-reveal
+                                            className="faq group rounded-2xl bg-[var(--paper)] px-6 py-5"
+                                        >
+                                            <summary className="flex cursor-pointer list-none items-center justify-between gap-6 [&::-webkit-details-marker]:hidden">
+                                                <h3 className="text-lg leading-snug font-semibold">
+                                                    {question}
+                                                </h3>
+                                                <ChevronDown
+                                                    className="faq-chevron h-5 w-5 shrink-0"
+                                                    aria-hidden
+                                                />
+                                            </summary>
+                                            <p className="faq-answer mt-3 max-w-prose text-lg leading-relaxed">
+                                                {answer}
+                                            </p>
+                                        </details>
+                                    ))}
+                                </div>
+                            </div>
+                        </section>
+                    )}
+
+                    {/* Reserva y contacto */}
+                    <section
+                        id="contacto"
+                        aria-labelledby="contacto-title"
+                        className="scroll-mt-18 bg-[var(--paper)] py-24 sm:py-36"
+                    >
+                        <div className="mx-auto grid max-w-7xl items-start gap-16 px-5 sm:px-8 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-20">
+                            <div>
+                                <h2
+                                    id="contacto-title"
+                                    data-reveal
+                                    className="section-title max-w-[11ch]"
+                                >
+                                    Reserva tu clase gratis
+                                </h2>
+                                <p
+                                    data-reveal
+                                    className="mt-6 max-w-md text-lg leading-relaxed"
+                                >
+                                    Sin compromiso y sin cargos ocultos.
+                                    Completa el formulario y te contactamos para
+                                    agendar tu primera clase.
+                                </p>
+
+                                <div data-reveal className="mt-12">
+                                    <h3 className="text-lg font-semibold">
+                                        Tu clase de prueba incluye
+                                    </h3>
+                                    <ul className="mt-4 flex flex-col gap-2.5 text-lg leading-snug">
+                                        <li>
+                                            Sesión individual de 45 a 60 minutos
+                                            con un profesor certificado
+                                        </li>
+                                        <li>
+                                            Evaluación personalizada de tu nivel
+                                            actual
+                                        </li>
+                                        <li>
+                                            Plan de estudio recomendado según
+                                            tus objetivos
+                                        </li>
+                                    </ul>
+                                </div>
+
+                                <div data-reveal className="mt-10">
+                                    <h3 className="text-lg font-semibold">
+                                        Después de enviar
+                                    </h3>
+                                    <ol className="mt-4 flex list-decimal flex-col gap-2.5 pl-5 text-lg leading-snug marker:font-semibold">
+                                        <li>
+                                            Revisamos tu solicitud en las
+                                            próximas 24 horas
+                                        </li>
+                                        <li>
+                                            Te contactamos por WhatsApp o correo
+                                            para coordinar fecha y hora
+                                        </li>
+                                        <li>
+                                            Recibes la confirmación con todos
+                                            los detalles
+                                        </li>
+                                        <li>
+                                            Disfrutas tu primera clase,
+                                            completamente gratis
+                                        </li>
+                                    </ol>
+                                </div>
+
+                                <dl
+                                    data-reveal
+                                    className="mt-12 grid gap-6 text-lg sm:grid-cols-2"
+                                >
+                                    <div>
+                                        <dt className="font-semibold">
+                                            Dirección
+                                        </dt>
+                                        <dd className="mt-1">
+                                            Calle 11 #25A - 15, Barrio Las
+                                            Llanadas, Ocaña, Norte de Santander
+                                        </dd>
+                                    </div>
+                                    <div>
+                                        <dt className="font-semibold">
+                                            Horario de atención
+                                        </dt>
+                                        <dd className="mt-1">
+                                            Lunes a sábado
+                                            <br />
+                                            8:30 a. m. – 12:00 m. y 2:00 – 6:00
+                                            p. m.
+                                        </dd>
+                                    </div>
+                                    <div>
+                                        <dt className="font-semibold">
+                                            WhatsApp
+                                        </dt>
+                                        <dd className="mt-1">
+                                            <a
+                                                href={WHATSAPP_URL}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="text-link"
+                                            >
+                                                300 421 8146
+                                            </a>
+                                        </dd>
+                                    </div>
+                                    <div>
+                                        <dt className="font-semibold">
+                                            Correo
+                                        </dt>
+                                        <dd className="mt-1">
+                                            <a
+                                                href="mailto:Linajeacademia@gmail.com"
+                                                className="text-link break-all"
+                                            >
+                                                Linajeacademia@gmail.com
+                                            </a>
+                                        </dd>
+                                    </div>
+                                </dl>
+                            </div>
+
+                            <div
+                                id="formulario-clase-gratis"
+                                className="scroll-mt-24 rounded-3xl bg-[var(--ground)] p-6 sm:p-10"
+                            >
+                                <div role="status" aria-live="polite">
+                                    {notice && (
+                                        <p
+                                            className={`notice notice-${notice.kind} appear mb-7`}
+                                        >
+                                            {plain(notice.text)}
+                                        </p>
+                                    )}
+                                </div>
+
+                                {demoPrograms.length === 0 ? (
+                                    // Sin clases de prueba con cupo el formulario no se puede enviar: se ofrece WhatsApp.
+                                    <div className="flex flex-col items-start gap-6">
+                                        <p className="text-lg leading-relaxed">
+                                            Ahora mismo no hay clases de prueba
+                                            con cupo. Escríbenos por WhatsApp y
+                                            te avisamos en cuanto se abra un
+                                            horario para el instrumento que
+                                            quieres.
+                                        </p>
+                                        <a
+                                            href={WHATSAPP_URL}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="btn btn-gold btn-lg group"
+                                        >
+                                            Escribir por WhatsApp
+                                            <ArrowRight
+                                                className="btn-arrow h-5 w-5"
+                                                aria-hidden
+                                            />
+                                        </a>
+                                    </div>
+                                ) : (
+                                    <form
+                                        onSubmit={submit}
+                                        className="flex flex-col gap-7"
+                                    >
+                                        <fieldset>
+                                            <legend className="field-label">
+                                                ¿Para quién es la clase?
+                                            </legend>
+                                            <div className="mt-3 grid grid-cols-2 gap-3">
+                                                {[
+                                                    {
+                                                        value: false,
+                                                        title: 'Para mí',
+                                                        hint: 'Quiero aprender',
+                                                    },
+                                                    {
+                                                        value: true,
+                                                        title: 'Para mi hijo/a',
+                                                        hint: 'Para un menor',
+                                                    },
+                                                ].map((option) => (
+                                                    <label
+                                                        key={option.title}
+                                                        className={`choice ${data.is_for_child === option.value ? 'is-checked' : ''}`}
+                                                    >
+                                                        <input
+                                                            type="radio"
+                                                            name="is_for_child"
+                                                            className="sr-only"
+                                                            checked={
+                                                                data.is_for_child ===
+                                                                option.value
+                                                            }
+                                                            onChange={() =>
+                                                                setData(
+                                                                    'is_for_child',
+                                                                    option.value,
+                                                                )
+                                                            }
+                                                        />
+                                                        <span className="block font-semibold">
+                                                            {option.title}
+                                                        </span>
+                                                        <span className="choice-hint mt-0.5 block text-sm">
+                                                            {option.hint}
+                                                        </span>
+                                                    </label>
+                                                ))}
+                                            </div>
+                                            {errors.is_for_child && (
+                                                <p className="field-error">
+                                                    {errors.is_for_child}
+                                                </p>
+                                            )}
+                                        </fieldset>
+
+                                        {data.is_for_child && (
+                                            <div className="appear">
+                                                <label
+                                                    htmlFor="child_name"
+                                                    className="field-label"
+                                                >
+                                                    Nombre del niño/a
+                                                </label>
+                                                <input
+                                                    id="child_name"
+                                                    type="text"
+                                                    value={data.child_name}
+                                                    onChange={(e) =>
+                                                        setData(
+                                                            'child_name',
+                                                            e.target.value,
+                                                        )
+                                                    }
+                                                    placeholder="Nombre completo del niño/a"
+                                                    required
+                                                    aria-invalid={
+                                                        !!errors.child_name
+                                                    }
+                                                    className="field"
+                                                />
+                                                {errors.child_name && (
+                                                    <p className="field-error">
+                                                        {errors.child_name}
+                                                    </p>
+                                                )}
+                                            </div>
+                                        )}
+
+                                        <div>
+                                            <label
+                                                htmlFor="name"
+                                                className="field-label"
+                                            >
+                                                {data.is_for_child
+                                                    ? 'Tu nombre (padre, madre o tutor)'
+                                                    : 'Nombre completo'}
+                                            </label>
+                                            <input
+                                                ref={nameInputRef}
+                                                id="name"
+                                                type="text"
+                                                autoComplete="name"
+                                                value={data.name}
+                                                onChange={(e) =>
+                                                    setData(
+                                                        'name',
+                                                        e.target.value,
+                                                    )
+                                                }
+                                                placeholder={
+                                                    data.is_for_child
+                                                        ? 'Tu nombre'
+                                                        : 'Tu nombre completo'
+                                                }
+                                                required
+                                                aria-invalid={!!errors.name}
+                                                className="field"
+                                            />
+                                            {errors.name && (
+                                                <p className="field-error">
+                                                    {errors.name}
+                                                </p>
+                                            )}
+                                        </div>
+
+                                        <div className="grid gap-7 sm:grid-cols-2 sm:gap-4">
+                                            <div>
+                                                <label
+                                                    htmlFor="email"
+                                                    className="field-label"
+                                                >
+                                                    Correo
+                                                </label>
+                                                <input
+                                                    id="email"
+                                                    type="email"
+                                                    autoComplete="email"
+                                                    value={data.email}
+                                                    onChange={(e) =>
+                                                        setData(
+                                                            'email',
+                                                            e.target.value,
+                                                        )
+                                                    }
+                                                    placeholder="tu@email.com"
+                                                    required
+                                                    aria-invalid={
+                                                        !!errors.email
+                                                    }
+                                                    className="field"
+                                                />
+                                                {errors.email && (
+                                                    <p className="field-error">
+                                                        {errors.email}
+                                                    </p>
+                                                )}
+                                            </div>
+                                            <div>
+                                                <label
+                                                    htmlFor="phone"
+                                                    className="field-label"
+                                                >
+                                                    Teléfono o WhatsApp
+                                                </label>
+                                                <input
+                                                    id="phone"
+                                                    type="tel"
+                                                    autoComplete="tel"
+                                                    value={data.phone}
+                                                    onChange={(e) =>
+                                                        setData(
+                                                            'phone',
+                                                            e.target.value,
+                                                        )
+                                                    }
+                                                    placeholder="300 123 4567"
+                                                    required
+                                                    aria-invalid={
+                                                        !!errors.phone
+                                                    }
+                                                    className="field"
+                                                />
+                                                {errors.phone && (
+                                                    <p className="field-error">
+                                                        {errors.phone}
+                                                    </p>
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        <fieldset>
+                                            <legend className="field-label">
+                                                ¿Qué clase quieres probar?
+                                            </legend>
+                                            <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3">
+                                                {demoPrograms.map((program) => (
+                                                    <label
+                                                        key={program.id}
+                                                        className={`choice ${data.instrument === program.name ? 'is-checked' : ''} ${flashDemo === program.name ? 'is-flash' : ''}`}
+                                                    >
+                                                        <input
+                                                            type="radio"
+                                                            name="instrument"
+                                                            className="sr-only"
+                                                            value={program.name}
+                                                            checked={
+                                                                data.instrument ===
+                                                                program.name
+                                                            }
+                                                            onChange={() =>
+                                                                selectDemo(
+                                                                    program.name,
+                                                                )
+                                                            }
+                                                            required
+                                                        />
+                                                        <span className="block font-semibold">
+                                                            {demoLabel(
+                                                                program.name,
+                                                            )}
+                                                        </span>
+                                                    </label>
+                                                ))}
+                                            </div>
+                                            {errors.instrument && (
+                                                <p className="field-error">
+                                                    {errors.instrument}
+                                                </p>
+                                            )}
+                                        </fieldset>
+
+                                        {availableSchedules.length > 0 && (
+                                            <fieldset
+                                                className="appear"
+                                                key={data.instrument}
+                                            >
+                                                <legend className="field-label">
+                                                    Horario preferido (opcional)
+                                                </legend>
+                                                <p className="mt-1 text-sm text-[var(--ink-2)]">
+                                                    Elige uno o cuéntanos tu
+                                                    disponibilidad en el
+                                                    mensaje.
+                                                </p>
+                                                <div className="mt-3 flex flex-col gap-2">
+                                                    {availableSchedules.map(
+                                                        (schedule) => (
+                                                            <label
+                                                                key={
+                                                                    schedule.id
+                                                                }
+                                                                className={`choice flex items-center justify-between gap-4 ${data.preferred_schedule === scheduleValue(schedule) ? 'is-checked' : ''}`}
+                                                            >
+                                                                <input
+                                                                    type="radio"
+                                                                    name="preferred_schedule"
+                                                                    className="sr-only"
+                                                                    checked={
+                                                                        data.preferred_schedule ===
+                                                                        scheduleValue(
+                                                                            schedule,
+                                                                        )
+                                                                    }
+                                                                    onChange={() =>
+                                                                        setData(
+                                                                            'preferred_schedule',
+                                                                            scheduleValue(
+                                                                                schedule,
+                                                                            ),
+                                                                        )
+                                                                    }
+                                                                />
+                                                                <span>
+                                                                    <span className="block font-semibold">
+                                                                        {formatDays(
+                                                                            schedule.days_of_week,
+                                                                        )}
+                                                                    </span>
+                                                                    <span className="choice-hint block text-sm tabular-nums">
+                                                                        {formatTime(
+                                                                            schedule.start_time,
+                                                                        )}{' '}
+                                                                        –{' '}
+                                                                        {formatTime(
+                                                                            schedule.end_time,
+                                                                        )}{' '}
+                                                                        · Prof.{' '}
+                                                                        {schedule
+                                                                            .professor
+                                                                            ?.name ??
+                                                                            'Sin asignar'}
+                                                                    </span>
+                                                                </span>
+                                                                <span className="choice-hint shrink-0 text-sm tabular-nums">
+                                                                    {
+                                                                        schedule.available_slots
+                                                                    }{' '}
+                                                                    {schedule.available_slots ===
+                                                                    1
+                                                                        ? 'cupo'
+                                                                        : 'cupos'}
+                                                                </span>
+                                                            </label>
+                                                        ),
+                                                    )}
+                                                </div>
+                                            </fieldset>
+                                        )}
+
+                                        <div>
+                                            <label
+                                                htmlFor="message"
+                                                className="field-label"
+                                            >
+                                                Cuéntanos más sobre ti
+                                                (opcional)
+                                            </label>
+                                            <textarea
+                                                id="message"
+                                                value={data.message}
+                                                onChange={(e) =>
+                                                    setData(
+                                                        'message',
+                                                        e.target.value,
+                                                    )
+                                                }
+                                                placeholder="Por ejemplo: nunca he tocado un instrumento pero siempre quise aprender."
+                                                rows={4}
+                                                aria-describedby="message-help"
+                                                className="field resize-y"
+                                            ></textarea>
+                                            {errors.message && (
+                                                <p className="field-error">
+                                                    {errors.message}
+                                                </p>
+                                            )}
+                                            <p
+                                                id="message-help"
+                                                className="mt-2 text-sm text-[var(--ink-2)]"
+                                            >
+                                                Tu nivel actual, tus objetivos o
+                                                cualquier pregunta.
+                                            </p>
+                                        </div>
+
+                                        <div>
+                                            <button
+                                                type="submit"
+                                                disabled={processing}
+                                                className="btn btn-gold btn-lg group w-full justify-center"
+                                            >
+                                                {processing ? (
+                                                    <>
+                                                        <Loader2
+                                                            className="h-5 w-5 animate-spin"
+                                                            aria-hidden
+                                                        />
+                                                        Enviando tu solicitud…
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        Reservar mi clase gratis
+                                                        <ArrowRight
+                                                            className="btn-arrow h-5 w-5"
+                                                            aria-hidden
+                                                        />
+                                                    </>
+                                                )}
+                                            </button>
+                                            {/* Pendiente: enlazar los términos y la política de datos cuando la academia los entregue. */}
+                                            <p className="mt-3 text-center text-sm text-[var(--ink-2)]">
+                                                Usamos tus datos solo para
+                                                agendar tu clase y responderte.
+                                            </p>
+                                        </div>
+                                    </form>
+                                )}
+                            </div>
+                        </div>
+                    </section>
+                </main>
+
+                <SiteFooter programs={academicPrograms} />
+                <WhatsAppButton />
             </div>
 
-            <style>{`
-                @keyframes bounce-slow {
-                    0%, 100% {
-                        transform: translateY(0);
-                    }
-                    50% {
-                        transform: translateY(-10px);
-                    }
-                }
-                .animate-bounce-slow {
-                    animation: bounce-slow 3s ease-in-out infinite;
-                }
-            `}</style>
+            <SiteStyles />
         </>
     );
 }

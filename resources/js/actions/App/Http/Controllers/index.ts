@@ -4,6 +4,8 @@ import MatriculaController from './MatriculaController'
 import PaymentController from './PaymentController'
 import TeacherRegistrationController from './TeacherRegistrationController'
 import HomeController from './HomeController'
+import SeoController from './SeoController'
+import ClasesController from './ClasesController'
 import RoleController from './RoleController'
 import UserController from './UserController'
 import AuditController from './AuditController'
@@ -30,6 +32,8 @@ MatriculaController: Object.assign(MatriculaController, MatriculaController),
 PaymentController: Object.assign(PaymentController, PaymentController),
 TeacherRegistrationController: Object.assign(TeacherRegistrationController, TeacherRegistrationController),
 HomeController: Object.assign(HomeController, HomeController),
+SeoController: Object.assign(SeoController, SeoController),
+ClasesController: Object.assign(ClasesController, ClasesController),
 RoleController: Object.assign(RoleController, RoleController),
 UserController: Object.assign(UserController, UserController),
 AuditController: Object.assign(AuditController, AuditController),

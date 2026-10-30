@@ -25,7 +25,7 @@ class DemoLeadController extends Controller
             'phone' => 'required|string|max:20',
             'is_for_child' => 'required|boolean',
             'child_name' => 'nullable|required_if:is_for_child,true|string|max:255',
-            'instrument' => 'required|string|max:50',
+            'instrument' => 'required|string|max:120',
             'preferred_schedule' => 'nullable|string|max:255',
             'message' => 'nullable|string|max:1000',
         ], [

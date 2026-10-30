@@ -27,3 +27,6 @@ yarn-error.log
 /public/hot
 nul
 tmpclaude-*
+
+# Capturas e informes de la skill de diseño taste-skill
+/.taste-skill
