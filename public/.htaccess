@@ -1,3 +1,21 @@
+# BEGIN SEGURIDAD v1 (no borrar)
+<IfModule mod_rewrite.c>
+RewriteEngine On
+# Carpetas de herramientas y archivos de configuración.
+RewriteRule "(^|/)\.(aws|git|svn|hg|ssh|docker|idea|vscode)(/|$)" "-" [F,L,NC]
+RewriteRule "(^|/)\.(env|npmrc|gitconfig|git-credentials|netrc|htpasswd|user\.ini|DS_Store|bash_history)($|[./~])" "-" [F,L,NC]
+# Respaldos, volcados y comprimidos nunca se descargan.
+RewriteRule "\.(sql|sqlite|bak|old|orig|swp|log|zip|tar|gz|tgz|rar|7z)$" "-" [F,L,NC]
+# Solo se ejecutan los PHP de la aplicación: cualquier otro (p. ej. un webshell subido) da 403.
+RewriteRule "^(?!(index)\.php$).+\.(php[0-9]?|phtml|phar|pht|phps)$" "-" [F,L,NC]
+</IfModule>
+<IfModule mod_headers.c>
+Header always set X-Content-Type-Options "nosniff"
+Header always set X-Frame-Options "SAMEORIGIN"
+Header always set Referrer-Policy "strict-origin-when-cross-origin"
+</IfModule>
+# END SEGURIDAD v1
+
 <IfModule mod_rewrite.c>
     <IfModule mod_negotiation.c>
         Options -MultiViews -Indexes
