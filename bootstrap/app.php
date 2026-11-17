@@ -60,5 +60,16 @@ return Application::configure(basePath: dirname(__DIR__))
         $schedule->command('payments:send-reminders')->dailyAt('08:00');
     })
     ->withExceptions(function (Exceptions $exceptions) {
-        //
+        // MySQL caído o sin conexiones libres (hosting compartido): aviso que no toca la base de datos.
+        $exceptions->render(function (\Throwable $e, \Illuminate\Http\Request $request) {
+            if (config('app.debug') || ! \App\Support\DatabaseDown::matches($e)) {
+                return null;
+            }
+
+            $headers = ['Retry-After' => '30'];
+
+            return $request->expectsJson() && ! $request->header('X-Inertia')
+                ? response()->json(['message' => 'El servicio no está disponible por un momento. Intenta de nuevo.'], 503, $headers)
+                : response()->view('errors.sin-base-de-datos', [], 503, $headers);
+        });
     })->create();

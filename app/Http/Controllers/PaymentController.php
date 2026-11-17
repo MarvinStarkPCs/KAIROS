@@ -751,7 +751,11 @@ class PaymentController extends Controller
      */
     public function wompiWebhook(Request $request)
     {
-        \Log::info('Wompi Webhook recibido:', $request->all());
+        \Log::info('Wompi Webhook recibido', [
+            'event' => $request->input('event'),
+            'transaction_id' => $request->input('data.transaction.id'),
+            'status' => $request->input('data.transaction.status'),
+        ]);
 
         $config = $this->wompiService->getActiveConfig();
 

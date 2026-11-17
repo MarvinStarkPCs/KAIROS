@@ -347,7 +347,6 @@ class MatriculaController extends Controller
         // Obtener configuración de Wompi
         $config = $this->wompiService->getActiveConfig();
 
-        \Log::info($config);
         /**
          * Preparar datos de checkout con firma de integridad
          *
